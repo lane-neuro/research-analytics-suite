@@ -210,7 +210,7 @@ Project Link: [https://github.com/lane-neuro/neurobehavioral-analytics-suite](ht
 [issues-shield]: https://img.shields.io/github/issues/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge
 [issues-url]: https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues
 [license-shield]: https://img.shields.io/github/license/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge
-[license-url]: https://github.com/lane-neuro/neurobehavioral-analytics-suite/blob/master/LICENSE.txt
+[license-url]: https://github.com/lane-neuro/neurobehavioral-analytics-suite/blob/main/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/lane14
 [product-screenshot]: images/screenshot.png
