@@ -27,7 +27,7 @@
 # NeuroBehavioral Analytics Suite (NBAS)
 
   <p align="center">
-    A collection of tools written in Python for the analysis of neurobehavioral data deriving from professional and academic neuroscience research.
+    NeuroBehavioral Analytics Suite (NBAS) is a collection of tools (currently in development) developed in Python with a focus on the aggregation and analysis of neurobehavioral data deriving from a multitude of input sources across professional and academic neuroscience research.
     <br />
     <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a>
     <br />
@@ -73,7 +73,10 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-...
+NeuroBehavioral Analytics Suite (NBAS) is designed to be the primary interface for neuroscientific analysis with (3) components/branches:
+* Data Management
+* Analytic
+* Integration
 
 <!-- [![Product Name Screen Shot][product-screenshot]](https://example.com) -->
 
