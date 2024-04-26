@@ -27,7 +27,8 @@
 # NeuroBehavioral Analytics Suite (NBAS)
 ### Gire Lab, University of Washington
   <p align="center">
-    NeuroBehavioral Analytics Suite (NBAS) is a collection of tools developed in Python with a focus on the aggregation and analysis of neurobehavioral data deriving from a multitude of input sources across professional and academic neuroscientific research projects. This project is being actively developed by <a href="#contact">Lane at Gire Lab</a> (University of Washington).
+    NeuroBehavioral Analytics Suite (NBAS) is a collection of tools developed in Python with a focus on the aggregation and analysis of neurobehavioral data deriving from a multitude of input sources across professional and academic neuroscientific research projects. 
+    <br /> Author: <a href="#contact">Lane</a> (Gire Lab, University of Washington)
     <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
     <br />
@@ -48,9 +49,9 @@
   <ol>
     <li>
       <a href="#about-the-project">About The Project</a>
-      <ul>
+      <!-- <ul>
         <li><a href="#built-with">Built With</a></li>
-      </ul>
+      </ul> -->
     </li>
     <li>
       <a href="#getting-started">Getting Started</a>
@@ -60,7 +61,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
+    <!-- <li><a href="#roadmap">Roadmap</a></li> -->
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -83,11 +84,8 @@ NeuroBehavioral Analytics Suite (NBAS) is designed to be the primary interface f
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
-### Built With
+<!-- ### Built With
 ...
-<!--
 * [![Next][Next.js]][Next-url]
 * [![React][React.js]][React-url]
 * [![Vue][Vue.js]][Vue-url]
@@ -96,11 +94,10 @@ NeuroBehavioral Analytics Suite (NBAS) is designed to be the primary interface f
 * [![Laravel][Laravel.com]][Laravel-url]
 * [![Bootstrap][Bootstrap.com]][Bootstrap-url]
 * [![JQuery][JQuery.com]][JQuery-url]
--->
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
+-->
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -108,15 +105,17 @@ NeuroBehavioral Analytics Suite (NBAS) is designed to be the primary interface f
 To get a local copy up and running follow these simple example steps.
 
 ### Prerequisites
-* If you are using <b>Anaconda</b> as a virtual environment, you can use the supplied `environment.yml` file to create a new environment with all the required packages. To do this, run the following command in the terminal:
+Once you have cloned the repo (see <a href="#installation">Installation</a>), you will need to install the required packages. This can be done in one of two ways:
+* If you are using <a href="https://www.anaconda.com/">Anaconda</a> as a virtual environment, you can use the supplied `environment.yml` file to create a new environment with all the required packages. To do this, run the following command in the terminal:
     ```sh 
     conda env create --file environment.yml
     conda activate nbas
   ```
-* Alternatively, you can install the required packages globally using the following command:
+* <i>Alternatively</i>, you can install the required packages globally <i>(typically not recommended)</i> using the following command:
     ```sh
     pip install -r requirements.txt
   ```
+<br />
 
 ### Installation
 1. Clone the repo
@@ -131,25 +130,20 @@ To get a local copy up and running follow these simple example steps.
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-...
+> <i>To be implemented at a later date.</i>
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
-<!-- ROADMAP -->
+<!-- ROADMAP
 ## Roadmap
 
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-    - [ ] Nested Feature
 
-See the [open issues](https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+ -->
 
 
 <!-- CONTRIBUTING -->
@@ -182,10 +176,19 @@ Distributed under the BSD 3-Clause License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-**Lane**: &nbsp;&nbsp;&nbsp;&nbsp; [justlane@uw.edu](mailto:justlane@uw.edu) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="https://linkedin.com/in/lane14"><img align="center" height="25" src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555"></a>
-<br />**Dr. David H. Gire**: &nbsp;&nbsp;&nbsp;&nbsp; [dhgire@uw.edu](mailto:dhgire@uw.edu)
-
-Project Link: [https://github.com/lane-neuro/neurobehavioral-analytics-suite](https://github.com/lane-neuro/neurobehavioral-analytics-suite)
+### Lane
+Neurobiological Researcher
+<br /><i>Gire Lab, University of Washington</i>
+<br />email: [justlane@uw.edu](mailto:justlane@uw.edu)
+<br /><a href="https://linkedin.com/in/lane14"><img align="center" height="25" src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555"></a>
+<br />
+<br />
+### David H. Gire, Ph.D.
+Associate Professor, Principal Investigator
+<br /><i>Gire Lab, University of Washington</i>
+<br />email: [dhgire@uw.edu](mailto:dhgire@uw.edu)
+<br /><a href="https://psych.uw.edu/people/6312"><img align="center" height="15" src="https://uw-s3-cdn.s3.us-west-2.amazonaws.com/wp-content/uploads/sites/230/2023/11/02134822/Wordmark_center_Purple_Hex.png"></a>
+<br /><br /><br /><br /><br />Project Link: [https://github.com/lane-neuro/neurobehavioral-analytics-suite](https://github.com/lane-neuro/neurobehavioral-analytics-suite)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
