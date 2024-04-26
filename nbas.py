@@ -1,16 +1,20 @@
-def process_data(data):
-    print("Beginning data processing...")
-    modified_data = data + " that has been modified"
-    print("Data processing finished.")
-    return modified_data
+#! python
+# -*- coding: utf-8 -*-
 
+"""
+This is the docstring, where I tell the reader what this document does.
+"""
 
-def main():
-    data = "random data"
-    print(data)
-    modified_data = process_data(data)
-    print(modified_data)
+# Imports
+# .../ various imports \...
 
+__author__ = 'Lane'
+__copyright__ = 'Lane'
+__credits__ = ['Lane']
+__license__ = 'BSD 3-Clause License'
+__version__ = '0.0.0.1'
+__maintainer__ = 'Lane'
+__emails__ = 'justlane@uw.edu'
+__status__ = 'Prototype'
 
-if __name__ == "__main__":
-    main()
+# .../ code follows \...

@@ -198,3 +198,7 @@ out/
 .idea/inspectionProfiles/Project_Default.xml
 .idea/misc.xml
 .idea/vcs.xml
+.idea/fileTemplates/internal/Python Script.py
+.idea/file.template.settings.xml
+.idea/copyright/profiles_settings.xml
+.idea/copyright/BSD_3_Clause.xml

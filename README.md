@@ -8,7 +8,7 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
-[![Contributors][contributors-shield]][contributors-url]
+<!-- [![Contributors][contributors-shield]][contributors-url] -->
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
@@ -25,12 +25,11 @@
 -->
 
 # NeuroBehavioral Analytics Suite (NBAS)
-
+### Gire Lab, University of Washington
   <p align="center">
-    NeuroBehavioral Analytics Suite (NBAS) is a collection of tools (currently in development) developed in Python with a focus on the aggregation and analysis of neurobehavioral data deriving from a multitude of input sources across professional and academic neuroscience research.
+    NeuroBehavioral Analytics Suite (NBAS) is a collection of tools developed in Python with a focus on the aggregation and analysis of neurobehavioral data deriving from a multitude of input sources across professional and academic neuroscientific research projects. This project is being actively developed by <a href="#contact">Lane at Gire Lab</a> (University of Washington).
     <br />
-    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a>
-    <br />
+    <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
     <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite">View Demo</a>
     ·
@@ -74,9 +73,11 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 NeuroBehavioral Analytics Suite (NBAS) is designed to be the primary interface for neuroscientific analysis with (3) components/branches:
-* Data Management
-* Analytic
-* Integration
+* Data Management Engine (DME) - allows for filtering and aggregation of large, complex datasets from multiple sources (i.e., pixel-tracking technology, accelerometer readings, voltage-output from analog sources, etc.)
+* Analytics - provides a suite of tools for the analysis of neurobehavioral data from the DME, including statistical analysis, machine learning, and data visualization
+  * Preloaded Functions
+  * Custom / User-Defined Functions - allows for the development & implementation of custom functions developed by the user
+* Future Integration with other tools (i.e., [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut))
 
 <!-- [![Product Name Screen Shot][product-screenshot]](https://example.com) -->
 
@@ -181,9 +182,8 @@ Distributed under the BSD 3-Clause License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Lane - justlane@uw.edu
-
-[![LinkedIn][linkedin-shield]][linkedin-url]
+**Lane**: &nbsp;&nbsp;&nbsp;&nbsp; [justlane@uw.edu](mailto:justlane@uw.edu) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="https://linkedin.com/in/lane14"><img align="center" height="25" src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555"></a>
+<br />**Dr. David H. Gire**: &nbsp;&nbsp;&nbsp;&nbsp; [dhgire@uw.edu](mailto:dhgire@uw.edu)
 
 Project Link: [https://github.com/lane-neuro/neurobehavioral-analytics-suite](https://github.com/lane-neuro/neurobehavioral-analytics-suite)
 
