@@ -28,6 +28,7 @@
 ### Gire Lab, University of Washington
   <p align="center">
     NeuroBehavioral Analytics Suite (NBAS) is a collection of tools developed in Python with a focus on the aggregation and analysis of neurobehavioral data deriving from a multitude of input sources across professional and academic neuroscientific research projects. 
+    <br />
     <br /> Author: <a href="#contact">Lane</a> (Gire Lab, University of Washington)
     <br />
     <br /> Prototype for NBAS was written in MATLAB & can be found at <a href="https://github.com/lane-neuro/RealTimeOdorNavigation">lane-neuro/RealTimeOdorNavigation</a>
