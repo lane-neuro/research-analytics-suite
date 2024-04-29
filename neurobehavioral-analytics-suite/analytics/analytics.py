@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This is the docstring, where I tell the reader what this document does.
+Docstring
 """
 
 # Imports
@@ -16,5 +16,3 @@ __version__ = '0.0.0.1'
 __maintainer__ = 'Lane'
 __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
-
-# .../ code follows \...
