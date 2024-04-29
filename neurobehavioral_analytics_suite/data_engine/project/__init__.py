@@ -1,13 +1,6 @@
 #! python
 # -*- coding: utf-8 -*-
 
-"""
-Docstring
-"""
-
-# Imports
-import sys
-
 __author__ = 'Lane'
 __copyright__ = 'Lane'
 __credits__ = ['Lane']
@@ -17,10 +10,9 @@ __maintainer__ = 'Lane'
 __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
 
+"""
+Docstring
+"""
 
-def main():
-    print('NeuroBehavioral Analytics Suite v' + __version__)
-
-
-if __name__ == '__main__':
-    sys.exit(main())
+# Imports
+# .../ various imports \...
