@@ -202,3 +202,11 @@ out/
 .idea/file.template.settings.xml
 .idea/copyright/profiles_settings.xml
 .idea/copyright/BSD_3_Clause.xml
+sample_datasets/2024-Tariq-et-al_olfaction/8-30-2021-2-08 PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv
+sample_datasets/2024-Tariq-et-al_olfaction/8-30-2021-2-13 PM-Mohammad-ETHSensor-CB3-5_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv
+sample_datasets/2024-Tariq-et-al_olfaction/8-31-2021-1-25 PM-Mohammad-ETHSensor-CB5-4_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv
+sample_datasets/2024-Tariq-et-al_olfaction/8-31-2021-2-30 PM-Mohammad-ETHSensor-CB9-12_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv
+sample_datasets/2024-Tariq-et-al_olfaction/8-31-2021-4-13 PM-Mohammad-ETHSensor-CB4-26_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv
+sample_datasets/2024-Tariq-et-al_olfaction/9-1-2021-2-58 PM-Mohammad-ETHSensor-CB9-18_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv
+sample_datasets/2024-Tariq-et-al_olfaction/9-2-2021-3-11 PM-Mohammad-ETHSensor-CB10-17_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv
+sample_datasets/2024-Tariq-et-al_olfaction/9-2-2021-4-07 PM-Mohammad-ETHSensor-CB5-28_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv
