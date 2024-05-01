@@ -10,7 +10,7 @@ __maintainer__ = 'Lane'
 __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
 
-from .project_load import project_load
+from .load_project import load_project
 from .save_project import save_project
 from ..DataEngine import DataEngine
 
@@ -22,5 +22,5 @@ Docstring
 def new_project(csv_dir_in: str, user_in: str, subject_in: str, framerate_in: int, csv_path: str):
     base_engine = DataEngine(csv_dir_in, user_in, subject_in, framerate_in, csv_path)
     save_file = save_project(base_engine)
-    return project_load(save_file)
+    return load_project(save_file)
 

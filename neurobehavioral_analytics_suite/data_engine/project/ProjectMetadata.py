@@ -10,7 +10,6 @@ __maintainer__ = 'Lane'
 __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
 
-from .. import DataEngine
 from ...analytics import Analytics
 
 """

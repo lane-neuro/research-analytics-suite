@@ -11,9 +11,12 @@ __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
 
 import argparse
-from .data_engine.DataEngine import start_data_engine
+import asyncio
+
+import nest_asyncio
+
 from .data_engine.project.new_project import new_project
-from .data_engine.project.project_load import project_load
+from .data_engine.project.load_project import load_project
 
 """
 Docstring
@@ -21,21 +24,26 @@ Docstring
 
 
 def launch_nbas():
-    arg, extra = launch_args().parse_known_args()
-    if arg.load_project is None:
+    args, extra = launch_args().parse_known_args()
+    active_project = None
+    if args.open_project is None:
         print('New Project Parameters Detected - Creating New Project')
-        proj = new_project(arg.directory, arg.user_name, arg.subject_name, arg.camera_framerate, arg.file_list)
-        start_data_engine(proj)
+        active_project = new_project(args.directory, args.user_name, args.subject_name,
+                                     args.camera_framerate, args.file_list)
     else:
-        print('Project File Detected - Loading Project at: ' + arg.load_project)
-        start_data_engine(project_load(arg.load_project))
+        print('Project File Detected - Loading Project at: ' + args.open_project)
+        active_project = load_project(args.open_project)
+
+    assert active_project is not None
+    asyncio.ensure_future(active_project.exec_loop())
+    asyncio.get_event_loop().run_forever()
 
 
 def launch_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-l', '--load_project',
-                        help='Load project from specified file')
+    parser.add_argument('-o', '--open_project',
+                        help='Opens an existing project from the specified file')
     parser.add_argument('-u', '--user_name',
                         help='Name of user/experimenter')
     parser.add_argument('-d', '--directory',
