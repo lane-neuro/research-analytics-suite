@@ -10,18 +10,20 @@ __maintainer__ = 'Lane'
 __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
 
+import sys
+
 """
 Docstring
 """
 
-# Imports
-import sys
-
 
 def main():
     print('Starting NeuroBehavioral Analytics Suite v' + __version__)
-    from neurobehavioral_analytics_suite.data_engine import data_engine
+    from neurobehavioral_analytics_suite.launch_nbas import launch_nbas
+    launch_nbas()
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.argv = ['__main__.py', '-u', 'Lane', '-d', 'C:\\Users\\lane\\Documents\\NBAS-Testing\\', '-s', 'Mouse', '-c', '60',
+                '-f', 'C:\\Users\\lane\\Documents\\NBAS-Testing\\examples\\9-2-2021-4-07 PM-Mohammad-ETHSensor-CB5-28_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv']
+    main()

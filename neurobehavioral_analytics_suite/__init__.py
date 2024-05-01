@@ -17,6 +17,6 @@ __status__ = 'Prototype'
 # Imports
 import os
 
-DEBUG = True and "DEBUG" in os.environ["DEBUG"]
+# DEBUG = True and "DEBUG" in os.environ["DEBUG"]
 
 print(f"Loading NBAS {__version__}...")
