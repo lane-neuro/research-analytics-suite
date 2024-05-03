@@ -13,8 +13,8 @@ __status__ = 'Prototype'
 
 import argparse
 import asyncio
-from .data_engine.project.new_project import new_project
-from .data_engine.project.load_project import load_project
+from neurobehavioral_analytics_suite.data_engine.project.new_project import new_project
+from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
 
 
 def launch_nbas():

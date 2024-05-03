@@ -12,8 +12,8 @@ __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
 
 from copy import deepcopy
-from .. import DataEngine
-from .Coord2D import Coord2D
+from neurobehavioral_analytics_suite.data_engine import DataEngine
+from neurobehavioral_analytics_suite.data_engine.d_structs.Coord2D import Coord2D
 
 
 class SingleFrame(object):
