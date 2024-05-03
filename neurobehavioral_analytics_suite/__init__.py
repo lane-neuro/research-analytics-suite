@@ -1,8 +1,5 @@
-#! python
-# -*- coding: utf-8 -*-
-
 """
-Docstring
+NeuroBehavioral Analytics Suite
 """
 
 __author__ = 'Lane'
@@ -14,7 +11,5 @@ __maintainer__ = 'Lane'
 __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
 
-# Imports
 import os
-
-# DEBUG = True and "DEBUG" in os.environ["DEBUG"]
+DEBUG = True and "DEBUG" in os.environ["DEBUG"]

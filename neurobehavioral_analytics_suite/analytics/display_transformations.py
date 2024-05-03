@@ -1,5 +1,6 @@
-#! python
-# -*- coding: utf-8 -*-
+"""
+Applies various transformations to data. Displays transformations using matplotlib.
+"""
 
 __author__ = 'Lane'
 __copyright__ = 'Lane'
@@ -12,10 +13,6 @@ __status__ = 'Prototype'
 
 from copy import deepcopy
 from matplotlib import pyplot as plt
-
-"""
-Applies various transformations to data. Displays transformations using matplotlib.
-"""
 
 
 def display_transformations(data_in, transformations, cmap='viridis'):

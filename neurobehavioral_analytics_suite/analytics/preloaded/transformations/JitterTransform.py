@@ -1,6 +1,3 @@
-#! python
-# -*- coding: utf-8 -*-
-
 __author__ = 'Lane'
 __copyright__ = 'Lane'
 __credits__ = ['Lane']
@@ -11,10 +8,6 @@ __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
 
 import numpy as np
-
-"""
-Docstring
-"""
 
 
 class JitterTransform:

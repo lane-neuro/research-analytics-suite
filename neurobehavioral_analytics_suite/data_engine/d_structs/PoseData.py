@@ -1,5 +1,12 @@
-#! python
-# -*- coding: utf-8 -*-
+"""
+A class for storing positional data from xy-coordinate tracking datasets.
+
+Typical usage example:
+    pose = PoseData(project_metadata, csv_path, use_likelihood{bool})
+    pose.extract_csv()
+    print(pose.pack())                  # Formats data for console output
+
+"""
 
 __author__ = 'Lane'
 __copyright__ = 'Lane'
@@ -12,19 +19,15 @@ __status__ = 'Prototype'
 
 import csv
 from copy import deepcopy
-
 from neurobehavioral_analytics_suite.data_engine.d_structs.SingleFrame import SingleFrame
 from neurobehavioral_analytics_suite.data_engine.project import ProjectMetadata
-
-"""
-Docstring
-"""
 
 
 class PoseData(object):
     def __init__(self, meta: ProjectMetadata, csv_path: str, use_likelihood):
-        self.use_likelihood = use_likelihood
-        self.meta = meta
+
+        self.use_likelihood = use_likelihood            # Whether to check for p-value
+        self.meta = meta                                # Binds with ProjectMetadata
         self.csv_path = csv_path
         self.frames = []
         print(f"PoseData object initialized")
@@ -33,10 +36,18 @@ class PoseData(object):
         return f"PoseData:(\'{self.pack()}\')"
 
     def pack(self):
+        """
+        Formats data for console output
+
+        Returns
+        -------
+        str
+            Formatted output
+
+        """
+
         pose_out = ""
-        if self.meta.end_index != 0:
-            pass
-        else:
+        if self.meta.end_index == 0:
             for iframe in self.frames:
                 rounded_frame = self.round_frame(iframe)
                 frame_str = "~"
@@ -46,6 +57,9 @@ class PoseData(object):
                     else:
                         frame_str += f"{coord.x}_{coord.y},"
                 pose_out += frame_str.rstrip(',')  # Remove trailing comma if present
+        else:
+            # TODO
+            pass
         return pose_out
 
     def round_frame(self, frame):
@@ -70,4 +84,4 @@ class PoseData(object):
                 if i >= 0:
                     self.frames.extend([SingleFrame(self.use_likelihood, row[:])])
         print(
-            f"PoseData: \'{self.meta.animal}\' .csv file extracted for {self.meta.body_parts_count} coordinates across {len(self.frames)} frames.")
+            f"PoseData: \'{self.meta.subject}\' .csv file extracted for {self.meta.body_parts_count} coordinates across {len(self.frames)} frames.")

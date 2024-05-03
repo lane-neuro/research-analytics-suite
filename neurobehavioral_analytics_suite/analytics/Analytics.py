@@ -1,5 +1,6 @@
-#! python
-# -*- coding: utf-8 -*-
+"""
+Analytical Engine to process neurobehavioral data from NBAS-DataEngine.
+"""
 
 __author__ = 'Lane'
 __copyright__ = 'Lane'
@@ -9,10 +10,6 @@ __version__ = '0.0.0.1'
 __maintainer__ = 'Lane'
 __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
-
-"""
-Docstring
-"""
 
 
 class Analytics(object):

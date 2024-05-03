@@ -1,5 +1,6 @@
-#! python
-# -*- coding: utf-8 -*-
+"""
+A class to hold all data related to a single frame.
+"""
 
 __author__ = 'Lane'
 __copyright__ = 'Lane'
@@ -13,10 +14,6 @@ __status__ = 'Prototype'
 from copy import deepcopy
 from .. import DataEngine
 from .Coord2D import Coord2D
-
-"""
-Docstring
-"""
 
 
 class SingleFrame(object):

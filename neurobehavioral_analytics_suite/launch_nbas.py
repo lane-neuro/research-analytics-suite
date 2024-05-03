@@ -1,5 +1,6 @@
-#! python
-# -*- coding: utf-8 -*-
+"""
+Launch script for NeuroBehavioral Analytics Suite
+"""
 
 __author__ = 'Lane'
 __copyright__ = 'Lane'
@@ -12,20 +13,20 @@ __status__ = 'Prototype'
 
 import argparse
 import asyncio
-
-import nest_asyncio
-
 from .data_engine.project.new_project import new_project
 from .data_engine.project.load_project import load_project
 
-"""
-Docstring
-"""
-
 
 def launch_nbas():
-    args, extra = launch_args().parse_known_args()
+    """
+    Launches NeuroBehavioral Analytics Suite
+    """
+
     active_project = None
+    args, extra = launch_args().parse_known_args()
+
+    # Checks args for -o '--open_project' flag.
+    # Exists: Open project from file
     if args.open_project is None:
         print('New Project Parameters Detected - Creating New Project')
         active_project = new_project(args.directory, args.user_name, args.subject_name,
@@ -34,12 +35,22 @@ def launch_nbas():
         print('Project File Detected - Loading Project at: ' + args.open_project)
         active_project = load_project(args.open_project)
 
+    # ensure we now have an active project open
     assert active_project is not None
+
+    # initialize asyncio primary event loop
     asyncio.ensure_future(active_project.exec_loop())
     asyncio.get_event_loop().run_forever()
 
 
 def launch_args():
+    """
+    Parse command line arguments
+
+    :return:
+
+    """
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-o', '--open_project',

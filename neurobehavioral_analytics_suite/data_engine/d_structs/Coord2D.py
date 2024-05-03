@@ -1,5 +1,6 @@
-#! python
-# -*- coding: utf-8 -*-
+"""
+A class dedicated to handling 2D coordinates.
+"""
 
 __author__ = 'Lane'
 __copyright__ = 'Lane'
@@ -12,10 +13,6 @@ __status__ = 'Prototype'
 
 from copy import deepcopy
 from neurobehavioral_analytics_suite.data_engine import DataEngine
-
-"""
-Docstring
-"""
 
 
 class Coord2D(object):
