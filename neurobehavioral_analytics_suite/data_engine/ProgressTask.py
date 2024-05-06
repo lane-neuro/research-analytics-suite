@@ -1,6 +1,3 @@
-"""
-NeuroBehavioral Analytics Suite
-"""
 
 __author__ = 'Lane'
 __copyright__ = 'Lane'
@@ -11,5 +8,10 @@ __maintainer__ = 'Lane'
 __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
 
-import os
-#DEBUG = True and "DEBUG" in os.environ["DEBUG"]
+import asyncio
+
+
+class ProgressTask(asyncio.Future):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.progress = 0

@@ -48,7 +48,6 @@ class SingleFrame(object):
             row.extend(jj)
         self.frame_num = row[0]
         self.coords = []
-
         step = 3
         for ii in range(1, len(row), step):
             if self.use_likelihood:
@@ -85,3 +84,99 @@ class SingleFrame(object):
         for coord in new_frame.coords:
             coord.transform(engine)
         return new_frame
+
+    def get_coord(self, index):
+        """
+        Returns a specific coordinate based on its index.
+
+        Args:
+            index (int): The index of the coordinate.
+
+        Returns:
+            Coord2D: The coordinate at the given index.
+        """
+        return self.coords[index]
+
+    def add_coord(self, coord):
+        """
+        Adds a new coordinate to the coords list.
+
+        Args:
+            coord (Coord2D): The coordinate to add.
+
+        Returns:
+            None
+        """
+        self.coords.append(coord)
+
+    def remove_coord(self, index):
+        """
+        Removes a specific coordinate based on its index.
+
+        Args:
+            index (int): The index of the coordinate to remove.
+
+        Returns:
+            None
+        """
+        self.coords.pop(index)
+
+    def update_coord(self, index, coord):
+        """
+        Updates a specific coordinate based on its index.
+
+        Args:
+            index (int): The index of the coordinate to update.
+            coord (Coord2D): The new coordinate.
+
+        Returns:
+            None
+        """
+        self.coords[index] = coord
+
+    def get_average_coord(self):
+        """
+        Calculates and returns the average coordinate position across all coordinates in the frame.
+
+        Returns:
+            tuple: The average x and y position.
+        """
+        avg_x = sum(coord.x for coord in self.coords) / len(self.coords)
+        avg_y = sum(coord.y for coord in self.coords) / len(self.coords)
+        return avg_x, avg_y
+
+    def get_max_coord(self):
+        """
+        Finds and returns the maximum coordinate position across all coordinates in the frame.
+
+        Returns:
+            tuple: The maximum x and y position.
+        """
+        max_x = max(coord.x for coord in self.coords)
+        max_y = max(coord.y for coord in self.coords)
+        return max_x, max_y
+
+    def get_min_coord(self):
+        """
+        Finds and returns the minimum coordinate position across all coordinates in the frame.
+
+        Returns:
+            tuple: The minimum x and y position.
+        """
+        min_x = min(coord.x for coord in self.coords)
+        min_y = min(coord.y for coord in self.coords)
+        return min_x, min_y
+
+    def distance_to_other_frame(self, other_frame):
+        """
+        Calculates the distance to another SingleFrame instance. This could be useful for comparing frames.
+
+        Args:
+            other_frame (SingleFrame): The other frame to compare with.
+
+        Returns:
+            float: The distance to the other frame.
+        """
+        # Note that this assumes that both frames have the same number of coordinates.
+        return sum(((coord.x - other_coord.x) ** 2 + (coord.y - other_coord.y) ** 2) ** 0.5
+                   for coord, other_coord in zip(self.coords, other_frame.coords))

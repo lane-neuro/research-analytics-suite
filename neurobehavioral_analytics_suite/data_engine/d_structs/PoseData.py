@@ -15,6 +15,9 @@ Status: Prototype
 """
 
 import csv
+import json
+import matplotlib.pyplot as plt
+import time
 from copy import deepcopy
 from neurobehavioral_analytics_suite.data_engine.d_structs.SingleFrame import SingleFrame
 from neurobehavioral_analytics_suite.data_engine.project import ProjectMetadata
@@ -62,29 +65,60 @@ class PoseData:
 
         return f"PoseData:(\'{self.pack()}\')"
 
-    def pack(self):
+    def pack(self, output_format='string'):
         """
         Formats data for console output.
 
+        Args:
+            output_format (str): The desired output format. Options are 'string' and 'json'.
+
         Returns:
-            str: Formatted output.
+            str or dict: Formatted output.
         """
 
-        pose_out = ""
-        if self.meta.end_index == 0:
-            for iframe in self.frames:
-                rounded_frame = self.round_frame(iframe)
-                frame_str = "~"
-                for coord in rounded_frame.coords:
-                    if self.use_likelihood:
-                        frame_str += f"{coord.x}_{coord.y}_{coord.likelihood},"
-                    else:
-                        frame_str += f"{coord.x}_{coord.y},"
-                pose_out += frame_str.rstrip(',')  # Remove trailing comma if present
+        # Check if frames are available
+        if not self.frames:
+            raise ValueError("No frames available to pack")
+
+        if output_format == 'string':
+            return self.pack_as_string()
+        elif output_format == 'json':
+            return self.pack_as_json()
         else:
-            # TODO
-            pass
+            raise ValueError(f"Unsupported output_format: {output_format}")
+
+    def pack_as_string(self):
+        pose_out = ""
+        for iframe in self.frames[self.meta.start_index:self.meta.end_index]:
+            rounded_frame = self.round_frame(iframe)
+            frame_str = "~"
+            for coord in rounded_frame.coords:
+                if self.use_likelihood:
+                    frame_str += f"{coord.x}_{coord.y}_{coord.likelihood},"
+                else:
+                    frame_str += f"{coord.x}_{coord.y},"
+            pose_out += frame_str.rstrip(',')  # Remove trailing comma if present
         return pose_out
+
+    def pack_as_json(self):
+        pose_out = []
+        for iframe in self.frames[self.meta.start_index:self.meta.end_index]:
+            rounded_frame = self.round_frame(iframe)
+            frame_data = []
+            for coord in rounded_frame.coords:
+                if self.use_likelihood:
+                    frame_data.append({
+                        'x': coord.x,
+                        'y': coord.y,
+                        'likelihood': coord.likelihood
+                    })
+                else:
+                    frame_data.append({
+                        'x': coord.x,
+                        'y': coord.y
+                    })
+            pose_out.append(frame_data)
+        return json.dumps(pose_out)
 
     def round_frame(self, frame):
         """
@@ -125,4 +159,116 @@ class PoseData:
                 if i >= 0:
                     self.frames.extend([SingleFrame(self.use_likelihood, row[:])])
         print(
-            f"PoseData: \'{self.meta.subject}\' .csv file extracted for {self.meta.body_parts_count} coordinates across {len(self.frames)} frames.")
+            f"PoseData: \'{self.meta.subject}\' .csv file extracted for {self.meta.body_parts_count} coordinates across"
+            f" {len(self.frames)} frames.")
+
+    def filter_frames(self, condition):
+        """
+        Filters out frames based on a condition.
+
+        Args:
+            condition (function): A function that takes a frame and returns a boolean.
+
+        Returns:
+            list: The list of frames that meet the condition.
+        """
+        return [frame for frame in self.frames if condition(frame)]
+
+    def transform_data(self, transformation):
+        """
+        Applies a transformation to the data.
+
+        Args:
+            transformation (function): A function that takes a frame and returns a transformed frame.
+
+        Returns:
+            None
+        """
+        self.frames = [transformation(frame) for frame in self.frames]
+
+    def aggregate_data(self, aggregation):
+        """
+        Performs an aggregation on the data.
+
+        Args:
+            aggregation (function): A function that takes a list of frames and returns an aggregated result.
+
+        Returns:
+            The result of the aggregation.
+        """
+        return aggregation(self.frames)
+
+    def annotate_data(self, annotation):
+        """
+        Adds an annotation to the data.
+
+        Args:
+            annotation (function): A function that takes a frame and returns an annotated frame.
+
+        Returns:
+            None
+        """
+        self.frames = [annotation(frame) for frame in self.frames]
+
+    def condition(self, frame):
+        """
+        A condition function that checks if the average likelihood of the coordinates in a frame is above 0.5.
+
+        Args:
+            frame (SingleFrame): The frame to check.
+
+        Returns:
+            bool: True if the average likelihood is above 0.5, False otherwise.
+        """
+        if frame.use_likelihood:
+            average_likelihood = sum(coord.likelihood for coord in frame.coords) / len(frame.coords)
+            return average_likelihood > 0.5
+        else:
+            return True  # If likelihood is not used, all frames pass the condition
+
+    def transformation(self, frame):
+        """
+        A transformation function that normalizes the coordinates in a frame.
+
+        Args:
+            frame (SingleFrame): The frame to transform.
+
+        Returns:
+            SingleFrame: The transformed frame.
+        """
+        max_x = max(coord.x for coord in frame.coords)
+        max_y = max(coord.y for coord in frame.coords)
+        for coord in frame.coords:
+            coord.x /= max_x
+            coord.y /= max_y
+        return frame
+
+    def aggregation(self, frames):
+        """
+        An aggregation function that calculates the average position of all coordinates in each frame.
+
+        Args:
+            frames (list): The list of frames.
+
+        Returns:
+            list: The list of average positions.
+        """
+        average_positions = []
+        for frame in frames:
+            average_x = sum(coord.x for coord in frame.coords) / len(frame.coords)
+            average_y = sum(coord.y for coord in frame.coords) / len(frame.coords)
+            average_positions.append((average_x, average_y))
+        return average_positions
+
+    def annotation(self, frame):
+        """
+        An annotation function that adds a timestamp to a frame.
+
+        Args:
+            frame (SingleFrame): The frame to annotate.
+
+        Returns:
+            SingleFrame: The annotated frame.
+        """
+        frame.timestamp = time.time()  # Add a timestamp to the frame
+        return frame
