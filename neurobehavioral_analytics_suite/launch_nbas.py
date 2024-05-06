@@ -1,15 +1,18 @@
 """
-Launch script for NeuroBehavioral Analytics Suite
-"""
+Module for launching the NeuroBehavioral Analytics Suite.
 
-__author__ = 'Lane'
-__copyright__ = 'Lane'
-__credits__ = ['Lane']
-__license__ = 'BSD 3-Clause License'
-__version__ = '0.0.0.1'
-__maintainer__ = 'Lane'
-__emails__ = 'justlane@uw.edu'
-__status__ = 'Prototype'
+This module contains the main entry point for launching the NeuroBehavioral Analytics Suite. It includes functions
+for parsing command line arguments and launching the application.
+
+Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
+"""
 
 import argparse
 import asyncio
@@ -19,7 +22,13 @@ from neurobehavioral_analytics_suite.data_engine.project.load_project import loa
 
 def launch_nbas():
     """
-    Launches NeuroBehavioral Analytics Suite
+    Launches the NeuroBehavioral Analytics Suite.
+
+    This function checks the command line arguments to determine whether to create a new project or open an existing
+    one. It then initializes the asyncio event loop and starts the application.
+
+    Raises:
+        AssertionError: If no active project is open.
     """
 
     active_project = None
@@ -45,10 +54,13 @@ def launch_nbas():
 
 def launch_args():
     """
-    Parse command line arguments
+    Parses command line arguments for launching the NeuroBehavioral Analytics Suite.
 
-    :return:
+    The arguments include options for opening an existing project, creating a new project, and specifying various
+    project parameters.
 
+    Returns:
+        argparse.ArgumentParser: The argument parser with the parsed command line arguments.
     """
 
     parser = argparse.ArgumentParser()

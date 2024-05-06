@@ -1,21 +1,38 @@
 """
-Applies various transformations to data. Displays transformations using matplotlib.
-"""
+Module for applying and visualizing transformations in the NeuroBehavioral Analytics Suite.
 
-__author__ = 'Lane'
-__copyright__ = 'Lane'
-__credits__ = ['Lane']
-__license__ = 'BSD 3-Clause License'
-__version__ = '0.0.0.1'
-__maintainer__ = 'Lane'
-__emails__ = 'justlane@uw.edu'
-__status__ = 'Prototype'
+This module defines a function to apply a series of transformations to a given dataset and visualize the results
+using matplotlib. It includes methods for deep copying data, applying transformations, and plotting the results.
+
+Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
+"""
 
 from copy import deepcopy
 from matplotlib import pyplot as plt
 
 
 def display_transformations(data_in, transformations, cmap='viridis'):
+    """
+    Applies a series of transformations to a given dataset and visualizes the results.
+
+    This function applies each transformation in the list to the dataset in order and plots the results using matplotlib.
+
+    Args:
+        data_in: The dataset to apply the transformations to.
+        transformations (list): The list of transformations to be applied.
+        cmap (str): The colormap to use for the plot.
+
+    Returns:
+        None
+    """
+
     plt.figure(figsize=(10, 10))
 
     # Create a colormap based on the number of transformations

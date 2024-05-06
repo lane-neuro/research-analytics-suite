@@ -1,23 +1,31 @@
 """
-main entry point for running NeuroBehavioral Analytics Suite.
+Main entry point for running the NeuroBehavioral Analytics Suite.
+
+This module contains the main function which starts the suite and sets up the necessary parameters.
+
+Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
 """
 
-__author__ = 'Lane'
-__copyright__ = 'Lane'
-__credits__ = ['Lane']
-__license__ = 'BSD 3-Clause License'
-__version__ = '0.0.0.1'
-__maintainer__ = 'Lane'
-__emails__ = 'justlane@uw.edu'
-__status__ = 'Prototype'
-
 import sys
+from neurobehavioral_analytics_suite.launch_nbas import launch_nbas
 
 
 def main():
-    print('Starting NeuroBehavioral Analytics Suite v' + __version__)
+    """
+    Starts the NeuroBehavioral Analytics Suite.
 
-    from neurobehavioral_analytics_suite.launch_nbas import launch_nbas
+    This function prints the version of the suite, imports the launch_nbas function from the
+    launch_nbas module, and calls it to start the suite.
+    """
+
+    print('Starting NeuroBehavioral Analytics Suite v0.0.0.1')
     launch_nbas()
 
 

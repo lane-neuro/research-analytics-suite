@@ -1,35 +1,40 @@
 """
-This module loads project data from the supplied file path.
+load_project.py
+
+This module defines the function to load a project from a given file path. It uses the pickle module to decode the
+DataEngine object from the file and returns it.
+
+Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
 """
 
-__author__ = 'Lane'
-__copyright__ = 'Lane'
-__credits__ = ['Lane']
-__license__ = 'BSD 3-Clause License'
-__version__ = '0.0.0.1'
-__maintainer__ = 'Lane'
-__emails__ = 'justlane@uw.edu'
-__status__ = 'Prototype'
+import pickle
 
 
 def load_project(file_in: str):
     """
-    Loads the active project to a file.
+    Loads the active project from a file.
 
-    Parameters
-    ----------
-    file_in: str
-        Path to the project config file (.json)
+    This function opens the file at the given path, uses pickle to decode the DataEngine object from
+    the file, and returns the DataEngine object.
 
-    Examples
-    --------
-    Project will be loaded from a file.
-    ->> load_project(\'G:\\Projects\\Project.json\')
+    Args:
+        file_in (str): Path to the project configuration file (.json).
 
+    Returns:
+        DataEngine: A DataEngine object containing the active project data.
+
+    Example:
+        ->> load_project('G:\\Projects\\Project.json')
+        <DataEngine object at 0x10d8cd160>
     """
 
-    file = open(file_in, 'rb')
-
-    # Unpack & return project object
-    import pickle
-    return pickle.load(file)
+    with open(file_in, 'rb') as file:
+        # Use pickle to decode & return DataEngine object from file
+        return pickle.load(file)
