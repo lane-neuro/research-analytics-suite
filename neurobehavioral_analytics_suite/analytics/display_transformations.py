@@ -22,7 +22,7 @@ def display_transformations(data_in, transformations, cmap='viridis'):
     """
     Applies a series of transformations to a given dataset and visualizes the results.
 
-    This function applies each transformation in the list to the dataset in order and plots the results using matplotlib.
+    This function applies each transformation in the list to the dataset in order and plots the results using matplotlib
 
     Args:
         data_in: The dataset to apply the transformations to.

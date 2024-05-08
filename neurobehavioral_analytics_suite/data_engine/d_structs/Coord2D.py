@@ -18,7 +18,7 @@ from copy import deepcopy
 from neurobehavioral_analytics_suite.data_engine import DataEngine
 
 
-class Coord2D:
+class Coord2D (object):
     """
     A class to handle 2D coordinates.
 
@@ -28,7 +28,7 @@ class Coord2D:
     Attributes:
         x (float): The x-coordinate.
         y (float): The y-coordinate.
-        likelihood (float): The likelihood of the coordinate.
+        likelihood (float): The likelihood/p-value of the coordinate.
     """
 
     def __init__(self, x_in: float, y_in: float, likelihood_in: float = None):

@@ -47,9 +47,6 @@ def launch_nbas():
     # ensure we now have an active project open
     assert active_project is not None
 
-    # initialize asyncio primary event loop
-    asyncio.ensure_future(active_project.exec_loop())
-    asyncio.get_event_loop().run_forever()
 
 
 def launch_args():
