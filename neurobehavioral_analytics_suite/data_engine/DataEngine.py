@@ -1,7 +1,7 @@
 """
-Data Engine for NeuroBehavioral Analytics Suite.
+A module for the NeuroBehavioral Analytics Suite's Data Engine.
 
-This module contains the DataEngine class which serves as the primary data handler for a project. It includes methods
+This module contains the DataEngine class, which serves as the primary data handler for a project. It includes methods
 for initializing the data engine, setting the data range, and executing the data engine.
 
 Author: Lane
@@ -97,4 +97,3 @@ class DataEngine:
         self.meta.start_index = start_frame
         self.meta.end_index = end_frame
         print(f"DataEngine: current data range set to {start_frame} : {end_frame}")
-

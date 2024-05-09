@@ -1,5 +1,5 @@
 """
-Module for launching the NeuroBehavioral Analytics Suite.
+A module for launching the NeuroBehavioral Analytics Suite.
 
 This module contains the main entry point for launching the NeuroBehavioral Analytics Suite. It includes functions
 for parsing command line arguments and launching the application.
@@ -18,9 +18,10 @@ import argparse
 import asyncio
 from neurobehavioral_analytics_suite.data_engine.project.new_project import new_project
 from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
+from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
 
 
-def launch_nbas():
+async def launch_nbas():
     """
     Launches the NeuroBehavioral Analytics Suite.
 
@@ -35,7 +36,7 @@ def launch_nbas():
     args, extra = launch_args().parse_known_args()
 
     # Checks args for -o '--open_project' flag.
-    # Exists: Open project from file
+    # If it exists, open the project from the file
     if args.open_project is None:
         print('New Project Parameters Detected - Creating New Project')
         active_project = new_project(args.directory, args.user_name, args.subject_name,
@@ -44,9 +45,11 @@ def launch_nbas():
         print('Project File Detected - Loading Project at: ' + args.open_project)
         active_project = load_project(args.open_project)
 
-    # ensure we now have an active project open
+    # Ensure we now have an active project open
     assert active_project is not None
 
+    operation_handler = OperationHandler()
+    await operation_handler.exec_loop()
 
 
 def launch_args():
