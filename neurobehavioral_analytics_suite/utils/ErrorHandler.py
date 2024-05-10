@@ -17,8 +17,6 @@ Status: Prototype
 import asyncio
 import logging
 
-from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
-
 
 class ErrorHandler:
     """
@@ -47,7 +45,7 @@ class ErrorHandler:
         console_handler.setFormatter(formatter)
         self.logger.addHandler(console_handler)
 
-    def handle_error(self, error, operation: Operation):
+    def handle_error(self, error, operation):
         """
         Handles an error that occurred during the execution of an operation.
 
@@ -58,6 +56,8 @@ class ErrorHandler:
             error (Exception): The error that occurred.
             operation (Operation): The operation during which the error occurred.
         """
+
+        from neurobehavioral_analytics_suite.operation_handler import Operation
 
         self.error = error
         self.logger.error(f"An error occurred during the execution of operation {operation}: {error}")

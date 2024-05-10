@@ -22,8 +22,8 @@ import nest_asyncio
 from neurobehavioral_analytics_suite.operation_handler.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
 from neurobehavioral_analytics_suite.operation_handler.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.operation_handler.ResourceMonitorOperation import ResourceMonitorOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
-from neurobehavioral_analytics_suite.utils.resource_monitor import resource_monitor
 from neurobehavioral_analytics_suite.operation_handler.OperationQueue import OperationQueue
 
 
@@ -50,12 +50,12 @@ class OperationHandler:
 
         self.error_handler = ErrorHandler()
         self.queue = OperationQueue()
-        self.console = ConsoleOperation(ErrorHandler())
-        self.monitor = resource_monitor(ErrorHandler())
+        self.console = ConsoleOperation(self.error_handler, self)
+        self.monitor = ResourceMonitorOperation(self.error_handler)
 
         nest_asyncio.apply()
         self.main_loop = asyncio.get_event_loop()
-        self.queue.add_persistent_task(self.add_operation_from_input())
+        self.queue.add_persistent_task(self.console)
         self.queue.add_persistent_task(self.monitor)
         asyncio.ensure_future(self.exec_loop())
 
@@ -75,11 +75,9 @@ class OperationHandler:
         Continuously gets user input from the console, creates a new CustomOperation based on the input, and adds it
         to the queue.
         """
-
-        while True:
-            input_line = await self.console.execute()
-            operation = CustomOperation(input_line, self.error_handler)
-            self.queue.add_operation(operation)
+        input_line = await self.console.execute()
+        operation = CustomOperation(input_line, self.error_handler)
+        self.queue.add_operation(operation)
 
     def stop_all_operations(self):
         """
@@ -129,6 +127,19 @@ class OperationHandler:
 
         return {operation: operation.status for operation in self.queue.queue}
 
+    def process_user_input(self, user_input):
+        """
+        Processes user input as an operation.
+
+        This method creates a new operation with the user input and adds it to the queue.
+
+        Args:
+            user_input (str): The user input to process.
+        """
+
+        operation = CustomOperation(user_input, self.error_handler)
+        self.add_custom_operation(operation)
+
     async def exec_loop(self):
         """
         Executes the main loop of the operation manager.
@@ -147,12 +158,15 @@ class OperationHandler:
                     for task in list(done):
                         try:
                             result = task.result()
-                            print(f"Task completed with result: {result}")
+                            if self.queue.contains(operation):
+                                self.queue.remove_operation(operation)
+                                print(f"Task completed with result: {result}")
                         except Exception as e:
                             self.error_handler.handle_error(e, task)
                             done.remove(task)
-                    self.queue.remove_operation(operation)
                 except Exception as e:
                     self.error_handler.handle_error(e, task)
             else:
-                await asyncio.sleep(.5)
+                # If there are no more operations in the queue, wait for a new operation to be added
+                await self.add_operation_from_input()
+                await asyncio.sleep(.25)

@@ -186,3 +186,24 @@ class OperationQueue:
 
         self.queue.clear()
         self.persistent_tasks.clear()
+
+    def contains(self, operation):
+        """
+        Checks if an operation is in the queue.
+
+        Args:
+            operation (Operation): The operation to check.
+
+        Returns:
+            bool: True if the operation is in the queue, False otherwise.
+        """
+        return operation in self.queue
+
+    def has_pending_operations(self):
+        """
+        Checks if there are any pending operations in the queue.
+
+        Returns:
+            bool: True if there are pending operations, False otherwise.
+        """
+        return any(operation.status == "pending" for operation in self.queue)

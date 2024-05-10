@@ -35,3 +35,10 @@ class BaseOperation(ABC):
         This method should be implemented by any concrete class that inherits from this base class.
         """
         pass
+
+    async def start(self):
+        """
+        Starts the operation.
+        """
+
+        await self.execute()

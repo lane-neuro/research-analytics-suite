@@ -13,7 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
+import asyncio
 import logging
 from aioconsole import ainput
 from neurobehavioral_analytics_suite.operation_handler.CustomOperation import CustomOperation
@@ -32,7 +32,7 @@ class ConsoleOperation(CustomOperation):
         logger (logging.Logger): A logger instance used for logging information.
     """
 
-    def __init__(self, error_handler: ErrorHandler, prompt: str = '->> ', data=None):
+    def __init__(self, error_handler: ErrorHandler, operation_handler, prompt: str = '->> ', data=None):
         """
         Initializes the ConsoleOperation with a prompt for user input and the data to be processed.
 
@@ -43,9 +43,12 @@ class ConsoleOperation(CustomOperation):
         """
 
         super().__init__(data, error_handler)
+        self.operation_handler = operation_handler
         self.error_handler = error_handler
         self.prompt = prompt
         self.logger = logging.getLogger(__name__)
+        self.task = None
+        self.status = "idle"
 
     async def execute(self):
         """
@@ -60,3 +63,23 @@ class ConsoleOperation(CustomOperation):
         line = await ainput(self.prompt)
         self.logger.info(f"User input: {line}")
         return line
+
+    async def start(self):
+        """
+        Starts the operation.
+        """
+
+        try:
+            user_input = await self.execute()
+            self.operation_handler.process_user_input(user_input)
+        except asyncio.CancelledError:
+            pass
+
+    def stop(self):
+        """Stops the operation and handles any exceptions that occur during execution."""
+
+        try:
+            if self.task:
+                self.task.cancel()
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
