@@ -15,6 +15,8 @@ Status: Prototype
 """
 
 import asyncio
+from abc import abstractmethod
+
 from neurobehavioral_analytics_suite.operation_handler.BaseOperation import BaseOperation
 from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
@@ -45,16 +47,21 @@ class CustomOperation(BaseOperation):
         self.data = data
         self.error_handler = error_handler
         self.operation = None
+        self.task = None
+        self.persistent = False
+        self.complete = False
 
     async def execute(self):
         """
-        Prints the data and simulates a long-running operation by sleeping for 50 ms.
+        Prints the data.
 
         This is a placeholder implementation and should be replaced with actual data processing code.
         """
 
         print(f"Processing data: {self.data}")
-        await asyncio.sleep(.5)
+        self.operation.complete = True
+        self.complete = True
+        return self.data
 
     async def start(self):
         """
@@ -62,7 +69,8 @@ class CustomOperation(BaseOperation):
         """
 
         self.operation = Operation(self)
-        await self.operation.start()
+        if self.operation is not None:
+            await self.operation.execute()
 
     def stop(self):
         """
@@ -72,3 +80,74 @@ class CustomOperation(BaseOperation):
         if self.operation is not None:
             self.operation.stop()
             self.operation = None
+
+    def pause(self):
+        """
+        Pauses the operation by pausing the operation.
+        """
+
+        if self.operation is not None:
+            self.operation.pause()
+
+    def resume(self):
+        """
+        Resumes the operation by resuming the operation.
+        """
+
+        if self.operation is not None:
+            self.operation.resume()
+
+    def get_status(self):
+        """
+        Returns the status of the operation.
+
+        Returns:
+            str: The status of the operation.
+        """
+
+        if self.operation is not None:
+            return self.operation.get_status()
+        return "idle"
+
+    def reset(self):
+        """
+        Resets the operation by resetting the operation.
+        """
+
+        if self.operation is not None:
+            self.operation.reset()
+            self.operation = None
+
+    def status(self):
+        """
+        Returns the status of the operation.
+
+        Returns:
+            str: The status of the operation.
+        """
+
+        return self.get_status()
+
+    def progress(self):
+        """
+        Returns the progress of the operation.
+
+        Returns:
+            int: The progress of the operation.
+        """
+
+        if self.operation is not None:
+            return self.operation.progress()
+        return 0
+
+    def is_completed(self):
+        """
+        Checks if the operation is complete.
+
+        Returns:
+            bool: True if the operation is complete, False otherwise.
+        """
+
+        if self.operation is not None:
+            return self.complete
+        return False

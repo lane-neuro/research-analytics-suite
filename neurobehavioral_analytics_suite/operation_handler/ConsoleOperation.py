@@ -15,7 +15,10 @@ Status: Prototype
 """
 import asyncio
 import logging
-from aioconsole import ainput
+import queue
+import sys
+import threading
+
 from neurobehavioral_analytics_suite.operation_handler.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.utils import ErrorHandler
 
@@ -32,7 +35,7 @@ class ConsoleOperation(CustomOperation):
         logger (logging.Logger): A logger instance used for logging information.
     """
 
-    def __init__(self, error_handler: ErrorHandler, operation_handler, prompt: str = '->> ', data=None):
+    def __init__(self, error_handler: ErrorHandler, operation_handler, loop, prompt: str = '->> ', data=None):
         """
         Initializes the ConsoleOperation with a prompt for user input and the data to be processed.
 
@@ -43,26 +46,33 @@ class ConsoleOperation(CustomOperation):
         """
 
         super().__init__(data, error_handler)
+        self.complete = False
         self.operation_handler = operation_handler
         self.error_handler = error_handler
         self.prompt = prompt
         self.logger = logging.getLogger(__name__)
         self.task = None
         self.status = "idle"
+        self.persistent = True
+        self.loop = loop
+        self.input_queue = queue.Queue()
+        self.input_thread = threading.Thread(target=self.read_input)
+        self.input_thread.start()
+
+    def read_input(self):
+        while True:
+            try:
+                line = sys.stdin.readline()
+                self.input_queue.put(line)
+            except UnicodeDecodeError:
+                pass
 
     async def execute(self):
-        """
-        Handles user-input data from the console.
-
-        This method is responsible for asynchronously waiting for user input from the console & returns the input data.
-
-        Returns:
-            str: User-input data from the console.
-        """
-
-        line = await ainput(self.prompt)
-        self.logger.info(f"User input: {line}")
-        return line
+        while not self.input_queue.empty():
+            user_input = self.input_queue.get()
+            user_input = user_input.strip()  # strip newline
+            response = self.operation_handler.process_user_input(user_input)
+            return response
 
     async def start(self):
         """
@@ -70,8 +80,9 @@ class ConsoleOperation(CustomOperation):
         """
 
         try:
-            user_input = await self.execute()
-            self.operation_handler.process_user_input(user_input)
+            self.task = asyncio.ensure_future(self.execute())
+            response = await self.task
+            return response
         except asyncio.CancelledError:
             pass
 

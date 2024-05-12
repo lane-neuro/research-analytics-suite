@@ -26,7 +26,8 @@ def main():
     """
 
     print('Starting NeuroBehavioral Analytics Suite v0.0.0.1')
-    asyncio.run(launch_nbas())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(launch_nbas())
 
 
 if __name__ == '__main__':

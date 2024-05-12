@@ -21,14 +21,11 @@ class BaseOperation(ABC):
     """
     An abstract base class that defines a common interface for all operations.
 
-    This class requires that any child class implement the execute method.
-
-    Methods:
-        execute: An abstract method that will execute the operation.
+    This class requires that any child class implement the execute, start, pause, stop, and resume methods.
     """
 
     @abstractmethod
-    def execute(self):
+    async def execute(self):
         """
         An abstract method that will execute the operation.
 
@@ -36,9 +33,65 @@ class BaseOperation(ABC):
         """
         pass
 
+    @abstractmethod
     async def start(self):
         """
-        Starts the operation.
-        """
+        An abstract method that will start the operation.
 
-        await self.execute()
+        This method should be implemented by any concrete class that inherits from this base class.
+        """
+        pass
+
+    @abstractmethod
+    async def pause(self):
+        """
+        An abstract method that will pause the operation.
+
+        This method should be implemented by any concrete class that inherits from this base class.
+        """
+        pass
+
+    @abstractmethod
+    async def stop(self):
+        """
+        An abstract method that will stop the operation.
+
+        This method should be implemented by any concrete class that inherits from this base class.
+        """
+        pass
+
+    @abstractmethod
+    async def resume(self):
+        """
+        An abstract method that will resume the operation.
+
+        This method should be implemented by any concrete class that inherits from this base class.
+        """
+        pass
+
+    @abstractmethod
+    async def reset(self):
+        """
+        An abstract method that will reset the operation.
+
+        This method should be implemented by any concrete class that inherits from this base class.
+        """
+        pass
+
+    @abstractmethod
+    def status(self):
+        """
+        An abstract method that will return the current status of the operation.
+
+        This method should be implemented by any concrete class that inherits from this base class.
+        """
+        pass
+
+    @abstractmethod
+    def progress(self):
+        """
+        An abstract method that will return the current progress of the operation.
+
+        This method should be implemented by any concrete class that inherits from this base class.
+        """
+        pass

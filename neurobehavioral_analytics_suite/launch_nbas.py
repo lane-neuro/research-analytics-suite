@@ -49,7 +49,7 @@ async def launch_nbas():
     assert active_project is not None
 
     operation_handler = OperationHandler()
-    await operation_handler.exec_loop()
+    await operation_handler.start()
 
 
 def launch_args():

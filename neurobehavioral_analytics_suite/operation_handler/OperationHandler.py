@@ -50,14 +50,13 @@ class OperationHandler:
 
         self.error_handler = ErrorHandler()
         self.queue = OperationQueue()
-        self.console = ConsoleOperation(self.error_handler, self)
+        self.console = None
         self.monitor = ResourceMonitorOperation(self.error_handler)
 
         nest_asyncio.apply()
         self.main_loop = asyncio.get_event_loop()
-        self.queue.add_persistent_task(self.console)
+        self.main_loop.create_task(self.exec_loop())
         self.queue.add_persistent_task(self.monitor)
-        asyncio.ensure_future(self.exec_loop())
 
     def add_custom_operation(self, data):
         """
@@ -77,7 +76,35 @@ class OperationHandler:
         """
         input_line = await self.console.execute()
         operation = CustomOperation(input_line, self.error_handler)
-        self.queue.add_operation(operation)
+        self.add_custom_operation(operation)
+
+    def process_user_input(self, user_input) -> str:
+        """
+        Processes user input from the console.
+
+        This method takes user input from the console and processes it. It can be extended to include additional
+        functionality as needed.
+
+        Args:
+            user_input (str): The user input to process.
+
+        Returns:
+            str: The response to the user input.
+        """
+
+        if user_input == "stop":
+            self.stop_all_operations()
+            return "Stopping all operations..."
+        elif user_input == "pause":
+            self.pause_all_operations()
+            return "Pausing all operations..."
+        elif user_input == "resume":
+            self.resume_all_operations()
+            return "Resuming all operations..."
+        else:
+            print(f"Adding custom operation with data: {user_input}")
+            self.add_custom_operation(user_input)
+            return f"Added custom operation with data: {user_input}"
 
     def stop_all_operations(self):
         """
@@ -85,7 +112,17 @@ class OperationHandler:
         """
 
         for operation in self.queue.queue:
-            operation.stop()
+            self.stop_operation(operation)
+
+    def stop_operation(self, operation):
+        """
+        Stops a specific operation.
+
+        Args:
+            operation (Operation): The operation to stop.
+        """
+
+        operation.stop()
 
     def pause_all_operations(self):
         """
@@ -104,7 +141,7 @@ class OperationHandler:
             if operation.status == "paused":
                 operation.resume()
 
-    def get_operation_status(self, operation):
+    def get_operation_status(self, operation) -> str:
         """
         Returns the status of a specific operation.
 
@@ -127,46 +164,30 @@ class OperationHandler:
 
         return {operation: operation.status for operation in self.queue.queue}
 
-    def process_user_input(self, user_input):
+    def start(self):
         """
-        Processes user input as an operation.
-
-        This method creates a new operation with the user input and adds it to the queue.
-
-        Args:
-            user_input (str): The user input to process.
+        Starts the operation handler.
         """
 
-        operation = CustomOperation(user_input, self.error_handler)
-        self.add_custom_operation(operation)
+        asyncio.get_event_loop().run_forever()
 
     async def exec_loop(self):
         """
         Executes the main loop of the operation manager.
-
-        This method sets up the asyncio event loop and continuously monitors for tasks. It waits for user input from
-        the console and executes the input as a command. If an exception occurs during the execution of the command,
-        it is caught and printed to the console. This method runs indefinitely until the program is stopped.
         """
 
+        print("Starting exec_loop")  # Add logging
+
         while True:
+            #print("In exec_loop")  # Add logging
+
+            if self.queue.console is None or not isinstance(self.queue.console,
+                                                            ConsoleOperation) or self.queue.console.complete:
+                print("Starting ConsoleOperation")  # Add logging
+                self.queue.add_console_operation(self.main_loop)
+
             if not self.queue.is_empty():
-                operation = self.queue.get_operation(0)
-                task = operation.start()
-                try:
-                    done, pending = await asyncio.wait([task], return_when=asyncio.FIRST_COMPLETED)
-                    for task in list(done):
-                        try:
-                            result = task.result()
-                            if self.queue.contains(operation):
-                                self.queue.remove_operation(operation)
-                                print(f"Task completed with result: {result}")
-                        except Exception as e:
-                            self.error_handler.handle_error(e, task)
-                            done.remove(task)
-                except Exception as e:
-                    self.error_handler.handle_error(e, task)
-            else:
-                # If there are no more operations in the queue, wait for a new operation to be added
-                await self.add_operation_from_input()
-                await asyncio.sleep(.25)
+                print("Executing all operations")  # Add logging
+                await self.queue.execute_all()
+
+            await asyncio.sleep(.25)

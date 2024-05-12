@@ -22,12 +22,12 @@ Status: Prototype
 
 import asyncio
 
-from neurobehavioral_analytics_suite.operation_handler import BaseOperation
+from neurobehavioral_analytics_suite.operation_handler.BaseOperation import BaseOperation
 from neurobehavioral_analytics_suite.operation_handler.SubOperation import SubOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
-class Operation (object):
+class Operation(BaseOperation):
     """
     Represents an operation that can be started, stopped, paused, resumed, and reset.
 
@@ -44,7 +44,8 @@ class Operation (object):
         sub_tasks (list): A list of asyncio.Future instances representing the sub-tasks of the operation.
     """
 
-    def __init__(self, operation: BaseOperation, error_handler: ErrorHandler=ErrorHandler(), persistent: bool = False):
+    def __init__(self, operation: BaseOperation, error_handler: ErrorHandler = ErrorHandler(),
+                 persistent: bool = False):
         """Initializes Operation with the operation to be managed and whether it should run indefinitely.
 
         Args:
@@ -123,9 +124,8 @@ class Operation (object):
         """Starts the operation and handles any exceptions that occur during execution."""
         try:
             self.status = "running"
-            await self.operation.execute()
             for task in self.sub_tasks:
-                task.start()
+                await task.start()
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"
@@ -209,6 +209,15 @@ class Operation (object):
         """
         return self.status
 
+    @property
+    def status(self):
+        """Returns the current status of the operation.
+
+        Returns:
+            str: The current status of the operation.
+        """
+        return self.get_status()
+
     def on_complete(self):
         """Method to be called when the operation is complete.
 
@@ -216,3 +225,15 @@ class Operation (object):
         """
         self.complete = True
         self.status = "complete"
+
+    def is_completed(self):
+        """Checks if the operation is complete.
+
+        Returns:
+            bool: True if the operation is complete, False otherwise.
+        """
+        return self.complete
+
+    @status.setter
+    def status(self, value):
+        self._status = value

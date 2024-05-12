@@ -20,6 +20,9 @@ import nest_asyncio
 from dask.distributed import Client
 from collections import deque
 
+from neurobehavioral_analytics_suite.operation_handler.BaseOperation import BaseOperation
+from neurobehavioral_analytics_suite.operation_handler.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
@@ -48,10 +51,11 @@ class OperationQueue:
 
         self.queue = deque()
         self.error_handler = error_handler
+        self.console = None
         self.persistent_tasks = []
         self.client = Client()
 
-    def add_operation(self, operation):
+    def add_operation(self, operation: BaseOperation):
         """
         Adds an Operation instance to the queue.
 
@@ -60,6 +64,13 @@ class OperationQueue:
         """
 
         self.queue.append(operation)
+
+    def add_console_operation(self, event_loop: asyncio.AbstractEventLoop):
+        """
+        Adds a ConsoleOperation instance to the persistent tasks list.
+        """
+        self.console = ConsoleOperation(self.error_handler, self, event_loop)
+        self.add_persistent_task(self.console)
 
     def add_persistent_task(self, task):
         """
@@ -87,11 +98,13 @@ class OperationQueue:
         non_persistent_tasks = [operation.execute() for operation in self.queue if not operation.persistent]
         persistent_tasks = [task.execute() for task in self.persistent_tasks]
         try:
-            await asyncio.gather(*non_persistent_tasks, *persistent_tasks)
+            for task in non_persistent_tasks + persistent_tasks:
+                await asyncio.get_event_loop().create_task(task)
         except Exception as e:
             self.error_handler.handle_error(e, self)
         for operation in non_persistent_tasks:
-            self.queue.remove(operation)
+            if operation in self.queue:
+                self.queue.remove(operation)
 
     async def execute_operation(self, operation):
         """
@@ -125,7 +138,7 @@ class OperationQueue:
 
         self.persistent_tasks.remove(task)
 
-    def get_operation(self, index):
+    def get_operation(self, index) -> Operation:
         """
         Returns a specific Operation instance from the queue based on its index.
 
@@ -137,6 +150,22 @@ class OperationQueue:
         """
 
         return self.queue[index]
+
+    def get_operation_by_task(self, task):
+        """
+        Returns the Operation instance associated with a specific task.
+
+        Args:
+            task (asyncio.Task): The task to find the associated Operation instance for.
+
+        Returns:
+            Operation: The Operation instance associated with the task.
+        """
+
+        for operation in self.queue:
+            if operation.task == task:
+                return operation
+        return None
 
     def insert_operation(self, index, operation):
         """
