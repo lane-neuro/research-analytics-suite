@@ -15,6 +15,7 @@ Status: Prototype
 """
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 
 class BaseOperation(ABC):
@@ -24,8 +25,13 @@ class BaseOperation(ABC):
     This class requires that any child class implement the execute, start, pause, stop, and resume methods.
     """
 
+    def __init__(self) -> None:
+        self.task = None
+        self.status = "idle"
+        self.name = "BaseOperation"
+
     @abstractmethod
-    async def execute(self):
+    async def execute(self) -> Any:
         """
         An abstract method that will execute the operation.
 
@@ -34,7 +40,7 @@ class BaseOperation(ABC):
         pass
 
     @abstractmethod
-    async def start(self):
+    async def start(self) -> None:
         """
         An abstract method that will start the operation.
 
@@ -43,7 +49,7 @@ class BaseOperation(ABC):
         pass
 
     @abstractmethod
-    async def pause(self):
+    async def pause(self) -> None:
         """
         An abstract method that will pause the operation.
 
@@ -52,7 +58,7 @@ class BaseOperation(ABC):
         pass
 
     @abstractmethod
-    async def stop(self):
+    async def stop(self) -> None:
         """
         An abstract method that will stop the operation.
 
@@ -61,7 +67,7 @@ class BaseOperation(ABC):
         pass
 
     @abstractmethod
-    async def resume(self):
+    async def resume(self) -> None:
         """
         An abstract method that will resume the operation.
 
@@ -70,7 +76,7 @@ class BaseOperation(ABC):
         pass
 
     @abstractmethod
-    async def reset(self):
+    async def reset(self) -> None:
         """
         An abstract method that will reset the operation.
 
@@ -79,19 +85,13 @@ class BaseOperation(ABC):
         pass
 
     @abstractmethod
-    def status(self):
-        """
-        An abstract method that will return the current status of the operation.
-
-        This method should be implemented by any concrete class that inherits from this base class.
-        """
-        pass
-
-    @abstractmethod
-    def progress(self):
+    def progress(self) -> int:
         """
         An abstract method that will return the current progress of the operation.
 
         This method should be implemented by any concrete class that inherits from this base class.
+
+        Returns:
+            int: The current progress of the operation.
         """
         pass

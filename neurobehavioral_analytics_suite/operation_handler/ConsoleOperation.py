@@ -52,6 +52,7 @@ class ConsoleOperation(CustomOperation):
         self.prompt = prompt
         self.logger = logging.getLogger(__name__)
         self.task = None
+        self.name = "ConsoleOperation"
         self.status = "idle"
         self.persistent = True
         self.loop = loop
@@ -59,41 +60,35 @@ class ConsoleOperation(CustomOperation):
         self.input_thread = threading.Thread(target=self.read_input)
         self.input_thread.start()
 
-    def read_input(self):
+    def read_input(self) -> None:
+        """Reads user input in a separate thread and adds it to the input queue."""
         while True:
             try:
                 line = sys.stdin.readline()
                 self.input_queue.put(line)
-            except UnicodeDecodeError:
-                pass
+            except UnicodeDecodeError as e:
+                self.error_handler.handle_error(e, self)
 
-    async def execute(self):
+    async def execute(self) -> None:
+        """Processes user input and sends it to the operation handler."""
         while not self.input_queue.empty():
-            user_input = self.input_queue.get()
-            user_input = user_input.strip()  # strip newline
-            print("Received user input: " + user_input)
+            user_input = self.input_queue.get().strip()  # strip newline
+            self.logger.info(f"ConsoleOperation.execute: Received user input: {user_input}")
             response = await self.operation_handler.process_user_input(user_input)
-            print("Response: " + response)
-            return response
+            self.logger.info(f"ConsoleOperation.execute: {response}")
 
-    async def start(self):
+    async def start(self) -> None:
         """
         Starts the operation.
         """
-
-        print("ConsoleOperation.start called")  # Debugging print statement
-
+        self.logger.info("ConsoleOperation.start: [START]")  # Debugging print statement
         try:
-            self.task = asyncio.ensure_future(self.execute())
-            response = await self.task
-            print("ConsoleOperation.start completed")  # Debugging print statement
-            return response
-        except asyncio.CancelledError:
-            pass
+            self.status = "running"  # Update the status of the operation
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stops the operation and handles any exceptions that occur during execution."""
-
         try:
             if self.task:
                 self.task.cancel()

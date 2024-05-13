@@ -39,13 +39,15 @@ class SubOperation:
         task (asyncio.Task): An asyncio.Task instance representing the running sub-operation.
     """
 
-    def __init__(self, func, error_handler: ErrorHandler = ErrorHandler(), persistent: bool = False):
+    def __init__(self, func, name: str = "SubOperation",
+                 error_handler: ErrorHandler = ErrorHandler(), persistent: bool = False):
         """
         Initializes the SubOperation with a callable function, an ErrorHandler instance, and a boolean indicating
         whether the sub-operation should run indefinitely.
 
         Args:
             func (callable): A callable representing the sub-operation to be performed.
+            name (str): A string representing the name of the sub-operation.
             error_handler (ErrorHandler): An ErrorHandler instance to handle any exceptions that occur.
             persistent (bool): A boolean indicating whether the sub-operation should run indefinitely.
         """
@@ -54,6 +56,7 @@ class SubOperation:
         self.error_handler = error_handler
         self.persistent = persistent
         self.task = None
+        self.name = name
 
     async def start(self):
         """
@@ -64,7 +67,7 @@ class SubOperation:
         """
 
         try:
-            self.task = asyncio.create_task(self.func())
+            self.task = asyncio.create_task(self.start())
             return await self.task
         except Exception as e:
             self.error_handler.handle_error(e, self)

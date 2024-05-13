@@ -60,15 +60,16 @@ class OperationHandler:
         self.queue.add_console_operation(self.console)
         self.main_loop.create_task(self.exec_loop())
 
-    def add_custom_operation(self, data):
+    def add_custom_operation(self, data, name: str = "CustomOperation"):
         """
         Creates a new CustomOperation and adds it to the queue.
 
         Args:
             data: The data to be processed by the CustomOperation.
+            name: The name of the CustomOperation.
         """
 
-        operation = CustomOperation(data, self.error_handler)
+        operation = CustomOperation(data, self.error_handler, name)
         self.queue.add_operation(operation)
 
     async def process_user_input(self, user_input) -> str:
@@ -87,17 +88,17 @@ class OperationHandler:
 
         if user_input == "stop":
             self.stop_all_operations()
-            return "Stopping all operations..."
+            return "OperationHandler.process_user_input: Stopping all operations..."
         elif user_input == "pause":
             self.pause_all_operations()
-            return "Pausing all operations..."
+            return "OperationHandler.process_user_input: Pausing all operations..."
         elif user_input == "resume":
             self.resume_all_operations()
-            return "Resuming all operations..."
+            return "OperationHandler.process_user_input: Resuming all operations..."
         else:
-            print(f"Adding custom operation with data: {user_input}")
-            self.add_custom_operation(user_input)
-            return f"Added custom operation with data: {user_input}"
+            print(f"OperationHandler.process_user_input: Adding custom operation with data: {user_input}")
+            self.add_custom_operation(user_input, "ConsoleInput")
+            return f"OperationHandler.process_user_input: Added custom operation with data: {user_input}"
 
     def stop_all_operations(self):
         """
@@ -161,7 +162,6 @@ class OperationHandler:
         """
         Starts the operation handler.
         """
-
         asyncio.get_event_loop().run_forever()
 
     async def exec_loop(self):
@@ -172,13 +172,19 @@ class OperationHandler:
         print("Starting exec_loop")  # Add logging
 
         while True:
-            #print("In exec_loop")  # Add logging
+            try:
+                if not self.queue.is_empty():
+                    print("exec_loop: Executing all operations")  # Add logging
+                    await self.queue.start_operations()
+                    await asyncio.gather(
+                        self.queue.execute_all(),
+                        self.queue.handle_tasks(),
+                    )
+                else:
+                    print("exec_loop: Queue is empty. Waiting for new operations...")  # Add logging
 
-            if not self.queue.is_empty():
-                # print("Executing all operations")  # Add logging
-                await asyncio.gather(
-                    self.queue.execute_all(),
-                    self.queue.handle_tasks(),
-                )
+            except Exception as e:
+                self.error_handler.handle_error(e, "exec_loop")
+                # break  # Exit the loop in case of an error
 
-            await asyncio.sleep(.25)
+            await asyncio.sleep(.5)

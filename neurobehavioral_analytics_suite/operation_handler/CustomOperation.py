@@ -14,9 +14,6 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-import asyncio
-from abc import abstractmethod
-
 from neurobehavioral_analytics_suite.operation_handler.BaseOperation import BaseOperation
 from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
@@ -34,7 +31,7 @@ class CustomOperation(BaseOperation):
         operation (Operation): The operation associated with the task.
     """
 
-    def __init__(self, data, error_handler: ErrorHandler):
+    def __init__(self, data, error_handler: ErrorHandler, name: str = "CustomOperation"):
         """
         Initializes the CustomOperation with the data to be processed and an ErrorHandler instance.
 
@@ -46,19 +43,20 @@ class CustomOperation(BaseOperation):
         super().__init__()
         self.data = data
         self.error_handler = error_handler
-        self.operation = None
+        self.operation = Operation(self)
         self.task = None
         self.persistent = False
         self.complete = False
+        self.name = name
 
-    async def execute(self):
+    async def execute(self) -> str:
         """
         Prints the data.
 
         This is a placeholder implementation and should be replaced with actual data processing code.
         """
 
-        print("CustomOperation.execute called")  # Debugging print statement
+        print(f"CustomOperation.execute: Entered w/ {self.task.get_name()}")  # Debugging print statement
 
         try:
             # Your task execution code here
@@ -72,55 +70,53 @@ class CustomOperation(BaseOperation):
                 self.operation.complete = True
 
         except Exception as e:
-            # Handle any exceptions that might occur during task execution
-            print(f"An error occurred: {e}")
+            self.error_handler.handle_error(e, self)
 
-        print(f"CustomOperation.execute completed: task: {self.task.done()}")  # Debugging print statement
-        return self.data
+        print(f"CustomOperation.execute: returning: {self.task.get_name()}")  # Debugging print statement
+        return self.data  # Return a result instead of a task
 
-    async def start(self):
+    async def start(self) -> None:
         """
         Starts the operation and assigns the operation to the operation attribute.
         """
 
         # Check if the operation has already been started
-        if self.operation is not None:
-            print(f"Operation: {self.data} has already been started")
+        if self.operation is not None and self.task and not self.task.done():
+            print(f"CustomOperation.start: [ALREADY RUNNING] {self.task.get_name()}")
             return
 
-        print(f"Starting operation: {self.data}")
+        print(f"CustomOperation.start: Starting operation: {self.data} --- {self.task.get_name()}")
         self.operation = Operation(self)
         if self.operation is not None:
-            self.task = await self.operation.start()
-            return self.task
+            self.task = self.operation.start()
 
-    async def stop(self):
+    async def stop(self) -> None:
         """
         Stops the operation by stopping the operation.
         """
 
         if self.operation is not None:
-            self.operation.stop()
+            await self.operation.stop()
             self.operation = None
             self.task = None
 
-    async def pause(self):
+    async def pause(self) -> None:
         """
         Pauses the operation by pausing the operation.
         """
 
         if self.operation is not None and self.task and not self.task.done():
-            self.operation.pause()
+            await self.operation.pause()
 
-    async def resume(self):
+    async def resume(self) -> None:
         """
         Resumes the operation by resuming the operation.
         """
 
         if self.operation is not None and self.task and self.task.done():
-            self.operation.resume()
+            await self.operation.resume()
 
-    def get_status(self):
+    def get_status(self) -> str:
         """
         Returns the status of the operation.
 
@@ -132,27 +128,17 @@ class CustomOperation(BaseOperation):
             return self.operation.get_status()
         return "idle"
 
-    async def reset(self):
+    async def reset(self) -> None:
         """
         Resets the operation by resetting the operation.
         """
 
         if self.operation is not None and self.task and not self.task.done():
-            self.operation.reset()
+            await self.operation.reset()
             self.operation = None
-            self.task = None  # Change here
+            self.task = None
 
-    def status(self):
-        """
-        Returns the status of the operation.
-
-        Returns:
-            str: The status of the operation.
-        """
-
-        return self.get_status()
-
-    def progress(self):
+    def progress(self) -> int:
         """
         Returns the progress of the operation.
 
@@ -164,7 +150,7 @@ class CustomOperation(BaseOperation):
             return self.operation.progress()
         return 0
 
-    def is_completed(self):
+    def is_completed(self) -> bool:
         """
         Checks if the operation is complete.
 

@@ -44,7 +44,7 @@ class Operation(BaseOperation):
         sub_tasks (list): A list of asyncio.Future instances representing the sub-tasks of the operation.
     """
 
-    def __init__(self, operation: BaseOperation, error_handler: ErrorHandler = ErrorHandler(),
+    def __init__(self, operation: BaseOperation, name: str = "Operation", error_handler: ErrorHandler = ErrorHandler(),
                  persistent: bool = False):
         """Initializes Operation with the operation to be managed and whether it should run indefinitely.
 
@@ -53,17 +53,19 @@ class Operation(BaseOperation):
             error_handler: An instance of ErrorHandler to handle any exceptions that occur.
             persistent: A boolean indicating whether the operation should run indefinitely.
         """
+        super().__init__()
         self.task = None
         self.operation = operation
         self.error_handler = error_handler
         self.persistent = persistent
         self.sub_tasks = []
 
+        self.name = name
         self.status = "idle"
         self.complete = False
         self.progress = 0
 
-        self.update_progress_operation = SubOperation(self.update_progress, ErrorHandler(), True)
+        self.update_progress_operation = SubOperation(self.update_progress, self.error_handler, True)
         self.check_for_errors_operation = SubOperation(self.check_for_errors, ErrorHandler(), True)
 
         self.add_sub_operation(self.update_progress_operation)
@@ -118,7 +120,7 @@ class Operation(BaseOperation):
         try:
             print("Operation: execute")
             if self.complete:
-                print("Operation already complete")
+                print("Operation.execute: Operation already complete")
                 return
 
             response = await self.operation.execute()
@@ -131,13 +133,13 @@ class Operation(BaseOperation):
     async def start(self):
         """Starts the operation and handles any exceptions that occur during execution."""
         try:
-            print("Operation: start")
+            print("Operation.start: start")
             self.status = "running"
             for task in self.sub_tasks:
-                print("Starting sub-task: ", task)
+                print(f"Operation.start: [START] (Sub-Task) {task.get_name()}")
                 await task.start()
             await self.operation.start()
-            return await self.execute()
+            # return await self.execute()
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"

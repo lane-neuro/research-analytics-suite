@@ -41,27 +41,16 @@ class ResourceMonitorOperation(BaseOperation):
         self.persistent = True
         self.error_handler = error_handler
         self.task = None
+        self.name = "ResourceMonitorOperation"
 
-    async def start(self):
+    async def start(self) -> None:
+        self.status = "running"
+
+    async def execute(self) -> None:
         """
         Asynchronously monitors the usage of CPU and memory.
-
-        This function runs indefinitely, checking the usage of CPU and memory every 500 milliseconds. If the usage of
-        either resource exceeds the specified thresholds, an error is handled by the `ErrorHandler`.
         """
 
-        self.task = asyncio.create_task(self.execute())
-
-    def status(self):
-        """
-        Returns the status of the operation.
-
-        Returns:
-            str: The status of the operation.
-        """
-        return "ResourceMonitorOperation - Running"
-
-    async def execute(self):
         while True:
             cpu_usage = psutil.cpu_percent()
             memory_usage = psutil.virtual_memory().percent
@@ -78,27 +67,27 @@ class ResourceMonitorOperation(BaseOperation):
 
             await asyncio.sleep(.5)
 
-    async def pause(self):
+    async def pause(self) -> None:
         if self.task:
             self.task.cancel()
             self.task = None
 
-    async def stop(self):
+    async def stop(self) -> None:
         if self.task:
             self.task.cancel()
             self.task = None
 
-    async def resume(self):
+    async def resume(self) -> None:
         if self.task is None:
             self.task = asyncio.create_task(self.execute())
 
-    async def reset(self):
+    async def reset(self) -> None:
         if self.task:
             self.task.cancel()
             self.task = None
         self.task = asyncio.create_task(self.execute())
 
-    def progress(self):
+    def progress(self) -> str:
         if self.task:
             return "ResourceMonitorOperation - Running"
         else:
