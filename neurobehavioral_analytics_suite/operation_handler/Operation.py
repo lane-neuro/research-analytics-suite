@@ -53,6 +53,7 @@ class Operation(BaseOperation):
             error_handler: An instance of ErrorHandler to handle any exceptions that occur.
             persistent: A boolean indicating whether the operation should run indefinitely.
         """
+        self.task = None
         self.operation = operation
         self.error_handler = error_handler
         self.persistent = persistent
@@ -107,15 +108,22 @@ class Operation(BaseOperation):
         while not self.complete:
             if self.error_handler.has_error:
                 for task in self.sub_tasks:
-                    task.stop()
-                self.stop()
+                    await task.stop()
+                await self.stop()
                 break
             await asyncio.sleep(1)
 
     async def execute(self):
         """Executes the operation."""
         try:
-            await self.operation.execute()
+            print("Operation: execute")
+            if self.complete:
+                print("Operation already complete")
+                return
+
+            response = await self.operation.execute()
+            print(response)
+            self.on_complete()
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"
@@ -123,46 +131,50 @@ class Operation(BaseOperation):
     async def start(self):
         """Starts the operation and handles any exceptions that occur during execution."""
         try:
+            print("Operation: start")
             self.status = "running"
             for task in self.sub_tasks:
+                print("Starting sub-task: ", task)
                 await task.start()
+            await self.operation.start()
+            return await self.execute()
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"
 
-    def stop(self):
+    async def stop(self):
         """Stops the operation and handles any exceptions that occur during execution."""
         try:
             self.status = "stopped"
             for task in self.sub_tasks:
-                task.stop()
+                await task.stop()
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"
 
-    def pause(self):
+    async def pause(self):
         """Pauses the operation and handles any exceptions that occur during execution."""
         try:
             self.status = "paused"
             self.pause_event.clear()
             for task in self.sub_tasks:
-                task.pause()
+                await task.pause()
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"
 
-    def resume(self):
+    async def resume(self):
         """Resumes the operation and handles any exceptions that occur during execution."""
         try:
             self.status = "running"
             self.pause_event.set()
             for task in self.sub_tasks:
-                task.resume()
+                await task.resume()
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"
 
-    def reset(self):
+    async def reset(self):
         """Resets the operation and handles any exceptions that occur during execution."""
         try:
             self.status = "idle"
@@ -170,9 +182,9 @@ class Operation(BaseOperation):
             self.complete = False
             self.pause_event.clear()
             for task in self.sub_tasks:
-                task.reset()
-            self.stop()
-            self.start()
+                await task.reset()
+            await self.stop()
+            await self.start()
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"
@@ -207,7 +219,7 @@ class Operation(BaseOperation):
         Returns:
             The current status of the operation.
         """
-        return self.status
+        return self._status
 
     @property
     def status(self):
@@ -224,6 +236,7 @@ class Operation(BaseOperation):
         This method can be overridden in subclasses to provide custom behavior when the operation is complete.
         """
         self.complete = True
+        self.progress = 100
         self.status = "complete"
 
     def is_completed(self):

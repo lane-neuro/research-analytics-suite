@@ -20,12 +20,13 @@ please refer to the project documentation: https://github.com/lane-neuro/neurobe
 import asyncio
 import psutil
 
-from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
+from neurobehavioral_analytics_suite.operation_handler.BaseOperation import BaseOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
-class ResourceMonitorOperation(Operation):
-    def __init__(self, error_handler: ErrorHandler, cpu_threshold=90, memory_threshold=90):
+class ResourceMonitorOperation(BaseOperation):
+
+    def __init__(self, error_handler: ErrorHandler, cpu_threshold=90, memory_threshold=95):
         """
         
     
@@ -34,12 +35,12 @@ class ResourceMonitorOperation(Operation):
             cpu_threshold (int, optional): The CPU usage threshold. Defaults to 90.
             memory_threshold (int, optional): The memory usage threshold. Defaults to 90.
         """
-        operation = Operation(self, error_handler)
-        super().__init__(operation, error_handler)
-
-        self.error_handler = error_handler
+        super().__init__()
         self.cpu_threshold = cpu_threshold
         self.memory_threshold = memory_threshold
+        self.persistent = True
+        self.error_handler = error_handler
+        self.task = None
 
     async def start(self):
         """
@@ -49,24 +50,7 @@ class ResourceMonitorOperation(Operation):
         either resource exceeds the specified thresholds, an error is handled by the `ErrorHandler`.
         """
 
-        while True:
-            cpu_usage = psutil.cpu_percent()
-            memory_usage = psutil.virtual_memory().percent
-
-            print(f"CPU Usage: {cpu_usage}%" + f"\nMemory Usage: {memory_usage}%")
-
-            # If CPU usage exceeds the threshold, handle the error
-            if cpu_usage > self.cpu_threshold:
-                self.error_handler.handle_error(Exception(f"CPU usage has exceeded {self.cpu_threshold}%: "
-                                                          f"current usage is {cpu_usage}%"), "resource_monitor")
-
-            # If memory usage exceeds the threshold, handle the error
-            if memory_usage > self.memory_threshold:
-                self.error_handler.handle_error(Exception(f"Memory usage has exceeded {self.memory_threshold}%: "
-                                                          f"current usage is {memory_usage}%"), "resource_monitor")
-
-            # Sleep for 500 milliseconds before checking again
-            await asyncio.sleep(.5)
+        self.task = asyncio.create_task(self.execute())
 
     def status(self):
         """
@@ -76,3 +60,46 @@ class ResourceMonitorOperation(Operation):
             str: The status of the operation.
         """
         return "ResourceMonitorOperation - Running"
+
+    async def execute(self):
+        while True:
+            cpu_usage = psutil.cpu_percent()
+            memory_usage = psutil.virtual_memory().percent
+
+            # print(f"CPU Usage: {cpu_usage}%" + f"\nMemory Usage: {memory_usage}%")
+
+            if cpu_usage > self.cpu_threshold:
+                self.error_handler.handle_error(Exception(f"CPU usage has exceeded {self.cpu_threshold}%: "
+                                                          f"current usage is {cpu_usage}%"), "resource_monitor")
+
+            if memory_usage > self.memory_threshold:
+                self.error_handler.handle_error(Exception(f"Memory usage has exceeded {self.memory_threshold}%: "
+                                                          f"current usage is {memory_usage}%"), "resource_monitor")
+
+            await asyncio.sleep(.5)
+
+    async def pause(self):
+        if self.task:
+            self.task.cancel()
+            self.task = None
+
+    async def stop(self):
+        if self.task:
+            self.task.cancel()
+            self.task = None
+
+    async def resume(self):
+        if self.task is None:
+            self.task = asyncio.create_task(self.execute())
+
+    async def reset(self):
+        if self.task:
+            self.task.cancel()
+            self.task = None
+        self.task = asyncio.create_task(self.execute())
+
+    def progress(self):
+        if self.task:
+            return "ResourceMonitorOperation - Running"
+        else:
+            return "ResourceMonitorOperation - Not Running"

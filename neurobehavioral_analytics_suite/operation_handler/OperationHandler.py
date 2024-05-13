@@ -48,15 +48,17 @@ class OperationHandler:
         It also sets up the asyncio event loop.
         """
 
-        self.error_handler = ErrorHandler()
-        self.queue = OperationQueue()
-        self.console = None
-        self.monitor = ResourceMonitorOperation(self.error_handler)
-
         nest_asyncio.apply()
         self.main_loop = asyncio.get_event_loop()
+        self.error_handler = ErrorHandler()
+        self.queue = OperationQueue()
+
+        self.console = ConsoleOperation(self.error_handler, self, self.main_loop)
+        self.monitor = ResourceMonitorOperation(self.error_handler)
+
+        self.queue.add_operation(self.monitor)
+        self.queue.add_console_operation(self.console)
         self.main_loop.create_task(self.exec_loop())
-        self.queue.add_persistent_task(self.monitor)
 
     def add_custom_operation(self, data):
         """
@@ -69,16 +71,7 @@ class OperationHandler:
         operation = CustomOperation(data, self.error_handler)
         self.queue.add_operation(operation)
 
-    async def add_operation_from_input(self):
-        """
-        Continuously gets user input from the console, creates a new CustomOperation based on the input, and adds it
-        to the queue.
-        """
-        input_line = await self.console.execute()
-        operation = CustomOperation(input_line, self.error_handler)
-        self.add_custom_operation(operation)
-
-    def process_user_input(self, user_input) -> str:
+    async def process_user_input(self, user_input) -> str:
         """
         Processes user input from the console.
 
@@ -164,7 +157,7 @@ class OperationHandler:
 
         return {operation: operation.status for operation in self.queue.queue}
 
-    def start(self):
+    async def start(self):
         """
         Starts the operation handler.
         """
@@ -181,13 +174,11 @@ class OperationHandler:
         while True:
             #print("In exec_loop")  # Add logging
 
-            if self.queue.console is None or not isinstance(self.queue.console,
-                                                            ConsoleOperation) or self.queue.console.complete:
-                print("Starting ConsoleOperation")  # Add logging
-                self.queue.add_console_operation(self.main_loop)
-
             if not self.queue.is_empty():
-                print("Executing all operations")  # Add logging
-                await self.queue.execute_all()
+                # print("Executing all operations")  # Add logging
+                await asyncio.gather(
+                    self.queue.execute_all(),
+                    self.queue.handle_tasks(),
+                )
 
             await asyncio.sleep(.25)

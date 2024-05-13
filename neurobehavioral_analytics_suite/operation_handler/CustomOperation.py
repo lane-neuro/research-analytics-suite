@@ -58,9 +58,24 @@ class CustomOperation(BaseOperation):
         This is a placeholder implementation and should be replaced with actual data processing code.
         """
 
-        print(f"Processing data: {self.data}")
-        self.operation.complete = True
-        self.complete = True
+        print("CustomOperation.execute called")  # Debugging print statement
+
+        try:
+            # Your task execution code here
+            print(f"Processing data: {self.data}")
+
+            # Mark the task as complete
+            self.complete = True
+
+            # If there's another operation linked to this one, mark it as complete too
+            if self.operation is not None:
+                self.operation.complete = True
+
+        except Exception as e:
+            # Handle any exceptions that might occur during task execution
+            print(f"An error occurred: {e}")
+
+        print(f"CustomOperation.execute completed: task: {self.task.done()}")  # Debugging print statement
         return self.data
 
     async def start(self):
@@ -68,11 +83,18 @@ class CustomOperation(BaseOperation):
         Starts the operation and assigns the operation to the operation attribute.
         """
 
+        # Check if the operation has already been started
+        if self.operation is not None:
+            print(f"Operation: {self.data} has already been started")
+            return
+
+        print(f"Starting operation: {self.data}")
         self.operation = Operation(self)
         if self.operation is not None:
-            await self.operation.execute()
+            self.task = await self.operation.start()
+            return self.task
 
-    def stop(self):
+    async def stop(self):
         """
         Stops the operation by stopping the operation.
         """
@@ -80,21 +102,22 @@ class CustomOperation(BaseOperation):
         if self.operation is not None:
             self.operation.stop()
             self.operation = None
+            self.task = None
 
-    def pause(self):
+    async def pause(self):
         """
         Pauses the operation by pausing the operation.
         """
 
-        if self.operation is not None:
+        if self.operation is not None and self.task and not self.task.done():
             self.operation.pause()
 
-    def resume(self):
+    async def resume(self):
         """
         Resumes the operation by resuming the operation.
         """
 
-        if self.operation is not None:
+        if self.operation is not None and self.task and self.task.done():
             self.operation.resume()
 
     def get_status(self):
@@ -109,14 +132,15 @@ class CustomOperation(BaseOperation):
             return self.operation.get_status()
         return "idle"
 
-    def reset(self):
+    async def reset(self):
         """
         Resets the operation by resetting the operation.
         """
 
-        if self.operation is not None:
+        if self.operation is not None and self.task and not self.task.done():
             self.operation.reset()
             self.operation = None
+            self.task = None  # Change here
 
     def status(self):
         """
@@ -148,6 +172,4 @@ class CustomOperation(BaseOperation):
             bool: True if the operation is complete, False otherwise.
         """
 
-        if self.operation is not None:
-            return self.complete
-        return False
+        return self.complete

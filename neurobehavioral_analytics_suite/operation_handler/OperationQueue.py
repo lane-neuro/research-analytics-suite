@@ -36,7 +36,6 @@ class OperationQueue:
     Attributes:
         queue (deque): A deque for storing Operation instances.
         error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
-        persistent_tasks (list): A list of tasks that are always running.
         client (Client): A Dask distributed client for executing tasks.
     """
 
@@ -50,9 +49,9 @@ class OperationQueue:
         """
 
         self.queue = deque()
+        self.tasks = []
         self.error_handler = error_handler
         self.console = None
-        self.persistent_tasks = []
         self.client = Client()
 
     def add_operation(self, operation: BaseOperation):
@@ -65,22 +64,12 @@ class OperationQueue:
 
         self.queue.append(operation)
 
-    def add_console_operation(self, event_loop: asyncio.AbstractEventLoop):
+    def add_console_operation(self, console: ConsoleOperation):
         """
-        Adds a ConsoleOperation instance to the persistent tasks list.
+        Adds a ConsoleOperation instance to the tasks list.
         """
-        self.console = ConsoleOperation(self.error_handler, self, event_loop)
-        self.add_persistent_task(self.console)
-
-    def add_persistent_task(self, task):
-        """
-        Adds a persistent task to the list.
-
-        Args:
-            task (coroutine): The task to add.
-        """
-
-        self.persistent_tasks.append(task)
+        self.console = console
+        self.add_operation(self.console)
 
     async def execute_all(self):
         """
@@ -95,27 +84,38 @@ class OperationQueue:
         """
 
         nest_asyncio.apply()
-        non_persistent_tasks = [operation.execute() for operation in self.queue if not operation.persistent]
-        persistent_tasks = [task.execute() for task in self.persistent_tasks]
-        try:
-            for task in non_persistent_tasks + persistent_tasks:
-                await asyncio.get_event_loop().create_task(task)
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-        for operation in non_persistent_tasks:
-            if operation in self.queue:
-                self.queue.remove(operation)
+        self.tasks = [asyncio.create_task(self.execute_operation(operation)) for operation in self.queue]
+        # print("Tasks: ", self.tasks)
+
+    async def handle_tasks(self):
+        for task in self.tasks:
+            # print(task)
+            if task.done():
+                try:
+                    task.result()  # This will re-raise any exceptions that occurred.
+                except Exception as e:
+                    self.error_handler.handle_error(e, self)
+                finally:
+                    print("Task done")
+                    operation = self.get_operation_by_task(task)
+                    if operation:
+                        self.remove_operation(operation)
+                    self.tasks.remove(task)
 
     async def execute_operation(self, operation):
         """
         Executes a single Operation in the queue.
-
-        Args:
-            operation (Operation): The Operation instance to execute.
         """
-
         nest_asyncio.apply()
-        await operation.execute()
+        if operation.task and not operation.task.done():
+            print(f"Operation: {operation} is already running")
+            return
+        try:
+            operation.task = asyncio.get_event_loop().create_task(operation.execute())
+            print(f"Operation: {operation} started")
+            return await operation.task
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
 
     def remove_operation(self, operation):
         """
@@ -124,19 +124,11 @@ class OperationQueue:
         Args:
             operation (Operation): The Operation instance to remove.
         """
-
+        if operation.task and not operation.task.done():
+            print(f"Operation: {operation} is still running")
+            return
         operation.stop()
         self.queue.remove(operation)
-
-    def remove_persistent_task(self, task):
-        """
-        Removes a persistent task from the list.
-
-        Args:
-            task (coroutine): The task to remove.
-        """
-
-        self.persistent_tasks.remove(task)
 
     def get_operation(self, index) -> Operation:
         """
@@ -214,7 +206,6 @@ class OperationQueue:
         """
 
         self.queue.clear()
-        self.persistent_tasks.clear()
 
     def contains(self, operation):
         """

@@ -71,7 +71,9 @@ class ConsoleOperation(CustomOperation):
         while not self.input_queue.empty():
             user_input = self.input_queue.get()
             user_input = user_input.strip()  # strip newline
-            response = self.operation_handler.process_user_input(user_input)
+            print("Received user input: " + user_input)
+            response = await self.operation_handler.process_user_input(user_input)
+            print("Response: " + response)
             return response
 
     async def start(self):
@@ -79,14 +81,17 @@ class ConsoleOperation(CustomOperation):
         Starts the operation.
         """
 
+        print("ConsoleOperation.start called")  # Debugging print statement
+
         try:
             self.task = asyncio.ensure_future(self.execute())
             response = await self.task
+            print("ConsoleOperation.start completed")  # Debugging print statement
             return response
         except asyncio.CancelledError:
             pass
 
-    def stop(self):
+    async def stop(self):
         """Stops the operation and handles any exceptions that occur during execution."""
 
         try:

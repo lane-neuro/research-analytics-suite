@@ -55,7 +55,7 @@ class SubOperation:
         self.persistent = persistent
         self.task = None
 
-    def start(self):
+    async def start(self):
         """
         Starts the sub-operation.
 
@@ -65,10 +65,11 @@ class SubOperation:
 
         try:
             self.task = asyncio.create_task(self.func())
+            return await self.task
         except Exception as e:
             self.error_handler.handle_error(e, self)
 
-    def stop(self):
+    async def stop(self):
         """
         Stops the sub-operation.
 
@@ -76,14 +77,14 @@ class SubOperation:
         """
 
         if self.task is not None:
-            self.task.cancel()
+            await self.task.cancel()
 
-    def reset(self):
+    async def reset(self):
         """
         Resets the sub-operation.
 
         This method stops the sub-operation and then starts it again.
         """
 
-        self.stop()
-        self.start()
+        await self.stop()
+        await self.start()
