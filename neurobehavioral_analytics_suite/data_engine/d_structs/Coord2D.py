@@ -88,5 +88,5 @@ class Coord2D (object):
             The transformed Coord2D object.
         """
 
-        new_datapoint = deepcopy(self)  # Create a new data point object
+        new_datapoint = deepcopy(self)  # Create a new func point object
         return engine.transform(new_datapoint)

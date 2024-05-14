@@ -35,14 +35,14 @@ def new_project(dir_in: str, user_in: str, subject_in: str, framerate_in: int, c
         csv_path (str): Path where initial csv file is located on local disk.
 
     Returns:
-        DataEngine: A DataEngine object containing the active project data.
+        DataEngine: A DataEngine object containing the active project func.
 
     Example:
         ->> new_project('Z:\\your-project-directory\\',
                 'Your_Name',
                 'Subject_ID',
                 60,
-                'C:\\your-data-directory\\one-csv-file.csv'
+                'C:\\your-func-directory\\one-csv-file.csv'
             )
         <DataEngine object at 0x10d8cd160>
     """

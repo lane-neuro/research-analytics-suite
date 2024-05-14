@@ -1,7 +1,7 @@
 """
 SingleFrame.py
 
-This module defines the SingleFrame class which encapsulates all data related to a single frame in a neurobehavioral
+This module defines the SingleFrame class which encapsulates all func related to a single frame in a neurobehavioral
 analytics project. It includes methods for initializing the frame, transforming it using a DataEngine object, and
 providing a string representation of the frame.
 
@@ -22,11 +22,11 @@ from neurobehavioral_analytics_suite.data_engine.d_structs.Coord2D import Coord2
 
 class SingleFrame(object):
     """
-    A class to hold all data related to a single frame.
+    A class to hold all func related to a single frame.
 
     Args:
         use_likelihood (bool): A flag to determine whether to use likelihood or not.
-        *data_in (list): A list of data related to a single frame.
+        *data_in (list): A list of func related to a single frame.
 
     Attributes:
         frame_num (int): The frame number.
@@ -39,7 +39,7 @@ class SingleFrame(object):
 
         Args:
             use_likelihood (bool): A flag to determine whether to use likelihood or not.
-            *data_in (list): A list of data related to a single frame.
+            *data_in (list): A list of func related to a single frame.
         """
 
         self.use_likelihood = use_likelihood

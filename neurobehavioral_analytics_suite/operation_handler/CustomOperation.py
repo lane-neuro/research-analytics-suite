@@ -1,8 +1,8 @@
 """
 A module that defines the CustomOperation class, which is a subclass of the BaseOperation class.
 
-The CustomOperation class is designed to handle custom operations that require data processing. It provides methods
-for setting the data to be processed and executing the operation.
+The CustomOperation class is designed to handle custom operations that require func processing. It provides methods
+for setting the func to be processed and executing the operation.
 
 Author: Lane
 Copyright: Lane
@@ -13,6 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+import asyncio
 
 from neurobehavioral_analytics_suite.operation_handler.BaseOperation import BaseOperation
 from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
@@ -26,56 +27,52 @@ class CustomOperation(BaseOperation):
     This class provides methods for setting the data to be processed and executing the operation.
 
     Attributes:
-        data (str): A formatted string to print out the data that the operation will process.
+        func (callable): A function to be executed.
         error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
         operation (Operation): The operation associated with the task.
     """
 
-    def __init__(self, data, error_handler: ErrorHandler, name: str = "CustomOperation"):
+    def __init__(self, error_handler: ErrorHandler, func, local_vars, name: str = "CustomOperation"):
         """
-        Initializes the CustomOperation with the data to be processed and an ErrorHandler instance.
+        Initializes the CustomOperation with the func to be processed and an ErrorHandler instance.
 
         Args:
-            data (str): A formatted string to print out the data that the operation will process.
+            func (callable): A function to be executed.
             error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
         """
 
         super().__init__()
-        self.data = data
+        self.func = func
         self.error_handler = error_handler
+        self.local_vars = local_vars
         self.operation = Operation(self)
         self.task = None
         self.persistent = False
         self.complete = False
         self.name = name
         self.status = "idle"
+        self.result = None
 
-    async def execute(self) -> str:
+    async def execute(self):
         """
-        Prints the data.
-
-        This is a placeholder implementation and should be replaced with actual data processing code.
+        Executes the func.
         """
-
-        print(f"CustomOperation.execute: Entered w/ {self.task.get_name()}")  # Debugging print statement
         self.status = "running"
+        temp_vars = self.local_vars.copy()
 
         try:
-            # Your task execution code here
-            print(f"Processing data: {self.data}")
+            # Execute the function
+            exec(self.func, {}, temp_vars)
+            self.result = temp_vars
+            self.local_vars = temp_vars
 
-            # Mark the task as complete
-            self.complete = True
-
-            # If there's another operation linked to this one, mark it as complete too
-            if self.operation is not None:
-                self.operation.complete = True
+            return self.result
 
         except Exception as e:
             self.error_handler.handle_error(e, self)
+            self.result = self.local_vars
 
-        print(f"CustomOperation.execute: returning: {self.task.get_name()}")  # Debugging print statement
-        return self.data  # Return a result instead of a task
+            return self.result
 
     async def start(self) -> None:
         """
@@ -84,10 +81,8 @@ class CustomOperation(BaseOperation):
 
         # Check if the operation has already been started
         if self.operation is not None and self.task and not self.task.done():
-            print(f"CustomOperation.start: [ALREADY RUNNING] {self.task.get_name()}")
             return
 
-        print(f"CustomOperation.start: Starting operation: {self.data} --- {self.task.get_name()}")
         self.status = "started"
         self.operation = Operation(self)
         if self.operation is not None:

@@ -49,7 +49,7 @@ async def launch_nbas():
     assert active_project is not None
 
     operation_handler = OperationHandler()
-    await operation_handler.start()
+    asyncio.run(operation_handler.exec_loop_coroutine)
 
 
 def launch_args():
@@ -74,7 +74,7 @@ def launch_args():
     parser.add_argument('-s', '--subject_name',
                         help='Name of the subject of experiment (e.g., mouse, human, rat, etc.)')
     parser.add_argument('-f', '--file_list',
-                        help='List of files containing experimental data')
+                        help='List of files containing experimental func')
     parser.add_argument('-c', '--camera_framerate',
                         help='Camera Framerate')
 

@@ -50,10 +50,9 @@ class OperationQueue:
 
         self.queue = deque()
         self.error_handler = error_handler
-        self.console = None
         self.client = Client()
 
-    def add_operation(self, operation: BaseOperation) -> None:
+    async def add_operation(self, operation: BaseOperation) -> None:
         """
         Adds an Operation instance to the queue.
 
@@ -63,21 +62,11 @@ class OperationQueue:
 
         if operation.task and not operation.task.done():
             # print(f"add_operation: {operation} is already running")
-            return
+            return None
         self.queue.append(operation)
         # print(f"add_operation: {operation} added to queue")
 
-    def add_console_operation(self, console: ConsoleOperation) -> None:
-        """
-        Adds a ConsoleOperation instance to the tasks list.
-        """
-        if self.console and self.console.task and not self.console.task.done():
-            # print(f"add_console_operation: {self.console} is already running")
-            return
-        self.console = console
-        self.add_operation(self.console)
-
-    def remove_operation(self, operation: BaseOperation) -> None:
+    async def remove_operation(self, operation: BaseOperation) -> None:
         """
         Removes a specific Operation instance from the queue.
 
@@ -87,7 +76,7 @@ class OperationQueue:
         if operation.task and not operation.task.done():
             # print(f"remove_operation: Operation: {operation.task.get_name()} is still running")
             return
-        operation.stop()
+        await operation.stop()
         self.queue.remove(operation)
 
     def get_operation(self, index: int) -> Operation:

@@ -1,8 +1,8 @@
 """
 A module for the NeuroBehavioral Analytics Suite's Data Engine.
 
-This module contains the DataEngine class, which serves as the primary data handler for a project. It includes methods
-for initializing the data engine, setting the data range, and executing the data engine.
+This module contains the DataEngine class, which serves as the primary func handler for a project. It includes methods
+for initializing the func engine, setting the func range, and executing the func engine.
 
 Author: Lane
 Copyright: Lane
@@ -21,16 +21,16 @@ from neurobehavioral_analytics_suite.data_engine.project.ProjectMetadata import 
 
 class DataEngine:
     """
-    The primary data handler for a project.
+    The primary func handler for a project.
 
-    This class is responsible for initializing the data engine, setting the data range, and executing the data engine.
+    This class is responsible for initializing the func engine, setting the func range, and executing the func engine.
 
     Attributes:
         dask_client: Pointer to primary Dask client.
-        b_likelihood: Whether to filter data for p-value (project-global).
+        b_likelihood: Whether to filter func for p-value (project-global).
         analytics: Initialize Analytics Engine.
         meta: Initialize ProjectMetadata object.
-        pose: Initialize PoseData object to process .csv data.
+        pose: Initialize PoseData object to process .csv func.
     """
 
     def __init__(
@@ -50,12 +50,12 @@ class DataEngine:
             user_in (str): Name of user/experimenter.
             subject_in (str): Name of the subject of experiment (e.g., mouse, human, rat, etc.).
             framerate (int): Camera Framerate.
-            csv_path (str): List of files containing experimental data.
-            use_likelihood (bool): Whether to filter data for p-value (project-global).
+            csv_path (str): List of files containing experimental func.
+            use_likelihood (bool): Whether to filter func for p-value (project-global).
         """
 
         self.dask_client = None  # Pointer to primary Dask client
-        self.b_likelihood = use_likelihood  # Whether to filter data for p-value (project-global)
+        self.b_likelihood = use_likelihood  # Whether to filter func for p-value (project-global)
         self.analytics = Analytics()  # Initialize Analytics Engine
         self.meta = ProjectMetadata(  # Initialize ProjectMetadata object
             directory_in,
@@ -64,12 +64,12 @@ class DataEngine:
             framerate,
             self.analytics,
         )
-        self.pose = PoseData(  # Initialize PoseData object to process .csv data
+        self.pose = PoseData(  # Initialize PoseData object to process .csv func
             self.meta,
             csv_path,
             self.b_likelihood
         )
-        self.pose.extract_csv()  # Extract & process positional data from .csv
+        self.pose.extract_csv()  # Extract & process positional func from .csv
 
     def __repr__(self):
         """
@@ -87,13 +87,13 @@ class DataEngine:
 
     def set_range(self, start_frame: int, end_frame: int):
         """
-        Sets the current data range.
+        Sets the current func range.
 
         Args:
-            start_frame (int): The start frame of the data range.
-            end_frame (int): The end frame of the data range.
+            start_frame (int): The start frame of the func range.
+            end_frame (int): The end frame of the func range.
         """
 
         self.meta.start_index = start_frame
         self.meta.end_index = end_frame
-        print(f"DataEngine: current data range set to {start_frame} : {end_frame}")
+        print(f"DataEngine: current func range set to {start_frame} : {end_frame}")

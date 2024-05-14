@@ -1,8 +1,8 @@
 """
-Module for storing positional data from xy-coordinate tracking datasets in the NeuroBehavioral Analytics Suite.
+Module for storing positional func from xy-coordinate tracking datasets in the NeuroBehavioral Analytics Suite.
 
-This module defines the PoseData class which is designed to handle positional data from xy-coordinate tracking datasets.
-It includes methods for initializing the data, extracting data from a CSV file, and formatting data for console output.
+This module defines the PoseData class which is designed to handle positional func from xy-coordinate tracking datasets.
+It includes methods for initializing the func, extracting func from a CSV file, and formatting func for console output.
 
 Author: Lane
 Copyright: Lane
@@ -25,10 +25,10 @@ from neurobehavioral_analytics_suite.data_engine.project import ProjectMetadata
 
 class PoseData:
     """
-    A class to handle positional data from xy-coordinate tracking datasets.
+    A class to handle positional func from xy-coordinate tracking datasets.
 
-    This class is responsible for handling positional data from xy-coordinate tracking datasets. It includes methods
-    for initializing the data, extracting data from a CSV file, and formatting data for console output.
+    This class is responsible for handling positional func from xy-coordinate tracking datasets. It includes methods
+    for initializing the func, extracting func from a CSV file, and formatting func for console output.
 
     Attributes:
         use_likelihood (bool): Whether to check for p-value.
@@ -57,7 +57,7 @@ class PoseData:
         """
         Returns a string representation of the PoseData object.
 
-        The string representation includes the formatted data.
+        The string representation includes the formatted func.
 
         Returns:
             str: A string representation of the PoseData object.
@@ -67,7 +67,7 @@ class PoseData:
 
     def pack(self, output_format='string'):
         """
-        Formats data for console output.
+        Formats func for console output.
 
         Args:
             output_format (str): The desired output format. Options are 'string' and 'json'.
@@ -131,7 +131,7 @@ class PoseData:
             The frame with rounded coordinates.
         """
 
-        # Create a deep copy so that the original data isn't modified
+        # Create a deep copy so that the original func isn't modified
         rounded_frame = deepcopy(frame)
         for coord in rounded_frame.coords:
             coord.x = round(coord.x, 3)
@@ -144,7 +144,7 @@ class PoseData:
 
     def extract_csv(self):
         """
-        Extracts data from a CSV file.
+        Extracts func from a CSV file.
 
         Returns:
             None
@@ -176,7 +176,7 @@ class PoseData:
 
     def transform_data(self, transformation):
         """
-        Applies a transformation to the data.
+        Applies a transformation to the func.
 
         Args:
             transformation (function): A function that takes a frame and returns a transformed frame.
@@ -188,7 +188,7 @@ class PoseData:
 
     def aggregate_data(self, aggregation):
         """
-        Performs an aggregation on the data.
+        Performs an aggregation on the func.
 
         Args:
             aggregation (function): A function that takes a list of frames and returns an aggregated result.
@@ -200,7 +200,7 @@ class PoseData:
 
     def annotate_data(self, annotation):
         """
-        Adds an annotation to the data.
+        Adds an annotation to the func.
 
         Args:
             annotation (function): A function that takes a frame and returns an annotated frame.

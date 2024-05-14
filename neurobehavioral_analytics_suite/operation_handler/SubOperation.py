@@ -57,6 +57,7 @@ class SubOperation:
         self.persistent = persistent
         self.task = None
         self.name = name
+        self.status = "idle"
 
     async def start(self):
         """
@@ -67,8 +68,7 @@ class SubOperation:
         """
 
         try:
-            self.task = asyncio.create_task(self.start())
-            return await self.task
+            self.status = "started"
         except Exception as e:
             self.error_handler.handle_error(e, self)
 

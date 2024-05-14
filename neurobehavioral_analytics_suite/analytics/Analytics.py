@@ -1,5 +1,5 @@
 """
-Analytical Engine to process neurobehavioral data from NBAS-DataEngine.
+Analytical Engine to process neurobehavioral func from NBAS-DataEngine.
 
 This module defines the Analytics class which is designed to apply a series of transformations
 to a given datapoint. It includes methods for initializing the transformation list, adding a transformation,

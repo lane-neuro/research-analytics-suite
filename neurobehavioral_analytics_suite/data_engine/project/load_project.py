@@ -28,7 +28,7 @@ def load_project(file_in: str):
         file_in (str): Path to the project configuration file (.json).
 
     Returns:
-        DataEngine: A DataEngine object containing the active project data.
+        DataEngine: A DataEngine object containing the active project func.
 
     Example:
         ->> load_project('G:\\Projects\\Project.json')

@@ -29,10 +29,10 @@ class ProjectMetadata:
         base_dir (str): Root directory for project.
         username (str): Name of current experimenter / researcher.
         subject (str): Name of subject (i.e., 'mouse-2', 'CB6', etc.).
-        body_parts_count (int): Number of body parts in pixel-tracking data.
+        body_parts_count (int): Number of body parts in pixel-tracking func.
         framerate (int): Framerate of the camera.
-        start_index (int): First frame index of relevant data.
-        end_index (int): Final frame index of relevant data.
+        start_index (int): First frame index of relevant func.
+        end_index (int): Final frame index of relevant func.
     """
 
     def __init__(self, directory_in: str, user_in: str, subject_in: str, framerate_in: int,
@@ -52,10 +52,10 @@ class ProjectMetadata:
         self.base_dir = directory_in                # root directory for project
         self.username = user_in                     # name of current experimenter / researcher
         self.subject = subject_in                   # name of subject (i.e., 'mouse-2', 'CB6', etc.)
-        self.body_parts_count = 0                   # number of body parts in pixel-tracking data
+        self.body_parts_count = 0                   # number of body parts in pixel-tracking func
         self.framerate = framerate_in               # framerate of the camera
-        self.start_index = 0                        # first frame index of relevant data
-        self.end_index = 0                          # final frame index of relevant data
+        self.start_index = 0                        # first frame index of relevant func
+        self.end_index = 0                          # final frame index of relevant func
 
         print(f"Metadata storage initialized...")
 

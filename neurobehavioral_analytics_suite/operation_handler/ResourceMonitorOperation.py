@@ -36,7 +36,9 @@ class ResourceMonitorOperation(BaseOperation):
             memory_threshold (int, optional): The memory usage threshold. Defaults to 90.
         """
         super().__init__()
+        self.cpu_usage = 0
         self.cpu_threshold = cpu_threshold
+        self.memory_usage = 0
         self.memory_threshold = memory_threshold
         self.persistent = True
         self.error_handler = error_handler
@@ -55,18 +57,18 @@ class ResourceMonitorOperation(BaseOperation):
         self.status = "running"
 
         while True:
-            cpu_usage = psutil.cpu_percent()
-            memory_usage = psutil.virtual_memory().percent
+            self.cpu_usage = psutil.cpu_percent()
+            self.memory_usage = psutil.virtual_memory().percent
 
             # print(f"CPU Usage: {cpu_usage}%" + f"\nMemory Usage: {memory_usage}%")
 
-            if cpu_usage > self.cpu_threshold:
+            if self.cpu_usage > self.cpu_threshold:
                 self.error_handler.handle_error(Exception(f"CPU usage has exceeded {self.cpu_threshold}%: "
-                                                          f"current usage is {cpu_usage}%"), "resource_monitor")
+                                                          f"current usage is {self.cpu_usage}%"), "resource_monitor")
 
-            if memory_usage > self.memory_threshold:
+            if self.memory_usage > self.memory_threshold:
                 self.error_handler.handle_error(Exception(f"Memory usage has exceeded {self.memory_threshold}%: "
-                                                          f"current usage is {memory_usage}%"), "resource_monitor")
+                                                          f"current usage is {self.memory_usage}%"), "resource_monitor")
 
             await asyncio.sleep(.5)
 

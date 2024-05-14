@@ -58,25 +58,26 @@ class Operation(BaseOperation):
         self.operation = operation
         self.error_handler = error_handler
         self.persistent = persistent
-        self.sub_tasks = []
+        # self.sub_tasks = []
 
         self.name = name
         self.status = "idle"
         self.complete = False
         self.progress = 0
 
-        self.update_progress_operation = SubOperation(self.update_progress, self.error_handler, True)
-        self.check_for_errors_operation = SubOperation(self.check_for_errors, ErrorHandler(), True)
-
-        self.add_sub_operation(self.update_progress_operation)
-        self.add_sub_operation(self.check_for_errors_operation)
+        # self.update_progress_operation = SubOperation(self.update_progress, "_progress", self.error_handler, True)
+        # self.check_for_errors_operation = SubOperation(self.check_for_errors, "_error_check", self.error_handler,
+        # True)
+        #
+        # self.add_sub_operation(self.update_progress_operation)
+        # self.add_sub_operation(self.check_for_errors_operation)
 
         self.pause_event = asyncio.Event()
         self.pause_event.set()
 
-    def add_sub_operation(self, operation):
-        """Adds a sub-operation to the operation."""
-        self.sub_tasks.append(operation)
+    # def add_sub_operation(self, operation):
+    #     """Adds a sub-operation to the operation."""
+    #     self.sub_tasks.append(operation)
 
     def progress(self):
         """Returns the current progress and status of the operation.
@@ -109,8 +110,8 @@ class Operation(BaseOperation):
         """
         while not self.complete:
             if self.error_handler.has_error:
-                for task in self.sub_tasks:
-                    await task.stop()
+                # for task in self.sub_tasks:
+                #     await task.stop()
                 await self.stop()
                 break
             await asyncio.sleep(1)
@@ -121,11 +122,9 @@ class Operation(BaseOperation):
             print("Operation: execute")
             self.status = "running"
             if self.complete:
-                print("Operation.execute: Operation already complete")
                 return
 
-            response = await self.operation.execute()
-            print(response)
+            await self.operation.execute()
             self.on_complete()
         except Exception as e:
             self.error_handler.handle_error(e, self)
@@ -134,11 +133,10 @@ class Operation(BaseOperation):
     async def start(self):
         """Starts the operation and handles any exceptions that occur during execution."""
         try:
-            print("Operation.start: start")
             self.status = "started"
-            for task in self.sub_tasks:
-                print(f"Operation.start: [START] (Sub-Task) {task.get_name()}")
-                await task.start()
+            # for task in self.sub_tasks:
+            #     await task.start()
+            #     print(f"Operation.start: [START] (Sub-Task) {task}")
             await self.operation.start()
             # return await self.execute()
         except Exception as e:
@@ -149,8 +147,8 @@ class Operation(BaseOperation):
         """Stops the operation and handles any exceptions that occur during execution."""
         try:
             self.status = "stopped"
-            for task in self.sub_tasks:
-                await task.stop()
+            # for task in self.sub_tasks:
+            #     await task.stop()
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"
@@ -160,8 +158,8 @@ class Operation(BaseOperation):
         try:
             self.status = "paused"
             self.pause_event.clear()
-            for task in self.sub_tasks:
-                await task.pause()
+            # for task in self.sub_tasks:
+            #     await task.pause()
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"
@@ -171,8 +169,8 @@ class Operation(BaseOperation):
         try:
             self.status = "running"
             self.pause_event.set()
-            for task in self.sub_tasks:
-                await task.resume()
+            # for task in self.sub_tasks:
+            #     await task.resume()
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"
@@ -184,8 +182,8 @@ class Operation(BaseOperation):
             self.progress = 0
             self.complete = False
             self.pause_event.clear()
-            for task in self.sub_tasks:
-                await task.reset()
+            # for task in self.sub_tasks:
+            #     await task.reset()
             await self.stop()
             await self.start()
         except Exception as e:
