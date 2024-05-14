@@ -48,6 +48,7 @@ class CustomOperation(BaseOperation):
         self.persistent = False
         self.complete = False
         self.name = name
+        self.status = "idle"
 
     async def execute(self) -> str:
         """
@@ -57,6 +58,7 @@ class CustomOperation(BaseOperation):
         """
 
         print(f"CustomOperation.execute: Entered w/ {self.task.get_name()}")  # Debugging print statement
+        self.status = "running"
 
         try:
             # Your task execution code here
@@ -86,6 +88,7 @@ class CustomOperation(BaseOperation):
             return
 
         print(f"CustomOperation.start: Starting operation: {self.data} --- {self.task.get_name()}")
+        self.status = "started"
         self.operation = Operation(self)
         if self.operation is not None:
             self.task = self.operation.start()

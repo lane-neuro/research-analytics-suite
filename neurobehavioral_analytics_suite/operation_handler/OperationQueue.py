@@ -16,7 +16,6 @@ Status: Prototype
 """
 
 import asyncio
-import nest_asyncio
 from dask.distributed import Client
 from collections import deque
 from typing import Optional
@@ -50,7 +49,6 @@ class OperationQueue:
         """
 
         self.queue = deque()
-        self.tasks = []
         self.error_handler = error_handler
         self.console = None
         self.client = Client()
@@ -67,7 +65,7 @@ class OperationQueue:
             # print(f"add_operation: {operation} is already running")
             return
         self.queue.append(operation)
-        print(f"add_operation: {operation} added to queue")
+        # print(f"add_operation: {operation} added to queue")
 
     def add_console_operation(self, console: ConsoleOperation) -> None:
         """
@@ -79,69 +77,6 @@ class OperationQueue:
         self.console = console
         self.add_operation(self.console)
 
-    async def start_operations(self) -> None:
-        """
-        Starts all operations in the queue.
-        """
-
-        for operation in self.queue:
-            if operation.status == "idle":
-                await operation.start()
-            else:
-                # print(f"start_operations: Operation {operation} has already been started.")
-                pass
-
-    async def execute_all(self) -> None:
-        """
-        Executes all Operation instances in the queue.
-
-        This method uses the Dask client to execute the operations asynchronously. It waits for all operations to
-        complete before returning.
-
-        Raises:
-            Exception: If an exception occurs during the execution of an operation, it is caught and handled by the
-            ErrorHandler instance.
-        """
-
-        nest_asyncio.apply()
-        for operation in self.queue:
-            # Ensure operation.task is a Task, not a coroutine
-            if asyncio.iscoroutine(operation.task):
-                operation.task = asyncio.create_task(operation.task, name=f"Task-{operation.name}")
-
-            if operation.task and not operation.task.done():
-                # print(f"execute_all: {operation} is already running")
-                pass
-            else:
-                self.tasks.append(asyncio.create_task(self.execute_operation(operation), name=f"Task-{operation.name}"))
-
-    async def handle_tasks(self) -> None:
-        for task in self.tasks:
-            if task.done():
-                try:
-                    task.result()  # This will re-raise any exceptions that occurred.
-                except Exception as e:
-                    self.error_handler.handle_error(e, self)
-                finally:
-                    print(f"handle_tasks: [DONE] {task.get_name()}")
-                    operation = self.get_operation_by_task(task)
-                    if operation:
-                        self.remove_operation(operation)
-                    self.tasks.remove(task)
-            else:
-                print(f"handle_tasks: [INCOMPLETE] {task.get_name()}")
-                pass
-
-    async def execute_operation(self, operation: BaseOperation) -> asyncio.Task:
-        nest_asyncio.apply()
-        try:
-            operation.status = "running"  # Update the status of the operation
-            operation.task = asyncio.get_event_loop().create_task(operation.execute())
-            print(f"execute_operation: [START] {operation.task.get_name()}")
-            return operation.task  # Return the coroutine, not the result of the coroutine
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-
     def remove_operation(self, operation: BaseOperation) -> None:
         """
         Removes a specific Operation instance from the queue.
@@ -150,7 +85,7 @@ class OperationQueue:
             operation (Operation): The Operation instance to remove.
         """
         if operation.task and not operation.task.done():
-            print(f"remove_operation: Operation: {operation.task.get_name()} is still running")
+            # print(f"remove_operation: Operation: {operation.task.get_name()} is still running")
             return
         operation.stop()
         self.queue.remove(operation)

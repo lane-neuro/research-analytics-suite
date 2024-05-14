@@ -42,14 +42,17 @@ class ResourceMonitorOperation(BaseOperation):
         self.error_handler = error_handler
         self.task = None
         self.name = "ResourceMonitorOperation"
+        self.status = "idle"
 
     async def start(self) -> None:
-        self.status = "running"
+        self.status = "started"
 
     async def execute(self) -> None:
         """
         Asynchronously monitors the usage of CPU and memory.
         """
+
+        self.status = "running"
 
         while True:
             cpu_usage = psutil.cpu_percent()

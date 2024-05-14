@@ -119,6 +119,7 @@ class Operation(BaseOperation):
         """Executes the operation."""
         try:
             print("Operation: execute")
+            self.status = "running"
             if self.complete:
                 print("Operation.execute: Operation already complete")
                 return
@@ -134,7 +135,7 @@ class Operation(BaseOperation):
         """Starts the operation and handles any exceptions that occur during execution."""
         try:
             print("Operation.start: start")
-            self.status = "running"
+            self.status = "started"
             for task in self.sub_tasks:
                 print(f"Operation.start: [START] (Sub-Task) {task.get_name()}")
                 await task.start()
