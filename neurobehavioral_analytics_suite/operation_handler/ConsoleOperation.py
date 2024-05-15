@@ -15,6 +15,8 @@ Status: Prototype
 """
 import asyncio
 import logging
+import sys
+
 import aioconsole
 from neurobehavioral_analytics_suite.operation_handler.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.utils import ErrorHandler
@@ -32,8 +34,8 @@ class ConsoleOperation(CustomOperation):
         logger (logging.Logger): A logger instance used for logging information.
     """
 
-    def __init__(self, error_handler: ErrorHandler, operation_handler, logger, local_vars, prompt: str = '->> ', data=None,
-                 name: str = "ConsoleOperation"):
+    def __init__(self, error_handler: ErrorHandler, operation_handler, logger, local_vars, prompt: str = '->> ',
+                 data=None, name: str = "ConsoleOperation"):
         """
         Initializes the ConsoleOperation with a prompt for user input and the func to be processed.
 
@@ -69,6 +71,7 @@ class ConsoleOperation(CustomOperation):
                 self.logger.debug(f"ConsoleOperation.execute: Received user input: {user_input}")
 
                 if user_input == "exit":  # Exit condition
+                    self.status = "stopped"
                     break
 
                 await self.operation_handler.process_user_input(user_input)

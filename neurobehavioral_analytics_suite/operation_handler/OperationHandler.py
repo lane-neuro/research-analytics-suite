@@ -19,7 +19,6 @@ Status: Prototype
 import asyncio
 import logging
 import nest_asyncio
-from neurobehavioral_analytics_suite.operation_handler import BaseOperation
 from neurobehavioral_analytics_suite.operation_handler.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
 from neurobehavioral_analytics_suite.operation_handler.ConsoleOperation import ConsoleOperation
@@ -74,8 +73,6 @@ class OperationHandler:
         self.error_handler = ErrorHandler()
         self.queue = OperationQueue()
 
-        # self.main_loop.create_task(self.exec_loop())
-
         # Initialize the exec_loop coroutine without creating a task
         self.exec_loop_coroutine = self.exec_loop()
 
@@ -95,26 +92,30 @@ class OperationHandler:
         logger.addHandler(handler)
 
     async def start_operations(self) -> None:
-        for operation in self.queue.queue:
-            if operation.status == "idle":
-                await operation.start()
-                logger.debug(f"start_operations: [START] {operation.name}")
+        for operation_list in self.queue.queue:
+            for operation_node in operation_list:
+                operation = operation_node.operation
+                if operation.status == "idle":
+                    await operation.start()
+                    operation.status = "started"
+                    logger.debug(f"start_operations: [START] {operation.name}")
 
-    async def execute_operation(self, operation: BaseOperation) -> asyncio.Task:
+    async def execute_operation(self, operation: Operation) -> asyncio.Task:
         nest_asyncio.apply()
         try:
-            if operation.status == "started" or operation.status == "idle":
+            if operation.status == "started":
                 operation.task = asyncio.get_event_loop().create_task(operation.execute(),
                                                                       name=self.task_counter.new_task(operation.name))
                 operation.task.type = type(operation)  # Add a 'type' attribute to the task
                 logger.info(f"execute_operation: [RUN] {operation.task.get_name()}")
 
                 self.tasks.append(operation.task)
+                operation.status = "completed"
                 return operation.task  # Return the coroutine, not the result of the coroutine
         except Exception as e:
             self.error_handler.handle_error(e, self)
 
-    def pause_operation(self, operation: BaseOperation) -> None:
+    async def pause_operation(self, operation: Operation) -> None:
         """
         Pauses a specific operation.
 
@@ -122,9 +123,10 @@ class OperationHandler:
             operation (Operation): The operation to pause.
         """
         if operation.status == "running":
-            operation.pause()
+            await operation.pause()
+            operation.status = "paused"
 
-    def resume_operation(self, operation: BaseOperation) -> None:
+    async def resume_operation(self, operation: Operation) -> None:
         """
         Resumes a specific operation.
 
@@ -132,9 +134,10 @@ class OperationHandler:
             operation (Operation): The operation to resume.
         """
         if operation.status == "paused":
-            operation.resume()
+            await operation.resume()
+            operation.status = "running"
 
-    def stop_operation(self, operation: BaseOperation) -> None:
+    async def stop_operation(self, operation: Operation) -> None:
         """
         Stops a specific operation.
 
@@ -142,7 +145,8 @@ class OperationHandler:
             operation (Operation): The operation to stop.
         """
         if operation.status in ["running", "paused"]:
-            operation.stop()
+            await operation.stop()
+            operation.status = "stopped"
 
     async def add_custom_operation(self, func, name: str = "CustomOperation"):
         """
@@ -171,25 +175,26 @@ class OperationHandler:
         """
 
         if user_input == "stop":
-            self.stop_all_operations()
+            await self.stop_all_operations()
             return "OperationHandler.process_user_input: Stopping all operations..."
 
         elif user_input == "pause":
-            self.pause_all_operations()
+            await self.pause_all_operations()
             return "OperationHandler.process_user_input: Pausing all operations..."
 
         elif user_input == "resume":
-            self.resume_all_operations()
+            await self.resume_all_operations()
             return "OperationHandler.process_user_input: Resuming all operations..."
 
         elif user_input == "resources":
-            for operation in self.queue.queue:
-                if isinstance(operation, ResourceMonitorOperation):
-                    cpu_usage = operation.cpu_usage
-                    memory_usage = operation.memory_usage
+            for operation_list in self.queue.queue:
+                operation_node = self.queue.get_operation(operation_list)
+                if isinstance(operation_node, ResourceMonitorOperation):
+                    cpu_usage = operation_node.cpu_usage
+                    memory_usage = operation_node.memory_usage
                     logger.info(f"OperationHandler.process_user_input: Resource Usage: CPU - {cpu_usage}, "
                                 f"MEMORY - {memory_usage}")
-            return "OperationHandler.process_user_input: No active ResourceMonitorOperation found."
+            return "OperationHandler.process_user_input: Displaying system resources."
 
         elif user_input == "tasks":
             for task in self.tasks:
@@ -211,30 +216,33 @@ class OperationHandler:
             self.local_vars = await self.add_custom_operation(user_input, "ConsoleInput")
             return f"OperationHandler.process_user_input: Added custom operation with func: {user_input}"
 
-    def stop_all_operations(self):
+    async def stop_all_operations(self):
         """
         Stops all operations in the queue.
         """
 
-        for operation in self.queue.queue:
-            self.stop_operation(operation)
+        for operation_list in self.queue.queue:
+            operation = self.queue.get_operation(operation_list)
+            await self.stop_operation(operation)
 
-    def pause_all_operations(self):
+    async def pause_all_operations(self):
         """
         Pauses all operations in the queue.
         """
 
-        for operation in self.queue.queue:
-            operation.pause()
+        for operation_list in self.queue.queue:
+            operation = self.queue.get_operation(operation_list)
+            await self.pause_operation(operation)
 
-    def resume_all_operations(self):
+    async def resume_all_operations(self):
         """
         Resumes all paused operations in the queue.
         """
 
-        for operation in self.queue.queue:
+        for operation_list in self.queue.queue:
+            operation = self.queue.get_operation(operation_list)
             if operation.status == "paused":
-                operation.resume()
+                await operation.resume()
 
     def get_operation_status(self, operation) -> str:
         """
@@ -246,7 +254,6 @@ class OperationHandler:
         Returns:
             str: The status of the operation.
         """
-
         return operation.status
 
     def get_all_operations_status(self):
@@ -257,7 +264,8 @@ class OperationHandler:
             dict: A dictionary mapping operation instances to their status.
         """
 
-        return {operation: operation.status for operation in self.queue.queue}
+        return {self.queue.get_operation(operation_list): self.queue.get_operation(operation_list).status
+                for operation_list in self.queue.queue}
 
     async def start(self):
         """
@@ -269,7 +277,7 @@ class OperationHandler:
         """
         Executes all Operation instances in the queue.
 
-        This method uses the Dask client to execute the operations asynchronously. It waits for all operations to
+        This method executes the operations asynchronously. It waits for all operations to
         complete before returning.
 
         Raises:
@@ -278,18 +286,18 @@ class OperationHandler:
         """
 
         nest_asyncio.apply()
-        # logger.info("OperationHandler: Queue Size: " + str(len(self.queue.queue)))
+        logger.debug("OperationHandler: Queue Size: " + str(self.queue.size()))
 
-        self.active_tasks = set()  # Use a set instead of a list
+        self.active_tasks = set()
 
-        for operation in self.queue.queue:
+        for operation_list in self.queue.queue:
+            operation = self.queue.get_operation(operation_list)
+
             # Ensure operation.task is a Task, not a coroutine
             if asyncio.iscoroutine(operation.task):
                 logger.debug(f"execute_all: Creating task for {operation}")
                 operation.task = asyncio.create_task(operation.task)
 
-            # Do not execute ConsoleOperation and ResourceMonitorOperation if they are already running or in
-            # self.active_tasks
             if operation.task and not operation.task.done() and operation.task not in self.active_tasks:
                 logger.debug(f"execute_all: {operation} is already running")
                 pass
@@ -306,15 +314,15 @@ class OperationHandler:
                     if task.type == CustomOperation:
                         self.local_vars = output
                     logger.debug(f"handle_tasks: [DONE] {task.get_name()}")
-                    logger.info(f"handle_tasks: [OUTPUT] {output}")
+                    logger.debug(f"handle_tasks: [OUTPUT] {output}")
                 except Exception as e:
                     self.error_handler.handle_error(e, self)
                 finally:
                     operation = self.queue.get_operation_by_task(task)
                     if isinstance(operation, ConsoleOperation):
                         self.console_operation_in_progress = False
-                    self.tasks.remove(task)
                     await self.queue.remove_operation(operation)
+                    self.tasks.remove(task)
 
     async def exec_loop(self):
         """
@@ -327,13 +335,16 @@ class OperationHandler:
             try:
                 if not self.console_operation_in_progress and \
                         not any(isinstance(task, ConsoleOperation) and not task.done() for task in self.tasks) and \
-                        not any(isinstance(operation, ConsoleOperation) for operation in self.queue.queue):
-                    await self.queue.add_operation(ConsoleOperation(self.error_handler, self, logger, self.local_vars))
+                        not any(isinstance(self.queue.get_operation(operation_list), ConsoleOperation) for
+                                operation_list in self.queue.queue):
+                    await self.queue.add_operation(ConsoleOperation(self.error_handler, self, logger, self.local_vars,
+                                                                    prompt=""))
                     logger.info("exec_loop: [QUEUE] Console - Added to queue")
                     self.console_operation_in_progress = True
 
                 if not any(isinstance(task, ResourceMonitorOperation) and not task.done() for task in self.tasks) and \
-                        not any(isinstance(operation, ResourceMonitorOperation) for operation in self.queue.queue):
+                        not any(isinstance(self.queue.get_operation(operation_list), ResourceMonitorOperation) for
+                                operation_list in self.queue.queue):
                     await self.queue.add_operation(ResourceMonitorOperation(self.error_handler))
                     logger.info("exec_loop: [QUEUE] ResourceMonitor - Added to queue")
 

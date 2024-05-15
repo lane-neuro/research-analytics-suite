@@ -26,8 +26,14 @@ def main():
     """
 
     print('Starting NeuroBehavioral Analytics Suite v0.0.0.1')
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(launch_nbas())
+    try:
+        asyncio.run(launch_nbas())
+    except KeyboardInterrupt:
+        print('Exiting NeuroBehavioral Analytics Suite...')
+    finally:
+        print("Cleaning up...")
+        asyncio.get_event_loop().close()
+        sys.exit(0)
 
 
 if __name__ == '__main__':
@@ -37,5 +43,5 @@ if __name__ == '__main__':
                 '-s', 'Mouse',
                 '-c', '60',
                 '-f', '..\\sample_datasets\\2024-Tariq-et-al_olfaction\\9-2-2021-4-07 PM-Mohammad-ETHSensor-CB5-28_'
-                'reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv']
+                      'reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv']
     main()

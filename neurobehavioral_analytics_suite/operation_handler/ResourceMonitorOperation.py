@@ -20,11 +20,11 @@ please refer to the project documentation: https://github.com/lane-neuro/neurobe
 import asyncio
 import psutil
 
-from neurobehavioral_analytics_suite.operation_handler.BaseOperation import BaseOperation
+from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
-class ResourceMonitorOperation(BaseOperation):
+class ResourceMonitorOperation(Operation):
 
     def __init__(self, error_handler: ErrorHandler, cpu_threshold=90, memory_threshold=95):
         """

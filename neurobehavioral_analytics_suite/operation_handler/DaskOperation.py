@@ -1,8 +1,17 @@
 """
-A module that defines the CustomOperation class, which is a subclass of the BaseOperation class.
+This module contains the DaskOperation class, a subclass of the Operation class.
 
-The CustomOperation class is designed to handle custom operations that require func processing. It provides methods
-for setting the func to be processed and executing the operation.
+The DaskOperation class is used to represent a Dask Operation in the NeuroBehavioral Analytics Suite.
+It provides methods for setting the data to be processed and executing the operation.
+
+Typical usage example:
+
+    dask_operation = DaskOperation(error_handler, func, local_vars)
+    dask_operation.execute()
+
+Attributes:
+    func (callable): A function to be executed.
+    error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
 
 Author: Lane
 Copyright: Lane
@@ -13,15 +22,18 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+
+from asyncio import Event
 from typing import Tuple
 
+from dask import delayed
 from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
-class CustomOperation(Operation):
+class DaskOperation(Operation):
     """
-    A class used to represent a Custom Operation in the NeuroBehavioral Analytics Suite.
+    A class used to represent a Dask Operation in the NeuroBehavioral Analytics Suite.
 
     This class provides methods for setting the data to be processed and executing the operation.
 
@@ -30,9 +42,9 @@ class CustomOperation(Operation):
         error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
     """
 
-    def __init__(self, error_handler: ErrorHandler, func, local_vars, name: str = "CustomOperation"):
+    def __init__(self, error_handler: ErrorHandler, func, local_vars, name: str = "DaskOperation"):
         """
-        Initializes the CustomOperation with the func to be processed and an ErrorHandler instance.
+        Initializes the DaskOperation with the func to be processed and an ErrorHandler instance.
 
         Args:
             func (callable): A function to be executed.
@@ -49,6 +61,8 @@ class CustomOperation(Operation):
         self.name = name
         self.status = "idle"
         self.result = None
+        self.pause_event = Event()
+        self.progress = 0
 
     async def execute(self):
         """
@@ -59,7 +73,9 @@ class CustomOperation(Operation):
 
         try:
             # Execute the function
-            exec(self.func, {}, temp_vars)
+            dask_func = delayed(self.func)
+            result = dask_func.compute()
+            temp_vars['result'] = result
             self.result = temp_vars
             self.local_vars = temp_vars
 
@@ -114,13 +130,12 @@ class CustomOperation(Operation):
     async def reset(self) -> None:
         """Resets the operation and handles any exceptions that occur during execution."""
         try:
+            self.status = "idle"
             self.progress = 0
             self.complete = False
             self.pause_event.clear()
             await self.stop()
-            self.status = "stopped"
             await self.start()
-            self.status = "started"
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"

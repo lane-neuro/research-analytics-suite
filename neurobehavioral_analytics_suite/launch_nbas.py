@@ -15,7 +15,6 @@ Status: Prototype
 """
 
 import argparse
-import asyncio
 from neurobehavioral_analytics_suite.data_engine.project.new_project import new_project
 from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
 from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
@@ -46,10 +45,9 @@ async def launch_nbas():
         active_project = load_project(args.open_project)
 
     # Ensure we now have an active project open
-    assert active_project is not None
-
-    operation_handler = OperationHandler()
-    asyncio.run(operation_handler.exec_loop_coroutine)
+    if active_project is not None:
+        operation_handler = OperationHandler()
+        await operation_handler.exec_loop_coroutine
 
 
 def launch_args():
