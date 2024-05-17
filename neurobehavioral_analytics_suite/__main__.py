@@ -15,6 +15,7 @@ Status: Prototype
 import asyncio
 import sys
 from neurobehavioral_analytics_suite.launch_nbas import launch_nbas
+from neurobehavioral_analytics_suite.nbas_gui.GuiLauncher import GuiLauncher
 
 
 def main():
@@ -24,7 +25,6 @@ def main():
     This function prints the version of the suite, imports the launch_nbas function from the
     launch_nbas module, and calls it to start the suite.
     """
-
     print('Starting NeuroBehavioral Analytics Suite v0.0.0.1')
     try:
         asyncio.run(launch_nbas())

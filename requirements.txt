@@ -11,3 +11,5 @@ matplotlib==3.7.2
 nest_asyncio==1.6.0
 numpy==1.24.3
 psutil==5.9.0
+dearpygui==1.11.1
+dearpygui-async==0.1.2

@@ -15,8 +15,11 @@ Status: Prototype
 """
 
 import argparse
+import asyncio
+
 from neurobehavioral_analytics_suite.data_engine.project.new_project import new_project
 from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
+from neurobehavioral_analytics_suite.nbas_gui.GuiLauncher import GuiLauncher
 from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
 
 
@@ -31,8 +34,14 @@ async def launch_nbas():
         AssertionError: If no active project is open.
     """
 
-    active_project = None
     args, extra = launch_args().parse_known_args()
+
+    operation_handler = OperationHandler()
+    gui_launcher = GuiLauncher(operation_handler)
+    await gui_launcher.launch()
+    await operation_handler.exec_loop_coroutine
+
+    return
 
     # Checks args for -o '--open_project' flag.
     # If it exists, open the project from the file
@@ -43,11 +52,6 @@ async def launch_nbas():
     else:
         print('Project File Detected - Loading Project at: ' + args.open_project)
         active_project = load_project(args.open_project)
-
-    # Ensure we now have an active project open
-    if active_project is not None:
-        operation_handler = OperationHandler()
-        await operation_handler.exec_loop_coroutine
 
 
 def launch_args():
