@@ -24,20 +24,20 @@ class OperationQueue:
                 if operation_chain.is_empty():
                     self.queue.remove(operation_chain)
 
-    async def get_operation_from_chain(self, operation_chain: OperationChain) -> Operation:
+    def get_operation_from_chain(self, operation_chain: OperationChain) -> Operation:
         if isinstance(operation_chain, OperationChain):
             return operation_chain.head.operation
 
-    async def get_operation_by_task(self, task) -> Operation:
+    def get_operation_by_task(self, task) -> Operation:
         for operation_chain in self.queue:
-            operation = await self.get_operation_from_chain(operation_chain)
+            operation = self.get_operation_from_chain(operation_chain)
             if operation:
                 if operation.task == task:
                     return operation
             else:
                 print(f"No operation found for operation chain {operation_chain}")
 
-    async def insert_operation(self, index, operation) -> None:
+    def insert_operation(self, index, operation) -> None:
         if isinstance(operation, OperationChain):
             self.queue.insert(index, operation)
         elif isinstance(operation, Operation):

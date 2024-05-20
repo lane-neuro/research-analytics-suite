@@ -78,6 +78,13 @@ class OperationHandler:
         # Initialize the exec_loop coroutine without creating a task
         self.exec_loop_coroutine = self.exec_loop
 
+    def _create_task(self, coro, name=None):
+        """
+        Private method to create tasks. This method should be used instead of asyncio.create_task
+        within the OperationHandler class.
+        """
+        return asyncio.create_task(coro, name=name)
+
     def setup_logger(self):
         """
         Sets up the logger with a timestamp.
@@ -164,8 +171,6 @@ class OperationHandler:
         """
 
         operation = CustomOperation(self.error_handler, func, self.local_vars, name)
-        # operation.task = asyncio.create_task(self.execute_operation(operation),
-        #                                      name=self.task_counter.new_task(operation.name))
         logger.debug(f"add_custom_operation: New Operation: {operation.name}")
         await self.queue.add_operation(operation)
 
@@ -206,7 +211,7 @@ class OperationHandler:
 
         elif user_input == "resources":
             for operation_list in self.queue.queue:
-                operation_node = await self.queue.get_operation_from_chain(operation_list)
+                operation_node = self.queue.get_operation_from_chain(operation_list)
                 if isinstance(operation_node, ResourceMonitorOperation):
                     cpu_usage = operation_node.cpu_usage
                     memory_usage = operation_node.memory_usage
@@ -216,7 +221,7 @@ class OperationHandler:
 
         elif user_input == "tasks":
             for task in self.tasks:
-                operation = await self.queue.get_operation_by_task(task)
+                operation = self.queue.get_operation_by_task(task)
                 if operation:
                     logger.info(f"OperationHandler.process_user_input: Task: {task.get_name()} - {operation.status}")
             return "OperationHandler.process_user_input: Displaying all tasks..."
@@ -352,7 +357,7 @@ class OperationHandler:
         for task in self.tasks.copy():
             logger.debug(f"handle_tasks: [CHECK] {task.get_name()}")
             if task.done():
-                operation = await self.queue.get_operation_by_task(task)
+                operation = self.queue.get_operation_by_task(task)
                 try:
                     logger.debug(f"handle_tasks: [START] {task.get_name()}")
                     if operation is not None:
