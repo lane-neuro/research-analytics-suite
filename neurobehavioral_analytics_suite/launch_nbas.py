@@ -36,22 +36,26 @@ async def launch_nbas():
 
     args, extra = launch_args().parse_known_args()
 
-    operation_handler = OperationHandler()
-    gui_launcher = GuiLauncher(operation_handler)
-    await gui_launcher.launch()
-    await operation_handler.exec_loop_coroutine
-
-    return
-
     # Checks args for -o '--open_project' flag.
     # If it exists, open the project from the file
     if args.open_project is None:
         print('New Project Parameters Detected - Creating New Project')
-        active_project = new_project(args.directory, args.user_name, args.subject_name,
-                                     args.camera_framerate, args.file_list)
+        data_engine = new_project(args.directory, args.user_name, args.subject_name,
+                                  args.camera_framerate, args.file_list)
     else:
         print('Project File Detected - Loading Project at: ' + args.open_project)
-        active_project = load_project(args.open_project)
+        data_engine = load_project(args.open_project)
+
+    operation_handler = OperationHandler()
+    gui_launcher = GuiLauncher(data_engine, operation_handler)
+
+    try:
+        await asyncio.gather(
+            operation_handler.exec_loop(),
+            gui_launcher.launch(),
+        )
+    except Exception as e:
+        print(f"Error launching NBAS: {e}")
 
 
 def launch_args():

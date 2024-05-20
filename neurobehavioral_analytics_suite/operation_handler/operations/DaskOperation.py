@@ -27,7 +27,7 @@ from asyncio import Event
 from typing import Tuple
 
 from dask import delayed
-from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
+from neurobehavioral_analytics_suite.operation_handler.operations.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
@@ -75,7 +75,7 @@ class DaskOperation(Operation):
             # Execute the function
             dask_func = delayed(self.func)
             result = dask_func.compute()
-            temp_vars['result'] = result
+            temp_vars['result_output'] = result
             self.result = temp_vars
             self.local_vars = temp_vars
 

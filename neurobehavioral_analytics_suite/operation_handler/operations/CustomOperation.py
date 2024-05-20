@@ -15,7 +15,7 @@ Status: Prototype
 """
 from typing import Tuple
 
-from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
+from neurobehavioral_analytics_suite.operation_handler.operations.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
@@ -48,7 +48,7 @@ class CustomOperation(Operation):
         self.complete = False
         self.name = name
         self.status = "idle"
-        self.result = None
+        self.result_output = None
 
     async def execute(self):
         """
@@ -60,18 +60,20 @@ class CustomOperation(Operation):
         try:
             # Execute the function
             exec(self.func, {}, temp_vars)
-            self.result = temp_vars
+            self.result_output = temp_vars
             self.local_vars = temp_vars
 
-            return self.result
+            self.status = "completed"
+            return self.result_output
 
         except Exception as e:
             self.error_handler.handle_error(e, self)
-            self.result = self.local_vars
+            self.result_output = temp_vars
 
-            return self.result
+            self.status = "error"
+            return self.result_output
 
-    async def start(self) -> str:
+    async def start(self):
         """Starts the operation and handles any exceptions that occur during execution."""
         try:
             self.status = "started"
@@ -79,9 +81,7 @@ class CustomOperation(Operation):
             self.error_handler.handle_error(e, self)
             self.status = "error"
 
-        return self.status
-
-    async def stop(self) -> str:
+    async def stop(self):
         """Stops the operation and handles any exceptions that occur during execution."""
         try:
             self.status = "stopped"
@@ -89,9 +89,7 @@ class CustomOperation(Operation):
             self.error_handler.handle_error(e, self)
             self.status = "error"
 
-        return self.status
-
-    async def pause(self) -> str:
+    async def pause(self):
         """Pauses the operation and handles any exceptions that occur during execution."""
         try:
             self.status = "paused"
@@ -99,8 +97,6 @@ class CustomOperation(Operation):
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.status = "error"
-
-        return self.status
 
     async def resume(self) -> None:
         """Resumes the operation and handles any exceptions that occur during execution."""

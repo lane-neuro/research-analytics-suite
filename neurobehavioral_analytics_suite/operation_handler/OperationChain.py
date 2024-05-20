@@ -1,4 +1,8 @@
-from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
+from neurobehavioral_analytics_suite.operation_handler.operations.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.operation_handler.operations.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_handler.operations.Operation import Operation
+from neurobehavioral_analytics_suite.operation_handler.operations.ResourceMonitorOperation import \
+    ResourceMonitorOperation
 
 
 class OperationNode:
@@ -7,10 +11,13 @@ class OperationNode:
         self.next_node = next_node
 
 
-class OperationLinkedList:
+class OperationChain:
     def __init__(self, operation: Operation = None):
         self.head = None
-        if isinstance(operation, Operation):
+        if (isinstance(operation, Operation) or
+                isinstance(operation, CustomOperation) or
+                isinstance(operation, ResourceMonitorOperation) or
+                isinstance(operation, ConsoleOperation)):
             self.add_operation(operation)
 
     def add_operation(self, operation: Operation):
@@ -33,11 +40,16 @@ class OperationLinkedList:
                     break
                 current_node = current_node.next_node
 
-    async def execute_operations(self):
+    def is_empty(self):
+        return not self.head
+
+    def count_operations(self):
+        count = 0
         current_node = self.head
         while current_node:
-            await current_node.operation.execute()
+            count += 1
             current_node = current_node.next_node
+        return count
 
     def __iter__(self):
         current_node = self.head

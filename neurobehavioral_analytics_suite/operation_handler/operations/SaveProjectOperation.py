@@ -1,5 +1,5 @@
 from neurobehavioral_analytics_suite.data_engine.project.save_project import save_project
-from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
+from neurobehavioral_analytics_suite.operation_handler.operations.Operation import Operation
 
 
 class SaveProjectOperation(Operation):

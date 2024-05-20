@@ -191,10 +191,10 @@ class PoseData:
         Performs an aggregation on the func.
 
         Args:
-            aggregation (function): A function that takes a list of frames and returns an aggregated result.
+            aggregation (function): A function that takes a list of frames and returns an aggregated result_output.
 
         Returns:
-            The result of the aggregation.
+            The result_output of the aggregation.
         """
         return aggregation(self.frames)
 

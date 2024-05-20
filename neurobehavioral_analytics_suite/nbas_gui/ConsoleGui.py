@@ -12,7 +12,7 @@ class ConsoleGui:
         self.submit_button = dpg.add_button(label="Submit", callback=self.submit_command, parent=self.window)
         self.operation_handler = operation_handler
 
-    def submit_command(self, sender, data):
+    async def submit_command(self, sender, data):
         command = dpg.get_value(self.input_text)
-        asyncio.create_task(self.operation_handler.process_user_input(command))
+        await self.operation_handler.process_user_input(command)
         dpg.set_value(self.input_text, "")  # Clear the input field

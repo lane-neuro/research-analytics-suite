@@ -15,10 +15,13 @@ Status: Prototype
 import asyncio
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
+
+from neurobehavioral_analytics_suite.data_engine.DataEngine import DataEngine
 from neurobehavioral_analytics_suite.nbas_gui.ConsoleGui import ConsoleGui
 from neurobehavioral_analytics_suite.nbas_gui.OperationManagerGui import OperationManagerGui
 from neurobehavioral_analytics_suite.nbas_gui.ProjectManagerGui import ProjectManagerGui
 from neurobehavioral_analytics_suite.nbas_gui.ResourceMonitorGui import ResourceMonitorGui
+from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
 
 
 class GuiLauncher:
@@ -32,9 +35,10 @@ class GuiLauncher:
         dpg_async (DearPyGuiAsync): An instance of the DearPyGuiAsync class.
     """
 
-    def __init__(self, operation_handler):
+    def __init__(self, data_engine: DataEngine, operation_handler: OperationHandler):
         """Initializes the GuiLauncher with instances of the necessary classes."""
         self.operation_handler = operation_handler
+        self.data_engine = data_engine
         self.resource_monitor = None
         self.console = None
         self.operation_manager = None
@@ -52,7 +56,7 @@ class GuiLauncher:
         dpg.create_viewport()
         dpg.setup_dearpygui()
 
-        self.project_manager = ProjectManagerGui(self.operation_handler)
+        self.project_manager = ProjectManagerGui(self.data_engine, self.operation_handler)
         self.operation_manager = OperationManagerGui(self.operation_handler)
         self.console = ConsoleGui(self.operation_handler)
         self.resource_monitor = ResourceMonitorGui(self.operation_handler)

@@ -58,8 +58,6 @@ class ErrorHandler:
             context: The contextual information for the error.
         """
 
-        from neurobehavioral_analytics_suite.operation_handler import Operation
-
         error_info = traceback.format_exc()
         error_message = f"An error occurred in {context}: {e}\n{error_info}"
         self.logger.error(error_message)

@@ -1,7 +1,6 @@
 from collections import deque
-
-from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
-from neurobehavioral_analytics_suite.operation_handler.OperationLinkedList import OperationLinkedList
+from neurobehavioral_analytics_suite.operation_handler.operations.Operation import Operation
+from neurobehavioral_analytics_suite.operation_handler.OperationChain import OperationChain
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
@@ -11,28 +10,39 @@ class OperationQueue:
         self.error_handler = error_handler
 
     async def add_operation(self, operation) -> None:
-        if isinstance(operation, Operation):
-            operation = OperationLinkedList(operation)
+        if not isinstance(operation, OperationChain):
+            operation = OperationChain(operation)
         self.queue.append(operation)
 
-    async def remove_operation(self, operation) -> None:
-        if isinstance(operation, Operation):
-            operation = next((op for op in self.queue if op.head.operation == operation), None)
-        if operation:
+    def remove_operation(self, operation):
+        if isinstance(operation, OperationChain):
             self.queue.remove(operation)
+        elif isinstance(operation, Operation):
+            operation_chain = next((op for op in self.queue if op.head.operation == operation), None)
+            if operation_chain:
+                operation_chain.remove_operation(operation)
+                if operation_chain.is_empty():
+                    self.queue.remove(operation_chain)
 
-    def get_operation(self, operation_list: OperationLinkedList) -> Operation:
-        return operation_list.head.operation
+    async def get_operation_from_chain(self, operation_chain: OperationChain) -> Operation:
+        if isinstance(operation_chain, OperationChain):
+            return operation_chain.head.operation
 
-    def get_operation_by_task(self, task) -> Operation:
-        for operation_list in self.queue:
-            if self.get_operation(operation_list).task == task:
-                return self.get_operation(operation_list)
+    async def get_operation_by_task(self, task) -> Operation:
+        for operation_chain in self.queue:
+            operation = await self.get_operation_from_chain(operation_chain)
+            if operation:
+                if operation.task == task:
+                    return operation
+            else:
+                print(f"No operation found for operation chain {operation_chain}")
 
-    def insert_operation(self, index, operation) -> None:
-        if isinstance(operation, Operation):
-            operation = OperationLinkedList(operation)
-        self.queue.insert(index, operation)
+    async def insert_operation(self, index, operation) -> None:
+        if isinstance(operation, OperationChain):
+            self.queue.insert(index, operation)
+        elif isinstance(operation, Operation):
+            operation = OperationChain(operation)
+            self.queue.insert(index, operation)
 
     def is_empty(self) -> bool:
         return len(self.queue) == 0
@@ -44,18 +54,15 @@ class OperationQueue:
         self.queue.clear()
 
     def contains(self, operation) -> bool:
-        return any(op.head.operation == operation for op in self.queue)
+        if isinstance(operation, OperationChain):
+            return operation in self.queue
+        elif isinstance(operation, Operation):
+            return any(op.head.operation == operation for op in self.queue)
 
-    def has_pending_operations(self) -> bool:
-        return any(op.head.operation.status == "pending" for op in self.queue)
+    async def has_pending_operations(self) -> bool:
+        return any(await self.get_operation_from_chain(op).status == "pending" for op in self.queue)
 
-    async def execute_operations(self):
-        while not self.is_empty():
-            operation_list = self.dequeue()
-            await operation_list.execute_operations()
-            await self.remove_operation(operation_list)
-
-    def dequeue(self):
+    async def dequeue(self):
         if self.is_empty():
             return None
         return self.queue.popleft()

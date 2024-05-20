@@ -20,7 +20,7 @@ please refer to the project documentation: https://github.com/lane-neuro/neurobe
 import asyncio
 import psutil
 
-from neurobehavioral_analytics_suite.operation_handler.Operation import Operation
+from neurobehavioral_analytics_suite.operation_handler.operations.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 

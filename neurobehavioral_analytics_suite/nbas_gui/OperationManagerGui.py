@@ -11,7 +11,7 @@ class OperationManagerGui:
 
     def display_operations(self):
         for operation_list in self.operation_handler.queue.queue:
-            operation = self.operation_handler.queue.get_operation(operation_list)
+            operation = self.operation_handler.queue.get_operation_from_chain(operation_list)
             if operation not in self.operation_items:
                 # Create new GUI elements for the operation
                 operation_id = dpg.generate_uuid()
