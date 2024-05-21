@@ -43,7 +43,23 @@ class GuiLauncher:
         self.console = None
         self.operation_manager = None
         self.project_manager = None
-        self.dpg_async = DearPyGuiAsync()  # initialize
+        self.dpg_async = DearPyGuiAsync()
+
+    def generate_layout(self):
+        """Generates a grid-like layout for all subwindows."""
+        window_width, window_height = dpg.get_viewport_width() // 2, dpg.get_viewport_height() // 2
+
+        # Set the position and size of each subwindow
+        dpg.configure_item(self.project_manager.window, pos=(0, 0), width=window_width,
+                           height=window_height)
+        dpg.configure_item(self.operation_manager.window, pos=(window_width, 0), width=window_width,
+                           height=window_height)
+        dpg.configure_item(self.console.window, pos=(0, window_height), width=window_width,
+                           height=window_height)
+        dpg.configure_item(self.resource_monitor.window, pos=(window_width, window_height), width=window_width,
+                           height=window_height)
+
+        self.resource_monitor.update_layout()
 
     async def launch(self):
         """Launches the GUI.
@@ -57,11 +73,13 @@ class GuiLauncher:
         dpg.setup_dearpygui()
 
         self.project_manager = ProjectManagerGui(self.data_engine, self.operation_handler)
-        self.operation_manager = OperationManagerGui(self.operation_handler)
         self.console = ConsoleGui(self.operation_handler)
         self.resource_monitor = ResourceMonitorGui(self.operation_handler)
+        self.operation_manager = OperationManagerGui(self.operation_handler)
 
         dpg.show_viewport()
+        self.generate_layout()
+
         await self.dpg_async.start()
 
         # Keep the event loop running until the DearPyGui window is closed

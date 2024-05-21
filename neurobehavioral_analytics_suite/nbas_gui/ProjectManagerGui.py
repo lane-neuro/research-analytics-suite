@@ -40,12 +40,9 @@ class ProjectManagerGui:
 
     def create_project_wrapper(self, sender, data):
         operation = CreateProjectOperation(self.operation_handler.error_handler, self.data_engine)
-        asyncio.create_task(self.operation_handler.queue.add_operation(operation))
 
     def load_project_wrapper(self, sender, data):
         operation = LoadProjectOperation(self.operation_handler.error_handler, self.data_engine)
-        asyncio.create_task(self.operation_handler.queue.add_operation(operation))
 
     def save_project_wrapper(self, sender, data):
         operation = SaveProjectOperation(self.operation_handler.error_handler, self.data_engine)
-        asyncio.create_task(self.operation_handler.queue.add_operation(operation))

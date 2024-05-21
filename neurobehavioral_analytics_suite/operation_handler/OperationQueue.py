@@ -9,12 +9,12 @@ class OperationQueue:
         self.queue = deque()
         self.error_handler = error_handler
 
-    async def add_operation(self, operation) -> None:
+    async def add_operation_to_queue(self, operation) -> None:
         if not isinstance(operation, OperationChain):
             operation = OperationChain(operation)
         self.queue.append(operation)
 
-    def remove_operation(self, operation):
+    def remove_operation_from_queue(self, operation):
         if isinstance(operation, OperationChain):
             self.queue.remove(operation)
         elif isinstance(operation, Operation):

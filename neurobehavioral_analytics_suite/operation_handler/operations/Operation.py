@@ -47,7 +47,7 @@ class Operation(ABC):
         return self._status
 
     def __init__(self, name: str = "Operation", error_handler: ErrorHandler = ErrorHandler(),
-                 persistent: bool = False):
+                 persistent: bool = False, func=None):
         """Initializes Operation with the operation to be managed and whether it should run indefinitely.
 
         Args:
@@ -56,6 +56,7 @@ class Operation(ABC):
         """
         self.name = name
         self.error_handler = error_handler
+        self.func = func
         self.persistent = persistent
         self.status = "idle"
         self.task = None
@@ -85,13 +86,27 @@ class Operation(ABC):
 
     @abstractmethod
     async def execute(self):
-        """Executes the operation."""
-        pass
+        """
+        Executes the operation.
+        """
+        self.status = "running"
+        try:
+            # Execute the function
+            self.func()
+            if not self.persistent:
+                self.status = "completed"
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
+            self.status = "error"
 
     @abstractmethod
     async def start(self):
         """Starts the operation."""
-        pass
+        try:
+            self.status = "started"
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
+            self.status = "error"
 
     @abstractmethod
     async def stop(self):

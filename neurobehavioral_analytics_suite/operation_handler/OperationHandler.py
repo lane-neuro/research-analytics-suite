@@ -78,12 +78,15 @@ class OperationHandler:
         # Initialize the exec_loop coroutine without creating a task
         self.exec_loop_coroutine = self.exec_loop
 
-    def _create_task(self, coro, name=None):
+    def _create_task(self, coro, name):
         """
         Private method to create tasks. This method should be used instead of asyncio.create_task
         within the OperationHandler class.
         """
-        return asyncio.create_task(coro, name=name)
+        name = self.task_counter.new_task(name)
+        task = asyncio.create_task(coro, name=name)
+        self.tasks.add(task)
+        return task
 
     def setup_logger(self):
         """
@@ -161,6 +164,20 @@ class OperationHandler:
         await operation.stop()
         operation.status = "stopped"
 
+    async def add_operation(self, func, name: str = "Operation") -> Operation:
+        """
+        Creates a new Operation and adds it to the queue.
+
+        Args:
+            func (callable): The function to be executed by the Operation.
+            name (str, optional): The name of the Operation. Defaults to "Operation".
+        """
+        logger.info(f"add_operation: [START] {name}")
+        operation = Operation(name=name, error_handler=self.error_handler, func=func)
+        logger.info(f"add_operation: New Operation: {operation.name}")
+        await self.queue.add_operation_to_queue(operation)
+        return operation
+
     async def add_custom_operation(self, func, name: str = "CustomOperation"):
         """
         Creates a new CustomOperation and adds it to the queue.
@@ -172,7 +189,7 @@ class OperationHandler:
 
         operation = CustomOperation(self.error_handler, func, self.local_vars, name)
         logger.debug(f"add_custom_operation: New Operation: {operation.name}")
-        await self.queue.add_operation(operation)
+        await self.queue.add_operation_to_queue(operation)
 
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs):
         # Check if a task of operation_type is running or in the queue
@@ -180,7 +197,7 @@ class OperationHandler:
                 isinstance(task, operation_type) and task.status in ["running", "started"] for task in self.tasks) and \
                 not any(
                     isinstance(operation_chain.head.operation, operation_type) for operation_chain in self.queue.queue):
-            await self.queue.add_operation(operation_type(*args, **kwargs))
+            await self.queue.add_operation_to_queue(operation_type(*args, **kwargs))
             logger.info(f"add_operation_if_not_exists: [QUEUE] {operation_type.__name__} - Added to queue")
 
     async def process_user_input(self, user_input) -> str:
@@ -344,10 +361,8 @@ class OperationHandler:
                     logger.debug(f"execute_all: [START] {operation.name} - {operation.status} - {operation.task}")
 
                     if not operation.task:
-                        operation.task = asyncio.create_task(self.execute_operation(operation),
-                                                             name=self.task_counter.new_task(operation.name))
+                        operation.task = self._create_task(self.execute_operation(operation), name=operation.name)
                         operation.task.type = type(operation)
-                        self.tasks.add(operation.task)
                     if isinstance(operation, ConsoleOperation):
                         self.console_operation_in_progress = True
                     # await operation.task
@@ -368,7 +383,7 @@ class OperationHandler:
                             logger.debug(f"handle_tasks: [OUTPUT] {output}")
                         logger.debug(f"handle_tasks: [DONE] {task.get_name()}")
                     else:
-                        print("Operation is None")
+                        logger.debug(f"handle_tasks: [ERROR] No operation found for task {task.get_name()}")
                 except Exception as e:
                     self.error_handler.handle_error(e, self)
                 finally:
@@ -376,7 +391,7 @@ class OperationHandler:
                         self.tasks.remove(task)
                         if not operation.persistent:
                             operation.status = "completed"
-                            self.queue.remove_operation(operation)
+                            self.queue.remove_operation_from_queue(operation)
 
                         if isinstance(operation, ConsoleOperation):
                             self.console_operation_in_progress = False
@@ -392,7 +407,7 @@ class OperationHandler:
             try:
                 if not self.console_operation_in_progress:
                     await self.add_operation_if_not_exists(ConsoleOperation, self.error_handler, self, logger,
-                                                           self.local_vars, name="ConsoleOperation", prompt="", )
+                                                           self.local_vars, name="ConsoleOperation", prompt="")
                     self.console_operation_in_progress = True
 
                 # Check if a ResourceMonitorOperation is already running
