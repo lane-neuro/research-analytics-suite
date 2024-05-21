@@ -63,6 +63,7 @@ class OperationHandler:
         """
         self.console_operation_in_progress = False
         self.setup_logger()
+        self.log_message_queue = asyncio.Queue()
         self.local_vars = locals()
 
         self.task_counter = TaskCounter()
@@ -111,6 +112,13 @@ class OperationHandler:
 
         # Add the handler to the logger
         logger.addHandler(handler)
+
+        # Add a log message to the queue whenever a new log is generated
+        logger.addFilter(lambda record: self.log_message(record.getMessage()))
+
+    def log_message(self, message):
+        """Send a log message to the queue."""
+        self.log_message_queue.put_nowait(message)
 
     async def start_operations(self) -> None:
         for operation_chain in self.queue.queue:
