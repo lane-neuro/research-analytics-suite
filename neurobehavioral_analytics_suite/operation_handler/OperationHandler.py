@@ -40,7 +40,7 @@ class TaskCounter:
 
     def new_task(self, name: str) -> str:
         self.counter += 1
-        logger.debug(f"TaskCounter.new_task: [NEW] [{self.counter}]{name}")
+        logger.info(f"TaskCounter.new_task: [NEW] [{self.counter}]{name}")
         return f"[{self.counter}]" + name
 
 
@@ -83,10 +83,19 @@ class OperationHandler:
         Private method to create tasks. This method should be used instead of asyncio.create_task
         within the OperationHandler class.
         """
-        name = self.task_counter.new_task(name)
-        task = asyncio.create_task(coro, name=name)
+        task = asyncio.create_task(coro, name=self.task_counter.new_task(name))
         self.tasks.add(task)
         return task
+
+    async def create_task(self, coro, name) -> Operation:
+        """
+        Public method to create tasks. This method should be used instead of asyncio.create_task
+        within the OperationHandler class.
+        """
+        logger.info(f"create_task: [START] {name}")
+        new_op = await self.add_operation(Operation(name=name, func=coro))
+        new_op.task = self._create_task(new_op.func(), new_op.name)
+        return new_op
 
     def setup_logger(self):
         """
@@ -362,7 +371,7 @@ class OperationHandler:
 
                     if not operation.task:
                         operation.task = self._create_task(self.execute_operation(operation), name=operation.name)
-                        operation.task.type = type(operation)
+                        # operation.task.type = operation.type
                     if isinstance(operation, ConsoleOperation):
                         self.console_operation_in_progress = True
                     # await operation.task
@@ -377,7 +386,7 @@ class OperationHandler:
                     logger.debug(f"handle_tasks: [START] {task.get_name()}")
                     if operation is not None:
                         await operation.task
-                        if task.type == CustomOperation:
+                        if operation.type == CustomOperation:
                             output = operation.result_output
                             self.local_vars = output
                             logger.debug(f"handle_tasks: [OUTPUT] {output}")

@@ -35,7 +35,10 @@ class ResourceMonitorGui:
         self.setup_cpu_monitor(self.cpu_container)
         self.setup_memory_monitor(self.memory_container)
 
-        self.update_task = asyncio.create_task(self.update_resource_usage())
+        try:
+            self.update_operation = asyncio.create_task(self.update_resource_usage(), name="gui_ResourceUpdateTask")
+        except Exception as e:
+            print(f"Error creating task: {e}")
 
     def setup_cpu_monitor(self, parent):
         self.cpu_text = dpg.add_text("CPU Usage: 0%", parent=parent)
@@ -81,14 +84,17 @@ class ResourceMonitorGui:
         line_series = dpg.add_line_series(x_data, data, label=label, parent=y_axis)
 
     def update_layout(self):
+        window_width = dpg.get_item_width(self.window)
+        container_width = window_width // 2
+        container_height = dpg.get_item_height(self.cpu_container)
+        plot_width = container_width - 20
+        plot_height = container_height - 20
+
         # Configure the size and position of the containers
-        dpg.configure_item(self.cpu_container, pos=(0, 0), width=dpg.get_item_width(self.window) // 2,
-                           height=dpg.get_item_height(self.window))
-        dpg.configure_item(self.memory_container, pos=(dpg.get_item_width(self.cpu_container), 0),
-                           width=dpg.get_item_width(self.window) // 2, height=dpg.get_item_height(self.window))
+        dpg.configure_item(self.cpu_container, pos=(0, 20), width=container_width, height=container_height)
+        dpg.configure_item(self.memory_container, pos=(container_width, 20), width=container_width,
+                           height=container_height)
 
         # Configure the size of the plots to match the size of their respective containers
-        dpg.configure_item(self.cpu_history, width=dpg.get_item_width(self.cpu_container),
-                           height=dpg.get_item_height(self.cpu_container))
-        dpg.configure_item(self.memory_history, width=dpg.get_item_width(self.memory_container),
-                           height=dpg.get_item_height(self.memory_container))
+        dpg.configure_item(self.cpu_history, width=plot_width, height=plot_height)
+        dpg.configure_item(self.memory_history, width=plot_width, height=plot_height)

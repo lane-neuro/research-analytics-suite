@@ -64,6 +64,7 @@ class Operation(ABC):
         self.complete = False
         self.pause_event = asyncio.Event()
         self.pause_event.set()
+        self.type = type(self)
 
     @abstractmethod
     def progress(self) -> Tuple[int, str]:

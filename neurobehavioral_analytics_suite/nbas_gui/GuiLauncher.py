@@ -47,7 +47,7 @@ class GuiLauncher:
 
     def generate_layout(self):
         """Generates a grid-like layout for all subwindows."""
-        window_width, window_height = dpg.get_viewport_width() // 2, dpg.get_viewport_height() // 2
+        window_width, window_height = dpg.get_viewport_width() // 2 - 10, dpg.get_viewport_height() // 2
 
         # Set the position and size of each subwindow
         dpg.configure_item(self.project_manager.window, pos=(0, 0), width=window_width,
