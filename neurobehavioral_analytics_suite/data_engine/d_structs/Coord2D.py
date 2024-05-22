@@ -15,10 +15,13 @@ Status: Prototype
 """
 
 from copy import deepcopy
+from dataclasses import dataclass
+
 from neurobehavioral_analytics_suite.data_engine import DataEngine
 
 
-class Coord2D (object):
+@dataclass
+class Coord2D(object):
     """
     A class to handle 2D coordinates.
 

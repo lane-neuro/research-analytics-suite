@@ -13,3 +13,4 @@ numpy==1.24.3
 psutil==5.9.0
 dearpygui==1.11.1
 dearpygui-async==0.1.2
+requests~=2.31.0
