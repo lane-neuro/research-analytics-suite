@@ -29,6 +29,7 @@ from neurobehavioral_analytics_suite.operation_handler.operations.ResourceMonito
     ResourceMonitorOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 from neurobehavioral_analytics_suite.operation_handler.OperationQueue import OperationQueue
+from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -55,14 +56,15 @@ class OperationHandler:
         nest_asyncio.apply()
         self.setup_logger()
         self.main_loop = asyncio.get_event_loop()
+
         self.error_handler = ErrorHandler()
         self.queue = OperationQueue()
+        self.task_manager = TaskManager(self, logger, self.error_handler, self.queue)
+        self.user_input_handler = UserInputManager(self, logger, self.error_handler)
 
         self.console_operation_in_progress = False
         self.log_message_queue = asyncio.Queue()
         self.local_vars = locals()
-
-        self.task_manager = TaskManager(self, logger, self.error_handler, self.queue)
 
         self.sleep_time = sleep_time
 
@@ -242,65 +244,6 @@ class OperationHandler:
                 status_dict[operation_node] = operation_node.status
         return status_dict
 
-    async def process_user_input(self, user_input) -> str:
-        """
-        Processes user input from the console.
-
-        This method takes user input from the console and processes it. It can be extended to include additional
-        functionality as needed.
-
-        Args:
-            user_input (str): The user input to process.
-
-        Returns:
-            str: The response to the user input.
-        """
-
-        if user_input == "stop":
-            await self.stop_all_operations()
-            return "OperationHandler.process_user_input: Stopping all operations..."
-
-        elif user_input == "pause":
-            await self.pause_all_operations()
-            return "OperationHandler.process_user_input: Pausing all operations..."
-
-        elif user_input == "resume":
-            await self.resume_all_operations()
-            return "OperationHandler.process_user_input: Resuming all operations..."
-
-        elif user_input == "resources":
-            for operation_list in self.queue.queue:
-                operation_node = self.queue.get_operation_from_chain(operation_list)
-                if isinstance(operation_node, ResourceMonitorOperation):
-                    cpu_usage = operation_node.cpu_usage
-                    memory_usage = operation_node.memory_usage
-                    logger.info(f"OperationHandler.process_user_input: Resource Usage: CPU - {cpu_usage}, "
-                                f"MEMORY - {memory_usage}")
-            return "OperationHandler.process_user_input: Displaying system resources."
-
-        elif user_input == "tasks":
-            for task in self.task_manager.tasks:
-                operation = self.queue.get_operation_by_task(task)
-                if operation:
-                    logger.info(f"OperationHandler.process_user_input: Task: {task.get_name()} - {operation.status}")
-            return "OperationHandler.process_user_input: Displaying all tasks..."
-
-        elif user_input == "queue":
-            for queue_chain in self.queue.queue:
-                operation = queue_chain.head.operation
-                logger.info(f"OperationHandler.process_user_input: Operation: {operation.task.get_name()} - "
-                            f"{operation.status}")
-            return "OperationHandler.process_user_input: Displaying all operations in the queue..."
-
-        elif user_input == "vars":
-            logger.info(f"OperationHandler.process_user_input: Local Vars: {self.local_vars}")
-            return "OperationHandler.process_user_input: Displaying local vars..."
-
-        else:
-            logger.debug(f"OperationHandler.process_user_input: Adding custom operation with func: {user_input}")
-            await self.add_custom_operation(user_input, "ConsoleInput")
-            return f"OperationHandler.process_user_input: Added custom operation with func: {user_input}"
-
     async def execute_operation(self, operation) -> asyncio.Task:
         nest_asyncio.apply()
         try:
@@ -356,7 +299,7 @@ class OperationHandler:
         """
 
         if not self.console_operation_in_progress:
-            await self.add_operation_if_not_exists(ConsoleOperation, self.error_handler, self, logger,
+            await self.add_operation_if_not_exists(ConsoleOperation, self.error_handler, self.user_input_handler, logger,
                                                    self.local_vars, name="ConsoleOperation", prompt="")
             self.console_operation_in_progress = True
 

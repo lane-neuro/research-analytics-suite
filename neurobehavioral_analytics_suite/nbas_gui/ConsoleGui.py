@@ -2,17 +2,20 @@
 import asyncio
 
 import dearpygui.dearpygui as dpg
+
 from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
+from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 
 
 class ConsoleGui:
-    def __init__(self, operation_handler: OperationHandler):
+    def __init__(self, user_input_handler: UserInputManager, operation_handler: OperationHandler):
         self.window = dpg.add_window(label="Console")
         self.logger_output = dpg.add_text(default_value="", parent=self.window)
         self.input_text = dpg.add_input_text(label="Command", parent=self.window)
         self.submit_button = dpg.add_button(label="Submit", callback=self.submit_command, parent=self.window)
         self.search_text = dpg.add_input_text(label="Search", parent=self.window)
         self.search_button = dpg.add_button(label="Search", callback=self.search_command, parent=self.window)
+        self.user_input_handler = user_input_handler
         self.operation_handler = operation_handler
         self.command_history = []
         self.command_help = {"command1": "This is command1", "command2": "This is command2"}
@@ -33,7 +36,7 @@ class ConsoleGui:
             dpg.set_value(self.logger_output, help_text)
         else:
             try:
-                await self.operation_handler.process_user_input(command)
+                await self.user_input_handler.process_user_input(command)
                 self.command_history.append(command)
             except Exception as e:
                 dpg.set_value(self.logger_output, str(e))

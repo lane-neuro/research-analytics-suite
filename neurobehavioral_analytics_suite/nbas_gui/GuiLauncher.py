@@ -73,7 +73,7 @@ class GuiLauncher:
         dpg.setup_dearpygui()
 
         self.project_manager = ProjectManagerGui(self.data_engine, self.operation_handler)
-        self.console = ConsoleGui(self.operation_handler)
+        self.console = ConsoleGui(self.operation_handler.user_input_handler, self.operation_handler)
         self.resource_monitor = ResourceMonitorGui(self.operation_handler)
         self.operation_manager = OperationManagerGui(self.operation_handler)
 

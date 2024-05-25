@@ -17,8 +17,10 @@ import asyncio
 import logging
 
 import aioconsole
+
 from neurobehavioral_analytics_suite.operation_handler.operations.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.utils import ErrorHandler
+from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 
 
 class ConsoleOperation(CustomOperation):
@@ -33,8 +35,8 @@ class ConsoleOperation(CustomOperation):
         logger (logging.Logger): A logger instance used for logging information.
     """
 
-    def __init__(self, error_handler: ErrorHandler, operation_handler, logger, local_vars, prompt: str = '->> ',
-                 data=None, name: str = "ConsoleOperation"):
+    def __init__(self, error_handler: ErrorHandler, user_input_handler: UserInputManager, logger, local_vars,
+                 prompt: str = '->> ', data=None, name: str = "ConsoleOperation"):
         """
         Initializes the ConsoleOperation with a prompt for user input and the func to be processed.
 
@@ -46,7 +48,7 @@ class ConsoleOperation(CustomOperation):
 
         super().__init__(error_handler, data, local_vars)
         self.complete = False
-        self.operation_handler = operation_handler
+        self.user_input_handler = user_input_handler
         self.error_handler = error_handler
         self.prompt = prompt
         self.logger = logger
@@ -73,7 +75,7 @@ class ConsoleOperation(CustomOperation):
                     self.status = "stopped"
                     break
 
-                await self.operation_handler.process_user_input(user_input)
+                await self.user_input_handler.process_user_input(user_input)
             except UnicodeDecodeError as e:  # Catch specific exception
                 self.logger.error(f"ConsoleOperation.execute: Exception occurred: {e}")
                 break
