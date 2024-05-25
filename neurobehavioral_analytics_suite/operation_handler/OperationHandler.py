@@ -148,17 +148,6 @@ class OperationHandler:
                     operation.status = "started"
                     logger.debug(f"start_operations: [START] {operation.name}")
 
-    async def execute_operation(self, operation) -> asyncio.Task:
-        nest_asyncio.apply()
-        try:
-            if operation.status == "started":
-                logger.info(f"execute_operation: [RUN] {operation.task.get_name()}")
-                await operation.execute()
-                operation.status = "completed"
-                return operation.task
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-
     async def resume_operation(self, operation: Operation) -> None:
         """
         Resumes a specific operation.
@@ -312,6 +301,17 @@ class OperationHandler:
             await self.add_custom_operation(user_input, "ConsoleInput")
             return f"OperationHandler.process_user_input: Added custom operation with func: {user_input}"
 
+    async def execute_operation(self, operation) -> asyncio.Task:
+        nest_asyncio.apply()
+        try:
+            if operation.status == "started":
+                logger.info(f"execute_operation: [RUN] {operation.task.get_name()}")
+                await operation.execute()
+                operation.status = "completed"
+                return operation.task
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
+
     async def execute_all(self) -> None:
         """
         Executes all Operation instances in the queue.
@@ -350,6 +350,20 @@ class OperationHandler:
                     if isinstance(operation, ConsoleOperation):
                         self.console_operation_in_progress = True
 
+    async def check_persistent_operations(self):
+        """
+        Checks for persistent operations and adds them to the queue if they are not already present.
+        """
+
+        if not self.console_operation_in_progress:
+            await self.add_operation_if_not_exists(ConsoleOperation, self.error_handler, self, logger,
+                                                   self.local_vars, name="ConsoleOperation", prompt="")
+            self.console_operation_in_progress = True
+
+        # Check if a ResourceMonitorOperation is already running
+        if not any(isinstance(task, ResourceMonitorOperation) for task in self.task_manager.tasks):
+            await self.add_operation_if_not_exists(ResourceMonitorOperation, self.error_handler)
+
     async def exec_loop(self):
         """
         Executes the main loop of the operation manager.
@@ -359,14 +373,8 @@ class OperationHandler:
 
         while True:
             try:
-                if not self.console_operation_in_progress:
-                    await self.add_operation_if_not_exists(ConsoleOperation, self.error_handler, self, logger,
-                                                           self.local_vars, name="ConsoleOperation", prompt="")
-                    self.console_operation_in_progress = True
-
-                # Check if a ResourceMonitorOperation is already running
-                if not any(isinstance(task, ResourceMonitorOperation) for task in self.task_manager.tasks):
-                    await self.add_operation_if_not_exists(ResourceMonitorOperation, self.error_handler)
+                # Check for persistent operations
+                await self.check_persistent_operations()
 
                 # Start all operations in the queue
                 await self.start_operations()
