@@ -123,10 +123,10 @@ class OperationHandler:
 
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs):
         # Check if a task of operation_type is running or in the queue
-        if not any(
-                isinstance(task, operation_type) and task.status in ["running", "started"] for task in self.task_manager.tasks) and \
-                not any(
-                    isinstance(operation_chain.head.operation, operation_type) for operation_chain in self.queue.queue):
+        if (not any(isinstance(task, operation_type)
+                    and task.status in ["running", "started"] for task in self.task_manager.tasks)
+                and not any(isinstance(operation_chain.head.operation, operation_type) for operation_chain
+                            in self.queue.queue)):
             await self.queue.add_operation_to_queue(operation_type(*args, **kwargs))
             logger.info(f"add_operation_if_not_exists: [QUEUE] {operation_type.__name__} - Added to queue")
 
@@ -345,7 +345,8 @@ class OperationHandler:
                     logger.debug(f"execute_all: [START] {operation.name} - {operation.status} - {operation.task}")
 
                     if not operation.task:
-                        operation.task = self.task_manager.create_task(self.execute_operation(operation), name=operation.name)
+                        operation.task = self.task_manager.create_task(self.execute_operation(operation),
+                                                                       name=operation.name)
                     if isinstance(operation, ConsoleOperation):
                         self.console_operation_in_progress = True
 
