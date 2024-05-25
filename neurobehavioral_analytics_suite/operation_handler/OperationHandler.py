@@ -66,14 +66,6 @@ class OperationHandler:
 
         self.sleep_time = sleep_time
 
-    def _create_task(self, coro, name):
-        """
-        Private method to create tasks. This method should be used instead of asyncio.create_task
-        within the OperationHandler class.
-        """
-        task = asyncio.create_task(coro, name=self.task_manager.task_counter.new_task(name))
-        self.task_manager.tasks.add(task)
-        return task
 
     def setup_logger(self):
         """
@@ -355,7 +347,7 @@ class OperationHandler:
                     logger.debug(f"execute_all: [START] {operation.name} - {operation.status} - {operation.task}")
 
                     if not operation.task:
-                        operation.task = self._create_task(self.execute_operation(operation), name=operation.name)
+                        operation.task = self.task_manager.create_task(self.execute_operation(operation), name=operation.name)
                     if isinstance(operation, ConsoleOperation):
                         self.console_operation_in_progress = True
 

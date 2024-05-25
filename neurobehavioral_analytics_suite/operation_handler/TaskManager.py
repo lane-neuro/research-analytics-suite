@@ -12,6 +12,8 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+import asyncio
+
 from neurobehavioral_analytics_suite.operation_handler.TaskCounter import TaskCounter
 from neurobehavioral_analytics_suite.operation_handler.operations.ConsoleOperation import ConsoleOperation
 from neurobehavioral_analytics_suite.operation_handler.operations.CustomOperation import CustomOperation
@@ -25,6 +27,15 @@ class TaskManager:
         self.error_handler = error_handler
         self.logger = logger
         self.queue = queue
+
+    def create_task(self, coro, name):
+        """
+        Private method to create tasks. This method should be used instead of asyncio.create_task
+        within the OperationHandler class.
+        """
+        task = asyncio.create_task(coro, name=self.task_counter.new_task(name))
+        self.tasks.add(task)
+        return task
 
     async def handle_tasks(self) -> None:
         self.logger.debug("handle_tasks: [INIT]")
