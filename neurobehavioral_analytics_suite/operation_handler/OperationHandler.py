@@ -66,6 +66,11 @@ class OperationHandler:
 
         self.sleep_time = sleep_time
 
+    async def start(self):
+        """
+        Starts the operation handler.
+        """
+        asyncio.get_event_loop().run_forever()
 
     def setup_logger(self):
         """
@@ -88,67 +93,6 @@ class OperationHandler:
     def log_message(self, message):
         """Send a log message to the queue."""
         self.log_message_queue.put_nowait(message)
-
-    async def start_operations(self) -> None:
-        for operation_chain in self.queue.queue:
-            if isinstance(operation_chain, OperationChain):
-                current_node = operation_chain.head
-                while current_node is not None:
-                    operation = current_node.operation
-                    if operation.status == "idle":
-                        await operation.start()
-                        operation.status = "started"
-                        logger.debug(f"start_operations: [START] {operation.name}")
-                    current_node = current_node.next_node
-            else:
-                operation = operation_chain.operation
-                if operation.status == "idle":
-                    await operation.start()
-                    operation.status = "started"
-                    logger.debug(f"start_operations: [START] {operation.name}")
-
-    async def execute_operation(self, operation) -> asyncio.Task:
-        nest_asyncio.apply()
-        try:
-            if operation.status == "started":
-                logger.info(f"execute_operation: [RUN] {operation.task.get_name()}")
-                await operation.execute()
-                operation.status = "completed"
-                return operation.task
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-
-    async def pause_operation(self, operation: Operation) -> None:
-        """
-        Pauses a specific operation.
-
-        Args:
-            operation (Operation): The operation to pause.
-        """
-        if operation.status == "running":
-            await operation.pause()
-            operation.status = "paused"
-
-    async def resume_operation(self, operation: Operation) -> None:
-        """
-        Resumes a specific operation.
-
-        Args:
-            operation (Operation): The operation to resume.
-        """
-        if operation.status == "paused":
-            await operation.resume()
-            operation.status = "running"
-
-    async def stop_operation(self, operation: Operation) -> None:
-        """
-        Stops a specific operation.
-
-        Args:
-            operation (Operation): The operation to stop.
-        """
-        await operation.stop()
-        operation.status = "stopped"
 
     async def add_operation(self, func, name: str = "Operation") -> Operation:
         """
@@ -185,6 +129,129 @@ class OperationHandler:
                     isinstance(operation_chain.head.operation, operation_type) for operation_chain in self.queue.queue):
             await self.queue.add_operation_to_queue(operation_type(*args, **kwargs))
             logger.info(f"add_operation_if_not_exists: [QUEUE] {operation_type.__name__} - Added to queue")
+
+    async def start_operations(self) -> None:
+        for operation_chain in self.queue.queue:
+            if isinstance(operation_chain, OperationChain):
+                current_node = operation_chain.head
+                while current_node is not None:
+                    operation = current_node.operation
+                    if operation.status == "idle":
+                        await operation.start()
+                        operation.status = "started"
+                        logger.debug(f"start_operations: [START] {operation.name}")
+                    current_node = current_node.next_node
+            else:
+                operation = operation_chain.operation
+                if operation.status == "idle":
+                    await operation.start()
+                    operation.status = "started"
+                    logger.debug(f"start_operations: [START] {operation.name}")
+
+    async def execute_operation(self, operation) -> asyncio.Task:
+        nest_asyncio.apply()
+        try:
+            if operation.status == "started":
+                logger.info(f"execute_operation: [RUN] {operation.task.get_name()}")
+                await operation.execute()
+                operation.status = "completed"
+                return operation.task
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
+
+    async def resume_operation(self, operation: Operation) -> None:
+        """
+        Resumes a specific operation.
+
+        Args:
+            operation (Operation): The operation to resume.
+        """
+        if operation.status == "paused":
+            await operation.resume()
+            operation.status = "running"
+
+    async def resume_all_operations(self):
+        """
+        Resumes all paused operations in the queue.
+        """
+
+        for operation_list in self.queue.queue:
+            operation = self.queue.get_operation_from_chain(operation_list)
+            if operation.status == "paused":
+                await operation.resume()
+
+    async def pause_operation(self, operation: Operation) -> None:
+        """
+        Pauses a specific operation.
+
+        Args:
+            operation (Operation): The operation to pause.
+        """
+        if operation.status == "running":
+            await operation.pause()
+            operation.status = "paused"
+
+    async def pause_all_operations(self):
+        """
+        Pauses all operations in the queue.
+        """
+
+        for operation_list in self.queue.queue:
+            operation = self.queue.get_operation_from_chain(operation_list)
+            await self.pause_operation(operation)
+
+    async def stop_operation(self, operation: Operation) -> None:
+        """
+        Stops a specific operation.
+
+        Args:
+            operation (Operation): The operation to stop.
+        """
+        await operation.stop()
+        operation.status = "stopped"
+
+    async def stop_all_operations(self):
+        """
+        Stops all operations in the queue.
+        """
+        for operation_node in self.queue.queue:
+            if isinstance(operation_node, OperationChain):
+                current_node = operation_node.head
+                while current_node is not None:
+                    await self.stop_operation(current_node.operation)
+                    current_node = current_node.next_node
+            else:
+                await self.stop_operation(operation_node)
+
+    def get_operation_status(self, operation) -> str:
+        """
+        Returns the status of a specific operation.
+
+        Args:
+            operation (Operation): The operation to get the status of.
+
+        Returns:
+            str: The status of the operation.
+        """
+        return operation.status
+
+    def get_all_operations_status(self):
+        """
+        Returns the status of all operations in the queue.
+
+        Returns:
+            dict: A dictionary mapping operation instances to their status.
+        """
+        status_dict = {}
+        for operation_node in self.queue.queue:
+            if isinstance(operation_node, OperationChain):
+                current_node = operation_node.head
+                while current_node is not None:
+                    status_dict[current_node.operation] = current_node.operation.status
+                    current_node = current_node.next_node
+            else:
+                status_dict[operation_node] = operation_node.status
+        return status_dict
 
     async def process_user_input(self, user_input) -> str:
         """
@@ -245,80 +312,11 @@ class OperationHandler:
             await self.add_custom_operation(user_input, "ConsoleInput")
             return f"OperationHandler.process_user_input: Added custom operation with func: {user_input}"
 
-    async def stop_all_operations(self):
-        """
-        Stops all operations in the queue.
-        """
-        for operation_node in self.queue.queue:
-            if isinstance(operation_node, OperationChain):
-                current_node = operation_node.head
-                while current_node is not None:
-                    await self.stop_operation(current_node.operation)
-                    current_node = current_node.next_node
-            else:
-                await self.stop_operation(operation_node)
-
-    async def pause_all_operations(self):
-        """
-        Pauses all operations in the queue.
-        """
-
-        for operation_list in self.queue.queue:
-            operation = self.queue.get_operation_from_chain(operation_list)
-            await self.pause_operation(operation)
-
-    async def resume_all_operations(self):
-        """
-        Resumes all paused operations in the queue.
-        """
-
-        for operation_list in self.queue.queue:
-            operation = self.queue.get_operation_from_chain(operation_list)
-            if operation.status == "paused":
-                await operation.resume()
-
-    def get_operation_status(self, operation) -> str:
-        """
-        Returns the status of a specific operation.
-
-        Args:
-            operation (Operation): The operation to get the status of.
-
-        Returns:
-            str: The status of the operation.
-        """
-        return operation.status
-
-    def get_all_operations_status(self):
-        """
-        Returns the status of all operations in the queue.
-
-        Returns:
-            dict: A dictionary mapping operation instances to their status.
-        """
-        status_dict = {}
-        for operation_node in self.queue.queue:
-            if isinstance(operation_node, OperationChain):
-                current_node = operation_node.head
-                while current_node is not None:
-                    status_dict[current_node.operation] = current_node.operation.status
-                    current_node = current_node.next_node
-            else:
-                status_dict[operation_node] = operation_node.status
-        return status_dict
-
-    async def start(self):
-        """
-        Starts the operation handler.
-        """
-        asyncio.get_event_loop().run_forever()
-
     async def execute_all(self) -> None:
         """
         Executes all Operation instances in the queue.
 
-        This method executes the operations asynchronously. It waits for all operations to
-        complete before returning.
+        This method executes the operations asynchronously. It waits for all operations tocomplete before returning.
 
         Raises:
             Exception: If an exception occurs during the execution of an operation, it is caught and handled by the
