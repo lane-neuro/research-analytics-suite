@@ -38,6 +38,7 @@ def main():
 
 if __name__ == '__main__':
     sys.argv = ['__main__.py',
+                '-g', 'True',
                 '-u', 'dev_test',
                 '-d', '..\\..\\NBAS-test-output\\',
                 '-s', 'Mouse',

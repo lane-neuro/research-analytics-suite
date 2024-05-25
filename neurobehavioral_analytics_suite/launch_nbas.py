@@ -35,6 +35,7 @@ async def launch_nbas():
     """
 
     args, extra = launch_args().parse_known_args()
+    tasks = []
 
     # Checks args for -o '--open_project' flag.
     # If it exists, open the project from the file
@@ -47,13 +48,14 @@ async def launch_nbas():
         data_engine = load_project(args.open_project)
 
     operation_handler = OperationHandler()
-    gui_launcher = GuiLauncher(data_engine, operation_handler)
+    tasks.append(operation_handler.exec_loop())
+
+    if args.gui is not None and args.gui.lower() == 'true':
+        gui_launcher = GuiLauncher(data_engine, operation_handler)
+        tasks.append(gui_launcher.launch())
 
     try:
-        await asyncio.gather(
-            operation_handler.exec_loop(),
-            gui_launcher.launch(),
-        )
+        await asyncio.gather(*tasks)
     except Exception as e:
         print(f"Error launching NBAS: {e}")
 
@@ -71,17 +73,13 @@ def launch_args():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-o', '--open_project',
-                        help='Opens an existing project from the specified file')
-    parser.add_argument('-u', '--user_name',
-                        help='Name of user/experimenter')
-    parser.add_argument('-d', '--directory',
-                        help='Directory where project files will be located')
+    parser.add_argument('-g', '--gui', help='Launches the NeuroBehavioral Analytics Suite GUI')
+    parser.add_argument('-o', '--open_project', help='Opens an existing project from the specified file')
+    parser.add_argument('-u', '--user_name', help='Name of user/experimenter')
+    parser.add_argument('-d', '--directory', help='Directory where project files will be located')
     parser.add_argument('-s', '--subject_name',
-                        help='Name of the subject of experiment (e.g., mouse, human, rat, etc.)')
-    parser.add_argument('-f', '--file_list',
-                        help='List of files containing experimental func')
-    parser.add_argument('-c', '--camera_framerate',
-                        help='Camera Framerate')
+                        help='Name of the experimental subject (e.g., mouse, human, etc.)')
+    parser.add_argument('-f', '--file_list', help='List of files containing experimental func')
+    parser.add_argument('-c', '--camera_framerate', help='Camera Framerate')
 
     return parser
