@@ -21,7 +21,7 @@ import logging
 import nest_asyncio
 
 from neurobehavioral_analytics_suite.operation_handler.OperationChain import OperationChain
-from neurobehavioral_analytics_suite.operation_handler.TaskCounter import TaskCounter
+from neurobehavioral_analytics_suite.operation_handler.TaskManager import TaskManager
 from neurobehavioral_analytics_suite.operation_handler.operations.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.operation_handler.operations.Operation import Operation
 from neurobehavioral_analytics_suite.operation_handler.operations.ConsoleOperation import ConsoleOperation
@@ -52,39 +52,28 @@ class OperationHandler:
         """
         Initializes the OperationHandler with an OperationQueue and an ErrorHandler instance.
         """
-        self.console_operation_in_progress = False
-        self.setup_logger()
-        self.log_message_queue = asyncio.Queue()
-        self.local_vars = locals()
-
-        self.task_counter = TaskCounter(logger)
-        self.tasks = set()
-
-        self.sleep_time = sleep_time
-
         nest_asyncio.apply()
+        self.setup_logger()
         self.main_loop = asyncio.get_event_loop()
         self.error_handler = ErrorHandler()
         self.queue = OperationQueue()
+
+        self.console_operation_in_progress = False
+        self.log_message_queue = asyncio.Queue()
+        self.local_vars = locals()
+
+        self.task_manager = TaskManager(self, logger, self.error_handler, self.queue)
+
+        self.sleep_time = sleep_time
 
     def _create_task(self, coro, name):
         """
         Private method to create tasks. This method should be used instead of asyncio.create_task
         within the OperationHandler class.
         """
-        task = asyncio.create_task(coro, name=self.task_counter.new_task(name))
-        self.tasks.add(task)
+        task = asyncio.create_task(coro, name=self.task_manager.task_counter.new_task(name))
+        self.task_manager.tasks.add(task)
         return task
-
-    async def create_task(self, coro, name) -> Operation:
-        """
-        Public method to create tasks. This method should be used instead of asyncio.create_task
-        within the OperationHandler class.
-        """
-        logger.info(f"create_task: [START] {name}")
-        new_op = await self.add_operation(Operation(name=name, func=coro))
-        new_op.task = self._create_task(new_op.func(), new_op.name)
-        return new_op
 
     def setup_logger(self):
         """
@@ -199,7 +188,7 @@ class OperationHandler:
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs):
         # Check if a task of operation_type is running or in the queue
         if not any(
-                isinstance(task, operation_type) and task.status in ["running", "started"] for task in self.tasks) and \
+                isinstance(task, operation_type) and task.status in ["running", "started"] for task in self.task_manager.tasks) and \
                 not any(
                     isinstance(operation_chain.head.operation, operation_type) for operation_chain in self.queue.queue):
             await self.queue.add_operation_to_queue(operation_type(*args, **kwargs))
@@ -242,7 +231,7 @@ class OperationHandler:
             return "OperationHandler.process_user_input: Displaying system resources."
 
         elif user_input == "tasks":
-            for task in self.tasks:
+            for task in self.task_manager.tasks:
                 operation = self.queue.get_operation_by_task(task)
                 if operation:
                     logger.info(f"OperationHandler.process_user_input: Task: {task.get_name()} - {operation.status}")
@@ -367,39 +356,8 @@ class OperationHandler:
 
                     if not operation.task:
                         operation.task = self._create_task(self.execute_operation(operation), name=operation.name)
-                        # operation.task.type = operation.type
                     if isinstance(operation, ConsoleOperation):
                         self.console_operation_in_progress = True
-                    # await operation.task
-
-    async def handle_tasks(self) -> None:
-        logger.debug("handle_tasks: [INIT]")
-        for task in self.tasks.copy():
-            logger.debug(f"handle_tasks: [CHECK] {task.get_name()}")
-            if task.done():
-                operation = self.queue.get_operation_by_task(task)
-                try:
-                    logger.debug(f"handle_tasks: [START] {task.get_name()}")
-                    if operation is not None:
-                        await operation.task
-                        if operation.type == CustomOperation:
-                            output = operation.result_output
-                            self.local_vars = output
-                            logger.debug(f"handle_tasks: [OUTPUT] {output}")
-                        logger.debug(f"handle_tasks: [DONE] {task.get_name()}")
-                    else:
-                        logger.debug(f"handle_tasks: [ERROR] No operation found for task {task.get_name()}")
-                except Exception as e:
-                    self.error_handler.handle_error(e, self)
-                finally:
-                    if operation:
-                        self.tasks.remove(task)
-                        if not operation.persistent:
-                            operation.status = "completed"
-                            self.queue.remove_operation_from_queue(operation)
-
-                        if isinstance(operation, ConsoleOperation):
-                            self.console_operation_in_progress = False
 
     async def exec_loop(self):
         """
@@ -416,7 +374,7 @@ class OperationHandler:
                     self.console_operation_in_progress = True
 
                 # Check if a ResourceMonitorOperation is already running
-                if not any(isinstance(task, ResourceMonitorOperation) for task in self.tasks):
+                if not any(isinstance(task, ResourceMonitorOperation) for task in self.task_manager.tasks):
                     await self.add_operation_if_not_exists(ResourceMonitorOperation, self.error_handler)
 
                 # Start all operations in the queue
@@ -426,7 +384,7 @@ class OperationHandler:
                 await self.execute_all()
 
                 # Handle any completed tasks
-                await self.handle_tasks()
+                await self.task_manager.handle_tasks()
 
             except Exception as e:
                 self.error_handler.handle_error(e, self)
