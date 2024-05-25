@@ -21,6 +21,7 @@ import logging
 import nest_asyncio
 
 from neurobehavioral_analytics_suite.operation_handler.OperationChain import OperationChain
+from neurobehavioral_analytics_suite.operation_handler.TaskCounter import TaskCounter
 from neurobehavioral_analytics_suite.operation_handler.operations.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.operation_handler.operations.Operation import Operation
 from neurobehavioral_analytics_suite.operation_handler.operations.ConsoleOperation import ConsoleOperation
@@ -32,16 +33,6 @@ from neurobehavioral_analytics_suite.operation_handler.OperationQueue import Ope
 # Set up logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-
-class TaskCounter:
-    def __init__(self):
-        self.counter = 0
-
-    def new_task(self, name: str) -> str:
-        self.counter += 1
-        logger.info(f"TaskCounter.new_task: [NEW] [{self.counter}]{name}")
-        return f"[{self.counter}]" + name
 
 
 class OperationHandler:
@@ -66,7 +57,7 @@ class OperationHandler:
         self.log_message_queue = asyncio.Queue()
         self.local_vars = locals()
 
-        self.task_counter = TaskCounter()
+        self.task_counter = TaskCounter(logger)
         self.tasks = set()
 
         self.sleep_time = sleep_time
@@ -75,9 +66,6 @@ class OperationHandler:
         self.main_loop = asyncio.get_event_loop()
         self.error_handler = ErrorHandler()
         self.queue = OperationQueue()
-
-        # Initialize the exec_loop coroutine without creating a task
-        self.exec_loop_coroutine = self.exec_loop
 
     def _create_task(self, coro, name):
         """
