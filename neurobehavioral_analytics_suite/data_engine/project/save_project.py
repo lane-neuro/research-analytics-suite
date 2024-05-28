@@ -18,7 +18,7 @@ from neurobehavioral_analytics_suite.data_engine import DataEngine
 import pickle
 
 
-def save_project(d_engine: DataEngine):
+def save_project(d_engine: dict):
     """
     Saves the active project to a file.
 
@@ -37,7 +37,7 @@ def save_project(d_engine: DataEngine):
     """
 
     # Opens/Creates a file at the root directory of the project
-    file_path = d_engine.meta.base_dir + d_engine.meta.username + '-PROJECT_CONFIG.json'
+    file_path = d_engine['meta'].base_dir + d_engine['meta'].username + '-PROJECT_CONFIG.json'
     with open(file_path, 'wb') as file:
         # Use pickle to encode & write DataEngine object to file, return file path as string
         pickle.dump(d_engine, file)

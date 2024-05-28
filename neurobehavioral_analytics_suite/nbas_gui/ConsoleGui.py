@@ -8,7 +8,8 @@ from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputMana
 
 
 class ConsoleGui:
-    def __init__(self, user_input_handler: UserInputManager, operation_handler: OperationHandler):
+    def __init__(self, user_input_handler: UserInputManager, operation_handler: OperationHandler, logger):
+        self.logger = logger
         self.window = dpg.add_window(label="Console")
         self.logger_output = dpg.add_text(default_value="", parent=self.window)
         self.input_text = dpg.add_input_text(label="Command", parent=self.window)
@@ -45,7 +46,7 @@ class ConsoleGui:
     async def update_logger_output(self):
         """Continuously update the logger output with new messages."""
         while True:
-            new_log = await self.operation_handler.log_message_queue.get()
+            new_log = await self.logger.log_message_queue.get()
             current_logs = dpg.get_value(self.logger_output)
             updated_logs = current_logs + "\n" + new_log
             dpg.set_value(self.logger_output, updated_logs)

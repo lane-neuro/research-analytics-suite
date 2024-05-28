@@ -15,6 +15,7 @@ Status: Prototype
 """
 
 from neurobehavioral_analytics_suite.analytics import Analytics
+from neurobehavioral_analytics_suite.utils.Logger import Logger
 
 
 class ProjectMetadata:
@@ -48,6 +49,7 @@ class ProjectMetadata:
             analytics_in (Analytics): Pointer to Analytics engine.
         """
 
+        self.logger = None                          # pointer to Logger
         self.analytics = analytics_in               # pointer to Analytics engine
         self.base_dir = directory_in                # root directory for project
         self.username = user_in                     # name of current experimenter / researcher
@@ -56,8 +58,6 @@ class ProjectMetadata:
         self.framerate = framerate_in               # framerate of the camera
         self.start_index = 0                        # first frame index of relevant func
         self.end_index = 0                          # final frame index of relevant func
-
-        print(f"Metadata storage initialized...")
 
     def __repr__(self):
         """
@@ -71,3 +71,27 @@ class ProjectMetadata:
 
         return (f"ProjectMetadata:(Animal: \'{self.subject}\', Number of Body Parts: {self.body_parts_count}, "
                 f"Framerate:{self.framerate}fps)")
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Exclude self.logger
+        state.pop('logger', None)
+        return state
+
+    def __setstate__(self, state):
+        # Restore non-serializable attributes here
+        self.__dict__.update(state)
+        self.logger = None
+
+    def attach_logger(self, logger):
+        """
+        Attaches a logger to the ProjectMetadata object.
+
+        This method attaches a logger to the ProjectMetadata object.
+
+        Args:
+            logger: The logger to attach.
+        """
+
+        self.logger = logger
+        self.logger.info("Logger attached to ProjectMetadata object.")

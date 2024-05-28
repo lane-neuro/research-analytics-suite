@@ -17,7 +17,6 @@ Status: Prototype
 """
 
 import asyncio
-import logging
 import nest_asyncio
 
 from neurobehavioral_analytics_suite.operation_handler.OperationChain import OperationChain
@@ -30,10 +29,6 @@ from neurobehavioral_analytics_suite.operation_handler.operations.ResourceMonito
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 from neurobehavioral_analytics_suite.operation_handler.OperationQueue import OperationQueue
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
-
-# Set up logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 class OperationHandler:
@@ -49,21 +44,20 @@ class OperationHandler:
         main_loop (asyncio.AbstractEventLoop): The main asyncio event loop.
     """
 
-    def __init__(self, sleep_time: float = 0.15):
+    def __init__(self, logger, sleep_time: float = 0.15):
         """
         Initializes the OperationHandler with an OperationQueue and an ErrorHandler instance.
         """
         nest_asyncio.apply()
-        self.setup_logger()
+        self.logger = logger
         self.main_loop = asyncio.get_event_loop()
 
         self.error_handler = ErrorHandler()
         self.queue = OperationQueue()
-        self.task_manager = TaskManager(self, logger, self.error_handler, self.queue)
-        self.user_input_handler = UserInputManager(self, logger, self.error_handler)
+        self.task_manager = TaskManager(self, self.logger, self.error_handler, self.queue)
+        self.user_input_handler = UserInputManager(self, self.logger, self.error_handler)
 
         self.console_operation_in_progress = False
-        self.log_message_queue = asyncio.Queue()
         self.local_vars = locals()
 
         self.sleep_time = sleep_time
@@ -74,28 +68,6 @@ class OperationHandler:
         """
         asyncio.get_event_loop().run_forever()
 
-    def setup_logger(self):
-        """
-        Sets up the logger with a timestamp.
-        """
-        # Create a handler
-        handler = logging.StreamHandler()
-
-        # Create a formatter and add it to the handler
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                                      datefmt='%Y-%m-%d %H:%M:%S')
-        handler.setFormatter(formatter)
-
-        # Add the handler to the logger
-        logger.addHandler(handler)
-
-        # Add a log message to the queue whenever a new log is generated
-        logger.addFilter(lambda record: self.log_message(record.getMessage()))
-
-    def log_message(self, message):
-        """Send a log message to the queue."""
-        self.log_message_queue.put_nowait(message)
-
     async def add_operation(self, func, name: str = "Operation") -> Operation:
         """
         Creates a new Operation and adds it to the queue.
@@ -104,9 +76,9 @@ class OperationHandler:
             func (callable): The function to be executed by the Operation.
             name (str, optional): The name of the Operation. Defaults to "Operation".
         """
-        logger.info(f"add_operation: [START] {name}")
+        self.logger.info(f"add_operation: [START] {name}")
         operation = Operation(name=name, error_handler=self.error_handler, func=func)
-        logger.info(f"add_operation: New Operation: {operation.name}")
+        self.logger.info(f"add_operation: New Operation: {operation.name}")
         await self.queue.add_operation_to_queue(operation)
         return operation
 
@@ -120,7 +92,7 @@ class OperationHandler:
         """
 
         operation = CustomOperation(self.error_handler, func, self.local_vars, name)
-        logger.debug(f"add_custom_operation: New Operation: {operation.name}")
+        self.logger.debug(f"add_custom_operation: New Operation: {operation.name}")
         await self.queue.add_operation_to_queue(operation)
 
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs):
@@ -130,7 +102,7 @@ class OperationHandler:
                 and not any(isinstance(operation_chain.head.operation, operation_type) for operation_chain
                             in self.queue.queue)):
             await self.queue.add_operation_to_queue(operation_type(*args, **kwargs))
-            logger.info(f"add_operation_if_not_exists: [QUEUE] {operation_type.__name__} - Added to queue")
+            self.logger.info(f"add_operation_if_not_exists: [QUEUE] {operation_type.__name__} - Added to queue")
 
     async def start_operations(self) -> None:
         for operation_chain in self.queue.queue:
@@ -141,14 +113,14 @@ class OperationHandler:
                     if operation.status == "idle":
                         await operation.start()
                         operation.status = "started"
-                        logger.debug(f"start_operations: [START] {operation.name}")
+                        self.logger.debug(f"start_operations: [START] {operation.name}")
                     current_node = current_node.next_node
             else:
                 operation = operation_chain.operation
                 if operation.status == "idle":
                     await operation.start()
                     operation.status = "started"
-                    logger.debug(f"start_operations: [START] {operation.name}")
+                    self.logger.debug(f"start_operations: [START] {operation.name}")
 
     async def resume_operation(self, operation: Operation) -> None:
         """
@@ -248,7 +220,7 @@ class OperationHandler:
         nest_asyncio.apply()
         try:
             if operation.status == "started":
-                logger.info(f"execute_operation: [RUN] {operation.task.get_name()}")
+                self.logger.info(f"execute_operation: [RUN] {operation.task.get_name()}")
                 await operation.execute()
                 operation.status = "completed"
                 return operation.task
@@ -267,7 +239,7 @@ class OperationHandler:
         """
 
         nest_asyncio.apply()
-        logger.debug("OperationHandler: Queue Size: " + str(self.queue.size()))
+        self.logger.debug("OperationHandler: Queue Size: " + str(self.queue.size()))
 
         # Create a copy of the queue for iteration
         queue_copy = set(self.queue.queue)
@@ -285,7 +257,7 @@ class OperationHandler:
                 if not operation.task or operation.task.done():
                     if isinstance(operation, ConsoleOperation) and not self.console_operation_in_progress:
                         continue
-                    logger.debug(f"execute_all: [START] {operation.name} - {operation.status} - {operation.task}")
+                    self.logger.debug(f"execute_all: [START] {operation.name} - {operation.status} - {operation.task}")
 
                     if not operation.task:
                         operation.task = self.task_manager.create_task(self.execute_operation(operation),
@@ -299,7 +271,7 @@ class OperationHandler:
         """
 
         if not self.console_operation_in_progress:
-            await self.add_operation_if_not_exists(ConsoleOperation, self.error_handler, self.user_input_handler, logger,
+            await self.add_operation_if_not_exists(ConsoleOperation, self.error_handler, self.user_input_handler, self.logger,
                                                    self.local_vars, name="ConsoleOperation", prompt="")
             self.console_operation_in_progress = True
 
@@ -312,7 +284,7 @@ class OperationHandler:
         Executes the main loop of the operation manager.
         """
 
-        logger.debug("Starting exec_loop")
+        self.logger.debug("Starting exec_loop")
 
         while True:
             try:

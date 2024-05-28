@@ -35,8 +35,9 @@ class GuiLauncher:
         dpg_async (DearPyGuiAsync): An instance of the DearPyGuiAsync class.
     """
 
-    def __init__(self, data_engine: DataEngine, operation_handler: OperationHandler):
+    def __init__(self, data_engine: DataEngine, operation_handler: OperationHandler, logger):
         """Initializes the GuiLauncher with instances of the necessary classes."""
+        self.logger = logger
         self.operation_handler = operation_handler
         self.data_engine = data_engine
         self.resource_monitor = None
@@ -73,7 +74,7 @@ class GuiLauncher:
         dpg.setup_dearpygui()
 
         self.project_manager = ProjectManagerGui(self.data_engine, self.operation_handler)
-        self.console = ConsoleGui(self.operation_handler.user_input_handler, self.operation_handler)
+        self.console = ConsoleGui(self.operation_handler.user_input_handler, self.operation_handler, self.logger)
         self.resource_monitor = ResourceMonitorGui(self.operation_handler)
         self.operation_manager = OperationManagerGui(self.operation_handler)
 

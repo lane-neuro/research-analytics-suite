@@ -47,11 +47,11 @@ class PoseData:
             use_likelihood (bool): Whether to check for p-value.
         """
 
+        self.logger = None
         self.use_likelihood = use_likelihood
         self.meta = meta
         self.csv_path = csv_path
         self.frames = []
-        print("PoseData object initialized")
 
     def __repr__(self):
         """
@@ -64,6 +64,30 @@ class PoseData:
         """
 
         return f"PoseData:(\'{self.pack()}\')"
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Exclude self.logger
+        state.pop('logger', None)
+        return state
+
+    def __setstate__(self, state):
+        # Restore non-serializable attributes here
+        self.__dict__.update(state)
+        self.logger = None
+
+    def attach_logger(self, logger):
+        """
+        Attaches a logger to the Analytics object.
+
+        This method attaches a logger to the PoseData object.
+
+        Args:
+            logger: The logger to attach.
+        """
+
+        self.logger = logger
+        self.logger.info("Logger attached to PoseData object.")
 
     def pack(self, output_format='string'):
         """
@@ -158,7 +182,7 @@ class PoseData:
                     self.meta.body_parts_count = (len(row) - 1) / (3 if self.use_likelihood else 2)
                 if i >= 0:
                     self.frames.extend([SingleFrame(self.use_likelihood, row[:])])
-        print(
+        self.meta.logger.info(
             f"PoseData: \'{self.meta.subject}\' .csv file extracted for {self.meta.body_parts_count} coordinates across"
             f" {len(self.frames)} frames.")
 

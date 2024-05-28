@@ -17,6 +17,7 @@ Status: Prototype
 from neurobehavioral_analytics_suite.data_engine.d_structs.PoseData import PoseData
 from neurobehavioral_analytics_suite.analytics.Analytics import Analytics
 from neurobehavioral_analytics_suite.data_engine.project.ProjectMetadata import ProjectMetadata
+from neurobehavioral_analytics_suite.utils.Logger import Logger
 
 
 class DataEngine:
@@ -54,6 +55,7 @@ class DataEngine:
             use_likelihood (bool): Whether to filter func for p-value (project-global).
         """
 
+        self.logger = None  # Pointer to Logger
         self.dask_client = None  # Pointer to primary Dask client
         self.b_likelihood = use_likelihood  # Whether to filter func for p-value (project-global)
         self.analytics = Analytics()  # Initialize Analytics Engine
@@ -62,13 +64,15 @@ class DataEngine:
             user_in,
             subject_in,
             framerate,
-            self.analytics,
+            self.analytics
         )
         self.pose = PoseData(  # Initialize PoseData object to process .csv func
             self.meta,
             csv_path,
             self.b_likelihood
         )
+
+    def extract_csv(self):
         self.pose.extract_csv()  # Extract & process positional func from .csv
 
     def __repr__(self):
@@ -85,6 +89,42 @@ class DataEngine:
                 f"\n\nPose Tokens:\'{self.pose.pack()}\', "
                 f"\n\nNumber of Pose Tokens: {len(self.pose.pack())})")
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Exclude self.logger
+        state.pop('logger', None)
+        return state
+
+    def __setstate__(self, state):
+        # Restore non-serializable attributes here
+        self.__dict__.update(state)
+        self.logger = None
+
+    def attach_logger(self, logger: Logger):
+        """
+        Attaches a logger to the DataEngine object and assigns the logger to other objects in instance.
+
+        This method attaches a logger to the DataEngine object.
+
+        Args:
+            logger: The logger to attach.
+        """
+
+        self.logger = logger
+        self.logger.info("Logger attached to DataEngine object.")
+
+        self.meta.attach_logger(logger)
+        self.pose.attach_logger(logger)
+        self.analytics.attach_logger(logger)
+
+    def get_pickleable_data(self):
+        data = self.__dict__.copy()
+
+        # Exclude serializable objects
+        data.pop('logger', None)
+
+        return data
+
     def set_range(self, start_frame: int, end_frame: int):
         """
         Sets the current func range.
@@ -96,4 +136,4 @@ class DataEngine:
 
         self.meta.start_index = start_frame
         self.meta.end_index = end_frame
-        print(f"DataEngine: current func range set to {start_frame} : {end_frame}")
+        self.logger.info(f"DataEngine: current func range set to {start_frame} : {end_frame}")

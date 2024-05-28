@@ -16,11 +16,13 @@ Status: Prototype
 
 import argparse
 import asyncio
+import logging
 
 from neurobehavioral_analytics_suite.data_engine.project.new_project import new_project
 from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
 from neurobehavioral_analytics_suite.nbas_gui.GuiLauncher import GuiLauncher
 from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
+from neurobehavioral_analytics_suite.utils.Logger import Logger
 
 
 async def launch_nbas():
@@ -35,29 +37,32 @@ async def launch_nbas():
     """
 
     args, extra = launch_args().parse_known_args()
+    print("Initiating Logger - Logging Level: INFO")
+    logger = Logger(logging.INFO)
     tasks = []
 
     # Checks args for -o '--open_project' flag.
     # If it exists, open the project from the file
     if args.open_project is None:
-        print('New Project Parameters Detected - Creating New Project')
+        logger.info('New Project Parameters Detected - Creating New Project')
         data_engine = new_project(args.directory, args.user_name, args.subject_name,
-                                  args.camera_framerate, args.file_list)
+                                  args.camera_framerate, args.file_list, logger)
     else:
-        print('Project File Detected - Loading Project at: ' + args.open_project)
+        logger.info('Project File Detected - Loading Project at: ' + args.open_project)
         data_engine = load_project(args.open_project)
+        data_engine.attach_logger(logger)
 
-    operation_handler = OperationHandler()
+    operation_handler = OperationHandler(logger)
     tasks.append(operation_handler.exec_loop())
 
     if args.gui is not None and args.gui.lower() == 'true':
-        gui_launcher = GuiLauncher(data_engine, operation_handler)
+        gui_launcher = GuiLauncher(data_engine, operation_handler, logger)
         tasks.append(gui_launcher.launch())
 
     try:
         await asyncio.gather(*tasks)
     except Exception as e:
-        print(f"Error launching NBAS: {e}")
+        logger.error(f"launch_nbas: {e}")
 
 
 def launch_args():
