@@ -25,7 +25,7 @@ class ConsoleGui:
         try:
             self.update_operation = asyncio.create_task(self.update_logger_output(), name="gui_ConsoleUpdateTask")
         except Exception as e:
-            print(f"Error creating task: {e}")
+            self.logger.error(f"Error creating task: {e}")
 
     async def submit_command(self, sender, data):
         command = dpg.get_value(self.input_text)

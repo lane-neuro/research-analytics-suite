@@ -38,7 +38,7 @@ class ResourceMonitorGui:
         try:
             self.update_operation = asyncio.create_task(self.update_resource_usage(), name="gui_ResourceUpdateTask")
         except Exception as e:
-            print(f"Error creating task: {e}")
+            self.operation_handler.logger.error(f"Error creating task: {e}")
 
     def setup_cpu_monitor(self, parent):
         self.cpu_text = dpg.add_text("CPU Usage: 0%", parent=parent)

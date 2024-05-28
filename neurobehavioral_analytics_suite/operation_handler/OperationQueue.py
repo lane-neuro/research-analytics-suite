@@ -5,8 +5,9 @@ from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
 class OperationQueue:
-    def __init__(self, error_handler: ErrorHandler = ErrorHandler()):
+    def __init__(self, logger, error_handler):
         self.queue = deque()
+        self.logger = logger
         self.error_handler = error_handler
 
     async def add_operation_to_queue(self, operation) -> None:
@@ -35,7 +36,7 @@ class OperationQueue:
                 if operation.task == task:
                     return operation
             else:
-                print(f"No operation found for operation chain {operation_chain}")
+                self.logger.error(f"No operation found for operation chain {operation_chain}")
 
     def insert_operation(self, index, operation) -> None:
         if isinstance(operation, OperationChain):

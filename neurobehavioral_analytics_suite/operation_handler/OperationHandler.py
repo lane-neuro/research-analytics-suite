@@ -50,10 +50,10 @@ class OperationHandler:
         """
         nest_asyncio.apply()
         self.logger = logger
+        self.error_handler = ErrorHandler()
         self.main_loop = asyncio.get_event_loop()
 
-        self.error_handler = ErrorHandler()
-        self.queue = OperationQueue()
+        self.queue = OperationQueue(self.logger, self.error_handler)
         self.task_manager = TaskManager(self, self.logger, self.error_handler, self.queue)
         self.user_input_handler = UserInputManager(self, self.logger, self.error_handler)
 
@@ -271,7 +271,8 @@ class OperationHandler:
         """
 
         if not self.console_operation_in_progress:
-            await self.add_operation_if_not_exists(ConsoleOperation, self.error_handler, self.user_input_handler, self.logger,
+            await self.add_operation_if_not_exists(ConsoleOperation, self.error_handler, self.user_input_handler,
+                                                   self.logger,
                                                    self.local_vars, name="ConsoleOperation", prompt="")
             self.console_operation_in_progress = True
 
