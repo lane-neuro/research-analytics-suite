@@ -1,4 +1,4 @@
-# neurobehavioral_analytics_suite/nbas_gui/ResourceMonitorGui.py
+# neurobehavioral_analytics_suite/gui/ResourceMonitorGui.py
 import dearpygui.dearpygui as dpg
 import asyncio
 import psutil

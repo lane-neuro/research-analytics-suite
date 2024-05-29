@@ -15,7 +15,7 @@ Status: Prototype
 import asyncio
 import sys
 from neurobehavioral_analytics_suite.launch_nbas import launch_nbas
-from neurobehavioral_analytics_suite.nbas_gui.GuiLauncher import GuiLauncher
+from neurobehavioral_analytics_suite.gui.GuiLauncher import GuiLauncher
 
 
 def main():

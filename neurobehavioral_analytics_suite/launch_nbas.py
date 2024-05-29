@@ -20,7 +20,7 @@ import logging
 
 from neurobehavioral_analytics_suite.data_engine.project.new_project import new_project
 from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
-from neurobehavioral_analytics_suite.nbas_gui.GuiLauncher import GuiLauncher
+from neurobehavioral_analytics_suite.gui.GuiLauncher import GuiLauncher
 from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
 from neurobehavioral_analytics_suite.utils.Logger import Logger
 

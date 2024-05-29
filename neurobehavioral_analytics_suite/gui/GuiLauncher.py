@@ -17,10 +17,10 @@ import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
 
 from neurobehavioral_analytics_suite.data_engine.DataEngine import DataEngine
-from neurobehavioral_analytics_suite.nbas_gui.ConsoleGui import ConsoleGui
-from neurobehavioral_analytics_suite.nbas_gui.OperationManagerGui import OperationManagerGui
-from neurobehavioral_analytics_suite.nbas_gui.ProjectManagerGui import ProjectManagerGui
-from neurobehavioral_analytics_suite.nbas_gui.ResourceMonitorGui import ResourceMonitorGui
+from neurobehavioral_analytics_suite.gui.ConsoleGui import ConsoleGui
+from neurobehavioral_analytics_suite.gui.OperationManagerGui import OperationManagerGui
+from neurobehavioral_analytics_suite.gui.ProjectManagerGui import ProjectManagerGui
+from neurobehavioral_analytics_suite.gui.ResourceMonitorGui import ResourceMonitorGui
 from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
 
 

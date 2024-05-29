@@ -1,4 +1,4 @@
-# neurobehavioral_analytics_suite/nbas_gui/ConsoleGui.py
+# neurobehavioral_analytics_suite/gui/ConsoleGui.py
 import asyncio
 
 import dearpygui.dearpygui as dpg

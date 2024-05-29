@@ -1,4 +1,4 @@
-# neurobehavioral_analytics_suite/nbas_gui/ProjectManagerGui.py
+# neurobehavioral_analytics_suite/gui/ProjectManagerGui.py
 import dearpygui.dearpygui as dpg
 import asyncio
 from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
