@@ -21,14 +21,14 @@ Status: Prototype
 """
 
 import asyncio
-from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor
 from typing import Tuple
 
+from neurobehavioral_analytics_suite.operation_handler.operations.BaseOperation import BaseOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
-class Operation(ABC):
+class Operation(BaseOperation):
     """
     An abstract base class that defines a common interface for all operations.
 
@@ -45,7 +45,7 @@ class Operation(ABC):
 
     @property
     def status(self):
-        return self._status
+        return super().status
 
     def __init__(self, name: str = "Operation", error_handler: ErrorHandler = ErrorHandler(),
                  persistent: bool = False, func=None, is_cpu_bound: bool = False):
@@ -55,6 +55,7 @@ class Operation(ABC):
             error_handler: An instance of ErrorHandler to handle any exceptions that occur.
             persistent: A boolean indicating whether the operation should run indefinitely.
         """
+        super().__init__(name)
         self.name = name
         self.error_handler = error_handler
         self.func = func
@@ -68,7 +69,6 @@ class Operation(ABC):
         self.pause_event.set()
         self.type = type(self)
 
-    @abstractmethod
     def progress(self) -> Tuple[int, str]:
         """Returns the progress of the operation."""
         pass
@@ -87,7 +87,6 @@ class Operation(ABC):
                 self.progress = self.progress + 1
             await asyncio.sleep(1)
 
-    @abstractmethod
     async def execute(self):
         """
         Executes the operation.
@@ -105,7 +104,6 @@ class Operation(ABC):
             self.error_handler.handle_error(e, self)
             self.status = "error"
 
-    @abstractmethod
     async def start(self):
         """Starts the operation."""
         try:
@@ -114,22 +112,18 @@ class Operation(ABC):
             self.error_handler.handle_error(e, self)
             self.status = "error"
 
-    @abstractmethod
     async def stop(self):
         """Stops the operation and handles any exceptions that occur during execution."""
         pass
 
-    @abstractmethod
     async def pause(self):
         """Pauses the operation and handles any exceptions that occur during execution."""
         pass
 
-    @abstractmethod
     async def resume(self):
         """Resumes the operation and handles any exceptions that occur during execution."""
         pass
 
-    @abstractmethod
     async def reset(self):
         """Resets the operation and handles any exceptions that occur during execution."""
         pass
