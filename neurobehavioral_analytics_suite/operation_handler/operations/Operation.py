@@ -30,7 +30,7 @@ from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 class Operation(BaseOperation):
     """
-    An abstract base class that defines a common interface for all operations.
+    An Operation class that defines a common interface for all operations, inherited from BaseOperation.
 
     This class requires that any child class implement the execute, start, pause, stop, and resume methods.
 
@@ -45,7 +45,7 @@ class Operation(BaseOperation):
 
     @property
     def status(self):
-        return super().status
+        return self._status
 
     def __init__(self, name: str = "Operation", error_handler: ErrorHandler = ErrorHandler(),
                  persistent: bool = False, func=None, is_cpu_bound: bool = False):
@@ -55,13 +55,13 @@ class Operation(BaseOperation):
             error_handler: An instance of ErrorHandler to handle any exceptions that occur.
             persistent: A boolean indicating whether the operation should run indefinitely.
         """
-        super().__init__(name)
+        super().__init__()
         self.name = name
         self.error_handler = error_handler
         self.func = func
         self.persistent = persistent
         self.is_cpu_bound = is_cpu_bound
-        self.status = "idle"
+        self._status = "idle"
         self.task = None
         self.progress = 0
         self.complete = False

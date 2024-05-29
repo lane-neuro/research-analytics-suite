@@ -28,8 +28,7 @@ class BaseOperation(ABC):
     """
 
     @abstractmethod
-    def __init__(self, name: str = "BaseOperation"):
-        self.name = name
+    def __init__(self):
         self._status = "idle"
 
     @abstractmethod
