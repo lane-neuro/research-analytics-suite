@@ -22,6 +22,7 @@ Status: Prototype
 
 import asyncio
 from abc import ABC, abstractmethod
+from concurrent.futures import ProcessPoolExecutor
 from typing import Tuple
 
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
@@ -47,7 +48,7 @@ class Operation(ABC):
         return self._status
 
     def __init__(self, name: str = "Operation", error_handler: ErrorHandler = ErrorHandler(),
-                 persistent: bool = False, func=None):
+                 persistent: bool = False, func=None, is_cpu_bound: bool = False):
         """Initializes Operation with the operation to be managed and whether it should run indefinitely.
 
         Args:
@@ -58,6 +59,7 @@ class Operation(ABC):
         self.error_handler = error_handler
         self.func = func
         self.persistent = persistent
+        self.is_cpu_bound = is_cpu_bound
         self.status = "idle"
         self.task = None
         self.progress = 0
@@ -92,8 +94,11 @@ class Operation(ABC):
         """
         self.status = "running"
         try:
-            # Execute the function
-            self.func()
+            if self.is_cpu_bound:
+                with ProcessPoolExecutor() as executor:
+                    self.func = executor.submit(self.func).result()
+            else:
+                self.func()
             if not self.persistent:
                 self.status = "completed"
         except Exception as e:

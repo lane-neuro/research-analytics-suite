@@ -17,6 +17,8 @@ Status: Prototype
 """
 
 import asyncio
+from concurrent.futures import ProcessPoolExecutor
+
 import nest_asyncio
 
 from neurobehavioral_analytics_suite.operation_handler.OperationChain import OperationChain
@@ -221,7 +223,11 @@ class OperationHandler:
         try:
             if operation.status == "started":
                 self.logger.info(f"execute_operation: [RUN] {operation.task.get_name()}")
-                await operation.execute()
+                if operation.is_cpu_bound:
+                    with ProcessPoolExecutor() as executor:
+                        operation.func = executor.submit(operation.func).result()
+                else:
+                    await operation.execute()
                 operation.status = "completed"
                 return operation.task
         except Exception as e:
