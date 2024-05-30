@@ -4,12 +4,14 @@ import asyncio
 import dearpygui.dearpygui as dpg
 
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
+from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 
 
 class ConsoleDialog:
-    def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl, logger):
+    def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl, launcher, logger):
         self.logger = logger
+        self.launcher = launcher
         self.window = dpg.add_window(label="Console")
 
         # Create a child window
@@ -30,10 +32,8 @@ class ConsoleDialog:
         self.command_help = {"command1": "This is command1", "command2": "This is command2"}
         self.command_aliases = {"c1": "command1", "c2": "command2"}
 
-        try:
-            self.update_operation = asyncio.create_task(self.update_logger_output(), name="gui_ConsoleUpdateTask")
-        except Exception as e:
-            self.logger.error(f"Error creating task: {e}")
+        self.update_operation = None
+        self.launcher.add_update_operation(self.create_update_operation())
 
     async def submit_command(self, sender, data):
         if dpg.is_key_pressed(dpg.mvKey_Return) or sender == "submit_button":
@@ -52,6 +52,15 @@ class ConsoleDialog:
                     self.logger.error(self, e)
             dpg.set_value('input_text', "")  # Clear the input field
 
+    async def create_update_operation(self):
+        try:
+            self.update_operation = await self.operation_control.operation_manager.add_operation(
+                operation_type=CustomOperation, name="gui_ConsoleUpdateTask",
+                local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
+                func=self.update_logger_output, persistent=True)
+        except Exception as e:
+            self.logger.error(f"Error creating task: {e}")
+
     async def update_logger_output(self):
         """Continuously update the logger output with new messages."""
         while True:
@@ -59,6 +68,7 @@ class ConsoleDialog:
             current_logs = dpg.get_value(self.logger_output)
             updated_logs = new_log + "\n" + current_logs
             dpg.set_value(self.logger_output, updated_logs)
+            await asyncio.sleep(0.01)
 
     def clear_logger_output(self):
         dpg.set_value(self.logger_output, "")

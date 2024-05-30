@@ -64,7 +64,8 @@ class OperationControl:
         self.operation_executor = OperationExecutor(self, self.queue, self.task_manager, self.logger,
                                                     self.error_handler)
         self.operation_status_checker = OperationStatusChecker(self, self.queue)
-        self.persistent_operation_checker = PersistentOperationChecker(self, self.operation_manager, self.queue, self.task_manager, self.logger,
+        self.persistent_operation_checker = PersistentOperationChecker(self, self.operation_manager, self.queue,
+                                                                       self.task_manager, self.logger,
                                                                        self.error_handler)
 
     async def start(self):

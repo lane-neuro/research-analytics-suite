@@ -30,7 +30,7 @@ class GuiLauncher:
     Attributes:
         resource_monitor (ResourceMonitorDialog): An instance of the ResourceMonitorGui class.
         console (ConsoleDialog): An instance of the ConsoleDialog class.
-        operation_manager (OperationManagerDialog): An instance of the OperationManagerGui class.
+        operation_window (OperationManagerDialog): An instance of the OperationManagerGui class.
         project_manager (ProjectManagerDialog): An instance of the ProjectManagerDialog class.
         dpg_async (DearPyGuiAsync): An instance of the DearPyGuiAsync class.
     """
@@ -42,8 +42,10 @@ class GuiLauncher:
         self.data_engine = data_engine
         self.resource_monitor = None
         self.console = None
-        self.operation_manager = None
+        self.operation_window = None
         self.project_manager = None
+
+        self.update_operations = []
 
         self.dpg_async = DearPyGuiAsync()
 
@@ -54,7 +56,7 @@ class GuiLauncher:
         # Set the position and size of each subwindow
         dpg.configure_item(self.project_manager.window, pos=(0, 0), width=window_width,
                            height=window_height)
-        dpg.configure_item(self.operation_manager.window, pos=(window_width, 0), width=window_width,
+        dpg.configure_item(self.operation_window.window, pos=(window_width, 0), width=window_width,
                            height=window_height)
         dpg.configure_item(self.console.window, pos=(0, window_height), width=window_width,
                            height=window_height)
@@ -62,7 +64,6 @@ class GuiLauncher:
                            height=window_height)
 
         self.resource_monitor.update_layout()
-        # self.console.update_console_layout()
 
     async def launch(self):
         """Launches the GUI.
@@ -76,17 +77,35 @@ class GuiLauncher:
         dpg.setup_dearpygui()
 
         self.project_manager = ProjectManagerDialog(self.data_engine, self.operation_control)
-        self.console = ConsoleDialog(self.operation_control.user_input_handler, self.operation_control, self.logger)
-        self.resource_monitor = ResourceMonitorDialog(self.operation_control)
-        self.operation_manager = OperationManagerDialog(self.operation_control)
+        self.console = ConsoleDialog(self.operation_control.user_input_handler, self.operation_control, self, self.logger)
+        self.resource_monitor = ResourceMonitorDialog(self.operation_control, self, self.logger)
+        self.operation_window = OperationManagerDialog(self.operation_control)
 
         dpg.show_viewport()
         self.generate_layout()
 
         await self.dpg_async.start()
+        for operation in self.update_operations:
+            await operation
 
         # Keep the event loop running until the DearPyGui window is closed
         while dpg.is_dearpygui_running():
             await asyncio.sleep(0.01)
 
         dpg.destroy_context()
+
+    def add_update_operation(self, operation):
+        """Adds an update operation to the GUI.
+
+        Args:
+            operation (asyncio.Task): The operation to add to the GUI.
+        """
+        self.update_operations.append(operation)
+
+    async def remove_update_operation(self, operation):
+        """Removes an update operation from the GUI.
+
+        Args:
+            operation (asyncio.Task): The operation to remove from the GUI.
+        """
+        self.update_operations.remove(operation)

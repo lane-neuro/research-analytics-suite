@@ -29,7 +29,8 @@ class CustomOperation(Operation):
         error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
     """
 
-    def __init__(self, error_handler: ErrorHandler, func, local_vars, name: str = "CustomOperation"):
+    def __init__(self, error_handler: ErrorHandler, func, local_vars, name: str = "CustomOperation",
+                 persistent: bool = False):
         """Initializes the CustomOperation with the function to be processed and an ErrorHandler instance.
 
         Args:
@@ -43,7 +44,7 @@ class CustomOperation(Operation):
         self.error_handler = error_handler
         self.local_vars = local_vars
         self.task = None
-        self.persistent = False
+        self.persistent = persistent
         self.name = name
         self._status = "idle"
         self.result_output = None

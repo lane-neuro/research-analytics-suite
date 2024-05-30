@@ -4,12 +4,13 @@ import asyncio
 import psutil
 
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
+from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
 
 
 class ResourceMonitorDialog:
     SLEEP_DURATION = 0.05
 
-    def __init__(self, operation_control: OperationControl):
+    def __init__(self, operation_control: OperationControl, launcher, logger):
         self.memory_line_series = None
         self.memory_x_axis = None
         self.memory_y_axis = None
@@ -22,6 +23,8 @@ class ResourceMonitorDialog:
         self.cpu_text = None
 
         self.operation_control = operation_control
+        self.launcher = launcher
+        self.logger = logger
 
         self.window = dpg.add_window(label="Resource Monitor")
         self.cpu_data = []
@@ -35,10 +38,8 @@ class ResourceMonitorDialog:
         self.setup_cpu_monitor(self.cpu_container)
         self.setup_memory_monitor(self.memory_container)
 
-        try:
-            self.update_operation = asyncio.create_task(self.update_resource_usage(), name="gui_ResourceUpdateTask")
-        except Exception as e:
-            self.operation_control.logger.error(f"Error creating task: {e}")
+        self.update_operation = None
+        self.launcher.add_update_operation(self.create_update_operation())
 
     def setup_cpu_monitor(self, parent):
         self.cpu_text = dpg.add_text("CPU Usage: 0%", parent=parent)
@@ -55,6 +56,15 @@ class ResourceMonitorDialog:
         self.memory_y_axis = dpg.add_plot_axis(axis=1, label="Memory Usage", parent=self.memory_history)
         dpg.set_axis_limits(self.memory_y_axis, 0, 100)
         self.memory_line_series = None
+
+    async def create_update_operation(self):
+        try:
+            self.update_operation = await self.operation_control.operation_manager.add_operation(
+                operation_type=CustomOperation, name="gui_ResourceUpdateTask",
+                local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
+                func=self.update_resource_usage, persistent=True)
+        except Exception as e:
+            self.logger.error(f"Error creating task: {e}")
 
     async def update_resource_usage(self):
         while True:

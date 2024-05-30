@@ -92,7 +92,7 @@ class Operation(ABCOperation):
                 with ProcessPoolExecutor() as executor:
                     self.func = executor.submit(self.func).result()
             else:
-                self.func()
+                await self.func()
             if not self.persistent:
                 self._status = "completed"
         except Exception as e:

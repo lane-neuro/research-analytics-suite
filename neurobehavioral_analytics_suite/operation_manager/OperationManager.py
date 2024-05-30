@@ -12,7 +12,6 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
 
 
@@ -24,7 +23,7 @@ class OperationManager:
         self.logger = logger
         self.error_handler = error_handler
 
-    async def add_operation(self, operation_type, *args, **kwargs):
+    async def add_operation(self, operation_type, *args, **kwargs) -> Operation:
         """
         Creates a new Operation and adds it to the queue.
 
@@ -35,7 +34,8 @@ class OperationManager:
         """
         op = operation_type(*args, **kwargs)
         new_op = await self.queue.add_operation_to_queue(op)
-        self.logger.info(f"add_operation: [QUEUE] {new_op}")
+        self.logger.info(f"add_operation: [QUEUE] {new_op.name}")
+        return new_op
 
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs):
         if not self.task_manager.task_exists(operation_type):
