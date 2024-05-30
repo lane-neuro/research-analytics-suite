@@ -129,16 +129,7 @@ class DaskOperation(Operation):
 
     async def reset(self) -> None:
         """Resets the operation and handles any exceptions that occur during execution."""
-        try:
-            self.status = "idle"
-            self.progress = 0
-            self.complete = False
-            self.pause_event.clear()
-            await self.stop()
-            await self.start()
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.status = "error"
+        await super().reset()
 
     def progress(self) -> Tuple[int, str]:
         """Returns the current progress and status of the operation.

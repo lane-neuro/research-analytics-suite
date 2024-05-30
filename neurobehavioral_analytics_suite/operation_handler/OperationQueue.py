@@ -1,7 +1,6 @@
 from collections import deque
 from neurobehavioral_analytics_suite.operation_handler.operations.Operation import Operation
 from neurobehavioral_analytics_suite.operation_handler.OperationChain import OperationChain
-from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
 class OperationQueue:

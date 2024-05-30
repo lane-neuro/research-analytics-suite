@@ -92,7 +92,6 @@ class OperationHandler:
             func: The func to be processed by the CustomOperation.
             name: The name of the CustomOperation.
         """
-
         operation = CustomOperation(self.error_handler, func, self.local_vars, name)
         self.logger.debug(f"add_custom_operation: New Operation: {operation.name}")
         await self.queue.add_operation_to_queue(operation)
@@ -113,15 +112,15 @@ class OperationHandler:
                 while current_node is not None:
                     operation = current_node.operation
                     if operation.status == "idle":
+                        await operation.init_operation()
                         await operation.start()
-                        operation.status = "started"
                         self.logger.debug(f"start_operations: [START] {operation.name}")
                     current_node = current_node.next_node
             else:
                 operation = operation_chain.operation
                 if operation.status == "idle":
+                    await operation.init_operation()
                     await operation.start()
-                    operation.status = "started"
                     self.logger.debug(f"start_operations: [START] {operation.name}")
 
     async def resume_operation(self, operation: Operation) -> None:
@@ -133,7 +132,6 @@ class OperationHandler:
         """
         if operation.status == "paused":
             await operation.resume()
-            operation.status = "running"
 
     async def resume_all_operations(self):
         """
@@ -154,7 +152,6 @@ class OperationHandler:
         """
         if operation.status == "running":
             await operation.pause()
-            operation.status = "paused"
 
     async def pause_all_operations(self):
         """
@@ -173,7 +170,6 @@ class OperationHandler:
             operation (Operation): The operation to stop.
         """
         await operation.stop()
-        operation.status = "stopped"
 
     async def stop_all_operations(self):
         """
@@ -223,12 +219,7 @@ class OperationHandler:
         try:
             if operation.status == "started":
                 self.logger.info(f"execute_operation: [RUN] {operation.task.get_name()}")
-                if operation.is_cpu_bound:
-                    with ProcessPoolExecutor() as executor:
-                        operation.func = executor.submit(operation.func).result()
-                else:
-                    await operation.execute()
-                operation.status = "completed"
+                await operation.execute()
                 return operation.task
         except Exception as e:
             self.error_handler.handle_error(e, self)

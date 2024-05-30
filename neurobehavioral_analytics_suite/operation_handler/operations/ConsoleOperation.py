@@ -13,7 +13,6 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-import asyncio
 import logging
 
 import aioconsole
@@ -47,19 +46,18 @@ class ConsoleOperation(CustomOperation):
         """
 
         super().__init__(error_handler, data, local_vars)
-        self.complete = False
         self.user_input_handler = user_input_handler
         self.error_handler = error_handler
         self.prompt = prompt
         self.logger = logger
         self.task = None
         self.name = name
-        self.status = "idle"
+        self._status = "idle"
         self.persistent = True
 
     async def execute(self) -> None:
         """Processes user input and sends it to the operation handler."""
-        self.status = "running"
+        self._status = "running"
         # self.task = asyncio.current_task()
         while True:  # Loop until a specific user input is received
             try:
@@ -72,7 +70,7 @@ class ConsoleOperation(CustomOperation):
                 self.logger.debug(f"ConsoleOperation.execute: Received user input: {user_input}")
 
                 if user_input == "exit":  # Exit condition
-                    self.status = "stopped"
+                    self._status = "stopped"
                     break
 
                 await self.user_input_handler.process_user_input(user_input)
@@ -82,21 +80,3 @@ class ConsoleOperation(CustomOperation):
             except Exception as e:  # Catch all other exceptions
                 self.logger.error(f"ConsoleOperation.execute: Unexpected exception occurred: {e}")
                 break
-
-    async def start(self) -> None:
-        """
-        Starts the operation.
-        """
-        self.logger.debug("ConsoleOperation.start: [START]")  # Debugging print statement
-        try:
-            self.status = "started"  # Update the status of the operation
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-
-    async def stop(self) -> None:
-        """Stops the operation and handles any exceptions that occur during execution."""
-        try:
-            if self.task:
-                self.task.cancel()
-        except Exception as e:
-            self.error_handler.handle_error(e, self)

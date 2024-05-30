@@ -34,7 +34,7 @@ class CustomOperation(Operation):
 
         Args:
             error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
-            func (callable): A function to be executed.
+            func: A function to be executed.
             local_vars (dict): Local variables to be used in the function execution.
             name (str): The name of the operation.
         """
@@ -44,10 +44,19 @@ class CustomOperation(Operation):
         self.local_vars = local_vars
         self.task = None
         self.persistent = False
-        self.complete = False
         self.name = name
-        self.status = "idle"
+        self._status = "idle"
         self.result_output = None
+        
+    def init_operation(self):
+        """
+        Initialize any resources or setup required for the operation before it starts.
+        """
+        super().init_operation()
+
+    async def start(self):
+        """Starts the operation and updates the status accordingly."""
+        await super().start()
 
     async def execute(self):
         """Executes the operation and updates the status and result output accordingly.
@@ -55,69 +64,56 @@ class CustomOperation(Operation):
         Returns:
             dict: The result output after function execution.
         """
-        self.status = "running"
         temp_vars = self.local_vars.copy()
 
         try:
-            exec(self.func, {}, temp_vars)
+            if isinstance(self.func, str):  # If self.func is a string of code
+                code = self.func
+                self.func = lambda: exec(code, {}, self.local_vars)
+            elif callable(self.func):  # If self.func is a callable function
+                func = self.func
+                self.func = lambda: func()
+            else:
+                raise TypeError("self.func must be a string of Python code or a callable function.")
+
+            await super().execute()
             self.result_output = temp_vars
             self.local_vars = temp_vars
-            self.status = "completed"
             return self.result_output
-
         except Exception as e:
             self.error_handler.handle_error(e, self)
             self.result_output = temp_vars
-            self.status = "error"
+            self._status = "error"
             return self.result_output
 
-    async def start(self):
-        """Starts the operation and updates the status accordingly."""
-        try:
-            self.status = "started"
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.status = "error"
+    def get_result(self):
+        """
+        Gets the result of the operation.
 
-    async def stop(self):
-        """Stops the operation and updates the status accordingly."""
-        try:
-            self.status = "stopped"
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.status = "error"
+        Returns:
+            The result of the operation.
+        """
+        return self.result_output
 
     async def pause(self):
         """Pauses the operation and updates the status accordingly."""
-        try:
-            self.status = "paused"
-            self.pause_event.clear()
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.status = "error"
+        await super().pause()
 
     async def resume(self) -> None:
         """Resumes the operation and updates the status accordingly."""
-        try:
-            self.status = "running"
-            self.pause_event.set()
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.status = "error"
+        await super().resume()
+
+    async def stop(self):
+        """Stops the operation and updates the status accordingly."""
+        await super().stop()
 
     async def reset(self) -> None:
         """Resets the operation and updates the status accordingly."""
-        try:
-            self.progress = 0
-            self.complete = False
-            self.pause_event.clear()
-            await self.stop()
-            self.status = "stopped"
-            await self.start()
-            self.status = "started"
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.status = "error"
+        await super().reset()
+
+    async def restart(self):
+        """Restarts the operation and updates the status accordingly."""
+        await super().restart()
 
     def progress(self) -> Tuple[int, str]:
         """Returns the current progress and status of the operation.
@@ -125,4 +121,4 @@ class CustomOperation(Operation):
         Returns:
             Tuple[int, str]: A tuple containing the current progress and status of the operation.
         """
-        return self.progress, self.status
+        return super().progress()

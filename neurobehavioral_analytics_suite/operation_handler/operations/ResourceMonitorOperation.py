@@ -35,7 +35,7 @@ class ResourceMonitorOperation(Operation):
             cpu_threshold (int, optional): The CPU usage threshold. Defaults to 90.
             memory_threshold (int, optional): The memory usage threshold. Defaults to 90.
         """
-        super().__init__()
+        super().__init__(name="ResourceMonitorOperation", error_handler=error_handler, persistent=True)
         self.cpu_usage = 0
         self.cpu_threshold = cpu_threshold
         self.memory_usage = 0
@@ -44,17 +44,14 @@ class ResourceMonitorOperation(Operation):
         self.error_handler = error_handler
         self.task = None
         self.name = "ResourceMonitorOperation"
-        self.status = "idle"
-
-    async def start(self) -> None:
-        self.status = "started"
+        self._status = "idle"
 
     async def execute(self) -> None:
         """
         Asynchronously monitors the usage of CPU and memory.
         """
 
-        self.status = "running"
+        self._status = "running"
 
         while True:
             self.cpu_usage = psutil.cpu_percent()
@@ -71,26 +68,6 @@ class ResourceMonitorOperation(Operation):
                                                           f"current usage is {self.memory_usage}%"), "resource_monitor")
 
             await asyncio.sleep(.5)
-
-    async def pause(self) -> None:
-        if self.task:
-            self.task.cancel()
-            self.task = None
-
-    async def stop(self) -> None:
-        if self.task:
-            self.task.cancel()
-            self.task = None
-
-    async def resume(self) -> None:
-        if self.task is None:
-            self.task = asyncio.create_task(self.execute())
-
-    async def reset(self) -> None:
-        if self.task:
-            self.task.cancel()
-            self.task = None
-        self.task = asyncio.create_task(self.execute())
 
     def progress(self) -> str:
         if self.task:

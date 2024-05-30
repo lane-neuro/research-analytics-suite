@@ -1,6 +1,6 @@
 """
 This module defines the abstract base class BaseOperation, which provides a common interface for all operations in the
-NeuroBehavioral Analytics Suite. The BaseOperation class requires any child class to implement the execute, start, pause,
+NeuroBehavioral Analytics Suite. The BaseOperation class requires any child class to implement execute, start, pause,
 stop, and resume methods. It also provides a property for the status of the operation, which can be "idle", "started",
 "paused", "running", or "stopped". This class is designed to be inherited by other classes that represent specific
 operations.
@@ -22,85 +22,122 @@ from typing import Tuple
 class BaseOperation(ABC):
     """
     An abstract base class that defines a common interface for all operations.
-
-    This class requires that any child class implement the execute, start, pause, stop, and resume methods.
     """
 
     @abstractmethod
     def __init__(self):
         """
-        Initialize the operation with status "idle".
+        Initialize the operation instance.
+        """
+        pass
+
+    @abstractmethod
+    def init_operation(self):
+        """
+        Initialize any resources or setup required for the operation before it starts.
         """
         pass
 
     @abstractmethod
     async def start(self):
         """
-        Abstract method to start the operation.
-        Must be implemented by any child class.
-        """
-        pass
-
-    @abstractmethod
-    async def resume(self):
-        """
-        Abstract method to resume the operation.
-        Must be implemented by any child class.
-        """
-        pass
-
-    @abstractmethod
-    async def pause(self):
-        """
-        Abstract method to pause the operation.
-        Must be implemented by any child class.
-        """
-        pass
-
-    @abstractmethod
-    async def stop(self):
-        """
-        Abstract method to stop the operation.
-        Must be implemented by any child class.
-        """
-        pass
-
-    @abstractmethod
-    async def reset(self):
-        """
-        Abstract method to reset the operation.
-        Must be implemented by any child class.
-        """
-        pass
-
-    @abstractmethod
-    def progress(self) -> Tuple[int, str]:
-        """
-        Abstract method to get the progress of the operation.
-        Must be implemented by any child class.
+        Start the operation.
         """
         pass
 
     @abstractmethod
     async def execute(self):
         """
-        Abstract method to execute the operation.
-        Must be implemented by any child class.
+        Execute the operation.
         """
         pass
 
     @abstractmethod
-    def get_progress(self):
+    def get_result(self):
         """
-        Abstract method to get the progress of the operation.
-        Must be implemented by any child class.
+        Retrieve the result of the operation, if applicable.
+        """
+        pass
+
+    @abstractmethod
+    async def pause(self):
+        """
+        Pause the operation.
+        """
+        pass
+
+    @abstractmethod
+    async def resume(self):
+        """
+        Resume the operation.
+        """
+        pass
+
+    @abstractmethod
+    async def stop(self):
+        """
+        Stop the operation.
+        """
+        pass
+
+    @abstractmethod
+    async def reset(self):
+        """
+        Reset the operation.
+        """
+        pass
+
+    @abstractmethod
+    async def restart(self):
+        """
+        Restart the operation from the beginning.
+        """
+        pass
+
+    @abstractmethod
+    def is_running(self):
+        """
+        Check if the operation is currently running.
+        """
+        pass
+
+    def is_complete(self):
+        """
+        Check if the operation is complete.
+        """
+        pass
+
+    @abstractmethod
+    def is_paused(self):
+        """
+        Check if the operation is currently paused.
+        """
+        pass
+
+    @abstractmethod
+    def is_stopped(self):
+        """
+        Check if the operation is currently stopped.
+        """
+        pass
+
+    @abstractmethod
+    def progress(self) -> Tuple[int, str]:
+        """
+        Get the progress of the operation.
         """
         pass
 
     @abstractmethod
     async def update_progress(self):
         """
-        Abstract method to update the progress of the operation.
-        Must be implemented by any child class.
+        Update the progress of the operation.
+        """
+        pass
+
+    @abstractmethod
+    def cleanup_operation(self):
+        """
+        Clean up any resources or perform any necessary teardown after the operation has completed or been stopped.
         """
         pass

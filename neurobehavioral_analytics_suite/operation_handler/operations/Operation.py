@@ -69,29 +69,25 @@ class Operation(BaseOperation):
         self.pause_event.set()
         self.type = type(self)
 
-    def progress(self) -> Tuple[int, str]:
-        """Returns the progress of the operation."""
+    def init_operation(self):
+        """
+        Initialize any resources or setup required for the operation before it starts.
+        """
         pass
 
-    async def update_progress(self):
-        """Updates the progress of the operation until it's complete.
-
-        This method sleeps for 1 second between each check.
-
-        Note:
-            This is a coroutine and should be awaited.
-        """
-        while not self.complete:
-            if self.status == "running":
-                await self.pause_event.wait()
-                self.progress = self.progress + 1
-            await asyncio.sleep(1)
+    async def start(self):
+        """Starts the operation."""
+        try:
+            self._status = "started"
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
+            self._status = "error"
 
     async def execute(self):
         """
         Executes the operation.
         """
-        self.status = "running"
+        self._status = "running"
         try:
             if self.is_cpu_bound:
                 with ProcessPoolExecutor() as executor:
@@ -99,34 +95,72 @@ class Operation(BaseOperation):
             else:
                 self.func()
             if not self.persistent:
-                self.status = "completed"
+                self._status = "completed"
         except Exception as e:
             self.error_handler.handle_error(e, self)
-            self.status = "error"
+            self._status = "error"
 
-    async def start(self):
-        """Starts the operation."""
-        try:
-            self.status = "started"
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.status = "error"
+    def get_result(self):
+        """
+        Gets the result of the operation.
 
-    async def stop(self):
-        """Stops the operation and handles any exceptions that occur during execution."""
-        pass
+        Returns:
+            The result of the operation.
+        """
+        return self.func
 
     async def pause(self):
-        """Pauses the operation and handles any exceptions that occur during execution."""
-        pass
+        """Pauses the operation."""
+        try:
+            self._status = "paused"
+            self.pause_event.clear()
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
+            self._status = "error"
 
     async def resume(self):
         """Resumes the operation and handles any exceptions that occur during execution."""
-        pass
+        try:
+            self._status = "running"
+            self.pause_event.set()
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
+            self._status = "error"
+
+    async def stop(self):
+        """Stops the operation and handles any exceptions that occur during execution."""
+        try:
+            if self.task:
+                self.task.cancel()
+            self._status = "stopped"
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
+            self._status = "error"
 
     async def reset(self):
         """Resets the operation and handles any exceptions that occur during execution."""
-        pass
+        try:
+            self._status = "idle"
+            self.progress = 0
+            self.pause_event.clear()
+            await self.stop()
+            await self.start()
+            self.pause_event.set()
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
+            self._status = "error"
+
+    async def restart(self):
+        """
+        Restart the operation from the beginning.
+        """
+        try:
+            await self.reset()
+            await self.start()
+            await self.execute()
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
+            self._status = "error"
 
     def is_running(self):
         """Checks if the operation is currently running.
@@ -142,24 +176,44 @@ class Operation(BaseOperation):
         Returns:
             True if the operation is complete, False otherwise.
         """
-        return self.complete
+        return self._status == "completed"
 
-    def get_progress(self):
-        """Gets the current progress of the operation.
-
-        Returns:
-            The current progress of the operation.
+    def is_paused(self):
         """
-        return self.progress
-
-    def get_status(self):
-        """Gets the current status of the operation.
-
-        Returns:
-            The current status of the operation.
+        Check if the operation is currently paused.
         """
-        return self.status
+        return self._status == "paused"
 
-    @status.setter
-    def status(self, value):
-        self._status = value
+    def is_stopped(self):
+        """
+        Check if the operation is currently stopped.
+        """
+        return self._status == "stopped"
+
+    def progress(self) -> Tuple[int, str]:
+        """Returns the progress of the operation."""
+        return self.progress, self._status
+
+    async def update_progress(self):
+        """Updates the progress of the operation until it's complete.
+
+        This method sleeps for 1 second between each check.
+
+        Note:
+            This is a coroutine and should be awaited.
+        """
+        while not self.is_complete():
+            if self.status == "running":
+                await self.pause_event.wait()
+                self.progress = self.progress + 1
+            await asyncio.sleep(1)
+
+    def cleanup_operation(self):
+        """
+        Clean up any resources or perform any necessary teardown after the operation has completed or been stopped.
+        """
+        self.func = None
+        self.progress = 0
+        self.pause_event.clear()
+        self._status = "idle"
+        self.task = None

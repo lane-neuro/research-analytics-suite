@@ -60,7 +60,6 @@ class TaskManager:
                     if operation:
                         self.tasks.remove(task)
                         if not operation.persistent:
-                            operation.status = "completed"
                             self.queue.remove_operation_from_queue(operation)
 
                         if isinstance(operation, ConsoleOperation):
