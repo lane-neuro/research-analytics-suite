@@ -21,7 +21,6 @@ class ConsoleGui:
             dpg.add_input_text(label="", tag="input_text")
             dpg.add_button(label="Submit", tag="submit_button", callback=self.submit_command)
 
-        print(dpg.get_item_width(self.window))
         self.logger_output = dpg.add_text(default_value="", parent=self.window, wrap=600)
         # self.search_text = dpg.add_input_text(label="Search", parent=self.window)
         # self.search_button = dpg.add_button(label="Search", callback=self.search_command, parent=self.window)
