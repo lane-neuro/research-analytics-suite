@@ -12,7 +12,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from neurobehavioral_analytics_suite.operation_handler.operations.ResourceMonitorOperation import \
+from neurobehavioral_analytics_suite.operation_manager.operations.ResourceMonitorOperation import \
     ResourceMonitorOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 

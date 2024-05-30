@@ -21,7 +21,7 @@ import logging
 from neurobehavioral_analytics_suite.data_engine.project.new_project import new_project
 from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
 from neurobehavioral_analytics_suite.gui.GuiLauncher import GuiLauncher
-from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
+from neurobehavioral_analytics_suite.operation_manager.OperationHandler import OperationHandler
 from neurobehavioral_analytics_suite.utils.Logger import Logger
 
 
@@ -39,7 +39,7 @@ async def launch_nbas():
     args, extra = launch_args().parse_known_args()
     print("Initiating Logger - Logging Level: INFO")
     logger = Logger(logging.INFO)
-    tasks = []
+    launch_tasks = []
 
     # Checks args for -o '--open_project' flag.
     # If it exists, open the project from the file
@@ -53,14 +53,14 @@ async def launch_nbas():
         data_engine.attach_logger(logger)
 
     operation_handler = OperationHandler(logger)
-    tasks.append(operation_handler.exec_loop())
+    launch_tasks.append(operation_handler.exec_loop())
 
     if args.gui is not None and args.gui.lower() == 'true':
         gui_launcher = GuiLauncher(data_engine, operation_handler, logger)
-        tasks.append(gui_launcher.launch())
+        launch_tasks.append(gui_launcher.launch())
 
     try:
-        await asyncio.gather(*tasks)
+        await asyncio.gather(*launch_tasks)
     except Exception as e:
         logger.error(f"launch_nbas: {e}")
 

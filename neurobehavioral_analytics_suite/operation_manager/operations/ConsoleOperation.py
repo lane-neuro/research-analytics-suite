@@ -17,7 +17,7 @@ import logging
 
 import aioconsole
 
-from neurobehavioral_analytics_suite.operation_handler.operations.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.utils import ErrorHandler
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 

@@ -3,7 +3,7 @@ import dearpygui.dearpygui as dpg
 import asyncio
 import psutil
 
-from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
+from neurobehavioral_analytics_suite.operation_manager.OperationHandler import OperationHandler
 
 
 class ResourceMonitorDialog:

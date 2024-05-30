@@ -3,7 +3,7 @@ import asyncio
 
 import dearpygui.dearpygui as dpg
 
-from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
+from neurobehavioral_analytics_suite.operation_manager.OperationHandler import OperationHandler
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 
 

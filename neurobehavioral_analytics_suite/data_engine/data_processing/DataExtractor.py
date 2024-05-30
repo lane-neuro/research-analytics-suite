@@ -20,7 +20,7 @@ import dask.bag as db
 import requests
 from dask import delayed
 from dask.distributed import Client
-from neurobehavioral_analytics_suite.operation_handler.operations.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 
 
 class DataExtractor(Operation):

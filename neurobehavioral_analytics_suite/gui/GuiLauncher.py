@@ -21,7 +21,7 @@ from neurobehavioral_analytics_suite.gui.ConsoleDialog import ConsoleDialog
 from neurobehavioral_analytics_suite.gui.OperationManagerDialog import OperationManagerDialog
 from neurobehavioral_analytics_suite.gui.ProjectManagerDialog import ProjectManagerDialog
 from neurobehavioral_analytics_suite.gui.ResourceMonitorDialog import ResourceMonitorDialog
-from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
+from neurobehavioral_analytics_suite.operation_manager.OperationHandler import OperationHandler
 
 
 class GuiLauncher:
@@ -44,6 +44,7 @@ class GuiLauncher:
         self.console = None
         self.operation_manager = None
         self.project_manager = None
+
         self.dpg_async = DearPyGuiAsync()
 
     def generate_layout(self):

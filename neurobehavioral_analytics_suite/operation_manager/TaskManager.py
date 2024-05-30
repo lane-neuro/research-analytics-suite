@@ -14,9 +14,9 @@ Status: Prototype
 """
 import asyncio
 
-from neurobehavioral_analytics_suite.operation_handler.TaskCounter import TaskCounter
-from neurobehavioral_analytics_suite.operation_handler.operations.ConsoleOperation import ConsoleOperation
-from neurobehavioral_analytics_suite.operation_handler.operations.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.TaskCounter import TaskCounter
+from neurobehavioral_analytics_suite.operation_manager.operations.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
 
 
 class TaskManager:
