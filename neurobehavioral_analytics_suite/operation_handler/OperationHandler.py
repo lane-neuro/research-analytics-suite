@@ -17,10 +17,7 @@ Status: Prototype
 """
 
 import asyncio
-from concurrent.futures import ProcessPoolExecutor
-
 import nest_asyncio
-
 from neurobehavioral_analytics_suite.operation_handler.OperationChain import OperationChain
 from neurobehavioral_analytics_suite.operation_handler.TaskManager import TaskManager
 from neurobehavioral_analytics_suite.operation_handler.operations.CustomOperation import CustomOperation
@@ -112,14 +109,14 @@ class OperationHandler:
                 while current_node is not None:
                     operation = current_node.operation
                     if operation.status == "idle":
-                        await operation.init_operation()
+                        operation.init_operation()
                         await operation.start()
                         self.logger.debug(f"start_operations: [START] {operation.name}")
                     current_node = current_node.next_node
             else:
                 operation = operation_chain.operation
                 if operation.status == "idle":
-                    await operation.init_operation()
+                    operation.init_operation()
                     await operation.start()
                     self.logger.debug(f"start_operations: [START] {operation.name}")
 

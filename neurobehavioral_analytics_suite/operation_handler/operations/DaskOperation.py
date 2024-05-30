@@ -59,7 +59,7 @@ class DaskOperation(Operation):
         self.persistent = False
         self.complete = False
         self.name = name
-        self.status = "idle"
+        self._status = "idle"
         self.result = None
         self.pause_event = Event()
         self.progress = 0
@@ -68,7 +68,7 @@ class DaskOperation(Operation):
         """
         Executes the operation.
         """
-        self.status = "running"
+        self._status = "running"
         temp_vars = self.local_vars.copy()
 
         try:
@@ -87,45 +87,21 @@ class DaskOperation(Operation):
 
             return self.result
 
-    async def start(self) -> str:
+    async def start(self):
         """Starts the operation and handles any exceptions that occur during execution."""
-        try:
-            self.status = "started"
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.status = "error"
+        await super().start()
 
-        return self.status
-
-    async def stop(self) -> str:
+    async def stop(self):
         """Stops the operation and handles any exceptions that occur during execution."""
-        try:
-            self.status = "stopped"
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.status = "error"
+        await super().stop()
 
-        return self.status
-
-    async def pause(self) -> str:
+    async def pause(self):
         """Pauses the operation and handles any exceptions that occur during execution."""
-        try:
-            self.status = "paused"
-            self.pause_event.clear()
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.status = "error"
-
-        return self.status
+        await super().pause()
 
     async def resume(self) -> None:
         """Resumes the operation and handles any exceptions that occur during execution."""
-        try:
-            self.status = "running"
-            self.pause_event.set()
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.status = "error"
+        await super().resume()
 
     async def reset(self) -> None:
         """Resets the operation and handles any exceptions that occur during execution."""
@@ -137,4 +113,4 @@ class DaskOperation(Operation):
         Returns:
             A tuple containing the current progress and status of the operation.
         """
-        return self.progress, self.status
+        return super().progress()

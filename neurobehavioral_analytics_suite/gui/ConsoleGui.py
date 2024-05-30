@@ -21,7 +21,8 @@ class ConsoleGui:
             dpg.add_input_text(label="", tag="input_text")
             dpg.add_button(label="Submit", tag="submit_button", callback=self.submit_command)
 
-        self.logger_output = dpg.add_text(default_value="", parent=self.window)
+        print(dpg.get_item_width(self.window))
+        self.logger_output = dpg.add_text(default_value="", parent=self.window, wrap=600)
         # self.search_text = dpg.add_input_text(label="Search", parent=self.window)
         # self.search_button = dpg.add_button(label="Search", callback=self.search_command, parent=self.window)
         self.user_input_handler = user_input_handler
@@ -49,7 +50,7 @@ class ConsoleGui:
                     await self.user_input_handler.process_user_input(command)
                     self.command_history.append(command)
                 except Exception as e:
-                    dpg.set_value(self.logger_output, str(e))
+                    self.logger.error(self, e)
             dpg.set_value('input_text', "")  # Clear the input field
 
     async def update_logger_output(self):

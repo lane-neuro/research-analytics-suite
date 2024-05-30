@@ -35,7 +35,6 @@ class Operation(BaseOperation):
     This class requires that any child class implement the execute, start, pause, stop, and resume methods.
 
     Attributes:
-        status (str): The current status of the operation.
         progress (int): The current progress of the operation.
         persistent (bool): Whether the operation should run indefinitely.
         complete (bool): Whether the operation is complete.

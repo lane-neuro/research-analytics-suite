@@ -69,7 +69,7 @@ class CustomOperation(Operation):
         try:
             if isinstance(self.func, str):  # If self.func is a string of code
                 code = self.func
-                self.func = lambda: exec(code, {}, self.local_vars)
+                self.func = lambda: exec(code, {}, temp_vars)
             elif callable(self.func):  # If self.func is a callable function
                 func = self.func
                 self.func = lambda: func()
