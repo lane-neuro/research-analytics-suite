@@ -17,10 +17,10 @@ import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
 
 from neurobehavioral_analytics_suite.data_engine.DataEngine import DataEngine
-from neurobehavioral_analytics_suite.gui.ConsoleGui import ConsoleGui
-from neurobehavioral_analytics_suite.gui.OperationManagerGui import OperationManagerGui
-from neurobehavioral_analytics_suite.gui.ProjectManagerGui import ProjectManagerGui
-from neurobehavioral_analytics_suite.gui.ResourceMonitorGui import ResourceMonitorGui
+from neurobehavioral_analytics_suite.gui.ConsoleDialog import ConsoleDialog
+from neurobehavioral_analytics_suite.gui.OperationManagerDialog import OperationManagerDialog
+from neurobehavioral_analytics_suite.gui.ProjectManagerDialog import ProjectManagerDialog
+from neurobehavioral_analytics_suite.gui.ResourceMonitorDialog import ResourceMonitorDialog
 from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
 
 
@@ -28,10 +28,10 @@ class GuiLauncher:
     """A class used to launch the GUI of the NeuroBehavioral Analytics Suite.
 
     Attributes:
-        resource_monitor (ResourceMonitorGui): An instance of the ResourceMonitorGui class.
-        console (ConsoleGui): An instance of the ConsoleGui class.
-        operation_manager (OperationManagerGui): An instance of the OperationManagerGui class.
-        project_manager (ProjectManagerGui): An instance of the ProjectManagerGui class.
+        resource_monitor (ResourceMonitorDialog): An instance of the ResourceMonitorGui class.
+        console (ConsoleDialog): An instance of the ConsoleDialog class.
+        operation_manager (OperationManagerDialog): An instance of the OperationManagerGui class.
+        project_manager (ProjectManagerDialog): An instance of the ProjectManagerDialog class.
         dpg_async (DearPyGuiAsync): An instance of the DearPyGuiAsync class.
     """
 
@@ -74,10 +74,10 @@ class GuiLauncher:
         dpg.create_viewport()
         dpg.setup_dearpygui()
 
-        self.project_manager = ProjectManagerGui(self.data_engine, self.operation_handler)
-        self.console = ConsoleGui(self.operation_handler.user_input_handler, self.operation_handler, self.logger)
-        self.resource_monitor = ResourceMonitorGui(self.operation_handler)
-        self.operation_manager = OperationManagerGui(self.operation_handler)
+        self.project_manager = ProjectManagerDialog(self.data_engine, self.operation_handler)
+        self.console = ConsoleDialog(self.operation_handler.user_input_handler, self.operation_handler, self.logger)
+        self.resource_monitor = ResourceMonitorDialog(self.operation_handler)
+        self.operation_manager = OperationManagerDialog(self.operation_handler)
 
         dpg.show_viewport()
         self.generate_layout()

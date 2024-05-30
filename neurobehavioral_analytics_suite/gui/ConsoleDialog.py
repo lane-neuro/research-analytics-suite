@@ -1,4 +1,4 @@
-# neurobehavioral_analytics_suite/gui/ConsoleGui.py
+# neurobehavioral_analytics_suite/gui/ConsoleDialog.py
 import asyncio
 
 import dearpygui.dearpygui as dpg
@@ -7,7 +7,7 @@ from neurobehavioral_analytics_suite.operation_handler.OperationHandler import O
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 
 
-class ConsoleGui:
+class ConsoleDialog:
     def __init__(self, user_input_handler: UserInputManager, operation_handler: OperationHandler, logger):
         self.logger = logger
         self.window = dpg.add_window(label="Console")

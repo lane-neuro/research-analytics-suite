@@ -1,4 +1,4 @@
-# neurobehavioral_analytics_suite/gui/ProjectManagerGui.py
+# neurobehavioral_analytics_suite/gui/ProjectManagerDialog.py
 import dearpygui.dearpygui as dpg
 import asyncio
 from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
@@ -10,7 +10,7 @@ from neurobehavioral_analytics_suite.operation_handler.operations.LoadProjectOpe
 from neurobehavioral_analytics_suite.operation_handler.operations.SaveProjectOperation import SaveProjectOperation
 
 
-class ProjectManagerGui:
+class ProjectManagerDialog:
     def __init__(self, data_engine: DataEngine, operation_handler: OperationHandler):
         self.window = dpg.add_window(label="Project Manager")
         dpg.add_button(label="Create Project", callback=self.create_project_wrapper, parent=self.window)

@@ -1,4 +1,4 @@
-# neurobehavioral_analytics_suite/gui/ResourceMonitorGui.py
+# neurobehavioral_analytics_suite/gui/ResourceMonitorDialog.py
 import dearpygui.dearpygui as dpg
 import asyncio
 import psutil
@@ -6,7 +6,7 @@ import psutil
 from neurobehavioral_analytics_suite.operation_handler.OperationHandler import OperationHandler
 
 
-class ResourceMonitorGui:
+class ResourceMonitorDialog:
     SLEEP_DURATION = 0.05
 
     def __init__(self, operation_handler: OperationHandler):
