@@ -93,14 +93,19 @@ class OperationHandler:
         self.logger.debug(f"add_custom_operation: New Operation: {operation.name}")
         await self.queue.add_operation_to_queue(operation)
 
-    async def add_operation_if_not_exists(self, operation_type, *args, **kwargs):
-        # Check if a task of operation_type is running or in the queue
-        if (not any(isinstance(task, operation_type)
+    def task_exists(self, operation_type):
+        return (any(isinstance(task, operation_type)
                     and task.status in ["running", "started"] for task in self.task_manager.tasks)
-                and not any(isinstance(operation_chain.head.operation, operation_type) for operation_chain
-                            in self.queue.queue)):
-            await self.queue.add_operation_to_queue(operation_type(*args, **kwargs))
-            self.logger.info(f"add_operation_if_not_exists: [QUEUE] {operation_type.__name__} - Added to queue")
+                or any(isinstance(operation_chain.head.operation, operation_type) for operation_chain
+                       in self.queue.queue))
+
+    async def add_task(self, operation_type, *args, **kwargs):
+        await self.queue.add_operation_to_queue(operation_type(*args, **kwargs))
+        self.logger.info(f"add_task: [QUEUE] {operation_type.__name__} - Added to queue")
+
+    async def add_operation_if_not_exists(self, operation_type, *args, **kwargs):
+        if not self.task_exists(operation_type):
+            await self.add_task(operation_type, *args, **kwargs)
 
     async def start_operations(self) -> None:
         for operation_chain in self.queue.queue:

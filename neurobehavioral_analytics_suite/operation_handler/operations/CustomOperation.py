@@ -77,13 +77,12 @@ class CustomOperation(Operation):
                 raise TypeError("self.func must be a string of Python code or a callable function.")
 
             await super().execute()
-            self.result_output = temp_vars
-            self.local_vars = temp_vars
-            return self.result_output
         except Exception as e:
             self.error_handler.handle_error(e, self)
-            self.result_output = temp_vars
             self._status = "error"
+        finally:
+            self.result_output = temp_vars
+            self.local_vars = temp_vars
             return self.result_output
 
     def get_result(self):
