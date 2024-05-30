@@ -18,7 +18,7 @@ Status: Prototype
 from dask import delayed
 import dask.bag as db
 from dask.distributed import Client
-from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
 
 
 class DataTransformer(Operation):

@@ -1,7 +1,7 @@
-from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
-from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
-from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
-from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
+from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ResourceMonitorOperation import \
     ResourceMonitorOperation
 
 

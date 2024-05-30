@@ -24,7 +24,7 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor
 from typing import Tuple
 
-from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from neurobehavioral_analytics_suite.operation_manager.operation.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
