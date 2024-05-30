@@ -19,12 +19,13 @@ Status: Prototype
 import asyncio
 import nest_asyncio
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
+from neurobehavioral_analytics_suite.operation_manager.OperationExecutor import OperationExecutor
+from neurobehavioral_analytics_suite.operation_manager.OperationManager import OperationManager
+from neurobehavioral_analytics_suite.operation_manager.OperationStatusChecker import OperationStatusChecker
+from neurobehavioral_analytics_suite.operation_manager.PersistentOperationChecker import PersistentOperationChecker
 from neurobehavioral_analytics_suite.operation_manager.TaskManager import TaskManager
 from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
-from neurobehavioral_analytics_suite.operation_manager.operations.ConsoleOperation import ConsoleOperation
-from neurobehavioral_analytics_suite.operation_manager.operations.ResourceMonitorOperation import \
-    ResourceMonitorOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 from neurobehavioral_analytics_suite.operation_manager.OperationQueue import OperationQueue
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
@@ -61,25 +62,18 @@ class OperationHandler:
 
         self.sleep_time = sleep_time
 
+        self.operation_manager = OperationManager(self.queue, self.logger, self.error_handler)
+        self.operation_executor = OperationExecutor(self, self.queue, self.task_manager, self.logger,
+                                                    self.error_handler)
+        self.operation_status_checker = OperationStatusChecker(self, self.queue)
+        self.persistent_operation_checker = PersistentOperationChecker(self, self.queue, self.task_manager, self.logger,
+                                                                       self.error_handler)
+
     async def start(self):
         """
         Starts the operation handler.
         """
-        asyncio.get_event_loop().run_forever()
-
-    async def add_operation(self, func, name: str = "Operation") -> Operation:
-        """
-        Creates a new Operation and adds it to the queue.
-
-        Args:
-            func (callable): The function to be executed by the Operation.
-            name (str, optional): The name of the Operation. Defaults to "Operation".
-        """
-        self.logger.info(f"add_operation: [START] {name}")
-        operation = Operation(name=name, error_handler=self.error_handler, func=func)
-        self.logger.info(f"add_operation: New Operation: {operation.name}")
-        await self.queue.add_operation_to_queue(operation)
-        return operation
+        self.main_loop.run_forever()
 
     async def add_custom_operation(self, func, name: str = "CustomOperation"):
         """
@@ -103,6 +97,33 @@ class OperationHandler:
         await self.queue.add_operation_to_queue(operation_type(*args, **kwargs))
         self.logger.info(f"add_task: [QUEUE] {operation_type.__name__} - Added to queue")
 
+    async def add_operation(self, func, name: str = "Operation") -> Operation:
+        return await self.operation_manager.add_operation(func, name)
+
+    async def pause_operation(self, operation: Operation) -> None:
+        await self.operation_manager.pause_operation(operation)
+
+    async def resume_operation(self, operation: Operation) -> None:
+        await self.operation_manager.resume_operation(operation)
+
+    async def stop_operation(self, operation: Operation) -> None:
+        await self.operation_manager.stop_operation(operation)
+
+    async def execute_operation(self, operation) -> asyncio.Task:
+        return await self.operation_executor.execute_operation(operation)
+
+    async def execute_all(self) -> None:
+        await self.operation_executor.execute_all()
+
+    def get_operation_status(self, operation) -> str:
+        return self.operation_status_checker.get_operation_status(operation)
+
+    def get_all_operations_status(self):
+        return self.operation_status_checker.get_all_operations_status()
+
+    async def check_persistent_operations(self):
+        await self.persistent_operation_checker.check_persistent_operations()
+
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs):
         if not self.task_exists(operation_type):
             await self.add_task(operation_type, *args, **kwargs)
@@ -125,35 +146,13 @@ class OperationHandler:
                     await operation.start()
                     self.logger.debug(f"start_operations: [START] {operation.name}")
 
-    async def resume_operation(self, operation: Operation) -> None:
-        """
-        Resumes a specific operation.
-
-        Args:
-            operation (Operation): The operation to resume.
-        """
-        if operation.status == "paused":
-            await operation.resume()
-
     async def resume_all_operations(self):
         """
         Resumes all paused operations in the queue.
         """
-
         for operation_list in self.queue.queue:
             operation = self.queue.get_operation_from_chain(operation_list)
-            if operation.status == "paused":
-                await operation.resume()
-
-    async def pause_operation(self, operation: Operation) -> None:
-        """
-        Pauses a specific operation.
-
-        Args:
-            operation (Operation): The operation to pause.
-        """
-        if operation.status == "running":
-            await operation.pause()
+            await self.resume_operation(operation)
 
     async def pause_all_operations(self):
         """
@@ -163,15 +162,6 @@ class OperationHandler:
         for operation_list in self.queue.queue:
             operation = self.queue.get_operation_from_chain(operation_list)
             await self.pause_operation(operation)
-
-    async def stop_operation(self, operation: Operation) -> None:
-        """
-        Stops a specific operation.
-
-        Args:
-            operation (Operation): The operation to stop.
-        """
-        await operation.stop()
 
     async def stop_all_operations(self):
         """
@@ -185,99 +175,6 @@ class OperationHandler:
                     current_node = current_node.next_node
             else:
                 await self.stop_operation(operation_node)
-
-    def get_operation_status(self, operation) -> str:
-        """
-        Returns the status of a specific operation.
-
-        Args:
-            operation (Operation): The operation to get the status of.
-
-        Returns:
-            str: The status of the operation.
-        """
-        return operation.status
-
-    def get_all_operations_status(self):
-        """
-        Returns the status of all operations in the queue.
-
-        Returns:
-            dict: A dictionary mapping operation instances to their status.
-        """
-        status_dict = {}
-        for operation_node in self.queue.queue:
-            if isinstance(operation_node, OperationChain):
-                current_node = operation_node.head
-                while current_node is not None:
-                    status_dict[current_node.operation] = current_node.operation.status
-                    current_node = current_node.next_node
-            else:
-                status_dict[operation_node] = operation_node.status
-        return status_dict
-
-    async def execute_operation(self, operation) -> asyncio.Task:
-        nest_asyncio.apply()
-        try:
-            if operation.status == "started":
-                self.logger.info(f"execute_operation: [RUN] {operation.task.get_name()}")
-                await operation.execute()
-                return operation.task
-        except Exception as e:
-            self.error_handler.handle_error(e, self)
-
-    async def execute_all(self) -> None:
-        """
-        Executes all Operation instances in the queue.
-
-        This method executes the operations asynchronously. It waits for all operations tocomplete before returning.
-
-        Raises:
-            Exception: If an exception occurs during the execution of an operation, it is caught and handled by the
-            ErrorHandler instance.
-        """
-
-        nest_asyncio.apply()
-        self.logger.debug("OperationHandler: Queue Size: " + str(self.queue.size()))
-
-        # Create a copy of the queue for iteration
-        queue_copy = set(self.queue.queue)
-
-        for operation_chain in queue_copy:
-            top_operations = set()
-            if isinstance(operation_chain, OperationChain):
-                current_node = operation_chain.head
-                if current_node is not None:
-                    top_operations.add(current_node.operation)
-            else:
-                top_operations.add(operation_chain.operation)
-
-            for operation in top_operations:
-                if not operation.task or operation.task.done():
-                    if isinstance(operation, ConsoleOperation) and not self.console_operation_in_progress:
-                        continue
-                    self.logger.debug(f"execute_all: [START] {operation.name} - {operation.status} - {operation.task}")
-
-                    if not operation.task:
-                        operation.task = self.task_manager.create_task(self.execute_operation(operation),
-                                                                       name=operation.name)
-                    if isinstance(operation, ConsoleOperation):
-                        self.console_operation_in_progress = True
-
-    async def check_persistent_operations(self):
-        """
-        Checks for persistent operations and adds them to the queue if they are not already present.
-        """
-
-        if not self.console_operation_in_progress:
-            await self.add_operation_if_not_exists(ConsoleOperation, self.error_handler, self.user_input_handler,
-                                                   self.logger,
-                                                   self.local_vars, name="ConsoleOperation", prompt="")
-            self.console_operation_in_progress = True
-
-        # Check if a ResourceMonitorOperation is already running
-        if not any(isinstance(task, ResourceMonitorOperation) for task in self.task_manager.tasks):
-            await self.add_operation_if_not_exists(ResourceMonitorOperation, self.error_handler)
 
     async def exec_loop(self):
         """

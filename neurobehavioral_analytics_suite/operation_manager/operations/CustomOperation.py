@@ -1,5 +1,5 @@
 """
-A module that defines the CustomOperation class, a subclass of the BaseOperation class.
+A module that defines the CustomOperation class, a subclass of the ABCOperation class.
 
 The CustomOperation class is designed to handle custom operations that require function processing. It provides methods
 for setting the function to be processed and executing the operation.

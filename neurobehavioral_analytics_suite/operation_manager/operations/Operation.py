@@ -7,7 +7,7 @@ progress of the task and handles any exceptions that occur during execution.
     Typical usage example:
 
     error_handler = ErrorHandler()
-    operation = Operation(BaseOperation(), error_handler)
+    operation = Operation(ABCOperation(), error_handler)
     operation.start()
 
 Author: Lane
@@ -24,13 +24,13 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor
 from typing import Tuple
 
-from neurobehavioral_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
-class Operation(BaseOperation):
+class Operation(ABCOperation):
     """
-    An Operation class that defines a common interface for all operations, inherited from BaseOperation.
+    An Operation class that defines a common interface for all operations, inherited from ABCOperation.
 
     This class requires that any child class implement the execute, start, pause, stop, and resume methods.
 
