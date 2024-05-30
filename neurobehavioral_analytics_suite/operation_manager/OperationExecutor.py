@@ -15,7 +15,7 @@ Status: Prototype
 import asyncio
 
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
-from neurobehavioral_analytics_suite.operation_manager.operations.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
 
 
 class OperationExecutor:

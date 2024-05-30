@@ -25,7 +25,6 @@ from neurobehavioral_analytics_suite.operation_manager.OperationStatusChecker im
 from neurobehavioral_analytics_suite.operation_manager.PersistentOperationChecker import PersistentOperationChecker
 from neurobehavioral_analytics_suite.operation_manager.TaskManager import TaskManager
 from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
-from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 from neurobehavioral_analytics_suite.operation_manager.OperationQueue import OperationQueue
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
@@ -97,33 +96,6 @@ class OperationHandler:
         await self.queue.add_operation_to_queue(operation_type(*args, **kwargs))
         self.logger.info(f"add_task: [QUEUE] {operation_type.__name__} - Added to queue")
 
-    async def add_operation(self, func, name: str = "Operation") -> Operation:
-        return await self.operation_manager.add_operation(func, name)
-
-    async def pause_operation(self, operation: Operation) -> None:
-        await self.operation_manager.pause_operation(operation)
-
-    async def resume_operation(self, operation: Operation) -> None:
-        await self.operation_manager.resume_operation(operation)
-
-    async def stop_operation(self, operation: Operation) -> None:
-        await self.operation_manager.stop_operation(operation)
-
-    async def execute_operation(self, operation) -> asyncio.Task:
-        return await self.operation_executor.execute_operation(operation)
-
-    async def execute_all(self) -> None:
-        await self.operation_executor.execute_all()
-
-    def get_operation_status(self, operation) -> str:
-        return self.operation_status_checker.get_operation_status(operation)
-
-    def get_all_operations_status(self):
-        return self.operation_status_checker.get_all_operations_status()
-
-    async def check_persistent_operations(self):
-        await self.persistent_operation_checker.check_persistent_operations()
-
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs):
         if not self.task_exists(operation_type):
             await self.add_task(operation_type, *args, **kwargs)
@@ -152,7 +124,7 @@ class OperationHandler:
         """
         for operation_list in self.queue.queue:
             operation = self.queue.get_operation_from_chain(operation_list)
-            await self.resume_operation(operation)
+            await self.operation_manager.resume_operation(operation)
 
     async def pause_all_operations(self):
         """
@@ -161,7 +133,7 @@ class OperationHandler:
 
         for operation_list in self.queue.queue:
             operation = self.queue.get_operation_from_chain(operation_list)
-            await self.pause_operation(operation)
+            await self.operation_manager.pause_operation(operation)
 
     async def stop_all_operations(self):
         """
@@ -171,10 +143,10 @@ class OperationHandler:
             if isinstance(operation_node, OperationChain):
                 current_node = operation_node.head
                 while current_node is not None:
-                    await self.stop_operation(current_node.operation)
+                    await self.operation_manager.stop_operation(current_node.operation)
                     current_node = current_node.next_node
             else:
-                await self.stop_operation(operation_node)
+                await self.operation_manager.stop_operation(operation_node)
 
     async def exec_loop(self):
         """
@@ -186,13 +158,13 @@ class OperationHandler:
         while True:
             try:
                 # Check for persistent operations
-                await self.check_persistent_operations()
+                await self.persistent_operation_checker.check_persistent_operations()
 
                 # Start all operations in the queue
                 await self.start_operations()
 
                 # Execute all operations in the queue
-                await self.execute_all()
+                await self.operation_executor.execute_all()
 
                 # Handle any completed tasks
                 await self.task_manager.handle_tasks()
