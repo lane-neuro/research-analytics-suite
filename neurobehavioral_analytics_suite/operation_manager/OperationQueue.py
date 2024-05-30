@@ -9,10 +9,11 @@ class OperationQueue:
         self.logger = logger
         self.error_handler = error_handler
 
-    async def add_operation_to_queue(self, operation) -> None:
+    async def add_operation_to_queue(self, operation) -> Operation:
         if not isinstance(operation, OperationChain):
             operation = OperationChain(operation)
         self.queue.append(operation)
+        return self.get_operation_from_chain(operation)
 
     def remove_operation_from_queue(self, operation):
         if isinstance(operation, OperationChain):

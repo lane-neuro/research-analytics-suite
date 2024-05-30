@@ -3,13 +3,13 @@ import dearpygui.dearpygui as dpg
 import asyncio
 import psutil
 
-from neurobehavioral_analytics_suite.operation_manager.OperationHandler import OperationHandler
+from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
 
 
 class ResourceMonitorDialog:
     SLEEP_DURATION = 0.05
 
-    def __init__(self, operation_handler: OperationHandler):
+    def __init__(self, operation_handler: OperationControl):
         self.memory_line_series = None
         self.memory_x_axis = None
         self.memory_y_axis = None

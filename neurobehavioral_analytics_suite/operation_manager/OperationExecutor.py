@@ -45,7 +45,7 @@ class OperationExecutor:
             Exception: If an exception occurs during the execution of an operation, it is caught and handled by the
             ErrorHandler instance.
         """
-        self.logger.debug("OperationHandler: Queue Size: " + str(self.queue.size()))
+        self.logger.debug("OperationControl: Queue Size: " + str(self.queue.size()))
 
         # Create a copy of the queue for iteration
         queue_copy = set(self.queue.queue)

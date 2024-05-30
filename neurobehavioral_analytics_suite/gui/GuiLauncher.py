@@ -21,7 +21,7 @@ from neurobehavioral_analytics_suite.gui.ConsoleDialog import ConsoleDialog
 from neurobehavioral_analytics_suite.gui.OperationManagerDialog import OperationManagerDialog
 from neurobehavioral_analytics_suite.gui.ProjectManagerDialog import ProjectManagerDialog
 from neurobehavioral_analytics_suite.gui.ResourceMonitorDialog import ResourceMonitorDialog
-from neurobehavioral_analytics_suite.operation_manager.OperationHandler import OperationHandler
+from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
 
 
 class GuiLauncher:
@@ -35,7 +35,7 @@ class GuiLauncher:
         dpg_async (DearPyGuiAsync): An instance of the DearPyGuiAsync class.
     """
 
-    def __init__(self, data_engine: DataEngine, operation_handler: OperationHandler, logger):
+    def __init__(self, data_engine: DataEngine, operation_handler: OperationControl, logger):
         """Initializes the GuiLauncher with instances of the necessary classes."""
         self.logger = logger
         self.operation_handler = operation_handler

@@ -2,13 +2,13 @@
 import asyncio
 
 import dearpygui.dearpygui as dpg
-from neurobehavioral_analytics_suite.operation_manager.OperationHandler import OperationHandler
+from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
 
 
 class OperationManagerDialog:
     SLEEP_DURATION = 0.05
 
-    def __init__(self, operation_handler: OperationHandler):
+    def __init__(self, operation_handler: OperationControl):
         self.window = dpg.add_window(label="Operation Manager")
         self.operation_handler = operation_handler
         self.operation_items = {}  # Store operation GUI items

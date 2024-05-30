@@ -1,8 +1,8 @@
 """
-A module that defines the OperationHandler class, which is responsible for managing and executing operations in the
+A module that defines the OperationControl class, which is responsible for managing and executing operations in the
 queue. It also handles user input from the console and monitors system resources.
 
-The OperationHandler class provides methods for adding operations to the queue, stopping, pausing, and resuming
+The OperationControl class provides methods for adding operations to the queue, stopping, pausing, and resuming
 operations, and getting the status of operations. It also sets up the asyncio event loop and continuously monitors
 for tasks.
 
@@ -24,13 +24,12 @@ from neurobehavioral_analytics_suite.operation_manager.OperationManager import O
 from neurobehavioral_analytics_suite.operation_manager.OperationStatusChecker import OperationStatusChecker
 from neurobehavioral_analytics_suite.operation_manager.PersistentOperationChecker import PersistentOperationChecker
 from neurobehavioral_analytics_suite.operation_manager.TaskManager import TaskManager
-from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 from neurobehavioral_analytics_suite.operation_manager.OperationQueue import OperationQueue
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 
 
-class OperationHandler:
+class OperationControl:
     """
     A class for handling the lifecycle of Operation instances.
 
@@ -45,7 +44,7 @@ class OperationHandler:
 
     def __init__(self, logger, sleep_time: float = 0.15):
         """
-        Initializes the OperationHandler with an OperationQueue and an ErrorHandler instance.
+        Initializes the OperationControl with an OperationQueue and an ErrorHandler instance.
         """
         nest_asyncio.apply()
         self.logger = logger
@@ -61,11 +60,11 @@ class OperationHandler:
 
         self.sleep_time = sleep_time
 
-        self.operation_manager = OperationManager(self.queue, self.logger, self.error_handler)
+        self.operation_manager = OperationManager(self, self.queue, self.task_manager, self.logger, self.error_handler)
         self.operation_executor = OperationExecutor(self, self.queue, self.task_manager, self.logger,
                                                     self.error_handler)
         self.operation_status_checker = OperationStatusChecker(self, self.queue)
-        self.persistent_operation_checker = PersistentOperationChecker(self, self.queue, self.task_manager, self.logger,
+        self.persistent_operation_checker = PersistentOperationChecker(self, self.operation_manager, self.queue, self.task_manager, self.logger,
                                                                        self.error_handler)
 
     async def start(self):
@@ -73,32 +72,6 @@ class OperationHandler:
         Starts the operation handler.
         """
         self.main_loop.run_forever()
-
-    async def add_custom_operation(self, func, name: str = "CustomOperation"):
-        """
-        Creates a new CustomOperation and adds it to the queue.
-
-        Args:
-            func: The func to be processed by the CustomOperation.
-            name: The name of the CustomOperation.
-        """
-        operation = CustomOperation(self.error_handler, func, self.local_vars, name)
-        self.logger.debug(f"add_custom_operation: New Operation: {operation.name}")
-        await self.queue.add_operation_to_queue(operation)
-
-    def task_exists(self, operation_type):
-        return (any(isinstance(task, operation_type)
-                    and task.status in ["running", "started"] for task in self.task_manager.tasks)
-                or any(isinstance(operation_chain.head.operation, operation_type) for operation_chain
-                       in self.queue.queue))
-
-    async def add_task(self, operation_type, *args, **kwargs):
-        await self.queue.add_operation_to_queue(operation_type(*args, **kwargs))
-        self.logger.info(f"add_task: [QUEUE] {operation_type.__name__} - Added to queue")
-
-    async def add_operation_if_not_exists(self, operation_type, *args, **kwargs):
-        if not self.task_exists(operation_type):
-            await self.add_task(operation_type, *args, **kwargs)
 
     async def start_operations(self) -> None:
         for operation_chain in self.queue.queue:

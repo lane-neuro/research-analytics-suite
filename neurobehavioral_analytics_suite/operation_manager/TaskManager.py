@@ -31,11 +31,17 @@ class TaskManager:
     def create_task(self, coro, name):
         """
         Private method to create tasks. This method should be used instead of asyncio.create_task
-        within the OperationHandler class.
+        within the OperationControl class.
         """
         task = asyncio.create_task(coro, name=self.task_counter.new_task(name))
         self.tasks.add(task)
         return task
+
+    def task_exists(self, operation_type):
+        return (any(isinstance(task, operation_type)
+                    and task.status in ["running", "started"] for task in self.tasks)
+                or any(isinstance(operation_chain.head.operation, operation_type) for operation_chain
+                       in self.queue.queue))
 
     async def handle_tasks(self) -> None:
         self.logger.debug("handle_tasks: [INIT]")

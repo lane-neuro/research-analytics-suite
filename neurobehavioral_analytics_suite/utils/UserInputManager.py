@@ -12,6 +12,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ResourceMonitorOperation import \
     ResourceMonitorOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
@@ -80,5 +81,8 @@ class UserInputManager:
 
         else:
             self.logger.debug(f"UserInputHandler.process_user_input: Adding custom operation with func: {user_input}")
-            await self.operation_handler.add_custom_operation(user_input, "ConsoleInput")
+            await self.operation_handler.operation_manager.add_operation(operation_type=CustomOperation,
+                                                                         func=user_input, name="ConsoleInput",
+                                                                         local_vars=self.operation_handler.local_vars,
+                                                                         error_handler=self.error_handler)
             return f"UserInputHandler.process_user_input: Added custom operation with func: {user_input}"

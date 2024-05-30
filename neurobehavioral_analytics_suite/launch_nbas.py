@@ -21,7 +21,7 @@ import logging
 from neurobehavioral_analytics_suite.data_engine.project.new_project import new_project
 from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
 from neurobehavioral_analytics_suite.gui.GuiLauncher import GuiLauncher
-from neurobehavioral_analytics_suite.operation_manager.OperationHandler import OperationHandler
+from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
 from neurobehavioral_analytics_suite.utils.Logger import Logger
 
 
@@ -52,7 +52,7 @@ async def launch_nbas():
         data_engine = load_project(args.open_project)
         data_engine.attach_logger(logger)
 
-    operation_handler = OperationHandler(logger)
+    operation_handler = OperationControl(logger)
     launch_tasks.append(operation_handler.exec_loop())
 
     if args.gui is not None and args.gui.lower() == 'true':

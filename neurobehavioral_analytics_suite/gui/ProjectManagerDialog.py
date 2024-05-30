@@ -4,14 +4,14 @@ import asyncio
 from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
 from neurobehavioral_analytics_suite.data_engine.project.save_project import save_project
 from neurobehavioral_analytics_suite.data_engine.DataEngine import DataEngine
-from neurobehavioral_analytics_suite.operation_manager.OperationHandler import OperationHandler
-from neurobehavioral_analytics_suite.operation_manager.operation.CreateProjectOperation import CreateProjectOperation
-from neurobehavioral_analytics_suite.operation_manager.operation.LoadProjectOperation import LoadProjectOperation
-from neurobehavioral_analytics_suite.operation_manager.operation.SaveProjectOperation import SaveProjectOperation
+from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
+from neurobehavioral_analytics_suite.operation_manager.operation.project.CreateProjectOperation import CreateProjectOperation
+from neurobehavioral_analytics_suite.operation_manager.operation.project.LoadProjectOperation import LoadProjectOperation
+from neurobehavioral_analytics_suite.operation_manager.operation.project.SaveProjectOperation import SaveProjectOperation
 
 
 class ProjectManagerDialog:
-    def __init__(self, data_engine: DataEngine, operation_handler: OperationHandler):
+    def __init__(self, data_engine: DataEngine, operation_handler: OperationControl):
         self.window = dpg.add_window(label="Project Manager")
         dpg.add_button(label="Create Project", callback=self.create_project_wrapper, parent=self.window)
         dpg.add_button(label="Load Project", callback=self.load_project_wrapper, parent=self.window)
