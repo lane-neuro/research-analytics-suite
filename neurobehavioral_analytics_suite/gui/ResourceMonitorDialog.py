@@ -9,7 +9,7 @@ from neurobehavioral_analytics_suite.operation_manager.OperationControl import O
 class ResourceMonitorDialog:
     SLEEP_DURATION = 0.05
 
-    def __init__(self, operation_handler: OperationControl):
+    def __init__(self, operation_control: OperationControl):
         self.memory_line_series = None
         self.memory_x_axis = None
         self.memory_y_axis = None
@@ -21,7 +21,7 @@ class ResourceMonitorDialog:
         self.cpu_history = None
         self.cpu_text = None
 
-        self.operation_handler = operation_handler
+        self.operation_control = operation_control
 
         self.window = dpg.add_window(label="Resource Monitor")
         self.cpu_data = []
@@ -38,7 +38,7 @@ class ResourceMonitorDialog:
         try:
             self.update_operation = asyncio.create_task(self.update_resource_usage(), name="gui_ResourceUpdateTask")
         except Exception as e:
-            self.operation_handler.logger.error(f"Error creating task: {e}")
+            self.operation_control.logger.error(f"Error creating task: {e}")
 
     def setup_cpu_monitor(self, parent):
         self.cpu_text = dpg.add_text("CPU Usage: 0%", parent=parent)

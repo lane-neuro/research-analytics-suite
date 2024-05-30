@@ -8,9 +8,9 @@ from neurobehavioral_analytics_suite.operation_manager.OperationControl import O
 class OperationManagerDialog:
     SLEEP_DURATION = 0.05
 
-    def __init__(self, operation_handler: OperationControl):
+    def __init__(self, operation_control: OperationControl):
         self.window = dpg.add_window(label="Operation Manager")
-        self.operation_handler = operation_handler
+        self.operation_control = operation_control
         self.operation_items = {}  # Store operation GUI items
 
         try:
@@ -20,8 +20,8 @@ class OperationManagerDialog:
 
     async def display_operations(self):
         while True:
-            for operation_list in self.operation_handler.queue.queue:
-                operation = self.operation_handler.queue.get_operation_from_chain(operation_list)
+            for operation_list in self.operation_control.queue.queue:
+                operation = self.operation_control.queue.get_operation_from_chain(operation_list)
                 if operation not in self.operation_items:
                     # Create new GUI elements for the operation
                     operation_id = dpg.generate_uuid()
@@ -37,10 +37,10 @@ class OperationManagerDialog:
             await asyncio.sleep(self.SLEEP_DURATION)
 
     async def pause_operation(self, sender, app_data, user_data):
-        await self.operation_handler.pause_operation(user_data)
+        await self.operation_control.pause_operation(user_data)
 
     async def resume_operation(self, sender, app_data, user_data):
-        await self.operation_handler.resume_operation(user_data)
+        await self.operation_control.resume_operation(user_data)
 
     async def stop_operation(self, sender, app_data, user_data):
-        await self.operation_handler.stop_operation(user_data)
+        await self.operation_control.stop_operation(user_data)

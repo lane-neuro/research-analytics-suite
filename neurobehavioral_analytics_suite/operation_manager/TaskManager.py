@@ -20,9 +20,9 @@ from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation
 
 
 class TaskManager:
-    def __init__(self, operation_handler, logger, error_handler, queue):
+    def __init__(self, operation_control, logger, error_handler, queue):
         self.task_counter = TaskCounter(logger)
-        self.operation_handler = operation_handler
+        self.operation_control = operation_control
         self.tasks = set()
         self.error_handler = error_handler
         self.logger = logger
@@ -55,7 +55,7 @@ class TaskManager:
                         await operation.task
                         if isinstance(operation, CustomOperation):
                             output = operation.result_output
-                            self.operation_handler.local_vars = output
+                            self.operation_control.local_vars = output
                             self.logger.debug(f"handle_tasks: [OUTPUT] {output}")
                         self.logger.debug(f"handle_tasks: [DONE] {task.get_name()}")
                     else:
@@ -69,4 +69,4 @@ class TaskManager:
                             self.queue.remove_operation_from_queue(operation)
 
                         if isinstance(operation, ConsoleOperation):
-                            self.operation_handler.console_operation_in_progress = False
+                            self.operation_control.console_operation_in_progress = False

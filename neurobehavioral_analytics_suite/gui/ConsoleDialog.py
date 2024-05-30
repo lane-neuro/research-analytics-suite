@@ -8,7 +8,7 @@ from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputMana
 
 
 class ConsoleDialog:
-    def __init__(self, user_input_handler: UserInputManager, operation_handler: OperationControl, logger):
+    def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl, logger):
         self.logger = logger
         self.window = dpg.add_window(label="Console")
 
@@ -25,7 +25,7 @@ class ConsoleDialog:
         # self.search_text = dpg.add_input_text(label="Search", parent=self.window)
         # self.search_button = dpg.add_button(label="Search", callback=self.search_command, parent=self.window)
         self.user_input_handler = user_input_handler
-        self.operation_handler = operation_handler
+        self.operation_control = operation_control
         self.command_history = []
         self.command_help = {"command1": "This is command1", "command2": "This is command2"}
         self.command_aliases = {"c1": "command1", "c2": "command2"}

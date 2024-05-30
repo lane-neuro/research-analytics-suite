@@ -52,11 +52,11 @@ async def launch_nbas():
         data_engine = load_project(args.open_project)
         data_engine.attach_logger(logger)
 
-    operation_handler = OperationControl(logger)
-    launch_tasks.append(operation_handler.exec_loop())
+    operation_control = OperationControl(logger)
+    launch_tasks.append(operation_control.exec_loop())
 
     if args.gui is not None and args.gui.lower() == 'true':
-        gui_launcher = GuiLauncher(data_engine, operation_handler, logger)
+        gui_launcher = GuiLauncher(data_engine, operation_control, logger)
         launch_tasks.append(gui_launcher.launch())
 
     try:

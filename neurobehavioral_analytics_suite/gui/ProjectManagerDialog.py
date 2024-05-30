@@ -11,13 +11,13 @@ from neurobehavioral_analytics_suite.operation_manager.operation.project.SavePro
 
 
 class ProjectManagerDialog:
-    def __init__(self, data_engine: DataEngine, operation_handler: OperationControl):
+    def __init__(self, data_engine: DataEngine, operation_control: OperationControl):
         self.window = dpg.add_window(label="Project Manager")
         dpg.add_button(label="Create Project", callback=self.create_project_wrapper, parent=self.window)
         dpg.add_button(label="Load Project", callback=self.load_project_wrapper, parent=self.window)
         dpg.add_button(label="Save Project", callback=self.save_project_wrapper, parent=self.window)
         self.data_engine = data_engine
-        self.operation_handler = operation_handler
+        self.operation_control = operation_control
 
     async def create_project(self, sender, data):
         print("Creating a new project...")
@@ -39,10 +39,10 @@ class ProjectManagerDialog:
             print("No project to save")
 
     def create_project_wrapper(self, sender, data):
-        operation = CreateProjectOperation(self.operation_handler.error_handler, self.data_engine)
+        operation = CreateProjectOperation(self.operation_control.error_handler, self.data_engine)
 
     def load_project_wrapper(self, sender, data):
-        operation = LoadProjectOperation(self.operation_handler.error_handler, self.data_engine)
+        operation = LoadProjectOperation(self.operation_control.error_handler, self.data_engine)
 
     def save_project_wrapper(self, sender, data):
-        operation = SaveProjectOperation(self.operation_handler.error_handler, self.data_engine)
+        operation = SaveProjectOperation(self.operation_control.error_handler, self.data_engine)
