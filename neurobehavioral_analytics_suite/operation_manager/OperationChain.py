@@ -18,9 +18,9 @@ class OperationChain:
                 isinstance(operation, CustomOperation) or
                 isinstance(operation, ResourceMonitorOperation) or
                 isinstance(operation, ConsoleOperation)):
-            self.add_operation(operation)
+            self.add_operation_to_chain(operation)
 
-    def add_operation(self, operation: Operation):
+    def add_operation_to_chain(self, operation: Operation):
         if not self.head:
             self.head = OperationNode(operation)
         else:

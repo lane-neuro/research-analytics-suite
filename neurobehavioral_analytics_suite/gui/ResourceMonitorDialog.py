@@ -1,10 +1,13 @@
 # neurobehavioral_analytics_suite/gui/ResourceMonitorDialog.py
+from typing import Optional
+
 import dearpygui.dearpygui as dpg
 import asyncio
 import psutil
 
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
 from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
 
 
 class ResourceMonitorDialog:
@@ -39,7 +42,20 @@ class ResourceMonitorDialog:
         self.setup_memory_monitor(self.memory_container)
 
         self.update_operation = None
-        self.launcher.add_update_operation(self.create_update_operation())
+
+    async def initialize(self):
+        self.update_operation = await self.add_update_operation()
+
+    async def add_update_operation(self):
+        try:
+            operation = await self.operation_control.operation_manager.add_operation(
+                operation_type=CustomOperation, name="gui_ResourceUpdateTask",
+                local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
+                func=self.update_resource_usage, persistent=True)
+            return operation
+        except Exception as e:
+            self.logger.error(f"Error creating task: {e}")
+        return None
 
     def setup_cpu_monitor(self, parent):
         self.cpu_text = dpg.add_text("CPU Usage: 0%", parent=parent)
@@ -57,20 +73,11 @@ class ResourceMonitorDialog:
         dpg.set_axis_limits(self.memory_y_axis, 0, 100)
         self.memory_line_series = None
 
-    async def create_update_operation(self):
-        try:
-            self.update_operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=CustomOperation, name="gui_ResourceUpdateTask",
-                local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
-                func=self.update_resource_usage, persistent=True)
-        except Exception as e:
-            self.logger.error(f"Error creating task: {e}")
-
     async def update_resource_usage(self):
         while True:
             self.update_cpu_usage()
             self.update_memory_usage()
-            await asyncio.sleep(self.SLEEP_DURATION)
+            await asyncio.sleep(0.05)
 
     def update_cpu_usage(self):
         cpu_usage = psutil.cpu_percent()

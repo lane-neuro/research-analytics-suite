@@ -19,8 +19,8 @@ from neurobehavioral_analytics_suite.operation_manager.operation.persistent.Cons
 
 
 class OperationExecutor:
-    def __init__(self, handler, queue, task_manager, logger, error_handler):
-        self.handler = handler
+    def __init__(self, operation_control, queue, task_manager, logger, error_handler):
+        self.op_control = operation_control
         self.queue = queue
         self.task_manager = task_manager
         self.logger = logger
@@ -61,12 +61,12 @@ class OperationExecutor:
 
             for operation in top_operations:
                 if not operation.task or operation.task.done():
-                    if isinstance(operation, ConsoleOperation) and not self.handler.console_operation_in_progress:
+                    if isinstance(operation, ConsoleOperation) and not self.op_control.console_operation_in_progress:
                         continue
-                    self.logger.debug(f"execute_all: [START] {operation.name} - {operation.status} - {operation.task}")
+                    self.logger.debug(f"execute_all: [OP] {operation.name} - {operation.status} - {operation.task}")
 
                     if not operation.task:
-                        operation.task = self.task_manager.create_task(self.execute_operation(operation),
+                        operation.task = await self.task_manager.create_task(self.execute_operation(operation),
                                                                        name=operation.name)
                     if isinstance(operation, ConsoleOperation):
-                        self.handler.console_operation_in_progress = True
+                        self.op_control.console_operation_in_progress = True

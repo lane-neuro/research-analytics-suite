@@ -45,7 +45,7 @@ class ConsoleOperation(CustomOperation):
             data (str): A formatted string to print out the func that the operation will process.
         """
 
-        super().__init__(error_handler, data, local_vars)
+        super().__init__(error_handler=error_handler, func=self.execute, local_vars=local_vars, name=name)
         self.user_input_handler = user_input_handler
         self.error_handler = error_handler
         self.prompt = prompt

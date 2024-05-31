@@ -46,27 +46,34 @@ class OperationControl:
         """
         Initializes the OperationControl with an OperationQueue and an ErrorHandler instance.
         """
-        nest_asyncio.apply()
         self.logger = logger
         self.error_handler = ErrorHandler()
         self.main_loop = asyncio.get_event_loop()
 
-        self.queue = OperationQueue(self.logger, self.error_handler)
-        self.task_manager = TaskManager(self, self.logger, self.error_handler, self.queue)
-        self.user_input_handler = UserInputManager(self, self.logger, self.error_handler)
+        self.queue = OperationQueue(logger=self.logger, error_handler=self.error_handler)
+        self.task_manager = TaskManager(operation_control=self, logger=self.logger, error_handler=self.error_handler,
+                                        queue=self.queue)
 
         self.console_operation_in_progress = False
         self.local_vars = locals()
 
         self.sleep_time = sleep_time
 
-        self.operation_manager = OperationManager(self, self.queue, self.task_manager, self.logger, self.error_handler)
-        self.operation_executor = OperationExecutor(self, self.queue, self.task_manager, self.logger,
-                                                    self.error_handler)
-        self.operation_status_checker = OperationStatusChecker(self, self.queue)
-        self.persistent_operation_checker = PersistentOperationChecker(self, self.operation_manager, self.queue,
-                                                                       self.task_manager, self.logger,
-                                                                       self.error_handler)
+        self.operation_manager = OperationManager(operation_control=self, queue=self.queue,
+                                                  task_manager=self.task_manager, logger=self.logger,
+                                                  error_handler=self.error_handler)
+        self.operation_executor = OperationExecutor(operation_control=self, queue=self.queue,
+                                                    task_manager=self.task_manager, logger=self.logger,
+                                                    error_handler=self.error_handler)
+        self.operation_status_checker = OperationStatusChecker(operation_control=self, queue=self.queue)
+        self.persistent_operation_checker = PersistentOperationChecker(operation_control=self,
+                                                                       operation_manager=self.operation_manager,
+                                                                       queue=self.queue,
+                                                                       task_manager=self.task_manager,
+                                                                       logger=self.logger,
+                                                                       error_handler=self.error_handler)
+        self.user_input_handler = UserInputManager(operation_control=self, logger=self.logger,
+                                                   error_handler=self.error_handler)
 
     async def start(self):
         """
@@ -83,14 +90,14 @@ class OperationControl:
                     if operation.status == "idle":
                         operation.init_operation()
                         await operation.start()
-                        self.logger.debug(f"start_operations: [START] {operation.name}")
+                        self.logger.info(f"start_operations: [START] {operation.name} - {operation.status}")
                     current_node = current_node.next_node
             else:
                 operation = operation_chain.operation
                 if operation.status == "idle":
                     operation.init_operation()
                     await operation.start()
-                    self.logger.debug(f"start_operations: [START] {operation.name}")
+                    self.logger.info(f"start_operations: [START] {operation.name} - {operation.status}")
 
     async def resume_all_operations(self):
         """

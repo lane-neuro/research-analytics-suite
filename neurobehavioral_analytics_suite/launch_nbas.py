@@ -18,6 +18,8 @@ import argparse
 import asyncio
 import logging
 
+import nest_asyncio
+
 from neurobehavioral_analytics_suite.data_engine.project.new_project import new_project
 from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
 from neurobehavioral_analytics_suite.gui.GuiLauncher import GuiLauncher
@@ -52,7 +54,9 @@ async def launch_nbas():
         data_engine = load_project(args.open_project)
         data_engine.attach_logger(logger)
 
+    nest_asyncio.apply()
     operation_control = OperationControl(logger)
+
     launch_tasks.append(operation_control.exec_loop())
 
     if args.gui is not None and args.gui.lower() == 'true':

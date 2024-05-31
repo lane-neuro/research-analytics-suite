@@ -33,15 +33,9 @@ class Operation(ABCOperation):
     An Operation class that defines a common interface for all operations, inherited from ABCOperation.
 
     This class requires that any child class implement the execute, start, pause, stop, and resume methods.
-
-    Attributes:
-        progress (int): The current progress of the operation.
-        persistent (bool): Whether the operation should run indefinitely.
-        complete (bool): Whether the operation is complete.
-        pause_event (asyncio.Event): An asyncio.Event instance for pausing and resuming the operation.
     """
 
-    def __init__(self, error_handler: ErrorHandler, name: str = "Operation", persistent: bool = False, func=None,
+    def __init__(self, error_handler: ErrorHandler, func, name: str = "Operation", persistent: bool = False,
                  is_cpu_bound: bool = False):
         """Initializes Operation with the operation to be managed and whether it should run indefinitely.
 
@@ -62,7 +56,6 @@ class Operation(ABCOperation):
         self._complete = False
         self._pause_event = asyncio.Event()
         self._pause_event.set()
-        self._type = type(self)
         self._error_handler = error_handler
 
     @property
@@ -119,23 +112,6 @@ class Operation(ABCOperation):
         assert isinstance(value, int), "Progress must be an integer"
         self._progress = value
 
-    @property
-    def complete(self):
-        return self._complete
-
-    @complete.setter
-    def complete(self, value):
-        assert isinstance(value, bool), "Complete must be a boolean"
-        self._complete = value
-
-    @property
-    def type(self):
-        return self._type
-
-    @type.setter
-    def type(self, value):
-        self._type = value
-
     def init_operation(self):
         """
         Initialize any resources or setup required for the operation before it starts.
@@ -154,18 +130,27 @@ class Operation(ABCOperation):
         """
         Executes the operation.
         """
-        self._status = "running"
-        try:
-            if self._is_cpu_bound:
-                with ProcessPoolExecutor() as executor:
-                    self.func = executor.submit(self.func).result()
-            else:
-                await self.func()
-            if not self._persistent:
-                self._status = "completed"
-        except Exception as e:
-            self._error_handler.handle_error(e, self)
-            self._status = "error"
+        if self._status == "started":
+            try:
+                if self.is_cpu_bound:
+                    with ProcessPoolExecutor() as executor:
+                        self.status = "running"
+                        self.func = executor.submit(self.func).result()
+                else:
+                    if self.func is not None:
+                        if asyncio.iscoroutinefunction(self.func):
+                            self._status = "running"
+                            await self.func()
+                        else:
+                            self._status = "running"
+                            await asyncio.get_event_loop().run_in_executor(None, func=self.func)
+                    else:
+                        raise ValueError("self.func is None")
+                if not self._persistent:
+                    self._status = "completed"
+            except Exception as e:
+                self._error_handler.handle_error(e, self)
+                self._status = "error"
 
     def get_result(self):
         """
@@ -275,7 +260,7 @@ class Operation(ABCOperation):
         """
         Clean up any resources or perform any necessary teardown after the operation has completed or been stopped.
         """
-        self.func = None
+        # self.func = None
         self._progress = 0
         self._pause_event.clear()
         self._status = "idle"

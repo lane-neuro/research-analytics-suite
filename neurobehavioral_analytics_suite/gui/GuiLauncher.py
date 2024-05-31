@@ -22,6 +22,7 @@ from neurobehavioral_analytics_suite.gui.OperationManagerDialog import Operation
 from neurobehavioral_analytics_suite.gui.ProjectManagerDialog import ProjectManagerDialog
 from neurobehavioral_analytics_suite.gui.ResourceMonitorDialog import ResourceMonitorDialog
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
+from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
 
 
 class GuiLauncher:
@@ -77,7 +78,8 @@ class GuiLauncher:
         dpg.setup_dearpygui()
 
         self.project_manager = ProjectManagerDialog(self.data_engine, self.operation_control)
-        self.console = ConsoleDialog(self.operation_control.user_input_handler, self.operation_control, self, self.logger)
+        self.console = ConsoleDialog(self.operation_control.user_input_handler, self.operation_control, self,
+                                     self.logger)
         self.resource_monitor = ResourceMonitorDialog(self.operation_control, self, self.logger)
         self.operation_window = OperationManagerDialog(self.operation_control)
 
@@ -85,27 +87,15 @@ class GuiLauncher:
         self.generate_layout()
 
         await self.dpg_async.start()
-        for operation in self.update_operations:
-            await operation
+
+        await self.console.initialize()
+        await self.console.update_operation.execute()
+
+        await self.resource_monitor.initialize()
+        await self.resource_monitor.update_operation.execute()
 
         # Keep the event loop running until the DearPyGui window is closed
         while dpg.is_dearpygui_running():
             await asyncio.sleep(0.01)
 
         dpg.destroy_context()
-
-    def add_update_operation(self, operation):
-        """Adds an update operation to the GUI.
-
-        Args:
-            operation (asyncio.Task): The operation to add to the GUI.
-        """
-        self.update_operations.append(operation)
-
-    async def remove_update_operation(self, operation):
-        """Removes an update operation from the GUI.
-
-        Args:
-            operation (asyncio.Task): The operation to remove from the GUI.
-        """
-        self.update_operations.remove(operation)

@@ -13,7 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
+import types
 from typing import Tuple
 from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
@@ -29,7 +29,7 @@ class CustomOperation(Operation):
         error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
     """
 
-    def __init__(self, error_handler: ErrorHandler, func, local_vars, name: str = "CustomOperation",
+    def __init__(self, error_handler: ErrorHandler, func, local_vars=None, name: str = "CustomOperation",
                  persistent: bool = False):
         """Initializes the CustomOperation with the function to be processed and an ErrorHandler instance.
 
@@ -40,6 +40,10 @@ class CustomOperation(Operation):
             name (str): The name of the operation.
         """
         super().__init__(name=name, error_handler=error_handler, func=func)
+        if local_vars is None:
+            local_vars = locals()
+        if local_vars is None:
+            local_vars = {}
         self.func = func
         self.error_handler = error_handler
         self.local_vars = local_vars
@@ -47,8 +51,9 @@ class CustomOperation(Operation):
         self.persistent = persistent
         self.name = name
         self._status = "idle"
+        self.type = type(self)
         self.result_output = None
-        
+
     def init_operation(self):
         """
         Initialize any resources or setup required for the operation before it starts.
@@ -72,10 +77,13 @@ class CustomOperation(Operation):
                 code = self.func
                 self.func = lambda: exec(code, {}, temp_vars)
             elif callable(self.func):  # If self.func is a callable function
-                func = self.func
-                self.func = lambda: func()
+                if isinstance(self.func, types.MethodType):  # If self.func is a bound method
+                    self.func = self.func
+                else:
+                    func = self.func
+                    self.func = lambda: func()
             else:
-                raise TypeError("self.func must be a string of Python code or a callable function.")
+                raise TypeError("self.func must be a string of Python code, a callable function, or a bound method.")
 
             await super().execute()
         except Exception as e:
@@ -121,4 +129,4 @@ class CustomOperation(Operation):
         Returns:
             Tuple[int, str]: A tuple containing the current progress and status of the operation.
         """
-        return super().progress()
+        return super().progress

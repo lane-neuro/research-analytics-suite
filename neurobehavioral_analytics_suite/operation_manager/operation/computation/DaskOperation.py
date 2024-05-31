@@ -51,7 +51,7 @@ class DaskOperation(Operation):
             error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
         """
 
-        super().__init__()
+        super().__init__(name="DaskOperation", error_handler=error_handler, func=func)
         self.func = func
         self.error_handler = error_handler
         self.local_vars = local_vars

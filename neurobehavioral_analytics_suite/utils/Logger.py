@@ -45,6 +45,7 @@ class Logger:
     def log_message(self, message):
         """Send a log message to the queue."""
         self.log_message_queue.put_nowait(message)
+        print(message)
 
     def info(self, message):
         self.logger.info(message)

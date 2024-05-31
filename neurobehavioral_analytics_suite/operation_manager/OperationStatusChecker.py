@@ -16,8 +16,8 @@ from neurobehavioral_analytics_suite.operation_manager.OperationChain import Ope
 
 
 class OperationStatusChecker:
-    def __init__(self, handler, queue):
-        self.handler = handler
+    def __init__(self, operation_control, queue):
+        self.op_control = operation_control
         self.queue = queue
 
     def get_operation_status(self, operation) -> str:

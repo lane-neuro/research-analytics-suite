@@ -28,7 +28,7 @@ class TaskManager:
         self.logger = logger
         self.queue = queue
 
-    def create_task(self, coro, name):
+    async def create_task(self, coro, name):
         """
         Private method to create tasks. This method should be used instead of asyncio.create_task
         within the OperationControl class.
@@ -50,16 +50,16 @@ class TaskManager:
             if task.done():
                 operation = self.queue.get_operation_by_task(task)
                 try:
-                    self.logger.debug(f"handle_tasks: [START] {task.get_name()}")
+                    self.logger.debug(f"handle_tasks: [OP] {task.get_name()}")
                     if operation is not None:
                         await operation.task
                         if isinstance(operation, CustomOperation):
                             output = operation.result_output
                             self.operation_control.local_vars = output
-                            self.logger.debug(f"handle_tasks: [OUTPUT] {output}")
-                        self.logger.debug(f"handle_tasks: [DONE] {task.get_name()}")
+                            self.logger.info(f"handle_tasks: [OUTPUT] {output}")
+                        self.logger.info(f"handle_tasks: [DONE] {task.get_name()}")
                     else:
-                        self.logger.debug(f"handle_tasks: [ERROR] No operation found for task {task.get_name()}")
+                        self.logger.error(f"handle_tasks: [ERROR] No operation found for task {task.get_name()}")
                 except Exception as e:
                     self.error_handler.handle_error(e, self)
                 finally:

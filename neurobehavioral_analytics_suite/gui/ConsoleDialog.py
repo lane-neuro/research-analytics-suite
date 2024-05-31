@@ -1,5 +1,6 @@
 # neurobehavioral_analytics_suite/gui/ConsoleDialog.py
 import asyncio
+from typing import Optional
 
 import dearpygui.dearpygui as dpg
 
@@ -33,7 +34,20 @@ class ConsoleDialog:
         self.command_aliases = {"c1": "command1", "c2": "command2"}
 
         self.update_operation = None
-        self.launcher.add_update_operation(self.create_update_operation())
+
+    async def initialize(self):
+        self.update_operation = await self.add_update_operation()
+
+    async def add_update_operation(self):
+        try:
+            operation = await self.operation_control.operation_manager.add_operation(
+                operation_type=CustomOperation, name="gui_ConsoleUpdateTask",
+                local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
+                func=self.update_logger_output, persistent=True)
+            return operation
+        except Exception as e:
+            self.logger.error(f"Error creating task: {e}")
+        return None
 
     async def submit_command(self, sender, data):
         if dpg.is_key_pressed(dpg.mvKey_Return) or sender == "submit_button":
@@ -51,15 +65,6 @@ class ConsoleDialog:
                 except Exception as e:
                     self.logger.error(self, e)
             dpg.set_value('input_text', "")  # Clear the input field
-
-    async def create_update_operation(self):
-        try:
-            self.update_operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=CustomOperation, name="gui_ConsoleUpdateTask",
-                local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
-                func=self.update_logger_output, persistent=True)
-        except Exception as e:
-            self.logger.error(f"Error creating task: {e}")
 
     async def update_logger_output(self):
         """Continuously update the logger output with new messages."""

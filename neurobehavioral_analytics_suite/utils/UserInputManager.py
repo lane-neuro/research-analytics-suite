@@ -54,10 +54,7 @@ class UserInputManager:
             for operation_list in self.operation_control.queue.queue:
                 operation_node = self.operation_control.queue.get_operation_from_chain(operation_list)
                 if isinstance(operation_node, ResourceMonitorOperation):
-                    cpu_usage = operation_node.cpu_usage
-                    memory_usage = operation_node.memory_usage
-                    self.logger.info(f"UserInputHandler.process_user_input: Resource Usage: CPU - {cpu_usage}, "
-                                     f"MEMORY - {memory_usage}")
+                    self.logger.info(operation_node.print_memory_usage())
             return "UserInputHandler.process_user_input: Displaying system resources."
 
         elif user_input == "tasks":
@@ -80,7 +77,7 @@ class UserInputManager:
             return "UserInputHandler.process_user_input: Displaying local vars..."
 
         else:
-            self.logger.debug(f"UserInputHandler.process_user_input: Adding custom operation with func: {user_input}")
+            self.logger.info(f"UserInputHandler.process_user_input: Executing custom operation with func: {user_input}")
             await self.operation_control.operation_manager.add_operation(operation_type=CustomOperation,
                                                                          func=user_input, name="ConsoleInput",
                                                                          local_vars=self.operation_control.local_vars,
