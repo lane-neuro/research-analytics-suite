@@ -38,35 +38,103 @@ class Operation(ABCOperation):
         progress (int): The current progress of the operation.
         persistent (bool): Whether the operation should run indefinitely.
         complete (bool): Whether the operation is complete.
-        error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
         pause_event (asyncio.Event): An asyncio.Event instance for pausing and resuming the operation.
     """
+
+    def __init__(self, error_handler: ErrorHandler, name: str = "Operation", persistent: bool = False, func=None,
+                 is_cpu_bound: bool = False):
+        """Initializes Operation with the operation to be managed and whether it should run indefinitely.
+
+        Args:
+            name: The name of the operation.
+            persistent: A boolean indicating whether the operation should run indefinitely.
+            func: The function to be executed by the operation.
+            is_cpu_bound: A boolean indicating whether the operation is CPU-bound.
+        """
+        super().__init__()
+        self._name = name
+        self.func = func
+        self._persistent = persistent
+        self._is_cpu_bound = is_cpu_bound
+        self._status = "idle"
+        self._task = None
+        self._progress = 0
+        self._complete = False
+        self._pause_event = asyncio.Event()
+        self._pause_event.set()
+        self._type = type(self)
+        self._error_handler = error_handler
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        assert isinstance(value, str), "Name must be a string"
+        self._name = value
+
+    @property
+    def persistent(self):
+        return self._persistent
+
+    @persistent.setter
+    def persistent(self, value):
+        assert isinstance(value, bool), "Persistent must be a boolean"
+        self._persistent = value
+
+    @property
+    def is_cpu_bound(self):
+        return self._is_cpu_bound
+
+    @is_cpu_bound.setter
+    def is_cpu_bound(self, value):
+        assert isinstance(value, bool), "is_cpu_bound must be a boolean"
+        self._is_cpu_bound = value
 
     @property
     def status(self):
         return self._status
 
-    def __init__(self, name: str = "Operation", error_handler: ErrorHandler = ErrorHandler(),
-                 persistent: bool = False, func=None, is_cpu_bound: bool = False):
-        """Initializes Operation with the operation to be managed and whether it should run indefinitely.
+    @status.setter
+    def status(self, value):
+        assert value in ["idle", "started", "running", "paused", "stopped", "completed", "error"], "Invalid status"
+        self._status = value
 
-        Args:
-            error_handler: An instance of ErrorHandler to handle any exceptions that occur.
-            persistent: A boolean indicating whether the operation should run indefinitely.
-        """
-        super().__init__()
-        self.name = name
-        self.error_handler = error_handler
-        self.func = func
-        self.persistent = persistent
-        self.is_cpu_bound = is_cpu_bound
-        self._status = "idle"
-        self.task = None
-        self.progress = 0
-        self.complete = False
-        self.pause_event = asyncio.Event()
-        self.pause_event.set()
-        self.type = type(self)
+    @property
+    def task(self):
+        return self._task
+
+    @task.setter
+    def task(self, value):
+        self._task = value
+
+    @property
+    def progress(self) -> Tuple[int, str]:
+        """Returns the progress of the operation."""
+        return self._progress, self._status
+
+    @progress.setter
+    def progress(self, value):
+        assert isinstance(value, int), "Progress must be an integer"
+        self._progress = value
+
+    @property
+    def complete(self):
+        return self._complete
+
+    @complete.setter
+    def complete(self, value):
+        assert isinstance(value, bool), "Complete must be a boolean"
+        self._complete = value
+
+    @property
+    def type(self):
+        return self._type
+
+    @type.setter
+    def type(self, value):
+        self._type = value
 
     def init_operation(self):
         """
@@ -79,7 +147,7 @@ class Operation(ABCOperation):
         try:
             self._status = "started"
         except Exception as e:
-            self.error_handler.handle_error(e, self)
+            self._error_handler.handle_error(e, self)
             self._status = "error"
 
     async def execute(self):
@@ -88,15 +156,15 @@ class Operation(ABCOperation):
         """
         self._status = "running"
         try:
-            if self.is_cpu_bound:
+            if self._is_cpu_bound:
                 with ProcessPoolExecutor() as executor:
                     self.func = executor.submit(self.func).result()
             else:
                 await self.func()
-            if not self.persistent:
+            if not self._persistent:
                 self._status = "completed"
         except Exception as e:
-            self.error_handler.handle_error(e, self)
+            self._error_handler.handle_error(e, self)
             self._status = "error"
 
     def get_result(self):
@@ -112,41 +180,41 @@ class Operation(ABCOperation):
         """Pauses the operation."""
         try:
             self._status = "paused"
-            self.pause_event.clear()
+            self._pause_event.clear()
         except Exception as e:
-            self.error_handler.handle_error(e, self)
+            self._error_handler.handle_error(e, self)
             self._status = "error"
 
     async def resume(self):
         """Resumes the operation and handles any exceptions that occur during execution."""
         try:
             self._status = "running"
-            self.pause_event.set()
+            self._pause_event.set()
         except Exception as e:
-            self.error_handler.handle_error(e, self)
+            self._error_handler.handle_error(e, self)
             self._status = "error"
 
     async def stop(self):
         """Stops the operation and handles any exceptions that occur during execution."""
         try:
-            if self.task:
-                self.task.cancel()
+            if self._task:
+                self._task.cancel()
             self._status = "stopped"
         except Exception as e:
-            self.error_handler.handle_error(e, self)
+            self._error_handler.handle_error(e, self)
             self._status = "error"
 
     async def reset(self):
         """Resets the operation and handles any exceptions that occur during execution."""
         try:
             self._status = "idle"
-            self.progress = 0
-            self.pause_event.clear()
+            self._progress = 0
+            self._pause_event.clear()
             await self.stop()
             await self.start()
-            self.pause_event.set()
+            self._pause_event.set()
         except Exception as e:
-            self.error_handler.handle_error(e, self)
+            self._error_handler.handle_error(e, self)
             self._status = "error"
 
     async def restart(self):
@@ -158,7 +226,7 @@ class Operation(ABCOperation):
             await self.start()
             await self.execute()
         except Exception as e:
-            self.error_handler.handle_error(e, self)
+            self._error_handler.handle_error(e, self)
             self._status = "error"
 
     def is_running(self):
@@ -167,7 +235,7 @@ class Operation(ABCOperation):
         Returns:
             True if the operation is running, False otherwise.
         """
-        return self.status == "running"
+        return self._status == "running"
 
     def is_complete(self):
         """Checks if the operation is complete.
@@ -189,10 +257,6 @@ class Operation(ABCOperation):
         """
         return self._status == "stopped"
 
-    def progress(self) -> Tuple[int, str]:
-        """Returns the progress of the operation."""
-        return self.progress, self._status
-
     async def update_progress(self):
         """Updates the progress of the operation until it's complete.
 
@@ -202,9 +266,9 @@ class Operation(ABCOperation):
             This is a coroutine and should be awaited.
         """
         while not self.is_complete():
-            if self.status == "running":
-                await self.pause_event.wait()
-                self.progress = self.progress + 1
+            if self._status == "running":
+                await self._pause_event.wait()
+                self._progress = self._progress + 1
             await asyncio.sleep(1)
 
     def cleanup_operation(self):
@@ -212,7 +276,7 @@ class Operation(ABCOperation):
         Clean up any resources or perform any necessary teardown after the operation has completed or been stopped.
         """
         self.func = None
-        self.progress = 0
-        self.pause_event.clear()
+        self._progress = 0
+        self._pause_event.clear()
         self._status = "idle"
-        self.task = None
+        self._task = None

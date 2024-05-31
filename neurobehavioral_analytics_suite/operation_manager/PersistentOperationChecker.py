@@ -33,9 +33,9 @@ class PersistentOperationChecker:
 
         if not self.handler.console_operation_in_progress:
             await self.op_manager.add_operation_if_not_exists(ConsoleOperation, self.error_handler,
-                                                           self.handler.user_input_handler,
-                                                           self.logger, self.handler.local_vars,
-                                                           name="ConsoleOperation", prompt="")
+                                                              self.handler.user_input_handler,
+                                                              self.logger, self.handler.local_vars,
+                                                              name="ConsoleOperation", prompt="")
             self.handler.console_operation_in_progress = True
 
         # Check if a ResourceMonitorOperation is already running
