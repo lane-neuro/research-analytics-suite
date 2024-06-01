@@ -67,10 +67,10 @@ class ResourceMonitorOperation(Operation):
         self._status = "running"
 
         while True:
-            self.cpu_usage = self.process.cpu_percent() / psutil.cpu_count()
+            self.cpu_usage = self.process.cpu_percent()
             self.total_memory_usage = psutil.virtual_memory().percent
             self.process_memory_usage = self.process.memory_info().rss / (1024 ** 3)  # Corrected to output in GB
-            if self.cpu_usage > self.cpu_threshold:
+            if (self.cpu_usage / psutil.cpu_count()) > self.cpu_threshold:
                 self.error_handler.handle_error(Exception(f"CPU usage has exceeded {self.cpu_threshold}%: "
                                                           f"current usage is {self.cpu_usage}%"), "resource_monitor")
 
