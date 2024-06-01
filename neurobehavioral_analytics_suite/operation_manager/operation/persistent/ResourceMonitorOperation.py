@@ -79,7 +79,7 @@ class ResourceMonitorOperation(Operation):
                                                           f"current usage is {self.total_memory_usage}%"),
                                                 "resource_monitor")
 
-            await asyncio.sleep(.05)
+            await asyncio.sleep(.01)
 
     def get_cpu_formatted(self) -> str:
         return (f"Total CPU Usage: {round(self.cpu_usage, 3)}% [{psutil.cpu_count()} cores]"

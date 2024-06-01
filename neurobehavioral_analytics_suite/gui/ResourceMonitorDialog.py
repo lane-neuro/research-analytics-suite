@@ -13,36 +13,25 @@ class ResourceMonitorDialog:
     MAX_DATA_POINTS = 100
 
     def __init__(self, operation_control: OperationControl, launcher, logger):
-        self.memory_line_series = None
-        self.memory_x_axis = None
-        self.memory_y_axis = None
-        self.memory_history = None
-        self.memory_text = None
-        self.cpu_line_series = None
-        self.cpu_y_axis = None
-        self.cpu_x_axis = None
-        self.cpu_history = None
-        self.cpu_text = None
 
         self.operation_control = operation_control
         self.launcher = launcher
         self.logger = logger
 
+        self.resource_monitor_operation = None
+        self.update_operation = None
+
         self.window = dpg.add_window(label="Resource Monitor")
-        self.cpu_data = deque(maxlen=self.MAX_DATA_POINTS)
-        self.memory_data = deque(maxlen=self.MAX_DATA_POINTS)
-        self.total_data_points = 0
 
         # Create a container for each monitor
         self.cpu_container = dpg.add_child_window(parent=self.window)
         self.memory_container = dpg.add_child_window(parent=self.window)
 
-        # Set up the CPU and memory monitors in their respective containers
+        self.memory_text = None
+        self.cpu_text = None
+
         self.setup_cpu_monitor(self.cpu_container)
         self.setup_memory_monitor(self.memory_container)
-
-        self.resource_monitor_operation = None
-        self.update_operation = None
 
     async def initialize(self):
         while self.resource_monitor_operation is None:
@@ -65,75 +54,34 @@ class ResourceMonitorDialog:
 
     def setup_cpu_monitor(self, parent):
         self.cpu_text = dpg.add_text("CPU Usage: 0%", parent=parent)
-        self.cpu_history = dpg.add_plot(label="CPU Usage History (%)", parent=parent)
-        self.cpu_x_axis = dpg.add_plot_axis(axis=0, label="Time", parent=self.cpu_history)
-        self.cpu_y_axis = dpg.add_plot_axis(axis=1, label="CPU Usage", parent=self.cpu_history)
-        dpg.set_axis_limits(self.cpu_y_axis, 0, 100)
-        self.cpu_line_series = None
 
     def setup_memory_monitor(self, parent):
         self.memory_text = dpg.add_text("Memory Usage: 0%", parent=parent)
-        self.memory_history = dpg.add_plot(label="Memory Usage History (%)", parent=parent)
-        self.memory_x_axis = dpg.add_plot_axis(axis=0, label="Time", parent=self.memory_history)
-        self.memory_y_axis = dpg.add_plot_axis(axis=1, label="Memory Usage", parent=self.memory_history)
-        dpg.set_axis_limits(self.memory_y_axis, 0, 100)
-        self.memory_line_series = None
 
     async def update_resource_usage(self):
         while True:
-            self.update_cpu_usage()
-            self.update_memory_usage()
+            await self.update_cpu_usage()
+            await self.update_memory_usage()
             await asyncio.sleep(self.SLEEP_DURATION)
 
-    def update_cpu_usage(self):
+    async def update_cpu_usage(self):
         if self.resource_monitor_operation is None:
             return
-
-        cpu_usage = self.resource_monitor_operation.cpu_usage
-        self.cpu_data.append(cpu_usage)
-        self.total_data_points += 1  # Increment the total number of data points
 
         dpg.set_value(self.cpu_text, f"{self.resource_monitor_operation.get_cpu_formatted()}")
-        self.update_line_series(self.cpu_data, self.cpu_x_axis, self.cpu_y_axis, self.cpu_line_series, "CPU Usage")
 
-    def update_memory_usage(self):
+    async def update_memory_usage(self):
         if self.resource_monitor_operation is None:
             return
 
-        memory_usage = self.resource_monitor_operation.process_memory_usage
-        self.memory_data.append(memory_usage)
-        self.total_data_points += 1  # Increment the total number of data points
-
         dpg.set_value(self.memory_text, f"{self.resource_monitor_operation.get_memory_formatted()}")
-        self.update_line_series(self.memory_data, self.memory_x_axis, self.memory_y_axis, self.memory_line_series,
-                                "Memory Usage")
-
-    def update_line_series(self, data, x_axis, y_axis, line_series, label):
-        if line_series:
-            dpg.delete_item(line_series)
-
-        # Generate x_data based on the total number of data points
-        x_data = list(range(self.total_data_points - len(data), self.total_data_points))
-        dpg.set_axis_limits(x_axis, x_data[0], x_data[-1])
-        dpg.set_axis_limits(y_axis, min(data) - 5, max(data) + 5)
-
-        # Ensure that data only contains float values
-        data = [float(value) for value in data]
-
-        line_series = dpg.add_line_series(x_data, data, label=label, parent=y_axis)
 
     def update_layout(self):
         window_width = dpg.get_item_width(self.window)
         container_width = window_width // 2
         container_height = dpg.get_item_height(self.cpu_container)
-        plot_width = container_width - 20
-        plot_height = container_height - 20
 
         # Configure the size and position of the containers
         dpg.configure_item(self.cpu_container, pos=(0, 20), width=container_width, height=container_height)
         dpg.configure_item(self.memory_container, pos=(container_width, 20), width=container_width,
                            height=container_height)
-
-        # Configure the size of the plots to match the size of their respective containers
-        dpg.configure_item(self.cpu_history, width=plot_width, height=plot_height)
-        dpg.configure_item(self.memory_history, width=plot_width, height=plot_height)
