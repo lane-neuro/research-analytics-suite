@@ -1,17 +1,16 @@
 # neurobehavioral_analytics_suite/gui/ResourceMonitorDialog.py
-from typing import Optional
-
+from collections import deque
 import dearpygui.dearpygui as dpg
 import asyncio
-import psutil
-
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
 from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
-from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ResourceMonitorOperation import \
+    ResourceMonitorOperation
 
 
 class ResourceMonitorDialog:
     SLEEP_DURATION = 0.05
+    MAX_DATA_POINTS = 100
 
     def __init__(self, operation_control: OperationControl, launcher, logger):
         self.memory_line_series = None
@@ -30,8 +29,9 @@ class ResourceMonitorDialog:
         self.logger = logger
 
         self.window = dpg.add_window(label="Resource Monitor")
-        self.cpu_data = []
-        self.memory_data = []
+        self.cpu_data = deque(maxlen=self.MAX_DATA_POINTS)
+        self.memory_data = deque(maxlen=self.MAX_DATA_POINTS)
+        self.total_data_points = 0
 
         # Create a container for each monitor
         self.cpu_container = dpg.add_child_window(parent=self.window)
@@ -41,9 +41,15 @@ class ResourceMonitorDialog:
         self.setup_cpu_monitor(self.cpu_container)
         self.setup_memory_monitor(self.memory_container)
 
+        self.resource_monitor_operation = None
         self.update_operation = None
 
     async def initialize(self):
+        while self.resource_monitor_operation is None:
+            self.resource_monitor_operation = self.operation_control.queue.get_operation_by_type(
+                ResourceMonitorOperation)
+            await asyncio.sleep(0.1)  # Sleep for a short time to prevent busy waiting
+
         self.update_operation = await self.add_update_operation()
 
     async def add_update_operation(self):
@@ -77,27 +83,43 @@ class ResourceMonitorDialog:
         while True:
             self.update_cpu_usage()
             self.update_memory_usage()
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(self.SLEEP_DURATION)
 
     def update_cpu_usage(self):
-        cpu_usage = psutil.cpu_percent()
+        if self.resource_monitor_operation is None:
+            return
+
+        cpu_usage = self.resource_monitor_operation.cpu_usage
         self.cpu_data.append(cpu_usage)
-        dpg.set_value(self.cpu_text, f"CPU Usage: {cpu_usage}%")
+        self.total_data_points += 1  # Increment the total number of data points
+
+        dpg.set_value(self.cpu_text, f"{self.resource_monitor_operation.get_cpu_formatted()}")
         self.update_line_series(self.cpu_data, self.cpu_x_axis, self.cpu_y_axis, self.cpu_line_series, "CPU Usage")
 
     def update_memory_usage(self):
-        memory_usage = psutil.virtual_memory().percent
+        if self.resource_monitor_operation is None:
+            return
+
+        memory_usage = self.resource_monitor_operation.process_memory_usage
         self.memory_data.append(memory_usage)
-        dpg.set_value(self.memory_text, f"Memory Usage: {memory_usage}%")
+        self.total_data_points += 1  # Increment the total number of data points
+
+        dpg.set_value(self.memory_text, f"{self.resource_monitor_operation.get_memory_formatted()}")
         self.update_line_series(self.memory_data, self.memory_x_axis, self.memory_y_axis, self.memory_line_series,
                                 "Memory Usage")
 
     def update_line_series(self, data, x_axis, y_axis, line_series, label):
         if line_series:
             dpg.delete_item(line_series)
-        x_data = list(range(len(data)))
-        dpg.set_axis_limits(x_axis, 0, len(x_data) + 1)
+
+        # Generate x_data based on the total number of data points
+        x_data = list(range(self.total_data_points - len(data), self.total_data_points))
+        dpg.set_axis_limits(x_axis, x_data[0], x_data[-1])
         dpg.set_axis_limits(y_axis, min(data) - 5, max(data) + 5)
+
+        # Ensure that data only contains float values
+        data = [float(value) for value in data]
+
         line_series = dpg.add_line_series(x_data, data, label=label, parent=y_axis)
 
     def update_layout(self):

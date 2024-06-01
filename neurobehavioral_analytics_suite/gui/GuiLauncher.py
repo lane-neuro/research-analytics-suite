@@ -92,7 +92,6 @@ class GuiLauncher:
         await self.console.update_operation.execute()
 
         await self.resource_monitor.initialize()
-        await self.resource_monitor.update_operation.execute()
 
         # Keep the event loop running until the DearPyGui window is closed
         while dpg.is_dearpygui_running():

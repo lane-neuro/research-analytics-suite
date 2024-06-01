@@ -41,11 +41,13 @@ class ResourceMonitorOperation(Operation):
         """
         super().__init__(name="ResourceMonitorOperation", error_handler=error_handler, persistent=True,
                          func=self.execute)
+
         self.cpu_usage = 0
         self.cpu_threshold = cpu_threshold
         self.total_memory_usage = 0
         self.process_memory_usage = 0
         self.memory_threshold = memory_threshold
+
         self.persistent = True
         self.error_handler = error_handler
         self.task = None
@@ -79,14 +81,19 @@ class ResourceMonitorOperation(Operation):
 
             await asyncio.sleep(.05)
 
-    def progress(self) -> str:
-        if self.task:
-            return "ResourceMonitorOperation - Running"
-        else:
-            return "ResourceMonitorOperation - Not Running"
+    def get_cpu_formatted(self) -> str:
+        return (f"Total CPU Usage: {round(self.cpu_usage, 3)}% [{psutil.cpu_count()} cores]"
+                f"({round(self.cpu_usage / psutil.cpu_count(), 3)}%/core)\n"
+                f"NBAS: {round(self.process.cpu_percent(), 3)}% "
+                f"({round(self.process.cpu_percent() / psutil.cpu_count(), 3)}%/core)")
+
+    def get_memory_formatted(self) -> str:
+        return (f"Total Memory Usage: {self.total_memory_usage}%\n"
+                f"NBAS: {round(self.process.memory_percent(), 3)}% "
+                f"({round(self.process_memory_usage, 3)} GB / "
+                f"{round(psutil.virtual_memory().total / (1024 ** 3), 3)} GB)")
 
     def print_memory_usage(self):
         self.profiler.print_stats('calls')
-        print(f"CPU Usage: {self.cpu_usage}% across {psutil.cpu_count()} cores")
-        print(f"Total Memory Usage: {self.total_memory_usage}% -- Process: {round(self.process.memory_percent(),3)}% ({round(self.process_memory_usage, 3)} GB / "
-              f"{round(psutil.virtual_memory().total / (1024 ** 3), 3)} GB)")
+        print(self.get_cpu_formatted())
+        print(self.get_memory_formatted())

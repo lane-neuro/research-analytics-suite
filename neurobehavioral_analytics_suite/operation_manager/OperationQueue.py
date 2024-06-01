@@ -29,6 +29,15 @@ class OperationQueue:
         if isinstance(operation_chain, OperationChain):
             return operation_chain.head.operation
 
+    def get_operation_by_type(self, operation_type) -> Operation:
+        for operation_chain in self.queue:
+            operation = self.get_operation_from_chain(operation_chain)
+            if operation:
+                if isinstance(operation, operation_type):
+                    return operation
+            else:
+                self.logger.error(f"No operation found for operation chain {operation_chain}")
+
     def get_operation_by_task(self, task) -> Operation:
         for operation_chain in self.queue:
             operation = self.get_operation_from_chain(operation_chain)
