@@ -1,8 +1,4 @@
-from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ConsoleOperation import ConsoleOperation
-from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
-from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ResourceMonitorOperation import \
-    ResourceMonitorOperation
 
 
 class OperationNode:
@@ -14,10 +10,7 @@ class OperationNode:
 class OperationChain:
     def __init__(self, operation: Operation = None):
         self.head = None
-        if (isinstance(operation, Operation) or
-                isinstance(operation, CustomOperation) or
-                isinstance(operation, ResourceMonitorOperation) or
-                isinstance(operation, ConsoleOperation)):
+        if isinstance(operation, Operation):
             self.add_operation_to_chain(operation)
 
     def add_operation_to_chain(self, operation: Operation):
