@@ -9,4 +9,9 @@ class LoadProjectOperation(Operation):
         self.data_engine = data_engine
 
     async def execute(self):
-        self.data_engine = load_project(...)  # fill in the file path as needed
+        try:
+            self.data_engine = None  # load_project(param1, param2, ...)  # replace with actual parameters
+            self.status = "completed"
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
+            self.status = "error"
