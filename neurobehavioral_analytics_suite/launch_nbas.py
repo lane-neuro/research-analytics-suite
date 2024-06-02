@@ -61,7 +61,7 @@ async def launch_nbas():
 
     if args.gui is not None and args.gui.lower() == 'true':
         gui_launcher = GuiLauncher(data_engine, operation_control, logger)
-        launch_tasks.append(gui_launcher.launch())
+        launch_tasks.append(gui_launcher.setup_main_window())
 
     try:
         await asyncio.gather(*launch_tasks)

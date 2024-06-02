@@ -1,5 +1,4 @@
 # neurobehavioral_analytics_suite/gui/ResourceMonitorDialog.py
-from collections import deque
 import dearpygui.dearpygui as dpg
 import asyncio
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
@@ -21,7 +20,7 @@ class ResourceMonitorDialog:
         self.resource_monitor_operation = None
         self.update_operation = None
 
-        self.window = dpg.add_window(label="Resource Monitor")
+        self.window = dpg.add_child_window(tag="resource_window", parent="bottom_pane")
 
         # Create a container for each monitor
         self.cpu_container = dpg.add_child_window(parent=self.window)

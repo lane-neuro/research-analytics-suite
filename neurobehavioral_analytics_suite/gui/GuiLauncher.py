@@ -1,43 +1,12 @@
-"""
-This is the GuiLauncher module.
-
-This module is responsible for launching the GUI of the NeuroBehavioral Analytics Suite. It initializes the necessary
-classes and starts the DearPyGui event loop, keeping it running until the DearPyGui window is closed.
-
-Author: Lane
-License: BSD 3-Clause License
-Version: 0.0.0.1
-Maintainer: Lane
-Email: justlane@uw.edu
-Status: Prototype
-"""
-
-import asyncio
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
-
 from neurobehavioral_analytics_suite.data_engine.DataEngine import DataEngine
 from neurobehavioral_analytics_suite.gui.ConsoleDialog import ConsoleDialog
-from neurobehavioral_analytics_suite.gui.OperationManagerDialog import OperationManagerDialog
-from neurobehavioral_analytics_suite.gui.ProjectManagerDialog import ProjectManagerDialog
-from neurobehavioral_analytics_suite.gui.ResourceMonitorDialog import ResourceMonitorDialog
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
-from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
 
 
 class GuiLauncher:
-    """A class used to launch the GUI of the NeuroBehavioral Analytics Suite.
-
-    Attributes:
-        resource_monitor (ResourceMonitorDialog): An instance of the ResourceMonitorGui class.
-        console (ConsoleDialog): An instance of the ConsoleDialog class.
-        operation_window (OperationManagerDialog): An instance of the OperationManagerGui class.
-        project_manager (ProjectManagerDialog): An instance of the ProjectManagerDialog class.
-        dpg_async (DearPyGuiAsync): An instance of the DearPyGuiAsync class.
-    """
-
     def __init__(self, data_engine: DataEngine, operation_control: OperationControl, logger):
-        """Initializes the GuiLauncher with instances of the necessary classes."""
         self.logger = logger
         self.operation_control = operation_control
         self.data_engine = data_engine
@@ -50,51 +19,77 @@ class GuiLauncher:
 
         self.dpg_async = DearPyGuiAsync()
 
-    def generate_layout(self):
-        """Generates a grid-like layout for all subwindows."""
-        window_width, window_height = dpg.get_viewport_width() // 2 - 10, dpg.get_viewport_height() // 2 - 10
+    async def setup_navigation_menu(self):
+        with dpg.group(parent="left_pane"):
+            dpg.add_button(label="Import Data", callback=lambda: self.switch_pane("import_data"))
+            dpg.add_button(label="Analyze Data", callback=lambda: self.switch_pane("analyze_data"))
+            dpg.add_button(label="Visualize Data", callback=lambda: self.switch_pane("visualize_data"))
+            dpg.add_button(label="Manage Projects", callback=lambda: self.switch_pane("manage_projects"))
+            dpg.add_button(label="Reports", callback=lambda: self.switch_pane("reports"))
+            dpg.add_button(label="Settings", callback=lambda: self.switch_pane("settings"))
 
-        # Set the position and size of each subwindow
-        dpg.configure_item(self.project_manager.window, pos=(0, 0), width=window_width,
-                           height=window_height)
-        dpg.configure_item(self.operation_window.window, pos=(window_width, 0), width=window_width,
-                           height=window_height)
-        dpg.configure_item(self.console.window, pos=(0, window_height), width=window_width,
-                           height=window_height)
-        dpg.configure_item(self.resource_monitor.window, pos=(window_width, window_height), width=window_width,
-                           height=window_height)
+    def switch_pane(self, pane_name):
+        # Hide all panes first
+        for pane in ["import_data_pane", "analyze_data_pane", "visualize_data_pane", "manage_projects_pane",
+                     "reports_pane", "settings_pane"]:
+            dpg.configure_item(pane, show=False)
 
-        self.resource_monitor.update_layout()
+        # Show the selected pane
+        dpg.configure_item(f"{pane_name}_pane", show=True)
 
-    async def launch(self):
-        """Launches the GUI.
+    async def setup_data_analysis_pane(self):
+        with dpg.group(parent="data_analysis_pane"):
+            dpg.add_text("Data Analysis Tools")
+            # Add more widgets for data analysis
 
-        This method sets up the DearPyGui context, creates the viewport, sets up DearPyGui,
-        initializes the GUI components, and starts the DearPyGui event loop. It keeps the event
-        loop running until the DearPyGui window is closed.
-        """
-        dpg.create_context()
-        dpg.create_viewport()
-        dpg.setup_dearpygui()
+    async def setup_visualization_pane(self):
+        with dpg.group(parent="visualization_pane"):
+            dpg.add_text("Data Visualization Tools")
+            # Add more widgets for data visualization
 
-        self.project_manager = ProjectManagerDialog(self.data_engine, self.operation_control)
-        self.console = ConsoleDialog(self.operation_control.user_input_handler, self.operation_control, self,
-                                     self.logger)
-        self.resource_monitor = ResourceMonitorDialog(self.operation_control, self, self.logger)
-        self.operation_window = OperationManagerDialog(self.operation_control)
+    async def setup_console_log_viewer(self):
+        with dpg.group(parent="bottom_pane"):
+            dpg.add_text("Console/Log Output", tag="console_log_output")
 
-        dpg.show_viewport()
-        self.generate_layout()
-
-        await self.dpg_async.start()
-
+        self.console = ConsoleDialog(self.operation_control.user_input_handler, self.operation_control, self.logger)
         await self.console.initialize()
-        await self.console.update_operation.execute()
 
-        await self.resource_monitor.initialize()
+    async def setup_panes(self):
+        with dpg.child_window(tag="import_data_pane", parent="right_pane", show=True):
+            dpg.add_text("Import Data Pane")
 
-        # Keep the event loop running until the DearPyGui window is closed
-        while dpg.is_dearpygui_running():
-            await asyncio.sleep(0.01)
+        with dpg.child_window(tag="analyze_data_pane", parent="right_pane", show=False):
+            await self.setup_data_analysis_pane()
 
+        with dpg.child_window(tag="visualize_data_pane", parent="right_pane", show=False):
+            await self.setup_visualization_pane()
+
+        with dpg.child_window(tag="manage_projects_pane", parent="right_pane", show=False):
+            dpg.add_text("Manage Projects Pane")
+
+        with dpg.child_window(tag="reports_pane", parent="right_pane", show=False):
+            dpg.add_text("Reports Pane")
+
+        with dpg.child_window(tag="settings_pane", parent="right_pane", show=False):
+            dpg.add_text("Settings Pane")
+
+    async def setup_main_window(self):
+        dpg.create_context()
+
+        with dpg.window(label="NBAS", tag="main_window"):
+            with dpg.group(horizontal=True):
+                with dpg.child_window(tag="left_pane", width=200):
+                    await self.setup_navigation_menu()
+
+                with dpg.child_window(tag="right_pane"):
+                    await self.setup_panes()
+
+            with dpg.child_window(tag="bottom_pane", height=200):
+                await self.setup_console_log_viewer()
+
+        dpg.create_viewport(title='NeuroBehavioral Analytics Suite', width=1280, height=720)
+        dpg.setup_dearpygui()
+        dpg.show_viewport()
+        dpg.set_primary_window("main_window", True)
+        dpg.start_dearpygui()
         dpg.destroy_context()

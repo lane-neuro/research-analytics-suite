@@ -1,32 +1,20 @@
-# neurobehavioral_analytics_suite/gui/ConsoleDialog.py
 import asyncio
-from typing import Optional
-
 import dearpygui.dearpygui as dpg
-
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
 from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 
 
 class ConsoleDialog:
-    def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl, launcher, logger):
+    def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl, logger):
         self.logger = logger
-        self.launcher = launcher
-        self.window = dpg.add_window(label="Console")
+        self.window = dpg.add_child_window(tag="console_window", parent="bottom_pane")
 
-        # Create a child window
-        self.input_child = dpg.add_child_window(tag="input_child", parent=self.window, height=20,
-                                                border=False, no_scrollbar=True)
-
-        # Add the input text and submit button to the child window
-        with dpg.group(tag="command_group", parent=self.input_child, horizontal=True):
+        with dpg.group(horizontal=True, parent=self.window):
             dpg.add_input_text(label="", tag="input_text")
-            dpg.add_button(label="Submit", tag="submit_button", callback=self.submit_command)
+            dpg.add_button(label="Submit", callback=self.submit_command)
 
         self.logger_output = dpg.add_text(default_value="", parent=self.window, wrap=600)
-        # self.search_text = dpg.add_input_text(label="Search", parent=self.window)
-        # self.search_button = dpg.add_button(label="Search", callback=self.search_command, parent=self.window)
         self.user_input_handler = user_input_handler
         self.operation_control = operation_control
         self.command_history = []
