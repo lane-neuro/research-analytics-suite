@@ -36,7 +36,7 @@ class TaskCreator:
 
     def task_exists(self, operation_type):
         """
-        Checks if a task of the specified operations type exists and is running or started.
+        Checks if a task of the specified operation type exists and is running or started.
 
         Args:
             operation_type: The type of operations to check for.

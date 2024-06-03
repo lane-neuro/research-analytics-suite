@@ -8,7 +8,7 @@ class OperationModule:
     """A class to manage operations and their GUI representation."""
     
     def __init__(self, operation, operation_control, logger):
-        """Initializes the OperationModule with the given operations, control, and logger.
+        """Initializes the OperationModule with the given operation, control, and logger.
         
         Args:
             operation: An instance of Operation.
@@ -24,7 +24,7 @@ class OperationModule:
         self.log_id = None
 
     async def initialize(self):
-        """Initializes resources and adds the update operations."""
+        """Initializes resources and adds the update operation."""
         await self.initialize_resources()
         self.update_operation = await self.add_update_operation()
 
@@ -38,7 +38,7 @@ class OperationModule:
             self.log_event(f"Error during initialization: {e}")
 
     async def add_update_operation(self):
-        """Adds an update operations to the operations manager.
+        """Adds an update operation to the operations manager.
 
         Returns:
             The created update operations or None if an error occurred.

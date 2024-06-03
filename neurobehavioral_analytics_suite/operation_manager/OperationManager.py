@@ -28,7 +28,7 @@ class OperationManager:
         Creates a new Operation and adds it to the queue.
 
         Args:
-            operation_type: The type of operations to be created.
+            operation_type: The type of operation to be created.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
@@ -43,17 +43,17 @@ class OperationManager:
 
     async def resume_operation(self, operation: Operation) -> None:
         """
-        Resumes a specific operations.
+        Resumes a specific operation.
 
         Args:
-            operation (Operation): The operations to resume.
+            operation (Operation): The operation to resume.
         """
         if operation.status == "paused":
             await operation.resume()
 
     async def pause_operation(self, operation: Operation) -> None:
         """
-        Pauses a specific operations.
+        Pauses a specific operation.
 
         Args:
             operation (Operation): The operations to pause.

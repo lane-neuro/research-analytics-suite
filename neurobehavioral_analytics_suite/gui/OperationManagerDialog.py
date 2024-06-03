@@ -9,29 +9,42 @@ class OperationManagerDialog:
     """A class to manage the dialog for displaying and controlling operations."""
 
     SLEEP_DURATION = 0.05
-    TILE_WIDTH = 300  # Fixed width for each operations tile
-    TILE_HEIGHT = 300  # Fixed height for each operations tile
+    TILE_WIDTH = 300  # Fixed width for each operation tile
+    TILE_HEIGHT = 300  # Fixed height for each operation tile
 
-    def __init__(self, operation_control: OperationControl, logger, tiles_per_row=3):
-        """Initializes the OperationManagerDialog with the given operations control, logger, and tile settings.
+    def __init__(self, operation_control: OperationControl, logger, container_width=900):
+        """Initializes the OperationManagerDialog with the given operation control, logger, and container width.
 
         Args:
             operation_control: Control interface for operations.
             logger: Logger instance for logging messages.
-            tiles_per_row: Number of tiles to display per row.
+            container_width: Initial width of the container.
         """
         self.window = dpg.add_group(label="Operation Manager", parent="operation_pane", tag="operation_gallery",
                                     horizontal=False)
         self.operation_control = operation_control
         self.logger = logger
-        self.operation_items = {}  # Store operations GUI items
+        self.operation_items = {}  # Store operation GUI items
         self.update_operation = None
-        self.tiles_per_row = tiles_per_row
+        self.container_width = container_width
+        self.tiles_per_row = self.calculate_tiles_per_row(container_width)
         self.current_row_group = None
 
+    def calculate_tiles_per_row(self, width):
+        """Calculates the number of tiles per row based on the container width.
+
+        Args:
+            width: Width of the container.
+
+        Returns:
+            Number of tiles that fit in the given width.
+        """
+        return max(1, width // self.TILE_WIDTH) - 1
+
     async def initialize(self):
-        """Initializes the operations manager dialog by adding the update operations."""
+        """Initializes the operation manager dialog by adding the update operation."""
         self.update_operation = await self.add_update_operation()
+        dpg.set_viewport_resize_callback(self.on_resize)
 
     async def add_update_operation(self):
         """Adds an update operations to the operations manager.
@@ -78,4 +91,23 @@ class OperationManagerDialog:
                                             parent=self.current_row_group)
         self.logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
         self.operation_items[operation].draw(parent=child_window)
-        
+
+    def on_resize(self, sender, data):
+        """Handles the resize event and adjusts the number of tiles per row.
+
+        Args:
+            sender: The sender of the event.
+            data: The data associated with the event.
+        """
+        new_width = dpg.get_viewport_client_width()
+        new_tiles_per_row = self.calculate_tiles_per_row(new_width)
+        if new_tiles_per_row != self.tiles_per_row:
+            self.tiles_per_row = new_tiles_per_row
+            self.refresh_display()
+
+    def refresh_display(self):
+        """Refreshes the display to adjust the tiles per row."""
+        dpg.delete_item(self.window, children_only=True)
+        self.current_row_group = None
+        for operation in self.operation_items.values():
+            self.add_operation_tile(operation.operation)

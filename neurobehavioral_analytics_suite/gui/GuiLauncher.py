@@ -14,7 +14,7 @@ class GuiLauncher:
         """Initializes the GUI launcher with necessary components.
 
         Args:
-            data_engine (DataEngine): The data engine for handling data operations.
+            data_engine (DataEngine): The data engine for handling data operation.
             operation_control (OperationControl): The control manager for operations.
             logger: The logger for logging information and errors.
         """

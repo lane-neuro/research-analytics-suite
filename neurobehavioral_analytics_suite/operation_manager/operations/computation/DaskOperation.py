@@ -2,7 +2,7 @@
 This module contains the DaskOperation class, a subclass of the Operation class.
 
 The DaskOperation class is used to represent a Dask Operation in the NeuroBehavioral AnalyticsCore Suite.
-It provides methods for setting the data to be processed and executing the operations.
+It provides methods for setting the data to be processed and executing the operation.
 
 Typical usage example:
 
@@ -66,7 +66,7 @@ class DaskOperation(Operation):
 
     async def execute(self):
         """
-        Executes the operations.
+        Executes the operation.
         """
         self._status = "running"
         temp_vars = self.local_vars.copy()
@@ -88,27 +88,27 @@ class DaskOperation(Operation):
             return self.result
 
     async def start(self):
-        """Starts the operations and handles any exceptions that occur during execution."""
+        """Starts the operation and handles any exceptions that occur during execution."""
         await super().start()
 
     async def stop(self):
-        """Stops the operations and handles any exceptions that occur during execution."""
+        """Stops the operation and handles any exceptions that occur during execution."""
         await super().stop()
 
     async def pause(self):
-        """Pauses the operations and handles any exceptions that occur during execution."""
+        """Pauses the operation and handles any exceptions that occur during execution."""
         await super().pause()
 
     async def resume(self) -> None:
-        """Resumes the operations and handles any exceptions that occur during execution."""
+        """Resumes the operation and handles any exceptions that occur during execution."""
         await super().resume()
 
     async def reset(self) -> None:
-        """Resets the operations and handles any exceptions that occur during execution."""
+        """Resets the operation and handles any exceptions that occur during execution."""
         await super().reset()
 
     def progress(self) -> Tuple[int, str]:
-        """Returns the current progress and status of the operations.
+        """Returns the current progress and status of the operation.
 
         Returns:
             A tuple containing the current progress and status of the operations.

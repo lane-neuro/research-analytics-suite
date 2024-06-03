@@ -22,13 +22,13 @@ class OperationStatusChecker:
 
     def get_operation_status(self, operation) -> str:
         """
-        Returns the status of a specific operations.
+        Returns the status of a specific operation.
 
         Args:
-            operation (Operation): The operations to get the status of.
+            operation (Operation): The operation to get the status of.
 
         Returns:
-            str: The status of the operations.
+            str: The status of the operation.
         """
         return operation.status
 

@@ -38,7 +38,7 @@ class OperationExecutor:
         """
         Executes ready Operation instances in the queue.
 
-        This method executes the operations asynchronously. It waits for all operations to complete before returning.
+        This method executes the operation asynchronously. It waits for all operations to complete before returning.
 
         Raises:
             Exception: If an exception occurs during the execution of an operations, it is caught and handled by the

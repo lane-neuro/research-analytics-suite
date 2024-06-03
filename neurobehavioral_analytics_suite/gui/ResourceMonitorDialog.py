@@ -15,7 +15,7 @@ class ResourceMonitorDialog:
     MAX_DATA_POINTS = 100
 
     def __init__(self, operation_control: OperationControl, launcher, logger):
-        """Initializes the ResourceMonitorDialog with the given operations control, launcher, and logger.
+        """Initializes the ResourceMonitorDialog with the given operation control, launcher, and logger.
 
         Args:
             operation_control: Control interface for operations.
@@ -42,7 +42,7 @@ class ResourceMonitorDialog:
         self.setup_memory_monitor(self.memory_container)
 
     async def initialize(self):
-        """Initializes the resource monitor by adding the update operations."""
+        """Initializes the resource monitor by adding the update operation."""
         while self.resource_monitor_operation is None:
             self.resource_monitor_operation = self.operation_control.queue.get_operation_by_type(
                 ResourceMonitorOperation)
@@ -51,7 +51,7 @@ class ResourceMonitorDialog:
         self.update_operation = await self.add_update_operation()
 
     async def add_update_operation(self):
-        """Adds an update operations to the operations manager.
+        """Adds an update operation to the operation manager.
 
         Returns:
             The created update operations or None if an error occurred.

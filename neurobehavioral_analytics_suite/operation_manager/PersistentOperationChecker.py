@@ -1,7 +1,9 @@
 """
-Module description.
+Persistent Operation Checker Module.
 
-Longer description.
+This module defines the PersistentOperationChecker class, which is responsible for managing and checking persistent
+operations within the neurobehavioral analytics suite. It ensures that necessary operations such as ConsoleOperation and
+ResourceMonitorOperation are running and adds them to the queue if they are not present.
 
 Author: Lane
 Copyright: Lane
@@ -12,6 +14,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+
 from neurobehavioral_analytics_suite.operation_manager.OperationManager import OperationManager
 from neurobehavioral_analytics_suite.operation_manager.OperationQueue import OperationQueue
 from neurobehavioral_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
@@ -23,8 +26,27 @@ from neurobehavioral_analytics_suite.utils.Logger import Logger
 
 
 class PersistentOperationChecker:
-    def __init__(self, operation_control, operation_manager: OperationManager, queue: OperationQueue,
+    """
+    Class to manage and check persistent operations.
+
+    This class is responsible for ensuring that necessary persistent operations, such as ConsoleOperation and
+    ResourceMonitorOperation, are running within the neurobehavioral analytics suite. If these operations are not
+    present, it adds them to the operation queue.
+    """
+
+    def __init__(self, operation_control: any, operation_manager: OperationManager, queue: OperationQueue,
                  task_creator: TaskCreator, logger: Logger, error_handler: ErrorHandler):
+        """
+        Initializes the PersistentOperationChecker with the necessary components.
+
+        Parameters:
+        - operation_control: The control interface for operations.
+        - operation_manager (OperationManager): The manager responsible for operations.
+        - queue (OperationQueue): The queue that holds operations to be executed.
+        - task_creator (TaskCreator): The task creator that handles task generation.
+        - logger (Logger): The logger for logging information and errors.
+        - error_handler (ErrorHandler): The handler for managing errors.
+        """
         self.op_control = operation_control
         self.op_manager = operation_manager
         self.queue = queue
@@ -32,11 +54,13 @@ class PersistentOperationChecker:
         self.logger = logger
         self.error_handler = error_handler
 
-    async def check_persistent_operations(self):
+    async def check_persistent_operations(self) -> None:
         """
         Checks for persistent operations and adds them to the queue if they are not already present.
-        """
 
+        This method ensures that a ConsoleOperation is in progress and a ResourceMonitorOperation is running. If these
+        operations are not present, they are added to the operation queue.
+        """
         if not self.op_control.console_operation_in_progress:
             await self.op_manager.add_operation_if_not_exists(operation_type=ConsoleOperation,
                                                               error_handler=self.error_handler,

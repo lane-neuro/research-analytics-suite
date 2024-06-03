@@ -1,9 +1,9 @@
 """
 This module defines the abstract base class ABCOperation, which provides a common interface for all operations in the
 NeuroBehavioral AnalyticsCore Suite. The ABCOperation class requires any child class to implement execute, start, pause,
-stop, and resume methods. It also provides a property for the status of the operations, which can be "idle", "started",
+stop, and resume methods. It also provides a property for the status of the operation, which can be "idle", "started",
 "paused", "running", or "stopped". This class is designed to be inherited by other classes that represent specific
-operations.
+operation.
 
 Author: Lane
 Copyright: Lane
@@ -27,49 +27,49 @@ class ABCOperation(ABC):
     @abstractmethod
     def __init__(self):
         """
-        Initialize the operations instance.
+        Initialize the operation instance.
         """
         pass
 
     @abstractmethod
     def init_operation(self):
         """
-        Initialize any resources or setup required for the operations before it starts.
+        Initialize any resources or setup required for the operation before it starts.
         """
         pass
 
     @abstractmethod
     async def start(self):
         """
-        Start the operations.
+        Start the operation.
         """
         pass
 
     @abstractmethod
     async def execute(self):
         """
-        Execute the operations.
+        Execute the operation.
         """
         pass
 
     @abstractmethod
     def get_result(self):
         """
-        Retrieve the result of the operations, if applicable.
+        Retrieve the result of the operation, if applicable.
         """
         pass
 
     @abstractmethod
     async def pause(self):
         """
-        Pause the operations.
+        Pause the operation.
         """
         pass
 
     @abstractmethod
     async def resume(self):
         """
-        Resume the operations.
+        Resume the operation.
         """
         pass
 
