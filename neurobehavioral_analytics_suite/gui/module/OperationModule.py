@@ -8,7 +8,7 @@ from neurobehavioral_analytics_suite.operation_manager.operation.Operation impor
 class OperationModule:
     """A class to manage operations and their GUI representation."""
     
-    def __init__(self, operation: Operation, operation_control, logger):
+    def __init__(self, operation, operation_control, logger):
         """Initializes the OperationModule with the given operation, control, and logger.
         
         Args:

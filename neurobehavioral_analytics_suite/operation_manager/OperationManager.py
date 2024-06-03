@@ -16,10 +16,10 @@ from neurobehavioral_analytics_suite.operation_manager.operation.Operation impor
 
 
 class OperationManager:
-    def __init__(self, operation_control, queue, task_manager, logger, error_handler):
+    def __init__(self, operation_control, queue, task_creator, logger, error_handler):
         self.op_control = operation_control
         self.queue = queue
-        self.task_manager = task_manager
+        self.task_creator = task_creator
         self.logger = logger
         self.error_handler = error_handler
 
@@ -38,7 +38,7 @@ class OperationManager:
         return operation
 
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs):
-        if not self.task_manager.task_exists(operation_type):
+        if not self.task_creator.task_exists(operation_type):
             await self.add_operation(operation_type, *args, **kwargs)
 
     async def resume_operation(self, operation: Operation) -> None:

@@ -12,17 +12,23 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from neurobehavioral_analytics_suite.operation_manager.OperationManager import OperationManager
+from neurobehavioral_analytics_suite.operation_manager.OperationQueue import OperationQueue
+from neurobehavioral_analytics_suite.operation_manager.TaskCreator import TaskCreator
 from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ConsoleOperation import ConsoleOperation
 from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ResourceMonitorOperation import \
     ResourceMonitorOperation
+from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
+from neurobehavioral_analytics_suite.utils.Logger import Logger
 
 
 class PersistentOperationChecker:
-    def __init__(self, operation_control, operation_manager, queue, task_manager, logger, error_handler):
+    def __init__(self, operation_control, operation_manager: OperationManager, queue: OperationQueue,
+                 task_creator: TaskCreator, logger: Logger, error_handler: ErrorHandler):
         self.op_control = operation_control
         self.op_manager = operation_manager
         self.queue = queue
-        self.task_manager = task_manager
+        self.task_creator = task_creator
         self.logger = logger
         self.error_handler = error_handler
 
@@ -40,6 +46,6 @@ class PersistentOperationChecker:
             self.op_control.console_operation_in_progress = True
 
         # Check if a ResourceMonitorOperation is already running
-        if not any(isinstance(task, ResourceMonitorOperation) for task in self.task_manager.tasks):
+        if not any(isinstance(task, ResourceMonitorOperation) for task in self.task_creator.tasks):
             await self.op_manager.add_operation_if_not_exists(operation_type=ResourceMonitorOperation,
                                                               error_handler=self.error_handler)

@@ -58,7 +58,7 @@ class UserInputManager:
             return "UserInputHandler.process_user_input: Displaying system resources."
 
         elif user_input == "tasks":
-            for task in self.operation_control.task_manager.tasks:
+            for task in self.operation_control.task_creator.tasks:
                 operation = self.operation_control.queue.find_operation_by_task(task)
                 if operation:
                     self.logger.info(f"UserInputHandler.process_user_input: Task: {task.get_name()} - "

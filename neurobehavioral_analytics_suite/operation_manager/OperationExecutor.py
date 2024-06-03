@@ -13,16 +13,15 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
-
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
 from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ConsoleOperation import ConsoleOperation
 
 
 class OperationExecutor:
-    def __init__(self, operation_control, queue, task_manager, logger, error_handler):
+    def __init__(self, operation_control, queue, task_creator, logger, error_handler):
         self.op_control = operation_control
         self.queue = queue
-        self.task_manager = task_manager
+        self.task_creator = task_creator
         self.logger = logger
         self.error_handler = error_handler
 
@@ -64,7 +63,7 @@ class OperationExecutor:
                     self.logger.debug(f"execute_all: [OP] {operation.name} - {operation.status} - {operation.task}")
 
                     if not operation.task and operation.is_ready():
-                        operation.task = await self.task_manager.create_task(self.execute_operation(operation),
+                        operation.task = await self.task_creator.create_task(self.execute_operation(operation),
                                                                              name=operation.name)
                     if isinstance(operation, ConsoleOperation):
                         self.op_control.console_operation_in_progress = True
