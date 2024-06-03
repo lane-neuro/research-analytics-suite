@@ -25,14 +25,15 @@
 -->
 
 # NeuroBehavioral Analytics Suite (NBAS)
-### Gire Lab, University of Washington
-  <p align="center">
-    NeuroBehavioral Analytics Suite (NBAS) is a collection of tools developed in Python with a focus on the aggregation and analysis of neurobehavioral data deriving from a multitude of input sources across professional and academic neuroscientific research projects. 
-    <br />
-    <br /> Author: <a href="#contact">Lane</a> (Gire Lab, University of Washington)
-    <br />
-    <br /> Prototype for NBAS was written in MATLAB & can be found at <a href="https://github.com/lane-neuro/RealTimeOdorNavigation">lane-neuro/RealTimeOdorNavigation</a>
-    <br />
+Author: [Lane](#contact)
+  <p align="left">
+The NeuroBehavioral Analytics Suite (NBAS), developed within Gire Lab at the University of Washington, aims to be a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse data sources. Unlike MATLAB and SPSS, which are widely used in scientific research, NBAS is designed to be free and accessible, addressing the financial and accessibility barriers faced by many researchers across all fields of science.
+<br />
+<br /> The motivation behind NBAS is to provide a versatile and powerful toolset for scientific data analysis, which includes data management, statistical analysis, machine learning, and data visualization. This suite is intended for academic researchers, students, educators, and industry professionals, allowing them to manage and analyze large and complex datasets effectively. The development of NBAS also includes a focus on future integration with other prominent tools in the field, such as DeepLabCut.
+<br />
+<br /> Additionally, NBAS is envisioned to evolve into a pseudosocial platform where scientists and researchers can collaborate on their analytic workflows and processes. This collaborative aspect aims to foster a community of shared knowledge and resources, enabling users to develop, share, and implement custom functions allowing for unlimited analysis techniques to be shared globally.
+    
+<br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
     <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite">View Demo</a>
@@ -76,7 +77,7 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-NeuroBehavioral Analytics Suite (NBAS) is designed to be the primary interface for neuroscientific analysis with (3) components/branches:
+NeuroBehavioral Analytics Suite (NBAS) is designed to be the primary interface for scientific data analysis with (3) primary components/branches:
 * Data Management Engine (DME) - allows for filtering and aggregation of large, complex datasets from multiple sources (i.e., pixel-tracking technology, accelerometer readings, voltage-output from analog sources, etc.)
 * Analytics - provides a suite of tools for the analysis of neurobehavioral data from the DME, including statistical analysis, machine learning, and data visualization
   * Preloaded Functions
