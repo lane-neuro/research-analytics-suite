@@ -5,7 +5,16 @@ from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 
 class ConsoleDialog:
+    """A class to create a console dialog for user input and operation control."""
+
     def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl, logger):
+        """Initializes the ConsoleDialog with the given user input handler, operation control, and logger.
+
+        Args:
+            user_input_handler: Instance of UserInputManager to handle user inputs.
+            operation_control: Control interface for operations.
+            logger: Logger instance for logging messages.
+        """
         self.logger = logger
         self.window = dpg.add_child_window(tag="console_window", parent="bottom_pane")
 
@@ -23,9 +32,15 @@ class ConsoleDialog:
         self.update_operation = None
 
     async def initialize(self):
+        """Initializes the console dialog by adding the update operation."""
         self.update_operation = await self.add_update_operation()
 
     async def add_update_operation(self):
+        """Adds an update operation to the operation manager.
+
+        Returns:
+            The created update operation or None if an error occurred.
+        """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
                 operation_type=CustomOperation, name="gui_ConsoleUpdateTask",
@@ -37,6 +52,12 @@ class ConsoleDialog:
         return None
 
     async def submit_command(self, sender, data):
+        """Submits the user command for processing.
+
+        Args:
+            sender: The sender of the submit event.
+            data: Additional application data.
+        """
         command = dpg.get_value('input_text')
         if command in self.command_aliases:
             command = self.command_aliases[command]
@@ -49,11 +70,11 @@ class ConsoleDialog:
                 await self.user_input_handler.process_user_input(command)
                 self.command_history.append(command)
             except Exception as e:
-                self.logger.error(self, e)
+                self.logger.error(f"Error processing command: {e}")
         dpg.set_value('input_text', "")  # Clear the input field
 
     async def update_logger_output(self):
-        """Continuously update the logger output with new messages."""
+        """Continuously updates the logger output with new messages."""
         while True:
             new_log = await self.logger.log_message_queue.get()
             current_logs = dpg.get_value(self.logger_output)
@@ -62,12 +83,20 @@ class ConsoleDialog:
             await asyncio.sleep(0.01)
 
     def clear_logger_output(self):
+        """Clears the logger output display."""
         dpg.set_value(self.logger_output, "")
 
     def search_command(self, sender, data):
-        search_text = dpg.get_value(self.search_text)
+        """Searches for a text in the console output.
+
+        Args:
+            sender: The sender of the search event.
+            data: Additional application data.
+        """
+        search_text = dpg.get_value('search_text')
         console_output = dpg.get_value(self.logger_output)
         if search_text in console_output:
             dpg.set_value(self.logger_output, search_text)
         else:
             dpg.set_value(self.logger_output, "Text not found")
+            
