@@ -1,19 +1,50 @@
+"""
+OperationChain Module.
+
+This module defines the OperationChain class, which manages a chain of operations within the neurobehavioral analytics 
+suite. It allows adding and removing operations, checking if the chain is empty, counting the operations, and iterating 
+over the chain.
+
+Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
+"""
+
+from neurobehavioral_analytics_suite.operation_manager.OperationNode import OperationNode
 from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 
 
-class OperationNode:
-    def __init__(self, operation: Operation, next_node=None):
-        self.operation = operation
-        self.next_node = next_node
-
-
 class OperationChain:
+    """
+    A class to manage a chain of operations.
+
+    This class provides methods to add and remove operations, check if the chain is empty, count the operations, 
+    and iterate over the chain of operations.
+    """
+
     def __init__(self, operation: Operation = None):
+        """
+        Initializes the OperationChain with an optional initial operation.
+
+        Args:
+            operation (Operation, optional): An initial operation to add to the chain. Defaults to None.
+        """
         self.head = None
         if isinstance(operation, Operation):
             self.add_operation_to_chain(operation)
 
-    def add_operation_to_chain(self, operation: Operation):
+    def add_operation_to_chain(self, operation: Operation) -> None:
+        """
+        Adds an operation to the end of the chain.
+
+        Args:
+            operation (Operation): The operation to add to the chain.
+        """
         if not self.head:
             self.head = OperationNode(operation)
         else:
@@ -22,7 +53,13 @@ class OperationChain:
                 current_node = current_node.next_node
             current_node.next_node = OperationNode(operation)
 
-    def remove_operation(self, operation: Operation):
+    def remove_operation(self, operation: Operation) -> None:
+        """
+        Removes an operation from the chain.
+
+        Args:
+            operation (Operation): The operation to remove from the chain.
+        """
         if self.head and self.head.operation == operation:
             self.head = self.head.next_node
         else:
@@ -33,10 +70,22 @@ class OperationChain:
                     break
                 current_node = current_node.next_node
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
+        """
+        Checks if the chain is empty.
+
+        Returns:
+            bool: True if the chain is empty, False otherwise.
+        """
         return not self.head
 
-    def count_operations(self):
+    def count_operations(self) -> int:
+        """
+        Counts the number of operations in the chain.
+
+        Returns:
+            int: The number of operations in the chain.
+        """
         count = 0
         current_node = self.head
         while current_node:
@@ -45,8 +94,13 @@ class OperationChain:
         return count
 
     def __iter__(self):
+        """
+        Iterates over the operations in the chain.
+
+        Yields:
+            OperationNode: The next operation node in the chain.
+        """
         current_node = self.head
         while current_node:
             yield current_node
             current_node = current_node.next_node
-            

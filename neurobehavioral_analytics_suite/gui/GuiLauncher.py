@@ -1,5 +1,5 @@
 """
-GUI Launcher Module.
+GUILauncher Module.
 
 This module defines the GuiLauncher class, which is responsible for launching the GUI for the NeuroBehavioral Analytics
 Suite. It sets up various panes, including data analysis, visualization, and operation management, and handles the

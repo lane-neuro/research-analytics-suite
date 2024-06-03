@@ -1,5 +1,5 @@
 """
-Console Dialog Module.
+ConsoleDialog Module.
 
 This module defines the ConsoleDialog class, which creates a console dialog for user input and operations control within 
 the neurobehavioral analytics suite. It handles the initialization, command submission, and logger output updates, 

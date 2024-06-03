@@ -4,12 +4,6 @@ A module that defines the Operation class, which is responsible for managing tas
 The Operation class represents a task that can be started, stopped, paused, resumed, and reset. It also tracks the
 progress of the task and handles any exceptions that occur during execution.
 
-    Typical usage example:
-
-    error_handler = ErrorHandler()
-    operation = Operation(ABCOperation(), error_handler)
-    operation.start()
-
 Author: Lane
 Copyright: Lane
 Credits: Lane

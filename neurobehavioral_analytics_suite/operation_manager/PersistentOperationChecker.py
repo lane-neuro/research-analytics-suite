@@ -1,5 +1,5 @@
 """
-Persistent Operation Checker Module.
+PersistentOperationChecker Module.
 
 This module defines the PersistentOperationChecker class, which is responsible for managing and checking persistent
 operations within the neurobehavioral analytics suite. It ensures that necessary operations such as ConsoleOperation and

@@ -1,7 +1,9 @@
 """
-Module description.
+OperationExecutor Module.
 
-Longer description.
+This module defines the OperationExecutor class, which is responsible for executing operations within the
+neurobehavioral analytics suite. It handles the execution of ready operations in the queue and manages their status
+and logging.
 
 Author: Lane
 Copyright: Lane
@@ -12,20 +14,48 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+
 import asyncio
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
 from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 
 
 class OperationExecutor:
+    """
+    A class to execute operations within the neurobehavioral analytics suite.
+
+    This class manages the execution of ready operations in the queue, ensuring that they are run and their statuses
+    are updated accordingly.
+    """
+
     def __init__(self, operation_control, queue, task_creator, logger, error_handler):
+        """
+        Initializes the OperationExecutor with the necessary components.
+
+        Args:
+            operation_control: Control interface for operations.
+            queue: Queue holding operations to be executed.
+            task_creator: Task creator for generating asyncio tasks.
+            logger: Logger instance for logging messages.
+            error_handler: Error handler for managing errors.
+        """
         self.op_control = operation_control
         self.queue = queue
         self.task_creator = task_creator
         self.logger = logger
         self.error_handler = error_handler
 
-    async def execute_operation(self, operation) -> asyncio.Task:
+    async def execute_operation(self, operation: Operation) -> asyncio.Task:
+        """
+        Executes a single operation.
+
+        Args:
+            operation (Operation): The operation to execute.
+
+        Returns:
+            asyncio.Task: The asyncio task for the operation execution.
+        """
         try:
             if operation.status == "started":
                 self.logger.info(f"execute_operation: [RUN] {operation.task.get_name()}")
@@ -36,12 +66,13 @@ class OperationExecutor:
 
     async def execute_ready_operations(self) -> None:
         """
-        Executes ready Operation instances in the queue.
+        Executes ready operations in the queue.
 
-        This method executes the operation asynchronously. It waits for all operations to complete before returning.
+        This method iterates over the operations in the queue, checks their readiness, and executes them asynchronously.
+        It waits for all operations to complete before returning.
 
         Raises:
-            Exception: If an exception occurs during the execution of an operations, it is caught and handled by the
+            Exception: If an exception occurs during the execution of an operation, it is caught and handled by the
             ErrorHandler instance.
         """
         self.logger.debug("OperationControl: Queue Size: " + str(self.queue.size()))

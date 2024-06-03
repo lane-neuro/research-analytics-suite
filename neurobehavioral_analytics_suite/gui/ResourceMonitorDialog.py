@@ -1,11 +1,27 @@
-# neurobehavioral_analytics_suite/gui/ResourceMonitorDialog.py
+"""
+ResourceMonitorDialog Module.
 
+This module defines the ResourceMonitorDialog class, which is responsible for managing the dialog for monitoring system 
+resources within the neurobehavioral analytics suite. It initializes the resource monitor, handles CPU and memory usage 
+displays, and updates these displays continuously.
+
+Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
+"""
+
+from typing import Optional, Any
 import dearpygui.dearpygui as dpg
 import asyncio
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
 from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
-from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
-    ResourceMonitorOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import (
+    ResourceMonitorOperation)
 
 
 class ResourceMonitorDialog:
@@ -15,10 +31,11 @@ class ResourceMonitorDialog:
     MAX_DATA_POINTS = 100
 
     def __init__(self, operation_control: OperationControl, launcher, logger):
-        """Initializes the ResourceMonitorDialog with the given operation control, launcher, and logger.
+        """
+        Initializes the ResourceMonitorDialog with the given operation control, launcher, and logger.
 
         Args:
-            operation_control: Control interface for operations.
+            operation_control (OperationControl): Control interface for operations.
             launcher: Launcher instance for initiating tasks.
             logger: Logger instance for logging messages.
         """
@@ -41,7 +58,7 @@ class ResourceMonitorDialog:
         self.setup_cpu_monitor(self.cpu_container)
         self.setup_memory_monitor(self.memory_container)
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initializes the resource monitor by adding the update operation."""
         while self.resource_monitor_operation is None:
             self.resource_monitor_operation = self.operation_control.queue.get_operation_by_type(
@@ -50,11 +67,12 @@ class ResourceMonitorDialog:
 
         self.update_operation = await self.add_update_operation()
 
-    async def add_update_operation(self):
-        """Adds an update operation to the operation manager.
+    async def add_update_operation(self) -> Optional[Any]:
+        """
+        Adds an update operation to the operation manager.
 
         Returns:
-            The created update operations or None if an error occurred.
+            CustomOperation: The created update operations or None if an error occurred.
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
@@ -66,44 +84,46 @@ class ResourceMonitorDialog:
             self.logger.error(f"Error creating task: {e}")
         return None
 
-    def setup_cpu_monitor(self, parent):
-        """Sets up the CPU monitor display.
+    def setup_cpu_monitor(self, parent: int) -> None:
+        """
+        Sets up the CPU monitor display.
 
         Args:
-            parent: The parent GUI element to attach to.
+            parent (int): The parent GUI element to attach to.
         """
         self.cpu_text = dpg.add_text("CPU Usage: 0%", parent=parent)
 
-    def setup_memory_monitor(self, parent):
-        """Sets up the memory monitor display.
+    def setup_memory_monitor(self, parent: int) -> None:
+        """
+        Sets up the memory monitor display.
 
         Args:
-            parent: The parent GUI element to attach to.
+            parent (int): The parent GUI element to attach to.
         """
         self.memory_text = dpg.add_text("Memory Usage: 0%", parent=parent)
 
-    async def update_resource_usage(self):
+    async def update_resource_usage(self) -> None:
         """Continuously updates the resource usage displays."""
         while True:
             await self.update_cpu_usage()
             await self.update_memory_usage()
             await asyncio.sleep(self.SLEEP_DURATION)
 
-    async def update_cpu_usage(self):
+    async def update_cpu_usage(self) -> None:
         """Updates the CPU usage display."""
         if self.resource_monitor_operation is None:
             return
 
         dpg.set_value(self.cpu_text, f"{self.resource_monitor_operation.get_cpu_formatted()}")
 
-    async def update_memory_usage(self):
+    async def update_memory_usage(self) -> None:
         """Updates the memory usage display."""
         if self.resource_monitor_operation is None:
             return
 
         dpg.set_value(self.memory_text, f"{self.resource_monitor_operation.get_memory_formatted()}")
 
-    def update_layout(self):
+    def update_layout(self) -> None:
         """Updates the layout of the resource monitor dialog."""
         window_width = dpg.get_item_width(self.window)
         container_width = window_width // 2
@@ -111,5 +131,5 @@ class ResourceMonitorDialog:
 
         # Configure the size and position of the containers
         dpg.configure_item(self.cpu_container, pos=(0, 20), width=container_width, height=container_height)
-        dpg.configure_item(self.memory_container, pos=(container_width, 20), width=container_width, height=container_height)
-        
+        dpg.configure_item(self.memory_container, pos=(container_width, 20), width=container_width,
+                           height=container_height)

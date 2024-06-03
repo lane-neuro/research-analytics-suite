@@ -1,5 +1,5 @@
 """
-Operation Module.
+OperationModule
 
 This module defines the OperationModule class, which is responsible for managing operations and their GUI representation
 within the neurobehavioral analytics suite. It handles the initialization, starting, stopping, pausing, resuming, and
@@ -18,7 +18,6 @@ Status: Prototype
 import asyncio
 import uuid
 from typing import Optional, Any
-
 import dearpygui.dearpygui as dpg
 from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.utils.Logger import Logger
