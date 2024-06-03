@@ -1,119 +1,135 @@
 <a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
+<!-- Using markdown "reference style" links for readability. -->
 <!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
+[![Contributors][contributors-shield]][contributors-url]
 -->
-<!-- [![Contributors][contributors-shield]][contributors-url] -->
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![BSD-3 License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
+<p align="center">
+  <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/network/members">
+    <img src="https://img.shields.io/github/forks/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Forks">
+  </a>
+  <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/stargazers">
+    <img src="https://img.shields.io/github/stars/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Stars">
+  </a>
+  <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues">
+    <img src="https://img.shields.io/github/issues/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Issues">
+  </a>
+  <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="License">
+  </a>
+  <a href="https://linkedin.com/in/lane14">
+    <img src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555" alt="LinkedIn">
+  </a>
+</p>
 
 <!-- PROJECT LOGO -->
 <br />
-<div align="center"> 
-<!--
+<div align="center">
+  <!--
   <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite">
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
--->
-
-# NeuroBehavioral Analytics Suite (NBAS)
-Author: [Lane](#contact)
+  -->
+  <h1>NeuroBehavioral Analytics Suite (NBAS)</h1>
+  <p>Author: <a href="#contact">Lane</a></p>
   <p align="left">
-The NeuroBehavioral Analytics Suite (NBAS), developed within Gire Lab at the University of Washington, aims to be a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse data sources. Unlike MATLAB and SPSS, which are widely used in scientific research, NBAS is designed to be free and accessible, addressing the financial and accessibility barriers faced by many researchers across all fields of science.
-<br />
-<br /> The motivation behind NBAS is to provide a versatile and powerful toolset for scientific data analysis, which includes data management, statistical analysis, machine learning, and data visualization. This suite is intended for academic researchers, students, educators, and industry professionals, allowing them to manage and analyze large and complex datasets effectively. The development of NBAS also includes a focus on future integration with other prominent tools in the field, such as DeepLabCut.
-<br />
-<br /> Additionally, NBAS is envisioned to evolve into a pseudosocial platform where scientists and researchers can collaborate on their analytic workflows and processes. This collaborative aspect aims to foster a community of shared knowledge and resources, enabling users to develop, share, and implement custom functions allowing for unlimited analysis techniques to be shared globally.
-    
-<br />
-    <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
-    <br />
-    <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite">View Demo</a>
-    ·
-    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
-    ·
-    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
-    -->
+    The NeuroBehavioral Analytics Suite (NBAS), developed within Gire Lab at the University of Washington, aims to be a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse data sources. Unlike MATLAB and SPSS, which are widely used in scientific research, NBAS is designed to be free and accessible, addressing the financial and accessibility barriers faced by many researchers across all fields of science.
+    <br /><br />
+    The motivation behind NBAS is to provide a versatile and powerful toolset for scientific data analysis, which includes data management, statistical analysis, machine learning, and data visualization. This suite is intended for academic researchers, students, educators, and industry professionals, allowing them to manage and analyze large and complex datasets effectively. The development of NBAS also includes a focus on future integration with other prominent tools in the field, such as DeepLabCut.
+    <br /><br />
+    Additionally, NBAS is envisioned to evolve into a pseudosocial platform where scientists and researchers can collaborate on their analytic workflows and processes. This collaborative aspect aims to foster a community of shared knowledge and resources, enabling users to develop, share, and implement custom functions allowing for unlimited analysis techniques to be shared globally.
   </p>
+  <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
 </div>
-
-
 
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
   <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <!-- <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul> -->
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
+    <li><a href="#about-the-project">About The Project</a></li>
+    <li><a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
+    <li><a href="#project-structure">Project Structure</a>
+      <ul>
+        <li><a href="#operation-manager">Operation Manager</a>
+          <ul>
+            <li><a href="#operation-manager-task">Task</a></li>
+            <li><a href="#operation-manager-operations">Operations</a>
+              <ul>
+                <li><a href="#operations-computation">Computation</a></li>
+                <li><a href="#operations-persistent">Persistent</a></li>
+                <li><a href="#operations-project">Project</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#gui">GUI</a>
+          <ul>
+            <li><a href="#gui-modules">Modules</a></li>
+          </ul>
+        </li>
+        <li><a href="#data-engine">Data Engine</a>
+          <ul>
+            <li><a href="#data-engine-data-processing">Data Processing</a></li>
+            <li><a href="#data-engine-data-structures">Data Structures</a></li>
+            <li><a href="#data-engine-project">Project</a></li>
+          </ul>
+        </li>
+        <li><a href="#analytics">Analytics</a>
+          <ul>
+            <li><a href="#preloaded">Preloaded</a>
+              <ul>
+                <li><a href="#preloaded-transformations">Transformations</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
     <li><a href="#usage">Usage</a></li>
-    <!-- <li><a href="#roadmap">Roadmap</a></li> -->
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <!-- <li><a href="#acknowledgments">Acknowledgments</a></li> -->
   </ol>
 </details>
 
-
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-NeuroBehavioral Analytics Suite (NBAS) is designed to be the primary interface for scientific data analysis with (3) primary components/branches:
-* Data Management Engine (DME) - allows for filtering and aggregation of large, complex datasets from multiple sources (i.e., pixel-tracking technology, accelerometer readings, voltage-output from analog sources, etc.)
-* Analytics - provides a suite of tools for the analysis of neurobehavioral data from the DME, including statistical analysis, machine learning, and data visualization
-  * Preloaded Functions
-  * Custom / User-Defined Functions - allows for the development & implementation of custom functions developed by the user
-* Future Integration with other tools (i.e., [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut))
 
-<!-- [![Product Name Screen Shot][product-screenshot]](https://example.com) -->
+The NeuroBehavioral Analytics Suite (NBAS) is a cutting-edge, open-source platform meticulously crafted in Python to address the diverse needs of neuroscientific data analysis. NBAS stands out by offering a comprehensive suite of tools for data aggregation, management, and analysis, derived from various input sources such as pixel-tracking technology, accelerometers, and analog voltage outputs.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+NBAS aims to democratize access to powerful data analysis tools traditionally dominated by commercial software like MATLAB and SPSS. By eliminating financial barriers, NBAS empowers researchers, educators, and industry professionals to conduct sophisticated analyses without the associated costs.
 
-<!-- ### Built With
-...
-* [![Next][Next.js]][Next-url]
-* [![React][React.js]][React-url]
-* [![Vue][Vue.js]][Vue-url]
-* [![Angular][Angular.io]][Angular-url]
-* [![Svelte][Svelte.dev]][Svelte-url]
-* [![Laravel][Laravel.com]][Laravel-url]
-* [![Bootstrap][Bootstrap.com]][Bootstrap-url]
-* [![JQuery][JQuery.com]][JQuery-url]
+Key Features:
+* **Data Management Engine (DME)**: A robust system for filtering and aggregating large, complex datasets from multiple sources. The DME ensures seamless integration and handling of diverse data types, facilitating comprehensive and efficient data analysis.
+* **Analytics Suite**: Offers an extensive array of tools for neurobehavioral data analysis, including advanced statistical methods, machine learning algorithms, and data visualization techniques. The analytics suite is designed to be both powerful and flexible, catering to the specific needs of each user.
+  * **Preloaded Functions**: A library of ready-to-use functions for common analysis tasks, enabling users to quickly apply standard methods without extensive setup.
+  * **Custom / User-Defined Functions**: Allows users to create and implement their own analysis functions, fostering innovation and customization in research workflows.
+* **Future Integration**: NBAS is designed with future compatibility in mind, aiming to integrate seamlessly with other leading tools in the field, such as [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut), to expand its capabilities further.
+
+In addition to its technical prowess, NBAS aspires to cultivate a collaborative research community. It envisions a platform where scientists and researchers can share their analytic workflows, collaborate on projects, and contribute to a growing repository of shared knowledge and resources. This collaborative spirit aims to accelerate scientific discovery and innovation by leveraging the collective expertise of the global research community.
+
+By providing a versatile and accessible toolset, NBAS not only enhances the efficiency and effectiveness of data analysis but also fosters a culture of open collaboration and shared progress in the scientific community.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
--->
 
 <!-- GETTING STARTED -->
 ## Getting Started
 
-To get a local copy up and running follow these simple example steps.
+To get a local copy up and running, follow these simple example steps.
 
 ### Prerequisites
-Once you have cloned the repo (see <a href="#installation">Installation</a>), you will need to install the required packages. This can be done in one of two ways:
-* If you are using <a href="https://www.anaconda.com/">Anaconda</a> as a virtual environment, you can use the supplied `environment.yml` file to create a new environment with all the required packages. To do this, run the following command in the terminal:
-    ```sh 
-    conda env create --file environment.yml
-    conda activate nbas
+Once you have cloned the repo (see [Installation](#installation)), you will need to install the required packages. This can be done in one of two ways:
+* If you are using [Anaconda](https://www.anaconda.com/) as a virtual environment, you can use the supplied `environment.yml` file to create a new environment with all the required packages. To do this, run the following command in the terminal:
+  ```sh
+  conda env create --file environment.yml
+  conda activate nbas
   ```
 * <i>Alternatively</i>, you can install the required packages globally <i>(typically not recommended)</i> using the following command:
     ```sh
@@ -130,24 +146,41 @@ Once you have cloned the repo (see <a href="#installation">Installation</a>), yo
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+  
+<!-- PROJECT STRUCTURE -->
+## Project Structure
+
+### Operation Manager
+The `operation_manager` package orchestrates and manages data processing operations within NBAS.
+- **[Task](operation_manager/task/README.md)**
+- **[Operations](operation_manager/operations/README.md)**
+  - **[Computation](operation_manager/operations/computation/README.md)**
+  - **[Persistent](operation_manager/operations/persistent/README.md)**
+  - **[Project](operation_manager/operations/project/README.md)**
+
+### GUI
+The `gui` package provides graphical user interfaces for interacting with NBAS.
+- **[Modules](gui/modules/README.md)**
+
+### Data Engine
+The `data_engine` package handles the primary functionality for data processing and management within a project.
+- **[Data Processing](data_engine/data_processing/README.md)**
+- **[Data Structures](data_engine/data_structures/README.md)**
+- **[Project](data_engine/project/README.md)**
+
+### Analytics
+The `analytics` package handles the application and visualization of data transformations within a project.
+- **[Preloaded](analytics/preloaded/README.md)**
+  - **[Transformations](analytics/preloaded/transformations/README.md)**
+
 
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 > <i>To be implemented at a later date.</i>
 
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
-<!-- ROADMAP
-## Roadmap
-
-
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
- -->
 
 
 <!-- CONTRIBUTING -->
@@ -196,19 +229,6 @@ Associate Professor, Principal Investigator
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
-<!-- ACKNOWLEDGMENTS
-## Acknowledgments
-
-* []()
-* []()
-* []()
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
--->
-
-
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge
@@ -223,20 +243,3 @@ Associate Professor, Principal Investigator
 [license-url]: https://github.com/lane-neuro/neurobehavioral-analytics-suite/blob/main/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/lane14
-[product-screenshot]: images/screenshot.png
-[Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
-[Next-url]: https://nextjs.org/
-[React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
-[React-url]: https://reactjs.org/
-[Vue.js]: https://img.shields.io/badge/Vue.js-35495E?style=for-the-badge&logo=vuedotjs&logoColor=4FC08D
-[Vue-url]: https://vuejs.org/
-[Angular.io]: https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white
-[Angular-url]: https://angular.io/
-[Svelte.dev]: https://img.shields.io/badge/Svelte-4A4A55?style=for-the-badge&logo=svelte&logoColor=FF3E00
-[Svelte-url]: https://svelte.dev/
-[Laravel.com]: https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white
-[Laravel-url]: https://laravel.com
-[Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
-[Bootstrap-url]: https://getbootstrap.com
-[JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
-[JQuery-url]: https://jquery.com 
