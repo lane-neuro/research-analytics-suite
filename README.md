@@ -26,17 +26,15 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <!--
   <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="neurobehavioral_analytics_suite/images/logo_medium_light.png" alt="NBAS">
   </a>
-  -->
   <h1>NeuroBehavioral Analytics Suite (NBAS)</h1>
   <p>Author: <a href="#contact">Lane</a></p>
   <p align="left">
     The NeuroBehavioral Analytics Suite (NBAS), developed within Gire Lab at the University of Washington, aims to be a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse data sources. Unlike MATLAB and SPSS, which are widely used in scientific research, NBAS is designed to be free and accessible, addressing the financial and accessibility barriers faced by many researchers across all fields of science.
     <br /><br />
-    The motivation behind NBAS is to provide a versatile and powerful toolset for scientific data analysis, which includes data management, statistical analysis, machine learning, and data visualization. This suite is intended for academic researchers, students, educators, and industry professionals, allowing them to manage and analyze large and complex datasets effectively. The development of NBAS also includes a focus on future integration with other prominent tools in the field, such as DeepLabCut.
+    The motivation behind NBAS is to provide a versatile and powerful toolset for scientific data analysis, which includes data management, statistical analysis, machine learning, and data visualization. This suite is intended for academic researchers, students, educators, and industry professionals, allowing them to manage and analyze large and complex datasets effectively. The development of NBAS also includes a focus on future integration with other prominent tools in the field, such as <a href="https://github.com/DeepLabCut/DeepLabCut">DeepLabCut</a>.
     <br /><br />
     Additionally, NBAS is envisioned to evolve into a pseudosocial platform where scientists and researchers can collaborate on their analytic workflows and processes. This collaborative aspect aims to foster a community of shared knowledge and resources, enabling users to develop, share, and implement custom functions allowing for unlimited analysis techniques to be shared globally.
   </p>
@@ -112,7 +110,7 @@ Key Features:
   * **Custom / User-Defined Functions**: Allows users to create and implement their own analysis functions, fostering innovation and customization in research workflows.
 * **Future Integration**: NBAS is designed with future compatibility in mind, aiming to integrate seamlessly with other leading tools in the field, such as [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut), to expand its capabilities further.
 
-In addition to its technical prowess, NBAS aspires to cultivate a collaborative research community. It envisions a platform where scientists and researchers can share their analytic workflows, collaborate on projects, and contribute to a growing repository of shared knowledge and resources. This collaborative spirit aims to accelerate scientific discovery and innovation by leveraging the collective expertise of the global research community.
+In addition, NBAS aspires to cultivate a collaborative research community. It envisions a platform where scientists and researchers can share their analytic workflows, collaborate on projects, and contribute to a growing repository of shared knowledge and resources. This collaborative spirit aims to accelerate scientific discovery and innovation by leveraging the collective expertise of the global research community.
 
 By providing a versatile and accessible toolset, NBAS not only enhances the efficiency and effectiveness of data analysis but also fosters a culture of open collaboration and shared progress in the scientific community.
 
