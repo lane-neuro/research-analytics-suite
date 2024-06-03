@@ -58,7 +58,7 @@ class ConsoleOperation(CustomOperation):
     async def execute(self) -> None:
         """Processes user input and sends it to the operation handler."""
         self._status = "running"
-        # self.task = asyncio.current_task()
+
         while True:  # Loop until a specific user input is received
             try:
                 user_input = await aioconsole.ainput(self.prompt)  # Read user input

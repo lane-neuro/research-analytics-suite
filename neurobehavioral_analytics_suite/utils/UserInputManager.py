@@ -52,14 +52,14 @@ class UserInputManager:
 
         elif user_input == "resources":
             for operation_list in self.operation_control.queue.queue:
-                operation_node = self.operation_control.queue.get_operation_from_chain(operation_list)
+                operation_node = self.operation_control.queue.get_head_operation_from_chain(operation_list)
                 if isinstance(operation_node, ResourceMonitorOperation):
                     self.logger.info(operation_node.print_memory_usage())
             return "UserInputHandler.process_user_input: Displaying system resources."
 
         elif user_input == "tasks":
             for task in self.operation_control.task_manager.tasks:
-                operation = self.operation_control.queue.get_operation_by_task(task)
+                operation = self.operation_control.queue.find_operation_by_task(task)
                 if operation:
                     self.logger.info(f"UserInputHandler.process_user_input: Task: {task.get_name()} - "
                                      f"{operation.status}")

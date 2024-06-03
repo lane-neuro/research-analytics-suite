@@ -4,7 +4,6 @@ from neurobehavioral_analytics_suite.operation_manager.OperationControl import O
 from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 
-
 class ConsoleDialog:
     def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl, logger):
         self.logger = logger
@@ -38,21 +37,20 @@ class ConsoleDialog:
         return None
 
     async def submit_command(self, sender, data):
-        if dpg.is_key_pressed(dpg.mvKey_Return) or sender == "submit_button":
-            command = dpg.get_value('input_text')
-            if command in self.command_aliases:
-                command = self.command_aliases[command]
-            if command.startswith("help"):
-                _, command = command.split()
-                help_text = self.command_help.get(command, "No help available for this command")
-                dpg.set_value(self.logger_output, help_text)
-            else:
-                try:
-                    await self.user_input_handler.process_user_input(command)
-                    self.command_history.append(command)
-                except Exception as e:
-                    self.logger.error(self, e)
-            dpg.set_value('input_text', "")  # Clear the input field
+        command = dpg.get_value('input_text')
+        if command in self.command_aliases:
+            command = self.command_aliases[command]
+        if command.startswith("help"):
+            _, command = command.split()
+            help_text = self.command_help.get(command, "No help available for this command")
+            dpg.set_value(self.logger_output, help_text)
+        else:
+            try:
+                await self.user_input_handler.process_user_input(command)
+                self.command_history.append(command)
+            except Exception as e:
+                self.logger.error(self, e)
+        dpg.set_value('input_text', "")  # Clear the input field
 
     async def update_logger_output(self):
         """Continuously update the logger output with new messages."""

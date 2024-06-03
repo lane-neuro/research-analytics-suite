@@ -90,7 +90,7 @@ class TaskManager:
         for task in self.tasks.copy():
             self.logger.debug(f"handle_tasks: [CHECK] {task.get_name()}")
             if task.done():
-                operation = self.queue.get_operation_by_task(task)
+                operation = self.queue.find_operation_by_task(task)
                 try:
                     self.logger.debug(f"handle_tasks: [OP] {task.get_name()}")
                     if operation is not None:

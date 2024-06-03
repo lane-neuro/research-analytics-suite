@@ -35,11 +35,11 @@ class OperationExecutor:
         except Exception as e:
             self.error_handler.handle_error(e, self)
 
-    async def execute_all(self) -> None:
+    async def execute_ready_operations(self) -> None:
         """
-        Executes all Operation instances in the queue.
+        Executes ready Operation instances in the queue.
 
-        This method executes the operations asynchronously. It waits for all operations tocomplete before returning.
+        This method executes the operations asynchronously. It waits for all operations to complete before returning.
 
         Raises:
             Exception: If an exception occurs during the execution of an operation, it is caught and handled by the
@@ -51,22 +51,20 @@ class OperationExecutor:
         queue_copy = set(self.queue.queue)
 
         for operation_chain in queue_copy:
-            top_operations = set()
+            chain_operations = set()
             if isinstance(operation_chain, OperationChain):
-                current_node = operation_chain.head
-                if current_node is not None:
-                    top_operations.add(current_node.operation)
-            else:
-                top_operations.add(operation_chain.operation)
+                for node in operation_chain:
+                    if node.operation.is_ready():
+                        chain_operations.add(node.operation)
 
-            for operation in top_operations:
+            for operation in chain_operations:
                 if not operation.task or operation.task.done():
                     if isinstance(operation, ConsoleOperation) and not self.op_control.console_operation_in_progress:
                         continue
                     self.logger.debug(f"execute_all: [OP] {operation.name} - {operation.status} - {operation.task}")
 
-                    if not operation.task:
+                    if not operation.task and operation.is_ready():
                         operation.task = await self.task_manager.create_task(self.execute_operation(operation),
-                                                                       name=operation.name)
+                                                                             name=operation.name)
                     if isinstance(operation, ConsoleOperation):
                         self.op_control.console_operation_in_progress = True

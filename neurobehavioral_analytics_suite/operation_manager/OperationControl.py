@@ -104,7 +104,7 @@ class OperationControl:
         Resumes all paused operations in the queue.
         """
         for operation_list in self.queue.queue:
-            operation = self.queue.get_operation_from_chain(operation_list)
+            operation = self.queue.get_head_operation_from_chain(operation_list)
             await self.operation_manager.resume_operation(operation)
 
     async def pause_all_operations(self):
@@ -113,7 +113,7 @@ class OperationControl:
         """
 
         for operation_list in self.queue.queue:
-            operation = self.queue.get_operation_from_chain(operation_list)
+            operation = self.queue.get_head_operation_from_chain(operation_list)
             await self.operation_manager.pause_operation(operation)
 
     async def stop_all_operations(self):
@@ -145,7 +145,7 @@ class OperationControl:
                 await self.start_operations()
 
                 # Execute all operations in the queue
-                await self.operation_executor.execute_all()
+                await self.operation_executor.execute_ready_operations()
 
                 # Handle any completed tasks
                 await self.task_manager.handle_tasks()

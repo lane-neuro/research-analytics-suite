@@ -39,7 +39,7 @@ class CustomOperation(Operation):
             local_vars (dict): Local variables to be used in the function execution.
             name (str): The name of the operation.
         """
-        super().__init__(name=name, error_handler=error_handler, func=func)
+        super().__init__(name=name, error_handler=error_handler, func=func, persistent=persistent)
         if local_vars is None:
             local_vars = locals()
         if local_vars is None:
@@ -122,11 +122,3 @@ class CustomOperation(Operation):
     async def restart(self):
         """Restarts the operation and updates the status accordingly."""
         await super().restart()
-
-    def progress(self) -> Tuple[int, str]:
-        """Returns the current progress and status of the operation.
-
-        Returns:
-            Tuple[int, str]: A tuple containing the current progress and status of the operation.
-        """
-        return super().progress

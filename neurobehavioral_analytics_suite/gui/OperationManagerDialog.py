@@ -1,46 +1,57 @@
-# neurobehavioral_analytics_suite/gui/OperationManagerDialog.py
 import asyncio
-
 import dearpygui.dearpygui as dpg
+from neurobehavioral_analytics_suite.gui.module.OperationModule import OperationModule
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
+from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
 
 
 class OperationManagerDialog:
     SLEEP_DURATION = 0.05
+    TILE_WIDTH = 300  # Fixed width for each operation tile
+    TILE_HEIGHT = 200  # Fixed height for each operation tile
 
-    def __init__(self, operation_control: OperationControl):
-        self.window = dpg.add_window(label="Operation Manager")
+    def __init__(self, operation_control: OperationControl, logger, tiles_per_row=3):
+        self.window = dpg.add_group(label="Operation Manager", parent="operation_pane", tag="operation_gallery",
+                                    horizontal=False)
         self.operation_control = operation_control
+        self.logger = logger
         self.operation_items = {}  # Store operation GUI items
+        self.update_operation = None
+        self.tiles_per_row = tiles_per_row
+        self.current_row_group = None
 
+    async def initialize(self):
+        self.update_operation = await self.add_update_operation()
+
+    async def add_update_operation(self):
         try:
-            self.update_operation = asyncio.create_task(self.display_operations(), name="gui_OperationUpdateTask")
+            operation = await self.operation_control.operation_manager.add_operation(
+                operation_type=CustomOperation, name="gui_OperationManagerUpdateTask",
+                local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
+                func=self.display_operations, persistent=True)
+            return operation
         except Exception as e:
-            print(f"Error creating task: {e}")
+            self.logger.error(f"Error creating task: {e}")
+        return None
 
     async def display_operations(self):
         while True:
-            for operation_list in self.operation_control.queue.queue:
-                operation = self.operation_control.queue.get_operation_from_chain(operation_list)
-                if operation not in self.operation_items:
-                    # Create new GUI elements for the operation
-                    operation_id = dpg.generate_uuid()
-                    with dpg.group(horizontal=True, parent=self.window):
-                        dpg.add_button(label="Pause", callback=self.pause_operation, user_data=operation)
-                        dpg.add_button(label="Resume", callback=self.resume_operation, user_data=operation)
-                        dpg.add_button(label="Stop", callback=self.stop_operation, user_data=operation)
-                        dpg.add_text(operation.name, tag=operation_id)
-                    self.operation_items[operation] = operation_id
-                else:
-                    # Update the status of the operation
-                    dpg.set_value(self.operation_items[operation], f"{operation.status} - {operation.name}")
+            # Check for new operations
+            queue_copy = set(self.operation_control.queue.queue)
+            for operation_chain in queue_copy:
+                for node in operation_chain:
+                    if node.operation not in self.operation_items and node.operation.name != "gui_OperationUpdateTask":
+                        self.operation_items[node.operation] = OperationModule(node.operation, self.operation_control,
+                                                                               self.logger)
+                        await self.operation_items[node.operation].initialize()
+                        self.add_operation_tile(node.operation)
             await asyncio.sleep(self.SLEEP_DURATION)
 
-    async def pause_operation(self, sender, app_data, user_data):
-        await self.operation_control.pause_operation(user_data)
-
-    async def resume_operation(self, sender, app_data, user_data):
-        await self.operation_control.resume_operation(user_data)
-
-    async def stop_operation(self, sender, app_data, user_data):
-        await self.operation_control.stop_operation(user_data)
+    def add_operation_tile(self, operation):
+        # Ensure current row group is created
+        if self.current_row_group is None or len(dpg.get_item_children(self.current_row_group)[1]) >= self.tiles_per_row:
+            self.current_row_group = dpg.add_group(horizontal=True, parent=self.window)
+            self.logger.debug(f"Created new row group: {self.current_row_group}")
+        child_window = dpg.add_child_window(width=self.TILE_WIDTH, height=self.TILE_HEIGHT, parent=self.current_row_group)
+        self.logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
+        self.operation_items[operation].draw(parent=child_window)
