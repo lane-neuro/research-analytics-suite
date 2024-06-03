@@ -3,8 +3,8 @@
 import dearpygui.dearpygui as dpg
 import asyncio
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
-from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
-from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ResourceMonitorOperation import \
+from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
     ResourceMonitorOperation
 
 
@@ -15,7 +15,7 @@ class ResourceMonitorDialog:
     MAX_DATA_POINTS = 100
 
     def __init__(self, operation_control: OperationControl, launcher, logger):
-        """Initializes the ResourceMonitorDialog with the given operation control, launcher, and logger.
+        """Initializes the ResourceMonitorDialog with the given operations control, launcher, and logger.
 
         Args:
             operation_control: Control interface for operations.
@@ -42,7 +42,7 @@ class ResourceMonitorDialog:
         self.setup_memory_monitor(self.memory_container)
 
     async def initialize(self):
-        """Initializes the resource monitor by adding the update operation."""
+        """Initializes the resource monitor by adding the update operations."""
         while self.resource_monitor_operation is None:
             self.resource_monitor_operation = self.operation_control.queue.get_operation_by_type(
                 ResourceMonitorOperation)
@@ -51,10 +51,10 @@ class ResourceMonitorDialog:
         self.update_operation = await self.add_update_operation()
 
     async def add_update_operation(self):
-        """Adds an update operation to the operation manager.
+        """Adds an update operations to the operations manager.
 
         Returns:
-            The created update operation or None if an error occurred.
+            The created update operations or None if an error occurred.
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(

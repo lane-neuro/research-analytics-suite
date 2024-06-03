@@ -1,7 +1,7 @@
 """
-Module for storing project metadata for the active project in the NeuroBehavioral Analytics Suite.
+Module for storing project metadata for the active project in the NeuroBehavioral AnalyticsCore Suite.
 
-This module defines the ProjectMetadata class which is designed to store project metadata for the
+This modules defines the ProjectMetadata class which is designed to store project metadata for the
 active project. It includes methods for initializing the metadata, and providing a string representation of the metadata
 
 Author: Lane
@@ -14,7 +14,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from neurobehavioral_analytics_suite.analytics import Analytics
+from neurobehavioral_analytics_suite.analytics import AnalyticsCore
 from neurobehavioral_analytics_suite.utils.Logger import Logger
 
 
@@ -26,7 +26,7 @@ class ProjectMetadata:
     framerate, and analytics for the active project.
 
     Attributes:
-        analytics (Analytics): Pointer to Analytics engine.
+        analytics (AnalyticsCore): Pointer to AnalyticsCore engine.
         base_dir (str): Root directory for project.
         username (str): Name of current experimenter / researcher.
         subject (str): Name of subject (i.e., 'mouse-2', 'CB6', etc.).
@@ -37,7 +37,7 @@ class ProjectMetadata:
     """
 
     def __init__(self, directory_in: str, user_in: str, subject_in: str, framerate_in: int,
-                 analytics_in: Analytics):
+                 analytics_in: AnalyticsCore):
         """
         Initializes the ProjectMetadata object with the provided parameters.
 
@@ -46,11 +46,11 @@ class ProjectMetadata:
             user_in (str): Name of current experimenter / researcher.
             subject_in (str): Name of subject (i.e., 'mouse-2', 'CB6', etc.).
             framerate_in (int): Framerate of the camera.
-            analytics_in (Analytics): Pointer to Analytics engine.
+            analytics_in (AnalyticsCore): Pointer to AnalyticsCore engine.
         """
 
         self.logger = None                          # pointer to Logger
-        self.analytics = analytics_in               # pointer to Analytics engine
+        self.analytics = analytics_in               # pointer to AnalyticsCore engine
         self.base_dir = directory_in                # root directory for project
         self.username = user_in                     # name of current experimenter / researcher
         self.subject = subject_in                   # name of subject (i.e., 'mouse-2', 'CB6', etc.)

@@ -1,8 +1,8 @@
 """
 TaskCreator Module.
 
-This module defines the TaskCreator class responsible for creating and scheduling tasks within the Neurobehavioral
-Analytics Suite. It handles task creation and tracking.
+This modules defines the TaskCreator class responsible for creating and scheduling tasks within the Neurobehavioral
+AnalyticsCore Suite. It handles task creation and tracking.
 
 Author: Lane
 Copyright: Lane
@@ -15,7 +15,7 @@ Status: Prototype
 """
 
 import asyncio
-from neurobehavioral_analytics_suite.operation_manager.TaskCounter import TaskCounter
+from neurobehavioral_analytics_suite.operation_manager.task.TaskCounter import TaskCounter
 
 
 class TaskCreator:
@@ -36,10 +36,10 @@ class TaskCreator:
 
     def task_exists(self, operation_type):
         """
-        Checks if a task of the specified operation type exists and is running or started.
+        Checks if a task of the specified operations type exists and is running or started.
 
         Args:
-            operation_type: The type of operation to check for.
+            operation_type: The type of operations to check for.
 
         Returns:
             bool: True if a task of the specified type exists and is running or started, otherwise False.

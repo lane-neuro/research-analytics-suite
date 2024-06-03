@@ -14,7 +14,7 @@ Status: Prototype
 """
 import asyncio
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
-from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
 
 
 class OperationExecutor:
@@ -41,7 +41,7 @@ class OperationExecutor:
         This method executes the operations asynchronously. It waits for all operations to complete before returning.
 
         Raises:
-            Exception: If an exception occurs during the execution of an operation, it is caught and handled by the
+            Exception: If an exception occurs during the execution of an operations, it is caught and handled by the
             ErrorHandler instance.
         """
         self.logger.debug("OperationControl: Queue Size: " + str(self.queue.size()))

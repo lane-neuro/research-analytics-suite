@@ -14,9 +14,9 @@ Status: Prototype
 """
 from neurobehavioral_analytics_suite.operation_manager.OperationManager import OperationManager
 from neurobehavioral_analytics_suite.operation_manager.OperationQueue import OperationQueue
-from neurobehavioral_analytics_suite.operation_manager.TaskCreator import TaskCreator
-from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ConsoleOperation import ConsoleOperation
-from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ResourceMonitorOperation import \
+from neurobehavioral_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
+from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
     ResourceMonitorOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 from neurobehavioral_analytics_suite.utils.Logger import Logger

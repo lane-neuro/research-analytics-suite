@@ -1,7 +1,7 @@
 """
-Module for storing positional func from xy-coordinate tracking datasets in the NeuroBehavioral Analytics Suite.
+Module for storing positional func from xy-coordinate tracking datasets in the NeuroBehavioral AnalyticsCore Suite.
 
-This module defines the PoseData class which is designed to handle positional func from xy-coordinate tracking datasets.
+This modules defines the PoseData class which is designed to handle positional func from xy-coordinate tracking datasets.
 It includes methods for initializing the func, extracting func from a CSV file, and formatting func for console output.
 
 Author: Lane
@@ -19,7 +19,7 @@ import json
 import matplotlib.pyplot as plt
 import time
 from copy import deepcopy
-from neurobehavioral_analytics_suite.data_engine.d_structs.SingleFrame import SingleFrame
+from neurobehavioral_analytics_suite.data_engine.data_structures.SingleFrame import SingleFrame
 from neurobehavioral_analytics_suite.data_engine.project import ProjectMetadata
 
 
@@ -78,7 +78,7 @@ class PoseData:
 
     def attach_logger(self, logger):
         """
-        Attaches a logger to the Analytics object.
+        Attaches a logger to the AnalyticsCore object.
 
         This method attaches a logger to the PoseData object.
 

@@ -1,8 +1,8 @@
 """
 OperationLifecycleManager Module.
 
-This module defines the OperationLifecycleManager class responsible for managing the overall lifecycle of operations
-within the Neurobehavioral Analytics Suite. It handles starting, stopping, pausing, and resuming operations.
+This modules defines the OperationLifecycleManager class responsible for managing the overall lifecycle of operations
+within the Neurobehavioral AnalyticsCore Suite. It handles starting, stopping, pausing, and resuming operations.
 
 Author: Lane
 Copyright: Lane
@@ -18,7 +18,7 @@ import asyncio
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
 from neurobehavioral_analytics_suite.operation_manager.OperationExecutor import OperationExecutor
 from neurobehavioral_analytics_suite.operation_manager.OperationQueue import OperationQueue
-from neurobehavioral_analytics_suite.operation_manager.TaskMonitor import TaskMonitor
+from neurobehavioral_analytics_suite.operation_manager.task.TaskMonitor import TaskMonitor
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 from neurobehavioral_analytics_suite.utils.Logger import Logger
 
@@ -32,9 +32,9 @@ class OperationLifecycleManager:
         Initializes the OperationLifecycleManager with the given parameters.
 
         Args:
-            queue: The operation queue.
-            operation_manager: The operation manager.
-            executor: The operation operation_executor.
+            queue: The operations queue.
+            operation_manager: The operations manager.
+            executor: The operations operation_executor.
             logger: Logger for logging lifecycle-related information.
             error_handler: Handler for managing errors.
         """
@@ -89,7 +89,7 @@ class OperationLifecycleManager:
             await self.operation_manager.pause_operation(operation)
 
     async def exec_loop(self):
-        """Executes the main loop of the operation manager."""
+        """Executes the main loop of the operations manager."""
         self.logger.debug("Starting exec_loop")
 
         while True:

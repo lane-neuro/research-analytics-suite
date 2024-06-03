@@ -1,7 +1,7 @@
 """
 Analytical Engine to process neurobehavioral func from NBAS-DataEngine.
 
-This module defines the Analytics class which is designed to apply a series of transformations
+This modules defines the AnalyticsCore class which is designed to apply a series of transformations
 to a given datapoint. It includes methods for initializing the transformation list, adding a transformation,
 and applying all transformations to a datapoint.
 
@@ -16,7 +16,7 @@ Status: Prototype
 """
 
 
-class Analytics:
+class AnalyticsCore:
     """
     A class to apply a series of transformations to a given datapoint.
 
@@ -29,7 +29,7 @@ class Analytics:
 
     def __init__(self, transformations=None):
         """
-        Initializes the Analytics object with the provided list of transformations.
+        Initializes the AnalyticsCore object with the provided list of transformations.
 
         Args:
             transformations (list): The list of transformations to be applied.
@@ -44,15 +44,15 @@ class Analytics:
 
     def __repr__(self):
         """
-        Returns a string representation of the Analytics object.
+        Returns a string representation of the AnalyticsCore object.
 
         The string representation includes the number of transformations.
 
         Returns:
-            str: A string representation of the Analytics object.
+            str: A string representation of the AnalyticsCore object.
         """
 
-        return f"Analytics, number of transformations = {len(self.transformations)}"
+        return f"AnalyticsCore, number of transformations = {len(self.transformations)}"
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -67,16 +67,16 @@ class Analytics:
 
     def attach_logger(self, logger):
         """
-        Attaches a logger to the Analytics object.
+        Attaches a logger to the AnalyticsCore object.
 
-        This method attaches a logger to the Analytics object.
+        This method attaches a logger to the AnalyticsCore object.
 
         Args:
             logger: The logger to attach.
         """
 
         self.logger = logger
-        self.logger.info("Logger attached to Analytics object.")
+        self.logger.info("Logger attached to AnalyticsCore object.")
 
     def transform(self, datapoint):
         """

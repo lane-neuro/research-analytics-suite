@@ -6,16 +6,16 @@ from neurobehavioral_analytics_suite.data_engine.project.load_project import loa
 from neurobehavioral_analytics_suite.data_engine.project.save_project import save_project
 from neurobehavioral_analytics_suite.data_engine.DataEngine import DataEngine
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
-from neurobehavioral_analytics_suite.operation_manager.operation.project.CreateProjectOperation import CreateProjectOperation
-from neurobehavioral_analytics_suite.operation_manager.operation.project.LoadProjectOperation import LoadProjectOperation
-from neurobehavioral_analytics_suite.operation_manager.operation.project.SaveProjectOperation import SaveProjectOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.project.CreateProjectOperation import CreateProjectOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.project.LoadProjectOperation import LoadProjectOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.project.SaveProjectOperation import SaveProjectOperation
 
 
 class ProjectManagerDialog:
     """A class to manage the dialog for creating, loading, and saving projects."""
 
     def __init__(self, data_engine: DataEngine, operation_control: OperationControl):
-        """Initializes the ProjectManagerDialog with the given data engine and operation control.
+        """Initializes the ProjectManagerDialog with the given data engine and operations control.
 
         Args:
             data_engine: Instance of DataEngine to manage project data.
@@ -66,7 +66,7 @@ class ProjectManagerDialog:
             print("No project to save")
 
     def create_project_wrapper(self, sender, data):
-        """Wrapper to create a project operation.
+        """Wrapper to create a project operations.
 
         Args:
             sender: The sender of the create project event.
@@ -75,7 +75,7 @@ class ProjectManagerDialog:
         operation = CreateProjectOperation(self.operation_control.error_handler, self.data_engine)
 
     def load_project_wrapper(self, sender, data):
-        """Wrapper to load a project operation.
+        """Wrapper to load a project operations.
 
         Args:
             sender: The sender of the load project event.
@@ -84,7 +84,7 @@ class ProjectManagerDialog:
         operation = LoadProjectOperation(self.operation_control.error_handler, self.data_engine)
 
     def save_project_wrapper(self, sender, data):
-        """Wrapper to save a project operation.
+        """Wrapper to save a project operations.
 
         Args:
             sender: The sender of the save project event.

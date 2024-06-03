@@ -1,14 +1,14 @@
 import asyncio
 import dearpygui.dearpygui as dpg
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
-from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 
 class ConsoleDialog:
-    """A class to create a console dialog for user input and operation control."""
+    """A class to create a console dialog for user input and operations control."""
 
     def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl, logger):
-        """Initializes the ConsoleDialog with the given user input handler, operation control, and logger.
+        """Initializes the ConsoleDialog with the given user input handler, operations control, and logger.
 
         Args:
             user_input_handler: Instance of UserInputManager to handle user inputs.
@@ -32,14 +32,14 @@ class ConsoleDialog:
         self.update_operation = None
 
     async def initialize(self):
-        """Initializes the console dialog by adding the update operation."""
+        """Initializes the console dialog by adding the update operations."""
         self.update_operation = await self.add_update_operation()
 
     async def add_update_operation(self):
-        """Adds an update operation to the operation manager.
+        """Adds an update operations to the operations manager.
 
         Returns:
-            The created update operation or None if an error occurred.
+            The created update operations or None if an error occurred.
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(

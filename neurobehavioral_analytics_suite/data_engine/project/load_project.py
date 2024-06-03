@@ -1,7 +1,7 @@
 """
 load_project.py
 
-This module defines the function to load a project from a given file path. It uses the pickle module to decode the
+This modules defines the function to load a project from a given file path. It uses the pickle modules to decode the
 DataEngine object from the file and returns it.
 
 Author: Lane

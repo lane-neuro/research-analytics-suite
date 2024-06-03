@@ -1,19 +1,19 @@
 import asyncio
 import dearpygui.dearpygui as dpg
-from neurobehavioral_analytics_suite.gui.module.OperationModule import OperationModule
+from neurobehavioral_analytics_suite.gui.modules.OperationModule import OperationModule
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
-from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
 
 
 class OperationManagerDialog:
     """A class to manage the dialog for displaying and controlling operations."""
 
     SLEEP_DURATION = 0.05
-    TILE_WIDTH = 300  # Fixed width for each operation tile
-    TILE_HEIGHT = 300  # Fixed height for each operation tile
+    TILE_WIDTH = 300  # Fixed width for each operations tile
+    TILE_HEIGHT = 300  # Fixed height for each operations tile
 
     def __init__(self, operation_control: OperationControl, logger, tiles_per_row=3):
-        """Initializes the OperationManagerDialog with the given operation control, logger, and tile settings.
+        """Initializes the OperationManagerDialog with the given operations control, logger, and tile settings.
 
         Args:
             operation_control: Control interface for operations.
@@ -24,20 +24,20 @@ class OperationManagerDialog:
                                     horizontal=False)
         self.operation_control = operation_control
         self.logger = logger
-        self.operation_items = {}  # Store operation GUI items
+        self.operation_items = {}  # Store operations GUI items
         self.update_operation = None
         self.tiles_per_row = tiles_per_row
         self.current_row_group = None
 
     async def initialize(self):
-        """Initializes the operation manager dialog by adding the update operation."""
+        """Initializes the operations manager dialog by adding the update operations."""
         self.update_operation = await self.add_update_operation()
 
     async def add_update_operation(self):
-        """Adds an update operation to the operation manager.
+        """Adds an update operations to the operations manager.
 
         Returns:
-            The created update operation or None if an error occurred.
+            The created update operations or None if an error occurred.
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
@@ -64,10 +64,10 @@ class OperationManagerDialog:
             await asyncio.sleep(self.SLEEP_DURATION)
 
     def add_operation_tile(self, operation):
-        """Adds a new operation tile to the GUI.
+        """Adds a new operations tile to the GUI.
 
         Args:
-            operation: The operation to add as a tile.
+            operation: The operations to add as a tile.
         """
         # Ensure current row group is created
         if (self.current_row_group is None

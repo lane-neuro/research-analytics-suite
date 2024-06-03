@@ -1,8 +1,8 @@
 """
-This module contains the DaskOperation class, a subclass of the Operation class.
+This modules contains the DaskOperation class, a subclass of the Operation class.
 
-The DaskOperation class is used to represent a Dask Operation in the NeuroBehavioral Analytics Suite.
-It provides methods for setting the data to be processed and executing the operation.
+The DaskOperation class is used to represent a Dask Operation in the NeuroBehavioral AnalyticsCore Suite.
+It provides methods for setting the data to be processed and executing the operations.
 
 Typical usage example:
 
@@ -27,15 +27,15 @@ from asyncio import Event
 from typing import Tuple
 
 from dask import delayed
-from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
 class DaskOperation(Operation):
     """
-    A class used to represent a Dask Operation in the NeuroBehavioral Analytics Suite.
+    A class used to represent a Dask Operation in the NeuroBehavioral AnalyticsCore Suite.
 
-    This class provides methods for setting the data to be processed and executing the operation.
+    This class provides methods for setting the data to be processed and executing the operations.
 
     Attributes:
         func (callable): A function to be executed.
@@ -66,7 +66,7 @@ class DaskOperation(Operation):
 
     async def execute(self):
         """
-        Executes the operation.
+        Executes the operations.
         """
         self._status = "running"
         temp_vars = self.local_vars.copy()
@@ -88,29 +88,29 @@ class DaskOperation(Operation):
             return self.result
 
     async def start(self):
-        """Starts the operation and handles any exceptions that occur during execution."""
+        """Starts the operations and handles any exceptions that occur during execution."""
         await super().start()
 
     async def stop(self):
-        """Stops the operation and handles any exceptions that occur during execution."""
+        """Stops the operations and handles any exceptions that occur during execution."""
         await super().stop()
 
     async def pause(self):
-        """Pauses the operation and handles any exceptions that occur during execution."""
+        """Pauses the operations and handles any exceptions that occur during execution."""
         await super().pause()
 
     async def resume(self) -> None:
-        """Resumes the operation and handles any exceptions that occur during execution."""
+        """Resumes the operations and handles any exceptions that occur during execution."""
         await super().resume()
 
     async def reset(self) -> None:
-        """Resets the operation and handles any exceptions that occur during execution."""
+        """Resets the operations and handles any exceptions that occur during execution."""
         await super().reset()
 
     def progress(self) -> Tuple[int, str]:
-        """Returns the current progress and status of the operation.
+        """Returns the current progress and status of the operations.
 
         Returns:
-            A tuple containing the current progress and status of the operation.
+            A tuple containing the current progress and status of the operations.
         """
         return super().progress()

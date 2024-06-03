@@ -1,5 +1,5 @@
 """
-This module provides the DataLoader class which is used to load transformed data using Dask.
+This modules provides the DataLoader class which is used to load transformed data using Dask.
 
 The DataLoader class inherits from the Operation class and overrides its methods to provide
 data loading functionality. It uses Dask to perform the loading in a parallel and efficient manner.
@@ -17,7 +17,7 @@ Status: Prototype
 from dask import delayed
 from dask.distributed import Client
 import dask.bag as db
-from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 
 
 class DataLoader(Operation):

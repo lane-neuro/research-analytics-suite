@@ -1,5 +1,5 @@
 """
-This module contains the `resource_monitor` function, which continuously monitors the usage of CPU and memory.
+This modules contains the `resource_monitor` function, which continuously monitors the usage of CPU and memory.
 
 The `resource_monitor` function checks the usage of CPU and memory at regular intervals. If the usage of either
 resource exceeds the specified thresholds, an error is handled by the `ErrorHandler`.
@@ -13,7 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 
-This file is part of the Neurobehavioral Analytics Suite project. For more information,
+This file is part of the Neurobehavioral AnalyticsCore Suite project. For more information,
 please refer to the project documentation: https://github.com/lane-neuro/neurobehavioral_analytics_suite
 """
 
@@ -24,7 +24,7 @@ import sys
 
 import psutil
 
-from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 

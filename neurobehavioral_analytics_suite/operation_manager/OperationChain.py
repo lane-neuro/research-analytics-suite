@@ -1,4 +1,4 @@
-from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 
 
 class OperationNode:

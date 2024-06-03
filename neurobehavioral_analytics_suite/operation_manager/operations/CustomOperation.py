@@ -1,8 +1,8 @@
 """
-A module that defines the CustomOperation class, a subclass of the ABCOperation class.
+A modules that defines the CustomOperation class, a subclass of the ABCOperation class.
 
 The CustomOperation class is designed to handle custom operations that require function processing. It provides methods
-for setting the function to be processed and executing the operation.
+for setting the function to be processed and executing the operations.
 
 Author: Lane
 Copyright: Lane
@@ -15,14 +15,14 @@ Status: Prototype
 """
 import types
 from typing import Tuple
-from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
 class CustomOperation(Operation):
-    """A class used to represent a Custom Operation in the NeuroBehavioral Analytics Suite.
+    """A class used to represent a Custom Operation in the NeuroBehavioral AnalyticsCore Suite.
 
-    This class provides methods for setting the data to be processed and executing the operation.
+    This class provides methods for setting the data to be processed and executing the operations.
 
     Attributes:
         func (callable): A function to be executed.
@@ -37,7 +37,7 @@ class CustomOperation(Operation):
             error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
             func: A function to be executed.
             local_vars (dict): Local variables to be used in the function execution.
-            name (str): The name of the operation.
+            name (str): The name of the operations.
         """
         super().__init__(name=name, error_handler=error_handler, func=func, persistent=persistent)
         if local_vars is None:
@@ -56,16 +56,16 @@ class CustomOperation(Operation):
 
     def init_operation(self):
         """
-        Initialize any resources or setup required for the operation before it starts.
+        Initialize any resources or setup required for the operations before it starts.
         """
         super().init_operation()
 
     async def start(self):
-        """Starts the operation and updates the status accordingly."""
+        """Starts the operations and updates the status accordingly."""
         await super().start()
 
     async def execute(self):
-        """Executes the operation and updates the status and result output accordingly.
+        """Executes the operations and updates the status and result output accordingly.
 
         Returns:
             dict: The result output after function execution.
@@ -96,29 +96,29 @@ class CustomOperation(Operation):
 
     def get_result(self):
         """
-        Gets the result of the operation.
+        Gets the result of the operations.
 
         Returns:
-            The result of the operation.
+            The result of the operations.
         """
         return self.result_output
 
     async def pause(self):
-        """Pauses the operation and updates the status accordingly."""
+        """Pauses the operations and updates the status accordingly."""
         await super().pause()
 
     async def resume(self) -> None:
-        """Resumes the operation and updates the status accordingly."""
+        """Resumes the operations and updates the status accordingly."""
         await super().resume()
 
     async def stop(self):
-        """Stops the operation and updates the status accordingly."""
+        """Stops the operations and updates the status accordingly."""
         await super().stop()
 
     async def reset(self) -> None:
-        """Resets the operation and updates the status accordingly."""
+        """Resets the operations and updates the status accordingly."""
         await super().reset()
 
     async def restart(self):
-        """Restarts the operation and updates the status accordingly."""
+        """Restarts the operations and updates the status accordingly."""
         await super().restart()

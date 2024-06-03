@@ -8,7 +8,7 @@ from neurobehavioral_analytics_suite.operation_manager.OperationControl import O
 
 
 class GuiLauncher:
-    """Class to launch the GUI for the NeuroBehavioral Analytics Suite."""
+    """Class to launch the GUI for the NeuroBehavioral AnalyticsCore Suite."""
 
     def __init__(self, data_engine: DataEngine, operation_control: OperationControl, logger):
         """Initializes the GUI launcher with necessary components.
@@ -76,7 +76,7 @@ class GuiLauncher:
         await self.console.initialize()
 
     async def setup_operation_pane(self):
-        """Sets up the operation pane asynchronously."""
+        """Sets up the operations pane asynchronously."""
         with dpg.group(parent="operation_pane"):
             dpg.add_text("Operation Manager")
 
@@ -109,7 +109,7 @@ class GuiLauncher:
     async def setup_main_window(self):
         """Sets up the main window of the GUI and runs the event loop."""
         dpg.create_context()
-        dpg.create_viewport(title='NeuroBehavioral Analytics Suite', width=1280, height=720)
+        dpg.create_viewport(title='NeuroBehavioral AnalyticsCore Suite', width=1280, height=720)
         dpg.setup_dearpygui()
 
         dpg.show_viewport()

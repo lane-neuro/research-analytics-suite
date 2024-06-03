@@ -1,7 +1,7 @@
 """
-A module for the NeuroBehavioral Analytics Suite's Data Engine.
+A modules for the NeuroBehavioral AnalyticsCore Suite's Data Engine.
 
-This module contains the DataEngine class, which serves as the primary func handler for a project. It includes methods
+This modules contains the DataEngine class, which serves as the primary func handler for a project. It includes methods
 for initializing the func engine, setting the func range, and executing the func engine.
 
 Author: Lane
@@ -14,8 +14,8 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from neurobehavioral_analytics_suite.data_engine.d_structs.PoseData import PoseData
-from neurobehavioral_analytics_suite.analytics.Analytics import Analytics
+from neurobehavioral_analytics_suite.data_engine.data_structures.PoseData import PoseData
+from neurobehavioral_analytics_suite.analytics.AnalyticsCore import AnalyticsCore
 from neurobehavioral_analytics_suite.data_engine.project.ProjectMetadata import ProjectMetadata
 from neurobehavioral_analytics_suite.utils.Logger import Logger
 
@@ -29,7 +29,7 @@ class DataEngine:
     Attributes:
         dask_client: Pointer to primary Dask client.
         b_likelihood: Whether to filter func for p-value (project-global).
-        analytics: Initialize Analytics Engine.
+        analytics: Initialize AnalyticsCore Engine.
         meta: Initialize ProjectMetadata object.
         pose: Initialize PoseData object to process .csv func.
     """
@@ -58,7 +58,7 @@ class DataEngine:
         self.logger = None  # Pointer to Logger
         self.dask_client = None  # Pointer to primary Dask client
         self.b_likelihood = use_likelihood  # Whether to filter func for p-value (project-global)
-        self.analytics = Analytics()  # Initialize Analytics Engine
+        self.analytics = AnalyticsCore()  # Initialize AnalyticsCore Engine
         self.meta = ProjectMetadata(  # Initialize ProjectMetadata object
             directory_in,
             user_in,

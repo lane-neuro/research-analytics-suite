@@ -1,15 +1,14 @@
 import asyncio
 import uuid
 import dearpygui.dearpygui as dpg
-from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
-from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
 
 
 class OperationModule:
     """A class to manage operations and their GUI representation."""
     
     def __init__(self, operation, operation_control, logger):
-        """Initializes the OperationModule with the given operation, control, and logger.
+        """Initializes the OperationModule with the given operations, control, and logger.
         
         Args:
             operation: An instance of Operation.
@@ -25,7 +24,7 @@ class OperationModule:
         self.log_id = None
 
     async def initialize(self):
-        """Initializes resources and adds the update operation."""
+        """Initializes resources and adds the update operations."""
         await self.initialize_resources()
         self.update_operation = await self.add_update_operation()
 
@@ -39,10 +38,10 @@ class OperationModule:
             self.log_event(f"Error during initialization: {e}")
 
     async def add_update_operation(self):
-        """Adds an update operation to the operation manager.
+        """Adds an update operations to the operations manager.
 
         Returns:
-            The created update operation or None if an error occurred.
+            The created update operations or None if an error occurred.
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
@@ -56,7 +55,7 @@ class OperationModule:
         return None
 
     async def start_operation(self, sender, app_data, user_data):
-        """Starts the operation.
+        """Starts the operations.
 
         Args:
             sender: The sender of the start event.
@@ -66,12 +65,12 @@ class OperationModule:
         try:
             await self.operation.start()
         except Exception as e:
-            self.logger.error(f"Error starting operation: {e}")
+            self.logger.error(f"Error starting operations: {e}")
             self.operation.status = "error"
-            self.log_event(f"Error starting operation: {e}")
+            self.log_event(f"Error starting operations: {e}")
 
     async def stop_operation(self, sender, app_data, user_data):
-        """Stops the operation.
+        """Stops the operations.
 
         Args:
             sender: The sender of the stop event.
@@ -81,12 +80,12 @@ class OperationModule:
         try:
             await self.operation.stop()
         except Exception as e:
-            self.logger.error(f"Error stopping operation: {e}")
+            self.logger.error(f"Error stopping operations: {e}")
             self.operation.status = "error"
-            self.log_event(f"Error stopping operation: {e}")
+            self.log_event(f"Error stopping operations: {e}")
 
     async def pause_operation(self, sender, app_data, user_data):
-        """Pauses the operation.
+        """Pauses the operations.
 
         Args:
             sender: The sender of the pause event.
@@ -96,12 +95,12 @@ class OperationModule:
         try:
             await self.operation.pause()
         except Exception as e:
-            self.logger.error(f"Error pausing operation: {e}")
+            self.logger.error(f"Error pausing operations: {e}")
             self.operation.status = "error"
-            self.log_event(f"Error pausing operation: {e}")
+            self.log_event(f"Error pausing operations: {e}")
 
     async def resume_operation(self, sender, app_data, user_data):
-        """Resumes the operation.
+        """Resumes the operations.
 
         Args:
             sender: The sender of the resume event.
@@ -111,12 +110,12 @@ class OperationModule:
         try:
             await self.operation.resume()
         except Exception as e:
-            self.logger.error(f"Error resuming operation: {e}")
+            self.logger.error(f"Error resuming operations: {e}")
             self.operation.status = "error"
-            self.log_event(f"Error resuming operation: {e}")
+            self.log_event(f"Error resuming operations: {e}")
 
     async def reset_operation(self, sender, app_data, user_data):
-        """Resets the operation.
+        """Resets the operations.
 
         Args:
             sender: The sender of the reset event.
@@ -126,12 +125,12 @@ class OperationModule:
         try:
             await self.operation.reset()
         except Exception as e:
-            self.logger.error(f"Error resetting operation: {e}")
+            self.logger.error(f"Error resetting operations: {e}")
             self.operation.status = "error"
-            self.log_event(f"Error resetting operation: {e}")
+            self.log_event(f"Error resetting operations: {e}")
 
     def draw(self, parent):
-        """Draws the GUI elements for the operation.
+        """Draws the GUI elements for the operations.
 
         Args:
             parent: The parent GUI element to attach to.
@@ -178,17 +177,17 @@ class OperationModule:
         self.current_items.append(message)
 
     def add_child_operation(self, child_operation):
-        """Adds a child operation to the current operation.
+        """Adds a child operations to the current operations.
 
         Args:
-            child_operation: The child operation to add.
+            child_operation: The child operations to add.
         """
         self.operation.add_child_operation(child_operation)
 
     def remove_child_operation(self, child_operation):
-        """Removes a child operation from the current operation.
+        """Removes a child operations from the current operations.
 
         Args:
-            child_operation: The child operation to remove.
+            child_operation: The child operations to remove.
         """
         self.operation.remove_child_operation(child_operation)

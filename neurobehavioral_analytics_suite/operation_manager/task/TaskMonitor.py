@@ -1,8 +1,8 @@
 """
 TaskMonitor Module.
 
-This module defines the TaskMonitor class responsible for monitoring and managing tasks within the Neurobehavioral
-Analytics Suite. It handles task monitoring and completion.
+This modules defines the TaskMonitor class responsible for monitoring and managing tasks within the Neurobehavioral
+AnalyticsCore Suite. It handles task monitoring and completion.
 
 Author: Lane
 Copyright: Lane
@@ -14,8 +14,8 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
-from neurobehavioral_analytics_suite.operation_manager.operation.persistent.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
 
 
 class TaskMonitor:
@@ -27,7 +27,7 @@ class TaskMonitor:
 
         Args:
             task_creator: The task creator.
-            queue: The operation queue.
+            queue: The operations queue.
             logger: Logger for task-related logs.
             error_handler: Handler for managing errors.
         """
@@ -53,7 +53,7 @@ class TaskMonitor:
                             self.logger.info(f"handle_tasks: [OUTPUT] {output}")
                         self.logger.info(f"handle_tasks: [DONE] {task.get_name()}")
                     else:
-                        self.logger.error(f"handle_tasks: [ERROR] No operation found for task {task.get_name()}")
+                        self.logger.error(f"handle_tasks: [ERROR] No operations found for task {task.get_name()}")
                 except Exception as e:
                     self.error_handler.handle_error(e, self)
                 finally:

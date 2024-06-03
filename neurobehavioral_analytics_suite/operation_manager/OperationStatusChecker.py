@@ -22,13 +22,13 @@ class OperationStatusChecker:
 
     def get_operation_status(self, operation) -> str:
         """
-        Returns the status of a specific operation.
+        Returns the status of a specific operations.
 
         Args:
-            operation (Operation): The operation to get the status of.
+            operation (Operation): The operations to get the status of.
 
         Returns:
-            str: The status of the operation.
+            str: The status of the operations.
         """
         return operation.status
 
@@ -37,7 +37,7 @@ class OperationStatusChecker:
         Returns the status of all operations in the queue.
 
         Returns:
-            dict: A dictionary mapping operation instances to their status.
+            dict: A dictionary mapping operations instances to their status.
         """
         status_dict = {}
         for operation_node in self.queue.queue:

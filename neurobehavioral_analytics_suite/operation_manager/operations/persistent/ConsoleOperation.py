@@ -1,5 +1,5 @@
 """
-A module that defines the ConsoleOperation class, which is a subclass of the CustomOperation class.
+A modules that defines the ConsoleOperation class, which is a subclass of the CustomOperation class.
 
 The ConsoleOperation class is designed to handle user-input func from the console. It provides methods for
 displaying a prompt for user input and processing the input func.
@@ -17,20 +17,20 @@ import logging
 
 import aioconsole
 
-from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.utils import ErrorHandler
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 
 
 class ConsoleOperation(CustomOperation):
     """
-    A class used to represent a Console Operation in the NeuroBehavioral Analytics Suite.
+    A class used to represent a Console Operation in the NeuroBehavioral AnalyticsCore Suite.
 
     This class provides methods for displaying a prompt for user input and processing the input data.
 
     Attributes:
         prompt (str): A string that is displayed as a prompt for user input.
-        func (str): A formatted string to print out the data that the operation will process.
+        func (str): A formatted string to print out the data that the operations will process.
         logger (logging.Logger): A logger instance used for logging information.
     """
 
@@ -42,7 +42,7 @@ class ConsoleOperation(CustomOperation):
         Args:
             error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
             prompt (str): A string that is displayed as a prompt for user input.
-            data (str): A formatted string to print out the func that the operation will process.
+            data (str): A formatted string to print out the func that the operations will process.
         """
 
         super().__init__(error_handler=error_handler, func=self.execute, local_vars=local_vars, name=name)
@@ -56,7 +56,7 @@ class ConsoleOperation(CustomOperation):
         self.persistent = True
 
     async def execute(self) -> None:
-        """Processes user input and sends it to the operation handler."""
+        """Processes user input and sends it to the operations handler."""
         self._status = "running"
 
         while True:  # Loop until a specific user input is received

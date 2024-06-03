@@ -1,5 +1,5 @@
 """
-This module provides the DataTransformer class which is used to transform data using Dask.
+This modules provides the DataTransformer class which is used to transform data using Dask.
 
 The DataTransformer class inherits from the Operation class and overrides its methods to provide
 data transformation functionality. It uses Dask to perform the transformations in a parallel and
@@ -18,7 +18,7 @@ Status: Prototype
 from dask import delayed
 import dask.bag as db
 from dask.distributed import Client
-from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 
 
 class DataTransformer(Operation):

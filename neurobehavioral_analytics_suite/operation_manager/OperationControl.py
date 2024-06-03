@@ -1,8 +1,8 @@
 """
 OperationControl Module.
 
-This module defines the OperationControl class, which is responsible for managing and executing operations in the
-queue. It integrates various components like the operation queue, manager, operation_executor, and checker to manage the
+This modules defines the OperationControl class, which is responsible for managing and executing operations in the
+queue. It integrates various components like the operations queue, manager, operation_executor, and checker to manage the
 lifecycle of operations.
 
 Author: Lane
@@ -24,8 +24,8 @@ from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 from neurobehavioral_analytics_suite.operation_manager.OperationQueue import OperationQueue
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 from neurobehavioral_analytics_suite.operation_manager.OperationLifecycleManager import OperationLifecycleManager
-from neurobehavioral_analytics_suite.operation_manager.TaskCreator import TaskCreator
-from neurobehavioral_analytics_suite.operation_manager.TaskMonitor import TaskMonitor
+from neurobehavioral_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
+from neurobehavioral_analytics_suite.operation_manager.task.TaskMonitor import TaskMonitor
 
 
 class OperationControl:
@@ -71,9 +71,9 @@ class OperationControl:
                                                            error_handler=self.error_handler)
 
     async def start(self):
-        """Starts the operation handler."""
+        """Starts the operations handler."""
         self.main_loop.run_forever()
 
     async def exec_loop(self):
-        """Executes the main loop of the operation manager."""
+        """Executes the main loop of the operations manager."""
         await self.lifecycle_manager.exec_loop()

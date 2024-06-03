@@ -1,7 +1,7 @@
 """
-Module for handling 2D coordinates in the NeuroBehavioral Analytics Suite.
+Module for handling 2D coordinates in the NeuroBehavioral AnalyticsCore Suite.
 
-This module defines the Coord2D class which is designed to handle 2D coordinates. It includes methods for initializing
+This modules defines the Coord2D class which is designed to handle 2D coordinates. It includes methods for initializing
 the coordinates, returning a formatted string representation, and applying transformations.
 
 Author: Lane

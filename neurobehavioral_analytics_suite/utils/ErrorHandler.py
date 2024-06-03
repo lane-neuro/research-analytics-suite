@@ -1,5 +1,5 @@
 """
-A module that defines the ErrorHandler class, which is responsible for handling and logging errors during runtime.
+A modules that defines the ErrorHandler class, which is responsible for handling and logging errors during runtime.
 
 The ErrorHandler class provides methods for logging errors to a specified file and handling errors that occur during
 the execution of operations. It can be extended to include additional error handling functionality as needed.
@@ -48,9 +48,9 @@ class ErrorHandler:
 
     def handle_error(self, e, context):
         """
-        Handles an error that occurred during the execution of an operation.
+        Handles an error that occurred during the execution of an operations.
 
-        This method logs the error message and the operation that caused the error. It also sets the `has_error` flag
+        This method logs the error message and the operations that caused the error. It also sets the `has_error` flag
         to True.
 
         Args:

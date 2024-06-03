@@ -1,5 +1,5 @@
 """
-This module serves as the main entry point for running the NeuroBehavioral Analytics Suite.
+This modules serves as the main entry point for running the NeuroBehavioral AnalyticsCore Suite.
 
 It contains the main function which initiates the suite and sets up the necessary parameters.
 
@@ -19,16 +19,16 @@ from neurobehavioral_analytics_suite.launch_nbas import launch_nbas
 
 def main():
     """
-    Initiates the NeuroBehavioral Analytics Suite.
+    Initiates the NeuroBehavioral AnalyticsCore Suite.
 
-    This function prints the version of the suite, imports the launch_nbas module,
+    This function prints the version of the suite, imports the launch_nbas modules,
     and calls it to start the suite.
     """
-    print('Starting NeuroBehavioral Analytics Suite v0.0.0.1')
+    print('Starting NeuroBehavioral AnalyticsCore Suite v0.0.0.1')
     try:
         asyncio.run(launch_nbas())
     except KeyboardInterrupt:
-        print('Exiting NeuroBehavioral Analytics Suite...')
+        print('Exiting NeuroBehavioral AnalyticsCore Suite...')
     finally:
         print("Cleaning up...")
         asyncio.get_event_loop().close()

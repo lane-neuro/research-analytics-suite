@@ -12,7 +12,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 
 
 class OperationManager:
@@ -28,7 +28,7 @@ class OperationManager:
         Creates a new Operation and adds it to the queue.
 
         Args:
-            operation_type: The type of operation to be created.
+            operation_type: The type of operations to be created.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
@@ -43,29 +43,29 @@ class OperationManager:
 
     async def resume_operation(self, operation: Operation) -> None:
         """
-        Resumes a specific operation.
+        Resumes a specific operations.
 
         Args:
-            operation (Operation): The operation to resume.
+            operation (Operation): The operations to resume.
         """
         if operation.status == "paused":
             await operation.resume()
 
     async def pause_operation(self, operation: Operation) -> None:
         """
-        Pauses a specific operation.
+        Pauses a specific operations.
 
         Args:
-            operation (Operation): The operation to pause.
+            operation (Operation): The operations to pause.
         """
         if operation.status == "running":
             await operation.pause()
 
     async def stop_operation(self, operation: Operation) -> None:
         """
-        Stops a specific operation.
+        Stops a specific operations.
 
         Args:
-            operation (Operation): The operation to stop.
+            operation (Operation): The operations to stop.
         """
         await operation.stop()

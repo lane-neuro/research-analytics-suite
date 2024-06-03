@@ -1,5 +1,5 @@
 """
-This module provides the DataExtractor class which is used to extract data from various sources using Dask.
+This modules provides the DataExtractor class which is used to extract data from various sources using Dask.
 
 The DataExtractor class inherits from the Operation class and overrides its methods to provide
 data extraction functionality. It uses Dask to perform the extraction in a parallel and efficient manner.
@@ -20,7 +20,7 @@ import dask.bag as db
 import requests
 from dask import delayed
 from dask.distributed import Client
-from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 
 
 class DataExtractor(Operation):

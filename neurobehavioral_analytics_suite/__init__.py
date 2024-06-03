@@ -1,5 +1,5 @@
 """
-NeuroBehavioral Analytics Suite
+NeuroBehavioral AnalyticsCore Suite
 """
 
 __author__ = 'Lane'
