@@ -1,5 +1,5 @@
 """
-Module for storing positional func from xy-coordinate tracking datasets in the NeuroBehavioral AnalyticsCore Suite.
+Module for storing positional func from xy-coordinate tracking datasets in the NeuroBehavioral Analytics Suite.
 
 This module defines the PoseData class which is designed to handle positional func from xy-coordinate tracking datasets.
 It includes methods for initializing the func, extracting func from a CSV file, and formatting func for console output.

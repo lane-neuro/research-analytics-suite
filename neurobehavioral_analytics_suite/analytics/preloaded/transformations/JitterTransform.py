@@ -1,5 +1,5 @@
 """
-Module for applying jitter transformation in the NeuroBehavioral AnalyticsCore Suite.
+Module for applying jitter transformation in the NeuroBehavioral Analytics Suite.
 
 This module defines the JitterTransform class which is designed to apply a jitter transformation to a given datapoint.
 It includes methods for initializing the transformation and applying it to a datapoint.

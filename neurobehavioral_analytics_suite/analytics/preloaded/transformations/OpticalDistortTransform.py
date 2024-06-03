@@ -1,5 +1,5 @@
 """
-Module for applying optical distortion transformation in the NeuroBehavioral AnalyticsCore Suite.
+Module for applying optical distortion transformation in the NeuroBehavioral Analytics Suite.
 
 This module defines the OpticalDistortTransform class which is designed to apply an optical distortion transformation
 to a given datapoint. It includes methods for initializing the transformation and applying it to a datapoint.

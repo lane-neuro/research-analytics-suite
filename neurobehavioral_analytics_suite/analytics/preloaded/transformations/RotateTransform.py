@@ -1,5 +1,5 @@
 """
-Module for applying rotation transformation in the NeuroBehavioral AnalyticsCore Suite.
+Module for applying rotation transformation in the NeuroBehavioral Analytics Suite.
 
 This module defines the RotateTransform class which is designed to apply a rotation transformation
 to a given datapoint. It includes methods for initializing the transformation and applying it to a datapoint.

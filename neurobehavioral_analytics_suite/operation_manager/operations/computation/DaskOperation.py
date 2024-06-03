@@ -1,7 +1,7 @@
 """
 This module contains the DaskOperation class, a subclass of the Operation class.
 
-The DaskOperation class is used to represent a Dask Operation in the NeuroBehavioral AnalyticsCore Suite.
+The DaskOperation class is used to represent a Dask Operation in the NeuroBehavioral Analytics Suite.
 It provides methods for setting the data to be processed and executing the operation.
 
 Typical usage example:
@@ -33,7 +33,7 @@ from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 class DaskOperation(Operation):
     """
-    A class used to represent a Dask Operation in the NeuroBehavioral AnalyticsCore Suite.
+    A class used to represent a Dask Operation in the NeuroBehavioral Analytics Suite.
 
     This class provides methods for setting the data to be processed and executing the operations.
 

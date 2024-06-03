@@ -1,3 +1,20 @@
+"""
+GUI Launcher Module.
+
+This module defines the GuiLauncher class, which is responsible for launching the GUI for the NeuroBehavioral Analytics
+Suite. It sets up various panes, including data analysis, visualization, and operation management, and handles the
+navigation between these panes.
+
+Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
+"""
+
 import asyncio
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
@@ -5,18 +22,20 @@ from neurobehavioral_analytics_suite.data_engine.DataEngine import DataEngine
 from neurobehavioral_analytics_suite.gui.ConsoleDialog import ConsoleDialog
 from neurobehavioral_analytics_suite.gui.OperationManagerDialog import OperationManagerDialog
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
+from neurobehavioral_analytics_suite.utils.Logger import Logger
 
 
 class GuiLauncher:
-    """Class to launch the GUI for the NeuroBehavioral AnalyticsCore Suite."""
+    """Class to launch the GUI for the NeuroBehavioral Analytics Suite."""
 
-    def __init__(self, data_engine: DataEngine, operation_control: OperationControl, logger):
-        """Initializes the GUI launcher with necessary components.
+    def __init__(self, data_engine: DataEngine, operation_control: OperationControl, logger: Logger):
+        """
+        Initializes the GUI launcher with necessary components.
 
         Args:
             data_engine (DataEngine): The data engine for handling data operation.
             operation_control (OperationControl): The control manager for operations.
-            logger: The logger for logging information and errors.
+            logger (Logger): The logger for logging information and errors.
         """
         self.logger = logger
         self.operation_control = operation_control
@@ -25,12 +44,10 @@ class GuiLauncher:
         self.console = None
         self.operation_window = None
         self.project_manager = None
-
         self.update_operations = []
-
         self.dpg_async = DearPyGuiAsync()
 
-    def setup_navigation_menu(self):
+    def setup_navigation_menu(self) -> None:
         """Sets up the navigation menu on the left pane."""
         with dpg.group(parent="left_pane"):
             dpg.add_button(label="Import Data", callback=lambda: self.switch_pane("import_data"))
@@ -41,8 +58,9 @@ class GuiLauncher:
             dpg.add_button(label="Reports", callback=lambda: self.switch_pane("reports"))
             dpg.add_button(label="Settings", callback=lambda: self.switch_pane("settings"))
 
-    def switch_pane(self, pane_name):
-        """Switches between different panes in the GUI.
+    def switch_pane(self, pane_name: str) -> None:
+        """
+        Switches between different panes in the GUI.
 
         Args:
             pane_name (str): The name of the pane to switch to.
@@ -55,19 +73,19 @@ class GuiLauncher:
         # Show the selected pane
         dpg.configure_item(f"{pane_name}_pane", show=True)
 
-    async def setup_data_analysis_pane(self):
+    async def setup_data_analysis_pane(self) -> None:
         """Sets up the data analysis pane asynchronously."""
         with dpg.group(parent="analyze_data_pane"):
             dpg.add_text("Data Analysis Tools")
             # Add more widgets for data analysis
 
-    async def setup_visualization_pane(self):
+    async def setup_visualization_pane(self) -> None:
         """Sets up the data visualization pane asynchronously."""
         with dpg.group(parent="visualize_data_pane"):
             dpg.add_text("Data Visualization Tools")
             # Add more widgets for data visualization
 
-    async def setup_console_log_viewer(self):
+    async def setup_console_log_viewer(self) -> None:
         """Sets up the console/log viewer asynchronously."""
         with dpg.group(parent="bottom_pane"):
             dpg.add_text("Console/Log Output", tag="console_log_output")
@@ -75,7 +93,7 @@ class GuiLauncher:
         self.console = ConsoleDialog(self.operation_control.user_input_handler, self.operation_control, self.logger)
         await self.console.initialize()
 
-    async def setup_operation_pane(self):
+    async def setup_operation_pane(self) -> None:
         """Sets up the operations pane asynchronously."""
         with dpg.group(parent="operation_pane"):
             dpg.add_text("Operation Manager")
@@ -83,7 +101,7 @@ class GuiLauncher:
         self.operation_window = OperationManagerDialog(self.operation_control, self.logger)
         await self.operation_window.initialize()
 
-    async def setup_panes(self):
+    async def setup_panes(self) -> None:
         """Sets up all the panes asynchronously."""
         with dpg.child_window(tag="import_data_pane", parent="right_pane", show=True):
             dpg.add_text("Import Data Pane")
@@ -106,10 +124,10 @@ class GuiLauncher:
         with dpg.child_window(tag="settings_pane", parent="right_pane", show=False):
             dpg.add_text("Settings Pane")
 
-    async def setup_main_window(self):
+    async def setup_main_window(self) -> None:
         """Sets up the main window of the GUI and runs the event loop."""
         dpg.create_context()
-        dpg.create_viewport(title='NeuroBehavioral AnalyticsCore Suite', width=1920, height=1080)
+        dpg.create_viewport(title='NeuroBehavioral Analytics Suite', width=1920, height=1080)
         dpg.setup_dearpygui()
 
         dpg.show_viewport()

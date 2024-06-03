@@ -1,7 +1,7 @@
 """
-A module for launching the NeuroBehavioral AnalyticsCore Suite.
+A module for launching the NeuroBehavioral Analytics Suite.
 
-This module contains the main entry point for launching the NeuroBehavioral AnalyticsCore Suite. It includes functions
+This module contains the main entry point for launching the NeuroBehavioral Analytics Suite. It includes functions
 for parsing command line arguments and launching the application.
 
 Author: Lane
@@ -29,7 +29,7 @@ from neurobehavioral_analytics_suite.utils.Logger import Logger
 
 async def launch_nbas():
     """
-    Launches the NeuroBehavioral AnalyticsCore Suite.
+    Launches the NeuroBehavioral Analytics Suite.
 
     This function checks the command line arguments to determine whether to create a new project or open an existing
     one. It then initializes the asyncio event loop and starts the application.
@@ -71,7 +71,7 @@ async def launch_nbas():
 
 def launch_args():
     """
-    Parses command line arguments for launching the NeuroBehavioral AnalyticsCore Suite.
+    Parses command line arguments for launching the NeuroBehavioral Analytics Suite.
 
     The arguments include options for opening an existing project, creating a new project, and specifying various
     project parameters.
@@ -82,7 +82,7 @@ def launch_args():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-g', '--gui', help='Launches the NeuroBehavioral AnalyticsCore Suite GUI')
+    parser.add_argument('-g', '--gui', help='Launches the NeuroBehavioral Analytics Suite GUI')
     parser.add_argument('-o', '--open_project', help='Opens an existing project from the specified file')
     parser.add_argument('-u', '--user_name', help='Name of user/experimenter')
     parser.add_argument('-d', '--directory', help='Directory where project files will be located')

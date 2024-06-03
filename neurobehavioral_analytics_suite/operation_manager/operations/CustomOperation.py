@@ -19,7 +19,7 @@ from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
 class CustomOperation(Operation):
-    """A class used to represent a Custom Operation in the NeuroBehavioral AnalyticsCore Suite.
+    """A class used to represent a Custom Operation in the NeuroBehavioral Analytics Suite.
 
     This class provides methods for setting the data to be processed and executing the operations.
 

@@ -1,6 +1,6 @@
 """
 This module defines the abstract base class ABCOperation, which provides a common interface for all operations in the
-NeuroBehavioral AnalyticsCore Suite. The ABCOperation class requires any child class to implement execute, start, pause,
+NeuroBehavioral Analytics Suite. The ABCOperation class requires any child class to implement execute, start, pause,
 stop, and resume methods. It also provides a property for the status of the operation, which can be "idle", "started",
 "paused", "running", or "stopped". This class is designed to be inherited by other classes that represent specific
 operation.

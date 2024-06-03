@@ -2,7 +2,7 @@
 OperationLifecycleManager Module.
 
 This module defines the OperationLifecycleManager class responsible for managing the overall lifecycle of operations
-within the Neurobehavioral AnalyticsCore Suite. It handles starting, stopping, pausing, and resuming operations.
+within the Neurobehavioral Analytics Suite. It handles starting, stopping, pausing, and resuming operations.
 
 Author: Lane
 Copyright: Lane

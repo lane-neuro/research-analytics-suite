@@ -13,7 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 
-This file is part of the Neurobehavioral AnalyticsCore Suite project. For more information,
+This file is part of the Neurobehavioral Analytics Suite project. For more information,
 please refer to the project documentation: https://github.com/lane-neuro/neurobehavioral_analytics_suite
 """
 

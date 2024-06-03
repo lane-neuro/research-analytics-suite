@@ -1,5 +1,5 @@
 """
-Module for applying scale transformation in the NeuroBehavioral AnalyticsCore Suite.
+Module for applying scale transformation in the NeuroBehavioral Analytics Suite.
 
 This module defines the ScaleTransform class which is designed to apply a scale transformation
 to a given datapoint. It includes methods for initializing the transformation and applying it to a datapoint.

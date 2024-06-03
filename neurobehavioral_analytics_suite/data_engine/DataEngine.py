@@ -1,5 +1,5 @@
 """
-A module for the NeuroBehavioral AnalyticsCore Suite's Data Engine.
+A module for the NeuroBehavioral Analytics Suite's Data Engine.
 
 This module contains the DataEngine class, which serves as the primary func handler for a project. It includes methods
 for initializing the func engine, setting the func range, and executing the func engine.

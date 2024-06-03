@@ -1,5 +1,5 @@
 """
-Module for applying perspective transformation in the NeuroBehavioral AnalyticsCore Suite.
+Module for applying perspective transformation in the NeuroBehavioral Analytics Suite.
 
 This module defines the PerspectiveTransform class which is designed to apply a perspective transformation
 to a given datapoint. It includes methods for initializing the transformation and applying it to a datapoint.

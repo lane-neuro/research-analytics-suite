@@ -24,7 +24,7 @@ from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputMana
 
 class ConsoleOperation(CustomOperation):
     """
-    A class used to represent a Console Operation in the NeuroBehavioral AnalyticsCore Suite.
+    A class used to represent a Console Operation in the NeuroBehavioral Analytics Suite.
 
     This class provides methods for displaying a prompt for user input and processing the input data.
 
