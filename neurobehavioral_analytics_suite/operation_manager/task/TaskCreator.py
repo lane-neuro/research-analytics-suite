@@ -1,7 +1,7 @@
 """
 TaskCreator Module.
 
-This modules defines the TaskCreator class responsible for creating and scheduling tasks within the Neurobehavioral
+This module defines the TaskCreator class responsible for creating and scheduling tasks within the Neurobehavioral
 AnalyticsCore Suite. It handles task creation and tracking.
 
 Author: Lane

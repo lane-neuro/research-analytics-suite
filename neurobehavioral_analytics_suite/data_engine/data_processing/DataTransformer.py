@@ -1,5 +1,5 @@
 """
-This modules provides the DataTransformer class which is used to transform data using Dask.
+This module provides the DataTransformer class which is used to transform data using Dask.
 
 The DataTransformer class inherits from the Operation class and overrides its methods to provide
 data transformation functionality. It uses Dask to perform the transformations in a parallel and

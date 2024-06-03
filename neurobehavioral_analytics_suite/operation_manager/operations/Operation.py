@@ -1,5 +1,5 @@
 """
-A modules that defines the Operation class, which is responsible for managing tasks.
+A module that defines the Operation class, which is responsible for managing tasks.
 
 The Operation class represents a task that can be started, stopped, paused, resumed, and reset. It also tracks the
 progress of the task and handles any exceptions that occur during execution.
@@ -119,7 +119,7 @@ class Operation(ABCOperation):
 
     def attach_gui_module(self, gui_module):
         self.gui_module = gui_module
-        self.log_to_gui(f"Attached GUI modules to operations: {self.name}")
+        self.log_to_gui(f"Attached GUI module to operations: {self.name}")
 
     def init_operation(self):
         """

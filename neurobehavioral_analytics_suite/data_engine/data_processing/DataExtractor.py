@@ -1,5 +1,5 @@
 """
-This modules provides the DataExtractor class which is used to extract data from various sources using Dask.
+This module provides the DataExtractor class which is used to extract data from various sources using Dask.
 
 The DataExtractor class inherits from the Operation class and overrides its methods to provide
 data extraction functionality. It uses Dask to perform the extraction in a parallel and efficient manner.

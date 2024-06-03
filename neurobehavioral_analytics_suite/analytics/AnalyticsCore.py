@@ -1,7 +1,7 @@
 """
 Analytical Engine to process neurobehavioral func from NBAS-DataEngine.
 
-This modules defines the AnalyticsCore class which is designed to apply a series of transformations
+This module defines the AnalyticsCore class which is designed to apply a series of transformations
 to a given datapoint. It includes methods for initializing the transformation list, adding a transformation,
 and applying all transformations to a datapoint.
 

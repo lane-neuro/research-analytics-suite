@@ -1,5 +1,5 @@
 """
-This modules serves as the main entry point for running the NeuroBehavioral AnalyticsCore Suite.
+This module serves as the main entry point for running the NeuroBehavioral AnalyticsCore Suite.
 
 It contains the main function which initiates the suite and sets up the necessary parameters.
 
@@ -21,7 +21,7 @@ def main():
     """
     Initiates the NeuroBehavioral AnalyticsCore Suite.
 
-    This function prints the version of the suite, imports the launch_nbas modules,
+    This function prints the version of the suite, imports the launch_nbas module,
     and calls it to start the suite.
     """
     print('Starting NeuroBehavioral AnalyticsCore Suite v0.0.0.1')

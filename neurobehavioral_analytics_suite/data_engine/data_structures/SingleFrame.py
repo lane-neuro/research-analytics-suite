@@ -1,7 +1,7 @@
 """
 SingleFrame.py
 
-This modules defines the SingleFrame class which encapsulates all func related to a single frame in a neurobehavioral
+This module defines the SingleFrame class which encapsulates all func related to a single frame in a neurobehavioral
 analytics project. It includes methods for initializing the frame, transforming it using a DataEngine object, and
 providing a string representation of the frame.
 

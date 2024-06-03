@@ -1,7 +1,7 @@
 """
-A modules for launching the NeuroBehavioral AnalyticsCore Suite.
+A module for launching the NeuroBehavioral AnalyticsCore Suite.
 
-This modules contains the main entry point for launching the NeuroBehavioral AnalyticsCore Suite. It includes functions
+This module contains the main entry point for launching the NeuroBehavioral AnalyticsCore Suite. It includes functions
 for parsing command line arguments and launching the application.
 
 Author: Lane

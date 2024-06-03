@@ -1,7 +1,7 @@
 """
 Module for creating a new project in the NeuroBehavioral AnalyticsCore Suite.
 
-This modules defines the function to create a new project, save it to disk, reload it, and return it as a DataEngine
+This module defines the function to create a new project, save it to disk, reload it, and return it as a DataEngine
 object. It uses the DataEngine class to initialize the base object and the save_project and load_project functions to
 handle the saving and loading of the project.
 

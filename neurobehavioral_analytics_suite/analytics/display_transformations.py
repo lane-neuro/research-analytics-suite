@@ -1,7 +1,7 @@
 """
 Module for applying and visualizing transformations in the NeuroBehavioral AnalyticsCore Suite.
 
-This modules defines a function to apply a series of transformations to a given dataset and visualize the results
+This module defines a function to apply a series of transformations to a given dataset and visualize the results
 using matplotlib. It includes methods for deep copying func, applying transformations, and plotting the results.
 
 Author: Lane

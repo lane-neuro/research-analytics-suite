@@ -1,7 +1,7 @@
 """
 TaskMonitor Module.
 
-This modules defines the TaskMonitor class responsible for monitoring and managing tasks within the Neurobehavioral
+This module defines the TaskMonitor class responsible for monitoring and managing tasks within the Neurobehavioral
 AnalyticsCore Suite. It handles task monitoring and completion.
 
 Author: Lane

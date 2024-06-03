@@ -1,7 +1,7 @@
 """
 Module for storing project metadata for the active project in the NeuroBehavioral AnalyticsCore Suite.
 
-This modules defines the ProjectMetadata class which is designed to store project metadata for the
+This module defines the ProjectMetadata class which is designed to store project metadata for the
 active project. It includes methods for initializing the metadata, and providing a string representation of the metadata
 
 Author: Lane

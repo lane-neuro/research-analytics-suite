@@ -1,7 +1,7 @@
 """
 Module for applying translation transformation in the NeuroBehavioral AnalyticsCore Suite.
 
-This modules defines the TranslateTransform class which is designed to apply a translation transformation
+This module defines the TranslateTransform class which is designed to apply a translation transformation
 to a given datapoint. It includes methods for initializing the transformation and applying it to a datapoint.
 
 Author: Lane

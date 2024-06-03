@@ -109,14 +109,14 @@ class GuiLauncher:
     async def setup_main_window(self):
         """Sets up the main window of the GUI and runs the event loop."""
         dpg.create_context()
-        dpg.create_viewport(title='NeuroBehavioral AnalyticsCore Suite', width=1280, height=720)
+        dpg.create_viewport(title='NeuroBehavioral AnalyticsCore Suite', width=1920, height=1080)
         dpg.setup_dearpygui()
 
         dpg.show_viewport()
         await self.dpg_async.start()
 
         with dpg.window(label="NBAS", tag="main_window"):
-            with dpg.group(horizontal=True, tag="main_pane", height=dpg.get_viewport_height() - 300):
+            with dpg.group(horizontal=True, tag="main_pane", height=dpg.get_viewport_height() - 370):
                 with dpg.child_window(tag="left_pane", width=200):
                     self.setup_navigation_menu()
 

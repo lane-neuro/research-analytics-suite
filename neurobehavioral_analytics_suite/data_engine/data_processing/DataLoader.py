@@ -1,5 +1,5 @@
 """
-This modules provides the DataLoader class which is used to load transformed data using Dask.
+This module provides the DataLoader class which is used to load transformed data using Dask.
 
 The DataLoader class inherits from the Operation class and overrides its methods to provide
 data loading functionality. It uses Dask to perform the loading in a parallel and efficient manner.

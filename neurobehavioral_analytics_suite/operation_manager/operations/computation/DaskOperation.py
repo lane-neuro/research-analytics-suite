@@ -1,5 +1,5 @@
 """
-This modules contains the DaskOperation class, a subclass of the Operation class.
+This module contains the DaskOperation class, a subclass of the Operation class.
 
 The DaskOperation class is used to represent a Dask Operation in the NeuroBehavioral AnalyticsCore Suite.
 It provides methods for setting the data to be processed and executing the operations.

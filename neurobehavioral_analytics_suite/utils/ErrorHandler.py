@@ -1,5 +1,5 @@
 """
-A modules that defines the ErrorHandler class, which is responsible for handling and logging errors during runtime.
+A module that defines the ErrorHandler class, which is responsible for handling and logging errors during runtime.
 
 The ErrorHandler class provides methods for logging errors to a specified file and handling errors that occur during
 the execution of operations. It can be extended to include additional error handling functionality as needed.

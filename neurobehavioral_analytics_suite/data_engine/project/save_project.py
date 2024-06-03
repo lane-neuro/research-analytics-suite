@@ -1,8 +1,8 @@
 """
 Module for saving the active project in the NeuroBehavioral AnalyticsCore Suite.
 
-This modules defines the function for saving the active project to a file. It uses the DataEngine object to access the
-project func and the pickle modules to serialize the DataEngine object and write it to a file.
+This module defines the function for saving the active project to a file. It uses the DataEngine object to access the
+project func and the pickle module to serialize the DataEngine object and write it to a file.
 
 Author: Lane
 Copyright: Lane

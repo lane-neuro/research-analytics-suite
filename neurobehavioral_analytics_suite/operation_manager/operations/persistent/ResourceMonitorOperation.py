@@ -1,5 +1,5 @@
 """
-This modules contains the `resource_monitor` function, which continuously monitors the usage of CPU and memory.
+This module contains the `resource_monitor` function, which continuously monitors the usage of CPU and memory.
 
 The `resource_monitor` function checks the usage of CPU and memory at regular intervals. If the usage of either
 resource exceeds the specified thresholds, an error is handled by the `ErrorHandler`.

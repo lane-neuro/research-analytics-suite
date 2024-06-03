@@ -1,5 +1,5 @@
 """
-A modules that defines the ConsoleOperation class, which is a subclass of the CustomOperation class.
+A module that defines the ConsoleOperation class, which is a subclass of the CustomOperation class.
 
 The ConsoleOperation class is designed to handle user-input func from the console. It provides methods for
 displaying a prompt for user input and processing the input func.
