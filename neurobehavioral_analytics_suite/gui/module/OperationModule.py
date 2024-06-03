@@ -4,9 +4,17 @@ import dearpygui.dearpygui as dpg
 from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
 
-
 class OperationModule:
+    """A class to manage operations and their GUI representation."""
+    
     def __init__(self, operation: Operation, operation_control, logger):
+        """Initializes the OperationModule with the given operation, control, and logger.
+        
+        Args:
+            operation: An instance of Operation.
+            operation_control: Control interface for operations.
+            logger: Logger instance for logging messages.
+        """
         self.current_items = []
         self.operation = operation
         self.operation_control = operation_control
@@ -16,10 +24,12 @@ class OperationModule:
         self.log_id = None
 
     async def initialize(self):
+        """Initializes resources and adds the update operation."""
         await self.initialize_resources()
         self.update_operation = await self.add_update_operation()
 
     async def initialize_resources(self):
+        """Initializes necessary resources and logs the event."""
         try:
             self.log_event("Resources initialized.")
         except Exception as e:
@@ -28,6 +38,11 @@ class OperationModule:
             self.log_event(f"Error during initialization: {e}")
 
     async def add_update_operation(self):
+        """Adds an update operation to the operation manager.
+
+        Returns:
+            The created update operation or None if an error occurred.
+        """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
                 operation_type=CustomOperation, name="gui_OperationUpdateTask",
@@ -40,6 +55,13 @@ class OperationModule:
         return None
 
     async def start_operation(self, sender, app_data, user_data):
+        """Starts the operation.
+
+        Args:
+            sender: The sender of the start event.
+            app_data: Additional application data.
+            user_data: Additional user data.
+        """
         try:
             await self.operation.start()
         except Exception as e:
@@ -48,6 +70,13 @@ class OperationModule:
             self.log_event(f"Error starting operation: {e}")
 
     async def stop_operation(self, sender, app_data, user_data):
+        """Stops the operation.
+
+        Args:
+            sender: The sender of the stop event.
+            app_data: Additional application data.
+            user_data: Additional user data.
+        """
         try:
             await self.operation.stop()
         except Exception as e:
@@ -56,6 +85,13 @@ class OperationModule:
             self.log_event(f"Error stopping operation: {e}")
 
     async def pause_operation(self, sender, app_data, user_data):
+        """Pauses the operation.
+
+        Args:
+            sender: The sender of the pause event.
+            app_data: Additional application data.
+            user_data: Additional user data.
+        """
         try:
             await self.operation.pause()
         except Exception as e:
@@ -64,6 +100,13 @@ class OperationModule:
             self.log_event(f"Error pausing operation: {e}")
 
     async def resume_operation(self, sender, app_data, user_data):
+        """Resumes the operation.
+
+        Args:
+            sender: The sender of the resume event.
+            app_data: Additional application data.
+            user_data: Additional user data.
+        """
         try:
             await self.operation.resume()
         except Exception as e:
@@ -72,6 +115,13 @@ class OperationModule:
             self.log_event(f"Error resuming operation: {e}")
 
     async def reset_operation(self, sender, app_data, user_data):
+        """Resets the operation.
+
+        Args:
+            sender: The sender of the reset event.
+            app_data: Additional application data.
+            user_data: Additional user data.
+        """
         try:
             await self.operation.reset()
         except Exception as e:
@@ -80,12 +130,21 @@ class OperationModule:
             self.log_event(f"Error resetting operation: {e}")
 
     def draw(self, parent):
+        """Draws the GUI elements for the operation.
+
+        Args:
+            parent: The parent GUI element to attach to.
+        """
         with dpg.group(parent=parent):
             dpg.add_text(f"Operation: {self.operation.name}")
             self.unique_id = str(uuid.uuid4())
             self.log_id = f"log_{self.unique_id}"
             dpg.add_text(f"Status: {self.operation.status}", tag=f"status_{self.operation.name}_{self.unique_id}")
-            dpg.add_progress_bar(default_value=self.operation.progress[0] / 100, tag=f"progress_{self.operation.name}_{self.unique_id}", overlay="%.1f%%" % self.operation.progress[0], width=dpg.get_item_width(parent)-20)
+            dpg.add_progress_bar(
+                default_value=self.operation.progress[0] / 100,
+                tag=f"progress_{self.operation.name}_{self.unique_id}",
+                overlay="%.1f%%" % self.operation.progress[0],
+                width=dpg.get_item_width(parent) - 20)
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Start", callback=self.start_operation)
                 dpg.add_button(label="Stop", callback=self.stop_operation)
@@ -93,27 +152,42 @@ class OperationModule:
                 dpg.add_button(label="Resume", callback=self.resume_operation)
                 dpg.add_button(label="Reset", callback=self.reset_operation)
             dpg.add_text("Logs:")
-            dpg.add_listbox(items=[], num_items=5, tag=self.log_id, width=dpg.get_item_width(parent)-20)
+            dpg.add_listbox(items=[], num_items=5, tag=self.log_id, width=dpg.get_item_width(parent) - 20)
             dpg.add_text("Child Operations:")
             for child_op in self.operation.child_operations:
                 dpg.add_text(f"Child Operation: {child_op.name} - Status: {child_op.status}")
         self.operation.attach_gui_module(self)
 
     async def update_gui(self):
+        """Updates the GUI with the current status and progress."""
         while True:
             if dpg.does_item_exist(f"status_{self.operation.name}_{self.unique_id}"):
                 dpg.set_value(f"status_{self.operation.name}_{self.unique_id}", f"Status: {self.operation.status}")
             if dpg.does_item_exist(f"progress_{self.operation.name}_{self.unique_id}"):
                 dpg.set_value(f"progress_{self.operation.name}_{self.unique_id}", self.operation.progress[0])
             dpg.set_value(f"log_{self.unique_id}", self.current_items)
-            await asyncio.sleep(.25)
+            await asyncio.sleep(0.25)
 
     def log_event(self, message: str):
+        """Logs an event message.
+
+        Args:
+            message: The message to log.
+        """
         self.current_items.append(message)
 
-    # Child Operation Management
     def add_child_operation(self, child_operation):
+        """Adds a child operation to the current operation.
+
+        Args:
+            child_operation: The child operation to add.
+        """
         self.operation.add_child_operation(child_operation)
 
     def remove_child_operation(self, child_operation):
+        """Removes a child operation from the current operation.
+
+        Args:
+            child_operation: The child operation to remove.
+        """
         self.operation.remove_child_operation(child_operation)
