@@ -17,7 +17,6 @@ Status: Prototype
 """
 
 import asyncio
-import nest_asyncio
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
 from neurobehavioral_analytics_suite.operation_manager.OperationExecutor import OperationExecutor
 from neurobehavioral_analytics_suite.operation_manager.OperationManager import OperationManager

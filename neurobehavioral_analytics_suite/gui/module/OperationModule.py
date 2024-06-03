@@ -4,6 +4,7 @@ import dearpygui.dearpygui as dpg
 from neurobehavioral_analytics_suite.operation_manager.operation.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.operation_manager.operation.Operation import Operation
 
+
 class OperationModule:
     """A class to manage operations and their GUI representation."""
     
