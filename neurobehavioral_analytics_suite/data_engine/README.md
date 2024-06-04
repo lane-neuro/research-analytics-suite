@@ -8,38 +8,50 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+
 <!-- [![Contributors][contributors-shield]][contributors-url] -->
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![BSD-3 License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
-
-<!-- PROJECT LOGO -->
-<br />
-<div align="center"> 
-<!--
-  <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
-  </a>
--->
-
-# Data Engine Package
-### Part of NeuroBehavioral Analytics Suite (NBAS)
-Author: [Lane](#contact)
-  <p align="left">
-The data_engine package within the NeuroBehavioral Analytics Suite (NBAS) handles the primary functionality for data processing and management within a project.
-<br />
-<br />
-    <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
-    <br />
-    <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite">View Demo</a>
-    ·
-    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
-    ·
-    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
-    -->
+<div align="center">
+  <p align="center">
+    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/network/members">
+      <img src="https://img.shields.io/github/forks/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Forks">
+    </a>
+    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/stargazers">
+      <img src="https://img.shields.io/github/stars/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Stars">
+    </a>
+    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues">
+      <img src="https://img.shields.io/github/issues/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Issues">
+    </a>
+    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="License">
+    </a>
+    <a href="https://linkedin.com/in/lane14">
+      <img src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555" alt="LinkedIn">
+    </a>
   </p>
+
+  <!-- PROJECT LOGO -->
+  <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite">
+    <img src="../images/centered_banner_white_black_text_1800x700.png" alt="NBAS" style="max-width: 75%; height: auto;">
+  </a>
+  <p>Author: <a href="#contact">Lane</a></p>
+</div>
+
+# data_engine Package
+### Part of NeuroBehavioral Analytics Suite (NBAS)
+<div>
+    <p align="left">
+        The data_engine package within the NeuroBehavioral Analytics Suite (NBAS) handles the primary functionality for data processing and management within a project.
+        <br />
+        <br />
+            <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
+            <br />
+            <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite">View Demo</a>
+            ·
+            <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+            ·
+            <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+            -->
+      </p>
 </div>
 
 <!-- TABLE OF CONTENTS -->

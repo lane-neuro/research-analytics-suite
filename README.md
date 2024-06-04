@@ -5,32 +5,34 @@
 <!--
 [![Contributors][contributors-shield]][contributors-url]
 -->
-<p align="center">
-  <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/network/members">
-    <img src="https://img.shields.io/github/forks/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Forks">
-  </a>
-  <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/stargazers">
-    <img src="https://img.shields.io/github/stars/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Stars">
-  </a>
-  <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues">
-    <img src="https://img.shields.io/github/issues/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Issues">
-  </a>
-  <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="License">
-  </a>
-  <a href="https://linkedin.com/in/lane14">
-    <img src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555" alt="LinkedIn">
-  </a>
-</p>
 
-<!-- PROJECT LOGO -->
-<br />
 <div align="center">
+  <p align="center">
+    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/network/members">
+      <img src="https://img.shields.io/github/forks/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Forks">
+    </a>
+    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/stargazers">
+      <img src="https://img.shields.io/github/stars/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Stars">
+    </a>
+    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues">
+      <img src="https://img.shields.io/github/issues/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Issues">
+    </a>
+    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="License">
+    </a>
+    <a href="https://linkedin.com/in/lane14">
+      <img src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555" alt="LinkedIn">
+    </a>
+  </p>
+
+  <!-- PROJECT LOGO -->
   <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite">
-    <img src="neurobehavioral_analytics_suite/images/logo_medium_light.png" alt="NBAS">
+    <img src="neurobehavioral_analytics_suite/images/centered_banner_white_black_text_1800x700.png" alt="NBAS" style="max-width: 75%; height: auto;">
   </a>
-  <h1>NeuroBehavioral Analytics Suite (NBAS)</h1>
   <p>Author: <a href="#contact">Lane</a></p>
+</div>
+
+<div>
   <p align="left">
     The NeuroBehavioral Analytics Suite (NBAS), developed within Gire Lab at the University of Washington, aims to be a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse data sources. Unlike MATLAB and SPSS, which are widely used in scientific research, NBAS is designed to be free and accessible, addressing the financial and accessibility barriers faced by many researchers across all fields of science.
     <br /><br />
@@ -41,6 +43,7 @@
   <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
 </div>
 
+<br />
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
