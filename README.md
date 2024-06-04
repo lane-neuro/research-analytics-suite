@@ -59,33 +59,33 @@
       <ul>
         <li><a href="#operation-manager">Operation Manager</a>
           <ul>
-            <li><a href="#operation-manager-task">Task</a></li>
-            <li><a href="#operation-manager-operations">Operations</a>
+            <li><a href="neurobehavioral_analytics_suite/operation_manager/task/README.md">Task</a></li>
+            <li><a href="neurobehavioral_analytics_suite/operation_manager/operations/README.md">Operations</a>
               <ul>
-                <li><a href="#operations-computation">Computation</a></li>
-                <li><a href="#operations-persistent">Persistent</a></li>
-                <li><a href="#operations-project">Project</a></li>
+                <li><a href="neurobehavioral_analytics_suite/operation_manager/operations/computation/README.md">Computation</a></li>
+                <li><a href="neurobehavioral_analytics_suite/operation_manager/operations/persistent/README.md">Persistent</a></li>
+                <li><a href="neurobehavioral_analytics_suite/operation_manager/operations/project/README.md">Project</a></li>
               </ul>
             </li>
           </ul>
         </li>
-        <li><a href="#gui">GUI</a>
+        <li><a href="neurobehavioral_analytics_suite/gui/README.md">GUI</a>
           <ul>
-            <li><a href="#gui-modules">Modules</a></li>
+            <li><a href="neurobehavioral_analytics_suite/gui/modules/README.md">Modules</a></li>
           </ul>
         </li>
-        <li><a href="#data-engine">Data Engine</a>
+        <li><a href="neurobehavioral_analytics_suite/data_engine/README.md">Data Engine</a>
           <ul>
-            <li><a href="#data-engine-data-processing">Data Processing</a></li>
-            <li><a href="#data-engine-data-structures">Data Structures</a></li>
-            <li><a href="#data-engine-project">Project</a></li>
+            <li><a href="neurobehavioral_analytics_suite/data_engine/data_processing/README.md">Data Processing</a></li>
+            <li><a href="neurobehavioral_analytics_suite/data_engine/data_structures/README.md">Data Structures</a></li>
+            <li><a href="neurobehavioral_analytics_suite/data_engine/project/README.md">Project</a></li>
           </ul>
         </li>
-        <li><a href="#analytics">Analytics</a>
+        <li><a href="neurobehavioral_analytics_suite/analytics/README.md">Analytics</a>
           <ul>
-            <li><a href="#preloaded">Preloaded</a>
+            <li><a href="neurobehavioral_analytics_suite/analytics/preloaded/README.md">Preloaded</a>
               <ul>
-                <li><a href="#preloaded-transformations">Transformations</a></li>
+                <li><a href="neurobehavioral_analytics_suite/analytics/preloaded/transformations/README.md">Transformations</a></li>
               </ul>
             </li>
           </ul>
@@ -152,8 +152,8 @@ Once you have cloned the repo (see [Installation](#installation)), you will need
 
 ### Operation Manager
 The `operation_manager` package orchestrates and manages data processing operations within NBAS.
-- **[Task](operation_manager/task/README.md)**
-- **[Operations](operation_manager/operations/README.md)**
+- **[Task](neurobehavioral_analytics_suite/operation_manager/task)**
+- **[Operations](operation_manager/operations)**
   - **[Computation](operation_manager/operations/computation/README.md)**
   - **[Persistent](operation_manager/operations/persistent/README.md)**
   - **[Project](operation_manager/operations/project/README.md)**
