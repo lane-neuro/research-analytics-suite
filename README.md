@@ -1,46 +1,46 @@
 <a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
-<!-- Using markdown "reference style" links for readability. -->
-<!--
-[![Contributors][contributors-shield]][contributors-url]
--->
-
 <div align="center">
   <p align="center">
     <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/network/members">
-      <img src="https://img.shields.io/github/forks/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Forks">
+      <img src="https://img.shields.io/github/forks/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="GitHub Forks">
     </a>
     <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/stargazers">
-      <img src="https://img.shields.io/github/stars/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Stars">
+      <img src="https://img.shields.io/github/stars/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="GitHub Stars">
     </a>
     <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues">
-      <img src="https://img.shields.io/github/issues/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="Issues">
+      <img src="https://img.shields.io/github/issues/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="GitHub Issues">
     </a>
     <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/blob/main/LICENSE">
-      <img src="https://img.shields.io/github/license/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="License">
+      <img src="https://img.shields.io/github/license/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="GitHub License">
     </a>
     <a href="https://linkedin.com/in/lane14">
       <img src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555" alt="LinkedIn">
     </a>
   </p>
 
-  <!-- PROJECT LOGO -->
   <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite">
-    <img src="neurobehavioral_analytics_suite/images/centered_banner_white_black_text_1800x700.png" alt="NBAS" style="max-width: 75%; height: auto;">
+    <img src="neurobehavioral_analytics_suite/images/centered_banner_white_black_text_1800x700.png" alt="NeuroBehavioral Analytics Suite Banner" style="max-width: 75%; height: auto;">
   </a>
   <p>Author: <a href="#contact">Lane</a></p>
 </div>
 
 <div>
   <p align="left">
-    The NeuroBehavioral Analytics Suite (NBAS), developed within Gire Lab at the University of Washington, aims to be a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse data sources. Unlike MATLAB and SPSS, which are widely used in scientific research, NBAS is designed to be free and accessible, addressing the financial and accessibility barriers faced by many researchers across all fields of science.
+    The <strong>NeuroBehavioral Analytics Suite (NBAS)</strong>, developed within Gire Lab at the University of Washington, is a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse sources. Unlike MATLAB and SPSS, NBAS is designed to be free and accessible, addressing financial and accessibility barriers in scientific research.
     <br /><br />
-    The motivation behind NBAS is to provide a versatile and powerful toolset for scientific data analysis, which includes data management, statistical analysis, machine learning, and data visualization. This suite is intended for academic researchers, students, educators, and industry professionals, allowing them to manage and analyze large and complex datasets effectively. The development of NBAS also includes a focus on future integration with other prominent tools in the field, such as <a href="https://github.com/DeepLabCut/DeepLabCut">DeepLabCut</a>.
+    <strong>Key Features:</strong>
+    <ul>
+      <li><strong>Data Management Engine (DME)</strong>: Filters and aggregates large, complex datasets from multiple sources.</li>
+      <li><strong>Analytics Suite</strong>: Includes tools for neurobehavioral data analysis, advanced statistics, machine learning algorithms, and data visualization.</li>
+      <li><strong>Preloaded Functions</strong>: Ready-to-use functions for common analysis tasks.</li>
+      <li><strong>Custom Functions</strong>: Allows users to create and implement custom analysis functions.</li>
+      <li><strong>Future Integration</strong>: Designed for compatibility with tools like <a href="https://github.com/DeepLabCut/DeepLabCut">DeepLabCut</a>.</li>
+    </ul>
     <br /><br />
-    Additionally, NBAS is envisioned to evolve into a pseudosocial platform where scientists and researchers can collaborate on their analytic workflows and processes. This collaborative aspect aims to foster a community of shared knowledge and resources, enabling users to develop, share, and implement custom functions allowing for unlimited analysis techniques to be shared globally.
+    <strong>NBAS</strong> aims to foster a collaborative research community, enabling scientists and researchers to share their analytic workflows and contribute to a repository of shared knowledge, accelerating scientific discovery and innovation.
   </p>
-  <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
 </div>
 
 <br />
@@ -102,11 +102,11 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-The NeuroBehavioral Analytics Suite (NBAS) is a cutting-edge, open-source platform meticulously crafted in Python to address the diverse needs of neuroscientific data analysis. NBAS stands out by offering a comprehensive suite of tools for data aggregation, management, and analysis, derived from various input sources such as pixel-tracking technology, accelerometers, and analog voltage outputs.
+The **NeuroBehavioral Analytics Suite (NBAS)** is a cutting-edge, open-source platform meticulously crafted in Python to address the diverse needs of neuroscientific data analysis. NBAS stands out by offering a comprehensive suite of tools for data aggregation, management, and analysis, derived from various input sources such as pixel-tracking technology, accelerometers, and analog voltage outputs.
 
 NBAS aims to democratize access to powerful data analysis tools traditionally dominated by commercial software like MATLAB and SPSS. By eliminating financial barriers, NBAS empowers researchers, educators, and industry professionals to conduct sophisticated analyses without the associated costs.
 
-Key Features:
+### Key Features:
 * **Data Management Engine (DME)**: A robust system for filtering and aggregating large, complex datasets from multiple sources. The DME ensures seamless integration and handling of diverse data types, facilitating comprehensive and efficient data analysis.
 * **Analytics Suite**: Offers an extensive array of tools for neurobehavioral data analysis, including advanced statistical methods, machine learning algorithms, and data visualization techniques. The analytics suite is designed to be both powerful and flexible, catering to the specific needs of each user.
   * **Preloaded Functions**: A library of ready-to-use functions for common analysis tasks, enabling users to quickly apply standard methods without extensive setup.
@@ -116,7 +116,6 @@ Key Features:
 In addition, NBAS aspires to cultivate a collaborative research community. It envisions a platform where scientists and researchers can share their analytic workflows, collaborate on projects, and contribute to a growing repository of shared knowledge and resources. This collaborative spirit aims to accelerate scientific discovery and innovation by leveraging the collective expertise of the global research community.
 
 By providing a versatile and accessible toolset, NBAS not only enhances the efficiency and effectiveness of data analysis but also fosters a culture of open collaboration and shared progress in the scientific community.
-
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -174,7 +173,7 @@ The `analytics` package handles the application and visualization of data transf
 - **[Preloaded](analytics/preloaded/README.md)**
   - **[Transformations](analytics/preloaded/transformations/README.md)**
 
-
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- USAGE EXAMPLES -->
 ## Usage
