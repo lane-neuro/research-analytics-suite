@@ -36,11 +36,11 @@
   <p>Author: <a href="#contact">Lane</a></p>
 </div>
 
-# data_engine Package
+# /data_engine
 ### Part of NeuroBehavioral Analytics Suite (NBAS)
 <div>
     <p align="left">
-        The data_engine package within the NeuroBehavioral Analytics Suite (NBAS) handles the primary functionality for data processing and management within a project.
+        The 'data_engine' package within the NeuroBehavioral Analytics Suite (NBAS) handles the primary functionality for data processing and management within a project.
         <br />
         <br />
             <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->

@@ -36,11 +36,11 @@
 </div>
 
 
-# Preloaded Package
+# /analytics/preloaded
 ### Part of NeuroBehavioral Analytics Suite (NBAS)
 <div>
   <p align="left">
-The Preloaded package within the Analytics package contains preloaded transformation functions and utilities to be used within the NeuroBehavioral Analytics Suite (NBAS).
+The 'analytics/preloaded' subpackage contains preloaded transformation functions and utilities to be used within the NeuroBehavioral Analytics Suite (NBAS).
 <br />
 <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
@@ -74,7 +74,7 @@ The Preloaded package within the Analytics package contains preloaded transforma
 <!-- ABOUT THE PACKAGE -->
 ## About The Package
 
-The `preloaded` package within the Analytics package contains preloaded transformation functions and utilities to be used within the NeuroBehavioral Analytics Suite (NBAS). This package serves as a repository for various built-in transformations that can be applied to data points in neurobehavioral analytics projects.
+The `preloaded` package within the `analytics` package contains preloaded transformation functions and utilities to be used within the NeuroBehavioral Analytics Suite (NBAS). This package serves as a repository for various built-in transformations that can be applied to data points in neurobehavioral analytics projects.
 
 ### Subpackage: transformations
 The `preloaded` package includes the `transformations` subpackage, which contains specific transformation functions.

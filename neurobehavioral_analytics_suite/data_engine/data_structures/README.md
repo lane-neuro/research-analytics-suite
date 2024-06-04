@@ -1,13 +1,6 @@
 <a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
 <!-- [![Contributors][contributors-shield]][contributors-url] -->
 <div align="center">
   <p align="center">
@@ -37,11 +30,11 @@
 
 
 
-# data_structures Subpackage
+# /data_engine/data_structures
 ### Part of NeuroBehavioral Analytics Suite (NBAS)
 <div>
   <p align="left">
-The data_structures subpackage within the Data Engine package handles the management and manipulation of data structures in the NeuroBehavioral Analytics Suite (NBAS).
+The 'data_engine/data_structures' subpackage handles the management and manipulation of data structures in the NeuroBehavioral Analytics Suite (NBAS).
 <br />
 <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
@@ -75,7 +68,7 @@ The data_structures subpackage within the Data Engine package handles the manage
 <!-- ABOUT THE SUBPACKAGE -->
 ## About The Subpackage
 
-The `data_structures` subpackage within the Data Engine package defines and manages various data structures used in the NeuroBehavioral Analytics Suite (NBAS). The key components of this subpackage include:
+The `data_structures` subpackage within the `data_engine` package defines and manages various data structures used in the NeuroBehavioral Analytics Suite (NBAS). The key components of this subpackage include:
 
 - **Coord2D**: A class to handle 2D coordinates, including methods for initializing, representing, and transforming the coordinates.
 - **SingleFrame**: A class that encapsulates all functions related to a single frame in a neurobehavioral analytics project.

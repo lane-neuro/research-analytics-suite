@@ -37,11 +37,11 @@
 
 
 
-# data_processing Subpackage
+# /data_engine/data_processing
 ### Part of NeuroBehavioral Analytics Suite (NBAS)
 <div>
   <p align="left">
-The data_processing subpackage within the data_engine package handles data extraction, transformation, and loading operations using Dask within the NeuroBehavioral Analytics Suite (NBAS).
+The 'data_engine/data_processing' subpackage handles data extraction, transformation, and loading operations using Dask within the NeuroBehavioral Analytics Suite (NBAS).
 <br />
 <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->

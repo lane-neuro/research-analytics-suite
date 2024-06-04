@@ -38,11 +38,11 @@
 
 
 
-# Analytics Package
+# /analytics
 ### Part of NeuroBehavioral Analytics Suite (NBAS)
 <div>
   <p align="left">
-The Analytics package within the NeuroBehavioral Analytics Suite (NBAS) handles the application and visualization of data transformations within a project.
+The 'analytics' package within the NeuroBehavioral Analytics Suite (NBAS) handles the application and visualization of data transformations within a project.
 <br />
 <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->

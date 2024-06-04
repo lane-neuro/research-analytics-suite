@@ -37,11 +37,11 @@
 
 
 
-# Operation Manager Module/Package
+# /operation_manager
 ### Part of NeuroBehavioral Analytics Suite (NBAS)
 <div>
   <p align="left">
-The Operation Manager module orchestrates and manages data processing operations within the NBAS.
+The 'operation_manager' package orchestrates and manages data processing operations within the NBAS.
 <br />
 <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->

@@ -37,11 +37,11 @@
 
 
 
-# GUI Modules Package
+# /gui/modules
 ### Part of NeuroBehavioral Analytics Suite (NBAS)
 <div>
   <p align="left">
-The modules subpackage within the `gui` package provides specific graphical user interfaces for managing operations within the NeuroBehavioral Analytics Suite (NBAS).
+The `gui/modules` subpackage provides specific graphical user interfaces for managing operations within the NeuroBehavioral Analytics Suite (NBAS).
 <br />
 <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->

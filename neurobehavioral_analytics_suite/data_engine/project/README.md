@@ -37,11 +37,11 @@
 
 
 
-# data_engine/project
+# /data_engine/project
 ### Part of NeuroBehavioral Analytics Suite (NBAS)
 <div>
   <p align="left">
-The Project subpackage within the Data Engine package handles project management functionalities within the NeuroBehavioral Analytics Suite (NBAS).
+The 'data_engine/project' subpackage handles project management functionalities within the NeuroBehavioral Analytics Suite (NBAS).
 <br />
 <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
@@ -75,7 +75,7 @@ The Project subpackage within the Data Engine package handles project management
 <!-- ABOUT THE SUBPACKAGE -->
 ## About The Subpackage
 
-The `project` subpackage within the Data Engine package defines and manages functionalities for handling projects in the NeuroBehavioral Analytics Suite (NBAS). The key components of this subpackage include:
+The `project` subpackage within the `data_engine` package defines and manages functionalities for handling projects in the NeuroBehavioral Analytics Suite (NBAS). The key components of this subpackage include:
 
 - **load_project**: Function to load a project from a given file path using the pickle module to decode the DataEngine object from the file.
 - **save_project**: Function to save the active project to a file using the pickle module to serialize the DataEngine object.

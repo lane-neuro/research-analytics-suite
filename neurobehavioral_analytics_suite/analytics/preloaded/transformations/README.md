@@ -37,11 +37,11 @@
 
 
 
-# Transformations Subpackage
+# /analytics/preloaded/transformations
 ### Part of NeuroBehavioral Analytics Suite (NBAS)
 <div>
   <p align="left">
-The Transformations subpackage within the Preloaded package contains a collection of transformation functions that can be applied to data points within the NeuroBehavioral Analytics Suite (NBAS).
+The 'analytics/preloaded/transformations' package contains a collection of transformation functions that can be applied to data points within the NeuroBehavioral Analytics Suite (NBAS).
 <br />
 <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
@@ -75,7 +75,7 @@ The Transformations subpackage within the Preloaded package contains a collectio
 <!-- ABOUT THE SUBPACKAGE -->
 ## About The Subpackage
 
-The `transformations` subpackage within the Preloaded package defines and manages various transformation functions used in the NeuroBehavioral Analytics Suite (NBAS). The key components of this subpackage include:
+The `transformations` subpackage within the `analytics/preloaded` package defines and manages various transformation functions used in the NeuroBehavioral Analytics Suite (NBAS). The key components of this subpackage include:
 
 - **JitterTransform**: A class to apply a jitter transformation to a given datapoint.
 - **OpticalDistortTransform**: A class to apply an optical distortion transformation to a given datapoint.

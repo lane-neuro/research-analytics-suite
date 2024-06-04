@@ -37,11 +37,11 @@
 
 
 
-# GUI Package
+# /gui
 ### Part of NeuroBehavioral Analytics Suite (NBAS)
 <div>
   <p align="left">
-The GUI package within the NeuroBehavioral Analytics Suite (NBAS) provides graphical user interfaces for interacting with the suite.
+The 'gui' package within the NeuroBehavioral Analytics Suite (NBAS) provides graphical user interfaces for interacting with the suite.
 <br />
 <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->

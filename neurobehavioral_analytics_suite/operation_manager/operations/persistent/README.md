@@ -8,27 +8,38 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
-<!-- [![Contributors][contributors-shield]][contributors-url] -->
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![BSD-3 License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
 
-<!-- PROJECT LOGO -->
-<br />
-<div align="center"> 
-<!--
+<!-- PROJECT SHIELDS -->
+<div align="center">
+  <p align="center">
+    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/network/members">
+      <img src="https://img.shields.io/github/forks/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="GitHub Forks">
+    </a>
+    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/stargazers">
+      <img src="https://img.shields.io/github/stars/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="GitHub Stars">
+    </a>
+    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/issues">
+      <img src="https://img.shields.io/github/issues/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="GitHub Issues">
+    </a>
+    <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/lane-neuro/neurobehavioral-analytics-suite.svg?style=for-the-badge" alt="GitHub License">
+    </a>
+    <a href="https://linkedin.com/in/lane14">
+      <img src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555" alt="LinkedIn">
+    </a>
+  </p>
+
   <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="../../../../neurobehavioral_analytics_suite/images/centered_banner_white_black_text_1800x700.png" alt="NeuroBehavioral Analytics Suite Banner" style="max-width: 75%; height: auto;">
   </a>
--->
+  <p>Author: <a href="#contact">Lane</a></p>
+</div>
 
-# Persistent Subpackage
+# /operation_manager/operations/persistent
 ### Part of NeuroBehavioral Analytics Suite (NBAS)
-Author: [Lane](#contact)
+<div>
   <p align="left">
-The Persistent subpackage within the `operation_manager/operations` module handles persistent operations within the NBAS.
+The `operation_manager/operations/persistent` subpackage handles persistent operations within the NBAS.
 <br />
 <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->

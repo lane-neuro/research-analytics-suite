@@ -37,11 +37,11 @@
 
 
 
-# computation Subpackage
+# /operation_manager/operations/computation
 ### Part of NeuroBehavioral Analytics Suite (NBAS)
 <div>
   <p align="left">
-The computation subpackage within the `operation_manager/operations` module handles computation-related operations within the NBAS.
+The `operation_manager/operations/computation` subpackage handles computation-related operations within the NBAS.
 <br />
 <br />
     <!-- <a href="https://github.com/lane-neuro/neurobehavioral-analytics-suite"><strong>Explore the docs »</strong></a> -->
