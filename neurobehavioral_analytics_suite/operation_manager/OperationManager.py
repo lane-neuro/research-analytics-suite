@@ -53,10 +53,13 @@ class OperationManager:
         Returns:
             Operation: The created operation.
         """
-        operation = operation_type(*args, **kwargs)
-        await self.queue.add_operation_to_queue(operation)
-        self.logger.info(f"add_operation: [QUEUE] {operation.name}")
-        return operation
+        try:
+            operation = operation_type(*args, **kwargs)
+            await self.queue.add_operation_to_queue(operation)
+            self.logger.info(f"add_operation: [QUEUE] {operation.name}")
+            return operation
+        except Exception as e:
+            self.logger.error(f"add_operation: {e}")
 
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> None:
         """

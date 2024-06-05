@@ -94,7 +94,10 @@ class OperationExecutor:
                     self.logger.debug(f"execute_all: [OP] {operation.name} - {operation.status} - {operation.task}")
 
                     if not operation.task and operation.is_ready():
-                        operation.task = await self.task_creator.create_task(self.execute_operation(operation),
-                                                                             name=operation.name)
+                        try:
+                            operation.task = await self.task_creator.create_task(self.execute_operation(operation),
+                                                                                 name=operation.name)
+                        except Exception as e:
+                            self.error_handler.handle_error(e, self)
                     if isinstance(operation, ConsoleOperation):
                         self.op_control.console_operation_in_progress = True

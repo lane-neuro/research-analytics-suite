@@ -36,7 +36,7 @@ class DataExtractor(Operation):
 
     def __init__(self, error_handler, data_source, data_format=None):
         """Initializes the DataExtractor with the given error handler, data source, and data format."""
-        super().__init__(name="DataExtractorOperation", error_handler=error_handler)
+        super().__init__(name="DataExtractorOperation", error_handler=error_handler, func=self.execute)
         self.data = None
         self.data_source = data_source
         self.data_format = data_format
@@ -47,10 +47,11 @@ class DataExtractor(Operation):
         if self.is_url(self.data_source):
             self.data = delayed(self.extract_from_url)(self.data_source, self.data_format)
         else:
+            print("Extracting data...")
             self.data = delayed(self.extract)(self.data_source, self.data_format)
         return self.client.compute(self.data)  # Compute using Dask distributed client
 
-    def extract(self, data_source, data_format):
+    async def extract(self, data_source, data_format):
         """Extracts the data from the given data source in the given data format."""
         if data_format == 'json':
             data = db.read_text(data_source).map(json.loads)
@@ -60,7 +61,7 @@ class DataExtractor(Operation):
             raise ValueError(f"Unsupported data format: {data_format}")
         return data
 
-    def extract_from_url(self, url, data_format):
+    async def extract_from_url(self, url, data_format):
         """Extracts the data from the given URL in the given data format."""
         response = requests.get(url)
         if data_format == 'json':
@@ -82,25 +83,21 @@ class DataExtractor(Operation):
     async def pause(self):
         """Pauses the data extraction."""
         self.status = "paused"
-        self.pause_event.clear()
+        self._pause_event.clear()
 
     async def resume(self):
         """Resumes the data extraction."""
         self.status = "running"
-        self.pause_event.set()
+        self._pause_event.set()
 
     async def reset(self):
         """Resets the data extraction."""
         self.status = "idle"
         self.progress = 0
-        self.complete = False
-        self.pause_event.clear()
+        self._complete = False
+        self._pause_event.clear()
         await self.stop()
         await self.start()
-
-    def progress(self):
-        """Returns the progress and status of the data extraction."""
-        return self.progress, self.status
 
     def is_url(self, data_source):
         """Checks if the given data source is a URL."""

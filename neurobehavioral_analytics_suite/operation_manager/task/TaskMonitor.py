@@ -15,6 +15,7 @@ Status: Prototype
 """
 
 from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.computation.DaskOperation import DaskOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
 
 
@@ -51,6 +52,10 @@ class TaskMonitor:
                             output = operation.result_output
                             self.queue.local_vars = output
                             self.logger.info(f"handle_tasks: [OUTPUT] {output}")
+                        elif isinstance(operation, DaskOperation):
+                            output = operation.result
+                            self.logger.info(f"handle_tasks: [OUTPUT] {output}")
+
                         self.logger.info(f"handle_tasks: [DONE] {task.get_name()}")
                     else:
                         self.logger.error(f"handle_tasks: [ERROR] No operations found for task {task.get_name()}")

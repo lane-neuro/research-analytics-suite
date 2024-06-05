@@ -14,7 +14,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
+from neurobehavioral_analytics_suite.machine_learning.MachineLearning import MachineLearning
 from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import (
     ResourceMonitorOperation)
@@ -58,6 +58,17 @@ class UserInputManager:
         if user_input == "stop":
             await self.operation_control.stop_all_operations()
             return "UserInputManager.process_user_input: Stopping all operations..."
+
+        elif user_input == "machine_learning":
+            ml_operation = MachineLearning(operation_control=self.operation_control, error_handler=self.error_handler)
+            result = await ml_operation.extract_data(file_path="../../../sample_datasets/2024-Tariq-et-al_olfaction/8-30-2021-2-08 PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv")
+            print(result)
+            self.logger.info("UserInputManager.process_user_input: Attached machine learning...")
+            # data = await ml_operation.extract_data(file_path="../../sample_datasets/2024-Tariq-et-al_olfaction/8-30
+            # -2021-2-08 PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv
+            # ") train_data, test_data = ml_operation.split_data(data, 7, test_size=0.2)
+
+            return f"UserInputManager.process_user_input: Attached machine learning..."
 
         elif user_input == "pause":
             await self.operation_control.pause_all_operations()

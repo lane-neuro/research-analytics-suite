@@ -52,7 +52,7 @@ class Operation(ABCOperation):
         self._error_handler = error_handler
 
         self.parent_operation = parent_operation
-        self.child_operations: List[Operation] = []
+        self._child_operations: List[Operation] = []
         self.concurrent = concurrent
         self.gui_module = None
 
@@ -111,6 +111,10 @@ class Operation(ABCOperation):
         assert isinstance(value, int), "Progress must be an integer"
         self._progress = value
 
+    @property
+    def child_operations(self):
+        return self._child_operations
+
     def attach_gui_module(self, gui_module):
         self.gui_module = gui_module
         self.log_to_gui(f"Attached GUI module to operation: {self.name}")
@@ -122,21 +126,22 @@ class Operation(ABCOperation):
         pass
 
     def add_child_operation(self, operation: 'Operation'):
-        self.child_operations.append(operation)
+        operation.parent_operation = self
+        self._child_operations.append(operation)
         self.log_to_gui(f"Added child operation: {operation.name}")
 
     def remove_child_operation(self, operation: 'Operation'):
-        self.child_operations.remove(operation)
+        self._child_operations.remove(operation)
         self.log_to_gui(f"Removed child operation: {operation.name}")
 
     def is_ready(self) -> bool:
         # An operation is ready if all nested operations are completed
-        return all(op.status == "completed" for op in self.child_operations if not op.concurrent)
+        return all(op.status == "completed" for op in self._child_operations if not op.concurrent)
 
     async def start(self):
         """Starts the operation and all child operations."""
         try:
-            for operation in self.child_operations:
+            for operation in self._child_operations:
                 await operation.start()
             self._status = "started"
             self.log_to_gui(f"Operation parameters initialized")
@@ -152,7 +157,7 @@ class Operation(ABCOperation):
 
         if self._status == "started" or self._status == "waiting":
             try:
-                for child_op in self.child_operations:
+                for child_op in self._child_operations:
                     if not child_op.concurrent and child_op.status != "completed":
                         self.log_to_gui(f"Executing child operation: {child_op.name}")
                         await child_op.execute()

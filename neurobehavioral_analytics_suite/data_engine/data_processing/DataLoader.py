@@ -31,10 +31,11 @@ class DataLoader(Operation):
         client: The Dask distributed client.
     """
 
-    def __init__(self, error_handler, transformed_data, data_destination):
+    def __init__(self, error_handler, transformed_data, data_destination, name="DataLoaderOperation"):
         """Initializes the DataLoader with the given error handler, transformed data, and data destination."""
-        super().__init__(name="DataLoaderOperation")
+        super().__init__(name="DataLoaderOperation", error_handler=error_handler, func=self.execute)
         self.loaded_data = None
+        self.name = name
         self.error_handler = error_handler
         self.transformed_data = transformed_data
         self.data_destination = data_destination
@@ -42,46 +43,50 @@ class DataLoader(Operation):
 
     async def execute(self):
         """Executes the loading of the transformed data and returns the loaded data."""
-        self.loaded_data = delayed(self.load)(self.transformed_data, self.data_destination)
-        return self.client.compute(self.loaded_data)  # Compute using Dask distributed client
+        try:
+            self.loaded_data = await delayed(self.load)(self.transformed_data, self.data_destination)
+            print(self.loaded_data)
+            self.loaded_data = self.client.persist(self.loaded_data)
+
+            result = await self.loaded_data
+
+            return result.result()  # Compute using Dask distributed client
+        except Exception as e:
+            self.error_handler.handle_error(e, self.name)
 
     def load(self, transformed_data, data_destination):
         """Loads the transformed data to the given data destination."""
         if isinstance(transformed_data, db.Bag):
             transformed_data.to_textfiles(data_destination + '/*.txt')
         else:
-            raise ValueError("Unsupported data type for DataLoader")
+            self.handle_error(ValueError("Invalid data: Expected a Dask Bag"))
 
     async def start(self):
         """Starts the data loading."""
-        self.status = "started"
+        self._status = "started"
 
     async def stop(self):
         """Stops the data loading."""
-        self.status = "stopped"
+        self._status = "stopped"
 
     async def pause(self):
         """Pauses the data loading."""
-        self.status = "paused"
-        self.pause_event.clear()
+        self._status = "paused"
+        self._pause_event.clear()
 
     async def resume(self):
         """Resumes the data loading."""
-        self.status = "running"
-        self.pause_event.set()
+        self._status = "running"
+        self._pause_event.set()
 
     async def reset(self):
         """Resets the data loading."""
-        self.status = "idle"
+        self._status = "idle"
         self.progress = 0
-        self.complete = False
-        self.pause_event.clear()
+        self._complete = False
+        self._pause_event.clear()
         await self.stop()
         await self.start()
-
-    def progress(self):
-        """Returns the progress and status of the data loading."""
-        return self.progress, self.status
 
     def validate_data(self, transformed_data):
         """Validates the transformed data. Raises a ValueError if the transformed data is not a Dask Bag."""
@@ -101,8 +106,8 @@ class DataLoader(Operation):
 
     def is_complete(self):
         """Checks if the data loading is complete."""
-        # Check if the loaded_data is not None and the status is "completed"
-        return self.loaded_data is not None and self.status == "completed"
+        # Check if the loaded_data is not None and the _status is "completed"
+        return self.loaded_data is not None and self._status == "completed"
 
     def get_loaded_data(self):
         """Returns the loaded data."""

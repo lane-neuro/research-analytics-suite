@@ -106,11 +106,3 @@ class DaskOperation(Operation):
     async def reset(self) -> None:
         """Resets the operation and handles any exceptions that occur during execution."""
         await super().reset()
-
-    def progress(self) -> Tuple[int, str]:
-        """Returns the current progress and status of the operation.
-
-        Returns:
-            A tuple containing the current progress and status of the operations.
-        """
-        return super().progress()
