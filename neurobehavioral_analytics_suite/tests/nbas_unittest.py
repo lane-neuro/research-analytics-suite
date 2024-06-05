@@ -8,9 +8,8 @@ def loadTest(test):
 
 if __name__ == '__main__':
     all_tests = list()
-
     # Load test sets
-    # loadTest(TestOperationChain)
+    # loadTest()
 
     # Run the tests
     for test_set in all_tests:

@@ -1,5 +1,5 @@
 """
-A module that defines the CustomOperation class, a subclass of the ABCOperation class.
+A module that defines the CustomOperation class, a subclass of the Operation class.
 
 The CustomOperation class is designed to handle custom operations that require function processing. It provides methods
 for setting the function to be processed and executing the operations.
@@ -13,45 +13,34 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+
 import types
 from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
 class CustomOperation(Operation):
-    """A class used to represent a Custom Operation in the NeuroBehavioral Analytics Suite.
+    """
+    A class used to represent a Custom Operation in the NeuroBehavioral Analytics Suite.
 
     This class provides methods for setting the data to be processed and executing the operations.
-
-    Attributes:
-        func (callable): A function to be executed.
-        error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
     """
 
-    def __init__(self, error_handler: ErrorHandler, func, local_vars=None, name: str = "CustomOperation",
-                 persistent: bool = False):
-        """Initializes the CustomOperation with the function to be processed and an ErrorHandler instance.
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the custom operation instance.
 
         Args:
-            error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
-            func: A function to be executed.
-            local_vars (dict): Local variables to be used in the function execution.
-            name (str): The name of the operations.
+            error_handler (ErrorHandler): The error handler for managing errors.
+            func (callable, optional): The function to be executed by the operation.
+            name (str, optional): The name of the operation. Defaults to "CustomOperation".
+            persistent (bool, optional): Whether the operation should run indefinitely. Defaults to False.
+            is_cpu_bound (bool, optional): Whether the operation is CPU-bound. Defaults to False.
+            concurrent (bool, optional): Whether child operations should run concurrently. Defaults to False.
+            parent_operation (ABCOperation, optional): The parent operation. Defaults to None.
+            local_vars (dict, optional): Local variables for the function execution. Defaults to None.
         """
-        super().__init__(name=name, error_handler=error_handler, func=func, persistent=persistent)
-        if local_vars is None:
-            local_vars = locals()
-        if local_vars is None:
-            local_vars = {}
-        self.func = func
-        self.error_handler = error_handler
-        self.local_vars = local_vars
-        self.task = None
-        self.persistent = persistent
-        self.name = name
-        self._status = "idle"
-        self.type = type(self)
-        self.result_output = None
+        super().__init__(*args, **kwargs)
 
     def init_operation(self):
         """
@@ -59,65 +48,38 @@ class CustomOperation(Operation):
         """
         super().init_operation()
 
-    async def start(self):
-        """Starts the operations and updates the status accordingly."""
-        await super().start()
-
-    async def execute(self):
-        """Executes the operations and updates the status and result output accordingly.
+    async def _execute_func(self):
+        """
+        Execute the function associated with the operation.
 
         Returns:
             dict: The result output after function execution.
         """
-        temp_vars = self.local_vars.copy()
-
+        temp_vars = self._local_vars.copy()
         try:
-            if isinstance(self.func, str):  # If self.func is a string of code
-                code = self.func
-                self.func = lambda: exec(code, {}, temp_vars)
-            elif callable(self.func):  # If self.func is a callable function
-                if isinstance(self.func, types.MethodType):  # If self.func is a bound method
-                    self.func = self.func
+            if isinstance(self._func, str):  # If self._func is a string of code
+                code = self._func
+                self._func = lambda: exec(code, {}, temp_vars)
+            elif callable(self._func):  # If self._func is a callable function
+                if isinstance(self._func, types.MethodType):  # If self._func is a bound method
+                    self._func = self._func
                 else:
-                    func = self.func
-                    self.func = lambda: func()
+                    func = self._func
+                    self._func = lambda: func()
             else:
-                raise TypeError("self.func must be a string of Python code, a callable function, or a bound method.")
-
-            await super().execute()
+                raise TypeError("self._func must be a string of Python code, a callable function, or a bound method.")
+            await super()._execute_func()
         except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self._status = "error"
+            self._handle_error(e)
         finally:
-            self.result_output = temp_vars
-            self.local_vars = temp_vars
-            return self.result_output
+            self._result_output = temp_vars
+            self._local_vars = temp_vars
 
     def get_result(self):
         """
-        Gets the result of the operations.
+        Retrieve the result of the operation, if applicable.
 
         Returns:
-            The result of the operations.
+            The result of the operation.
         """
-        return self.result_output
-
-    async def pause(self):
-        """Pauses the operations and updates the status accordingly."""
-        await super().pause()
-
-    async def resume(self) -> None:
-        """Resumes the operations and updates the status accordingly."""
-        await super().resume()
-
-    async def stop(self):
-        """Stops the operations and updates the status accordingly."""
-        await super().stop()
-
-    async def reset(self) -> None:
-        """Resets the operations and updates the status accordingly."""
-        await super().reset()
-
-    async def restart(self):
-        """Restarts the operations and updates the status accordingly."""
-        await super().restart()
+        return self._result_output

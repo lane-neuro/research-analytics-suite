@@ -17,8 +17,9 @@ Status: Prototype
 
 import asyncio
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
-from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 
 
 class OperationExecutor:
@@ -46,19 +47,19 @@ class OperationExecutor:
         self.logger = logger
         self.error_handler = error_handler
 
-    async def execute_operation(self, operation: Operation) -> asyncio.Task:
+    async def execute_operation(self, operation: ABCOperation) -> asyncio.Task:
         """
         Executes a single operation.
 
         Args:
-            operation (Operation): The operation to execute.
+            operation (ABCOperation): The operation to execute.
 
         Returns:
             asyncio.Task: The asyncio task for the operation execution.
         """
         try:
             if operation.status == "started":
-                self.logger.info(f"execute_operation: [RUN] {operation.task.get_name()}")
+                self.logger.info(f"execute_operation: [RUN] {operation.name}")
                 await operation.execute()
                 return operation.task
         except Exception as e:
@@ -89,15 +90,17 @@ class OperationExecutor:
 
             for operation in chain_operations:
                 if not operation.task or operation.task.done():
-                    if isinstance(operation, ConsoleOperation) and not self.op_control.console_operation_in_progress:
+                    if isinstance(operation, CustomOperation) and not self.op_control.console_operation_in_progress:
                         continue
                     self.logger.debug(f"execute_all: [OP] {operation.name} - {operation.status} - {operation.task}")
 
                     if not operation.task and operation.is_ready():
                         try:
-                            operation.task = await self.task_creator.create_task(self.execute_operation(operation),
-                                                                                 name=operation.name)
+                            operation.task = await self.task_creator.create_task(
+                                self.execute_operation(operation),
+                                name=operation.name
+                            )
                         except Exception as e:
                             self.error_handler.handle_error(e, self)
-                    if isinstance(operation, ConsoleOperation):
+                    if isinstance(operation, CustomOperation):
                         self.op_control.console_operation_in_progress = True

@@ -1,17 +1,8 @@
 """
-This module contains the DaskOperation class, a subclass of the Operation class.
+A module that defines the DaskOperation class, a subclass of the Operation class.
 
-The DaskOperation class is used to represent a Dask Operation in the NeuroBehavioral Analytics Suite.
-It provides methods for setting the data to be processed and executing the operation.
-
-Typical usage example:
-
-    dask_operation = DaskOperation(error_handler, func, local_vars)
-    dask_operation.execute()
-
-Attributes:
-    func (callable): A function to be executed.
-    error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
+The DaskOperation class is designed to handle Dask computations. It provides methods for setting the Dask computation
+to be processed and executing the operations.
 
 Author: Lane
 Copyright: Lane
@@ -23,86 +14,107 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from asyncio import Event
-from typing import Tuple
-
-from dask import delayed
+import types
 from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
+import dask
+import dask.distributed
 
 
 class DaskOperation(Operation):
     """
     A class used to represent a Dask Operation in the NeuroBehavioral Analytics Suite.
 
-    This class provides methods for setting the data to be processed and executing the operations.
+    This class provides methods for setting the Dask computation to be processed and executing the operations.
 
     Attributes:
-        func (callable): A function to be executed.
+        func (callable): A Dask computation function to be executed.
         error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
+        local_vars (dict): Local variables to be used in the function execution.
+        client (dask.distributed.Client): The Dask client for managing the computation.
     """
 
-    def __init__(self, error_handler: ErrorHandler, func, local_vars, name: str = "DaskOperation"):
+    def __init__(self, *args, **kwargs):
         """
-        Initializes the DaskOperation with the func to be processed and an ErrorHandler instance.
+        Initialize the Dask operation instance.
 
         Args:
-            func (callable): A function to be executed.
-            error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
+            error_handler (ErrorHandler): The error handler for managing errors.
+            func (callable, optional): The Dask computation to be executed by the operation.
+            name (str, optional): The name of the operation. Defaults to "DaskOperation".
+            persistent (bool, optional): Whether the operation should run indefinitely. Defaults to False.
+            is_cpu_bound (bool, optional): Whether the operation is CPU-bound. Defaults to False.
+            concurrent (bool, optional): Whether child operations should run concurrently. Defaults to False.
+            parent_operation (ABCOperation, optional): The parent operation. Defaults to None.
+            local_vars (dict, optional): Local variables for the function execution. Defaults to None.
+            client (dask.distributed.Client, optional): The Dask client for managing the computation.
         """
+        self._client = kwargs.pop('client', None)
+        super().__init__(*args, **kwargs)
 
-        super().__init__(name="DaskOperation", error_handler=error_handler, func=func)
-        self.func = func
-        self.error_handler = error_handler
-        self.local_vars = local_vars
-        self.task = None
-        self.persistent = False
-        self.complete = False
-        self.name = name
-        self._status = "idle"
-        self.result = None
-        self.pause_event = Event()
-        self.progress = 0
+    @property
+    def client(self):
+        """Gets the Dask client for managing the computation."""
+        return self._client
 
-    async def execute(self):
+    @client.setter
+    def client(self, value):
+        """Sets the Dask client for managing the computation."""
+        if not isinstance(value, dask.distributed.Client):
+            raise ValueError("client must be an instance of dask.distributed.Client")
+        self._client = value
+
+    def init_operation(self):
         """
-        Executes the operation.
+        Initialize any resources or setup required for the Dask operation before it starts.
         """
-        self._status = "running"
-        temp_vars = self.local_vars.copy()
+        super().init_operation()
+        if self.client is None:
+            self.client = dask.distributed.Client()
 
+    async def _execute_func(self):
+        """
+        Execute the Dask computation associated with the operation.
+
+        Returns:
+            The result of the Dask computation.
+        """
+        temp_vars = self._local_vars.copy()
         try:
-            # Execute the function
-            dask_func = delayed(self.func)
-            result = dask_func.compute()
-            temp_vars['result_output'] = result
-            self.result = temp_vars
-            self.local_vars = temp_vars
+            if isinstance(self._func, str):  # If self._func is a string of code
+                code = self._func
+                self._func = lambda: exec(code, {}, temp_vars)
+            elif callable(self._func):  # If self._func is a callable function
+                if isinstance(self._func, types.MethodType):  # If self._func is a bound method
+                    self._func = self._func
+                else:
+                    func = self._func
+                    self._func = lambda: func()
+            else:
+                raise TypeError("self._func must be a string of Python code, a callable function, or a bound method.")
 
-            return self.result
-
+            # Execute the Dask computation
+            future = self.client.submit(self._func)
+            self._result_output = future.result()
         except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.result = self.local_vars
+            self.status = "error"
+            self._handle_error(e)
+        finally:
+            self._local_vars = temp_vars
 
-            return self.result
+    def get_result(self):
+        """
+        Retrieve the result of the Dask computation.
 
-    async def start(self):
-        """Starts the operation and handles any exceptions that occur during execution."""
-        await super().start()
+        Returns:
+            The result of the Dask computation.
+        """
+        return self._result_output
 
-    async def stop(self):
-        """Stops the operation and handles any exceptions that occur during execution."""
-        await super().stop()
-
-    async def pause(self):
-        """Pauses the operation and handles any exceptions that occur during execution."""
-        await super().pause()
-
-    async def resume(self) -> None:
-        """Resumes the operation and handles any exceptions that occur during execution."""
-        await super().resume()
-
-    async def reset(self) -> None:
-        """Resets the operation and handles any exceptions that occur during execution."""
-        await super().reset()
+    def cleanup_operation(self):
+        """
+        Clean up any resources or perform any necessary teardown after the Dask operation has completed or been stopped.
+        """
+        if self.client:
+            self.client.close()
+        super().cleanup_operation()

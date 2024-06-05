@@ -49,11 +49,11 @@ class TaskMonitor:
                     if operation is not None:
                         await operation.task
                         if isinstance(operation, CustomOperation):
-                            output = operation.result_output
+                            output = operation.get_result()
                             self.queue.local_vars = output
                             self.logger.info(f"handle_tasks: [OUTPUT] {output}")
                         elif isinstance(operation, DaskOperation):
-                            output = operation.result
+                            output = operation.get_result()
                             self.logger.info(f"handle_tasks: [OUTPUT] {output}")
 
                         self.logger.info(f"handle_tasks: [DONE] {task.get_name()}")
