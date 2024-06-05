@@ -28,7 +28,7 @@
 
 <div>
   <p align="left">
-    The <strong>NeuroBehavioral Analytics Suite (NBAS)</strong>, developed within Gire Lab at the University of Washington, is a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse sources. Unlike MATLAB and SPSS, NBAS is designed to be free and accessible, addressing financial and accessibility barriers in scientific research.
+    The <strong>NeuroBehavioral Analytics Suite (NBAS)</strong>, developed within Gire Lab at the University of Washington, is a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse sources. NBAS is designed to be free and accessible, addressing financial and accessibility barriers in scientific research.
     <br /><br />
     <strong>Key Features:</strong>
     <ul>
@@ -104,7 +104,7 @@
 
 The **NeuroBehavioral Analytics Suite (NBAS)** is a cutting-edge, open-source platform meticulously crafted in Python to address the diverse needs of neuroscientific data analysis. NBAS stands out by offering a comprehensive suite of tools for data aggregation, management, and analysis, derived from various input sources such as pixel-tracking technology, accelerometers, and analog voltage outputs.
 
-NBAS aims to democratize access to powerful data analysis tools traditionally dominated by commercial software like MATLAB and SPSS. By eliminating financial barriers, NBAS empowers researchers, educators, and industry professionals to conduct sophisticated analyses without the associated costs.
+NBAS aims to democratize access to powerful data analysis tools traditionally dominated by commercial software. By eliminating financial barriers, NBAS empowers researchers, educators, and industry professionals to conduct sophisticated analyses without the associated costs.
 
 ### Key Features:
 * **Data Management Engine (DME)**: A robust system for filtering and aggregating large, complex datasets from multiple sources. The DME ensures seamless integration and handling of diverse data types, facilitating comprehensive and efficient data analysis.
