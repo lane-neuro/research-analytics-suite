@@ -15,7 +15,6 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import dask.distributed
-
 from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.computation.DaskOperation import DaskOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \

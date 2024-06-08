@@ -14,7 +14,6 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
 from neurobehavioral_analytics_suite.operation_manager.OperationNode import OperationNode
 from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 
@@ -23,7 +22,7 @@ class OperationChain:
     """
     A class to manage a chain of operations.
 
-    This class provides methods to add and remove operations, check if the chain is empty, count the operations, 
+    This class provides methods to add and remove operations, check if the chain is empty, count the operations,
     and iterate over the chain of operations.
     """
 
@@ -92,6 +91,23 @@ class OperationChain:
             count += 1
             current_node = current_node.next_node
         return count
+
+    def contains(self, operation: ABCOperation) -> bool:
+        """
+        Checks if the chain contains a specific operation.
+
+        Args:
+            operation (Operation): The operation to check for.
+
+        Returns:
+            bool: True if the chain contains the operation, False otherwise.
+        """
+        current_node = self.head
+        while current_node:
+            if current_node.operation == operation:
+                return True
+            current_node = current_node.next_node
+        return False
 
     def __iter__(self):
         """
