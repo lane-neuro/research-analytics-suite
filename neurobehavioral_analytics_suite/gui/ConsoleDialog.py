@@ -14,7 +14,6 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
 import asyncio
 from typing import Optional, Any
 import dearpygui.dearpygui as dpg
@@ -39,7 +38,7 @@ class ConsoleDialog:
         self.window = dpg.add_child_window(tag="console_window", parent="bottom_pane")
 
         with dpg.group(horizontal=True, parent=self.window):
-            dpg.add_input_text(label="", tag="input_text")
+            dpg.add_input_text(label="", tag="input_text", width=500)
             dpg.add_button(label="Submit", callback=self.submit_command)
 
         self._logger_output = dpg.add_text(default_value="", parent=self.window, wrap=600)

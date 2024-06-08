@@ -6,7 +6,6 @@ within the NeuroBehavioral Analytics Suite.
 
 Author: Lane
 """
-
 import dearpygui.dearpygui as dpg
 from neurobehavioral_analytics_suite.data_engine.DataEngineOptimized import DataEngineOptimized
 from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
@@ -28,10 +27,11 @@ class RealTimeDataVisualization:
     async def initialize(self):
         """Initializes the Real-Time Data Visualization pane."""
         with dpg.window(label="Real-Time Data Visualization", tag="real_time_data_visualization"):
-            dpg.add_text("Real-Time Data Visualization")
+            dpg.add_text("Real-Time Data Visualization", color=(255, 255, 0))
             dpg.add_plot(label="Real-Time Data", tag="real_time_plot")
-            dpg.add_button(label="Start Visualization", callback=self.start_visualization)
-            dpg.add_button(label="Stop Visualization", callback=self.stop_visualization)
+            with dpg.group(horizontal=True):
+                dpg.add_button(label="Start Visualization", callback=self.start_visualization)
+                dpg.add_button(label="Stop Visualization", callback=self.stop_visualization)
 
     def start_visualization(self):
         """Starts real-time data visualization."""

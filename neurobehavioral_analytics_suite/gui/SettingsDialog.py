@@ -6,7 +6,6 @@ NeuroBehavioral Analytics Suite.
 
 Author: Lane
 """
-
 import dearpygui.dearpygui as dpg
 from neurobehavioral_analytics_suite.data_engine.Config import Config
 from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
@@ -25,7 +24,7 @@ class SettingsDialog:
     def show(self):
         """Shows the settings dialog."""
         with dpg.window(label="Settings", modal=True, tag="settings_dialog", width=500):
-            dpg.add_text("Configuration Settings")
+            dpg.add_text("Configuration Settings", color=(255, 255, 0))
 
             # Paths
             dpg.add_input_text(label="Workspace Name", default_value=self._config.WORKSPACE_NAME, tag="workspace_name")
@@ -35,8 +34,12 @@ class SettingsDialog:
                                tag="workspace_dir")
             dpg.add_input_text(label="Backup Directory", default_value=self._config.BACKUP_DIR, tag="backup_dir")
 
+            dpg.add_separator()
+
             # Memory settings
             dpg.add_input_float(label="Memory Limit", default_value=self._config.MEMORY_LIMIT, tag="memory_limit")
+
+            dpg.add_separator()
 
             # Logging settings
             dpg.add_input_text(label="Log File", default_value=self._config.LOG_FILE, tag="log_file")
@@ -45,9 +48,13 @@ class SettingsDialog:
             dpg.add_combo(label="Log Level", items=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                           default_value=self._config.LOG_LEVEL, tag="log_level")
 
+            dpg.add_separator()
+
             # Data engine settings
             dpg.add_input_int(label="Cache Size", default_value=self._config.CACHE_SIZE, tag="cache_size")
             dpg.add_input_int(label="Number of Threads", default_value=self._config.NUM_THREADS, tag="num_threads")
+
+            dpg.add_separator()
 
             # Database settings
             dpg.add_input_text(label="DB Host", default_value=self._config.DB_HOST, tag="db_host")
@@ -57,9 +64,13 @@ class SettingsDialog:
                                password=True)
             dpg.add_input_text(label="DB Name", default_value=self._config.DB_NAME, tag="db_name")
 
+            dpg.add_separator()
+
             # API settings
             dpg.add_input_text(label="API Base URL", default_value=self._config.API_BASE_URL, tag="api_base_url")
             dpg.add_input_text(label="API Key", default_value=self._config.API_KEY, tag="api_key", password=True)
+
+            dpg.add_separator()
 
             # Notification settings
             dpg.add_input_text(label="Email Host", default_value=self._config.EMAIL_HOST, tag="email_host")
@@ -70,9 +81,13 @@ class SettingsDialog:
             dpg.add_checkbox(label="Email Use TLS", default_value=self._config.EMAIL_USE_TLS, tag="email_use_tls")
             dpg.add_checkbox(label="Email Use SSL", default_value=self._config.EMAIL_USE_SSL, tag="email_use_ssl")
 
+            dpg.add_separator()
+
             # UI settings
             dpg.add_combo(label="Theme", items=["light", "dark"], default_value=self._config.THEME, tag="theme")
             dpg.add_input_text(label="Language", default_value=self._config.LANGUAGE, tag="language")
+
+            dpg.add_separator()
 
             # Security settings
             dpg.add_input_text(label="Encryption Key", default_value=self._config.ENCRYPTION_KEY, tag="encryption_key",
@@ -80,8 +95,12 @@ class SettingsDialog:
             dpg.add_combo(label="Authentication Method", items=["token", "oauth", "basic"],
                           default_value=self._config.AUTHENTICATION_METHOD, tag="authentication_method")
 
+            dpg.add_separator()
+
             # Performance settings
             dpg.add_input_int(label="Batch Size", default_value=self._config.BATCH_SIZE, tag="batch_size")
+
+            dpg.add_separator()
 
             # Data transformation settings
             dpg.add_checkbox(label="Normalize", default_value=self._config.TRANSFORMATIONS['normalize'],
@@ -90,6 +109,8 @@ class SettingsDialog:
                              tag="standardize")
             dpg.add_checkbox(label="Remove Outliers", default_value=self._config.TRANSFORMATIONS['remove_outliers'],
                              tag="remove_outliers")
+
+            dpg.add_separator()
 
             # Scheduler settings
             dpg.add_combo(label="Scheduler Interval", items=["hourly", "daily", "weekly"],

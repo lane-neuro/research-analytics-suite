@@ -14,7 +14,6 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
 from typing import Optional, Any
 import dearpygui.dearpygui as dpg
 import asyncio
@@ -48,9 +47,9 @@ class ResourceMonitorDialog:
 
         self.window = dpg.add_child_window(tag="resource_window", parent="bottom_pane")
 
-        # Create a container for each monitor
-        self.cpu_container = dpg.add_child_window(parent=self.window)
-        self.memory_container = dpg.add_child_window(parent=self.window)
+        with dpg.group(horizontal=True, parent=self.window):
+            self.cpu_container = dpg.add_child_window(parent=self.window)
+            self.memory_container = dpg.add_child_window(parent=self.window)
 
         self.memory_text = None
         self.cpu_text = None
@@ -81,7 +80,7 @@ class ResourceMonitorDialog:
                 func=self.update_resource_usage, persistent=True)
             return operation
         except Exception as e:
-            self._logger.error(f"Error creating task: {e}")
+            self._logger.error(e, self)
         return None
 
     def setup_cpu_monitor(self, parent: int) -> None:

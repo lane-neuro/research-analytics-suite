@@ -7,7 +7,6 @@ providing a user interface for managing data operations.
 
 Author: Lane
 """
-
 import dearpygui.dearpygui as dpg
 from neurobehavioral_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
 from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
@@ -23,23 +22,27 @@ class DataEngineDialog:
 
         Args:
             data_engine (UnifiedDataEngine): The data engine for handling data operations.
-            logger (CustomLogger): CustomLogger for logging information and errors.
         """
         self._data_engine = data_engine
-        self._logger = logger
+        self._logger = CustomLogger()
 
     async def initialize(self):
         """
         Initializes the data engine dialog.
         """
         with dpg.group(tag="data_engine_dialog"):
-            dpg.add_text("Data Engine Operations")
-            dpg.add_button(label="Import Data", callback=self._import_data)
-            dpg.add_button(label="Execute Operation", callback=self._execute_operation)
-            dpg.add_button(label="Show Results", callback=self._show_results)
+            dpg.add_text("Data Engine Operations", color=(255, 255, 0))
+
+            with dpg.group(horizontal=True):
+                dpg.add_button(label="Import Data", callback=self._import_data)
+                dpg.add_button(label="Execute Operation", callback=self._execute_operation)
+                dpg.add_button(label="Show Results", callback=self._show_results)
+
             dpg.add_text("", tag="data_engine_status")
 
-            dpg.add_text("Workspace")
+            dpg.add_separator()
+
+            dpg.add_text("Workspace", color=(255, 255, 0))
             dpg.add_button(label="Refresh Variables", callback=self._refresh_variables)
             dpg.add_listbox(items=[], label="Variables", tag="variables_list", callback=self._select_variable)
             dpg.add_input_text(label="Variable Value", tag="variable_value_input")
@@ -55,7 +58,6 @@ class DataEngineDialog:
             app_data: Application data.
             user_data: User data.
         """
-        # Example of importing data, replace with actual implementation
         data_path = "path/to/data.csv"
         self._data_engine.load_data(data_path)
         dpg.set_value("data_engine_status", f"Data imported from {data_path}")
@@ -70,7 +72,6 @@ class DataEngineDialog:
             app_data: Application data.
             user_data: User data.
         """
-        # Example of executing an operation, replace with actual implementation
         result = self._data_engine.perform_operation("operation_name")
         dpg.set_value("data_engine_status", f"Operation executed: {result}")
         self._logger.info(f"Operation executed: {result}")
@@ -84,7 +85,6 @@ class DataEngineDialog:
             app_data: Application data.
             user_data: User data.
         """
-        # Example of showing results, replace with actual implementation
         results = self._data_engine.get_results()
         dpg.set_value("data_engine_status", f"Results: {results}")
         self._logger.info(f"Results: {results}")

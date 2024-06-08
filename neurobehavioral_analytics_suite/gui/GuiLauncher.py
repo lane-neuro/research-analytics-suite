@@ -7,7 +7,6 @@ navigation between these panes.
 
 Author: Lane
 """
-
 import asyncio
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
@@ -41,6 +40,7 @@ class GuiLauncher:
         self.operation_control = operation_control
         self.data_engine = data_engine
         self.workspace = workspace
+        self.visualization_dialog = None
         self.data_engine_dialog = None
         self.data_import_wizard = None
         self.real_time_data_visualization = None
@@ -54,11 +54,9 @@ class GuiLauncher:
     def setup_navigation_menu(self) -> None:
         """Sets up the navigation menu on the left pane."""
         with dpg.group(parent="left_pane"):
-            # dpg.add_button(label="Import Data", callback=lambda: self.switch_pane("import_data"))
             dpg.add_button(label="Operation Manager", callback=lambda: self.switch_pane("operation"))
             dpg.add_button(label="Analyze Data", callback=lambda: self.switch_pane("analyze_data"))
             dpg.add_button(label="Visualize Data", callback=lambda: self.switch_pane("visualize_data"))
-            # dpg.add_button(label="Real-Time Visualization", callback=lambda: self.switch_pane("real_time_visualization"))
             dpg.add_button(label="Manage Projects", callback=lambda: self.switch_pane("manage_projects"))
             dpg.add_button(label="Reports", callback=lambda: self.switch_pane("reports"))
             dpg.add_button(label="Settings", callback=lambda: self.switch_pane("settings"))
@@ -90,7 +88,8 @@ class GuiLauncher:
         """Sets up the data visualization pane asynchronously."""
         with dpg.group(parent="visualize_data_pane"):
             dpg.add_text("Data Visualization Tools")
-            # Add more widgets for data visualization
+            self.visualization_dialog = RealTimeDataVisualization(self.data_engine)
+            await self.visualization_dialog.initialize()
 
     async def setup_console_log_viewer(self) -> None:
         """Sets up the console/log viewer asynchronously."""
@@ -131,9 +130,6 @@ class GuiLauncher:
 
     async def setup_panes(self) -> None:
         """Sets up all the panes asynchronously."""
-        # with dpg.child_window(tag="import_data_pane", parent="right_pane", show=True):
-        #     await self.setup_data_engine_pane()
-
         with dpg.child_window(tag="operation_pane", parent="right_pane", show=True):
             await self.setup_operation_pane()
 
@@ -151,12 +147,6 @@ class GuiLauncher:
 
         with dpg.child_window(tag="settings_pane", parent="right_pane", show=False):
             dpg.add_text("Settings Pane")
-
-        # with dpg.child_window(tag="data_import_pane", parent="right_pane", show=False):
-        #    await self.setup_data_import_wizard_pane()
-
-        # with dpg.child_window(tag="real_time_visualization_pane", parent="right_pane", show=False):
-        #     await self.setup_real_time_visualization_pane()
 
     async def setup_main_window(self) -> None:
         """Sets up the main window of the GUI and runs the event loop."""

@@ -9,10 +9,7 @@ Author: Lane
 
 import argparse
 import asyncio
-import logging
-
 import nest_asyncio
-
 from neurobehavioral_analytics_suite.data_engine.Config import Config
 from neurobehavioral_analytics_suite.gui.GuiLauncher import GuiLauncher
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl

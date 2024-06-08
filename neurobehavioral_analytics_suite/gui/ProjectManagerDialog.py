@@ -14,12 +14,9 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
 import dearpygui.dearpygui as dpg
 import asyncio
-from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
-from neurobehavioral_analytics_suite.data_engine.project.save_project import save_project
-from neurobehavioral_analytics_suite.data_engine.UnifiedDataEngine import DataEngine
+from neurobehavioral_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
 from neurobehavioral_analytics_suite.operation_manager.operations.project.CreateProjectOperation import (
     CreateProjectOperation)
@@ -32,7 +29,7 @@ from neurobehavioral_analytics_suite.operation_manager.operations.project.SavePr
 class ProjectManagerDialog:
     """A class to manage the dialog for creating, loading, and saving projects."""
 
-    def __init__(self, data_engine: DataEngine, operation_control: OperationControl):
+    def __init__(self, data_engine: UnifiedDataEngine, operation_control: OperationControl):
         """
         Initializes the ProjectManagerDialog with the given data engine and operations control.
 
@@ -68,7 +65,7 @@ class ProjectManagerDialog:
         """
         file_path = dpg.open_file_dialog(directory='.', extensions='.json')
         if file_path:
-            self.data_engine = load_project(file_path[0])
+            # self.data_engine = load_project(file_path[0])
             print(f"Loaded project from {file_path[0]}")
 
     async def save_project(self, sender: str, data: dict) -> None:
@@ -82,7 +79,7 @@ class ProjectManagerDialog:
         if self.data_engine:
             file_path = dpg.save_file_dialog(directory='.', extensions='.json')
             if file_path:
-                save_project(self.data_engine, file_path[0])
+                # save_project(self.data_engine, file_path[0])
                 print(f"Saved project to {file_path[0]}")
         else:
             print("No project to save")
@@ -95,7 +92,8 @@ class ProjectManagerDialog:
             sender (str): The sender of the create project event.
             data (dict): Additional application data.
         """
-        CreateProjectOperation(self.operation_control.error_handler, self.data_engine)
+        # CreateProjectOperation(self.data_engine)
+        pass
 
     def load_project_wrapper(self, sender: str, data: dict) -> None:
         """
@@ -105,7 +103,8 @@ class ProjectManagerDialog:
             sender (str): The sender of the load project event.
             data (dict): Additional application data.
         """
-        LoadProjectOperation(self.operation_control.error_handler, self.data_engine)
+        # LoadProjectOperation(self.data_engine)
+        pass
 
     def save_project_wrapper(self, sender: str, data: dict) -> None:
         """
@@ -115,4 +114,5 @@ class ProjectManagerDialog:
             sender (str): The sender of the save project event.
             data (dict): Additional application data.
         """
-        SaveProjectOperation(self.operation_control.error_handler, self.data_engine)
+        # SaveProjectOperation(self.data_engine)
+        pass

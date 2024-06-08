@@ -6,7 +6,6 @@ neurobehavioral analytics suite. It supports various data formats and provides o
 
 Author: Lane
 """
-
 import dearpygui.dearpygui as dpg
 from neurobehavioral_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
 from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
@@ -31,11 +30,18 @@ class DataImportWizard:
         Initializes the data import wizard dialog.
         """
         with dpg.group(tag="data_import_wizard"):
-            dpg.add_text("Data Import Wizard")
-            dpg.add_button(label="Choose File", callback=self._choose_file)
-            dpg.add_text("Selected File:", tag="selected_file_text")
-            dpg.add_button(label="Preview Data", callback=self._preview_data)
-            dpg.add_text("Data Preview:", tag="data_preview_text")
+            dpg.add_text("Data Import Wizard", color=(255, 255, 0))
+
+            with dpg.group(horizontal=True):
+                dpg.add_button(label="Choose File", callback=self._choose_file)
+                dpg.add_text("Selected File:", tag="selected_file_text")
+
+            dpg.add_separator()
+
+            with dpg.group(horizontal=True):
+                dpg.add_button(label="Preview Data", callback=self._preview_data)
+                dpg.add_text("Data Preview:", tag="data_preview_text")
+
             dpg.add_button(label="Import Data", callback=self._import_data)
 
     def _choose_file(self, sender, app_data, user_data):

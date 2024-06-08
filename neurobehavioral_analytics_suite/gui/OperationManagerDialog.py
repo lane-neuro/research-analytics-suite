@@ -14,10 +14,8 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
 import asyncio
 from typing import Optional, Any
-
 import dearpygui.dearpygui as dpg
 from neurobehavioral_analytics_suite.gui.modules.OperationModule import OperationModule
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
@@ -38,7 +36,6 @@ class OperationManagerDialog:
 
         Args:
             operation_control (OperationControl): Control interface for operations.
-            logger (CustomLogger): Logger instance for logging messages.
             container_width (int): Initial width of the container.
         """
         self.window = dpg.add_group(label="Operation Manager", parent="operation_pane", tag="operation_gallery",
@@ -73,7 +70,7 @@ class OperationManagerDialog:
         Adds an update operations to the operations manager.
 
         Returns:
-            CustomOperation: The created update operations or None if an error occurred.
+            Operation: The created update operations or None if an error occurred.
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
@@ -82,7 +79,7 @@ class OperationManagerDialog:
                 func=self.display_operations, persistent=True, concurrent=True)
             return operation
         except Exception as e:
-            self._logger.error(f"Error creating task: {e}")
+            self._logger.error(e, self)
         return None
 
     async def display_operations(self) -> None:
