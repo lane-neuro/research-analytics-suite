@@ -30,6 +30,7 @@ async def launch_nbas():
     Raises:
         AssertionError: If no active project is open.
     """
+    nest_asyncio.apply()
     args = launch_args().parse_args()
     print("Initiating CustomLogger - Logging Level: INFO")
     logger = CustomLogger(logging.INFO)
@@ -64,12 +65,17 @@ async def launch_nbas():
         finally:
             launch_tasks.append(gui_launcher.setup_main_window())
 
-    print("Launching NBAS")
+    logger.info("Launching NBAS")
 
     try:
         await asyncio.gather(*launch_tasks)
     except Exception as e:
         logger.error(f"launch_nbas: {e}")
+    finally:
+        logger.info("Cleaning up...")
+        workspace.save_current_workspace()
+        logger.info("Exiting NeuroBehavioral Analytics Suite...")
+        asyncio.get_event_loop().close()
 
 
 def launch_args():

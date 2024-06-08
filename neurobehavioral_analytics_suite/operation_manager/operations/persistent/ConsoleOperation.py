@@ -13,10 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-import logging
-
 import aioconsole
-
 from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.utils import ErrorHandler
 

@@ -69,8 +69,8 @@ class DaskOperation(Operation):
         Initialize any resources or setup required for the Dask operation before it starts.
         """
         super().init_operation()
-        if self.client is None:
-            self.client = dask.distributed.Client()
+        if self._client is None:
+            self._client = dask.distributed.Client()
 
     async def execute_func(self):
         """
