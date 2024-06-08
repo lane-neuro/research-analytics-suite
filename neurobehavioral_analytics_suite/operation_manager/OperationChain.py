@@ -16,7 +16,7 @@ Status: Prototype
 """
 
 from neurobehavioral_analytics_suite.operation_manager.OperationNode import OperationNode
-from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 
 
 class OperationChain:
@@ -27,7 +27,7 @@ class OperationChain:
     and iterate over the chain of operations.
     """
 
-    def __init__(self, operation: Operation = None):
+    def __init__(self, operation: ABCOperation = None):
         """
         Initializes the OperationChain with an optional initial operation.
 
@@ -35,10 +35,10 @@ class OperationChain:
             operation (Operation, optional): An initial operation to add to the chain. Defaults to None.
         """
         self.head = None
-        if isinstance(operation, Operation):
+        if isinstance(operation, ABCOperation):
             self.add_operation_to_chain(operation)
 
-    def add_operation_to_chain(self, operation: Operation) -> None:
+    def add_operation_to_chain(self, operation: ABCOperation) -> None:
         """
         Adds an operation to the end of the chain.
 
@@ -53,7 +53,7 @@ class OperationChain:
                 current_node = current_node.next_node
             current_node.next_node = OperationNode(operation)
 
-    def remove_operation(self, operation: Operation) -> None:
+    def remove_operation(self, operation: ABCOperation) -> None:
         """
         Removes an operation from the chain.
 

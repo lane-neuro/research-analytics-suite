@@ -28,7 +28,7 @@ class TaskCounter:
         Initializes the TaskCounter with a logger.
 
         Args:
-            logger: Logger instance for logging messages.
+            logger: CustomLogger instance for logging messages.
         """
         self.counter = 0
         self.logger = logger

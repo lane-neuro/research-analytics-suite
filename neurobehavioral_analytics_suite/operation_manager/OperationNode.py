@@ -13,8 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
-from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 
 
 class OperationNode:
@@ -24,7 +23,7 @@ class OperationNode:
     Each node contains an operation and a reference to the next node in the chain.
     """
 
-    def __init__(self, operation: Operation, next_node: 'OperationNode' = None):
+    def __init__(self, operation: ABCOperation, next_node: 'OperationNode' = None):
         """
         Initializes the OperationNode with an operation and an optional reference to the next node.
 

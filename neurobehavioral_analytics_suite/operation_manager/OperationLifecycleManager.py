@@ -20,14 +20,14 @@ from neurobehavioral_analytics_suite.operation_manager.OperationExecutor import 
 from neurobehavioral_analytics_suite.operation_manager.OperationQueue import OperationQueue
 from neurobehavioral_analytics_suite.operation_manager.task.TaskMonitor import TaskMonitor
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
-from neurobehavioral_analytics_suite.utils.Logger import Logger
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class OperationLifecycleManager:
     """Manages the lifecycle of operations."""
 
     def __init__(self, queue: OperationQueue, operation_manager, executor: OperationExecutor,
-                 persistent_op_checker, task_monitor: TaskMonitor, logger: Logger, error_handler: ErrorHandler):
+                 persistent_op_checker, task_monitor: TaskMonitor, logger: CustomLogger, error_handler: ErrorHandler):
         """
         Initializes the OperationLifecycleManager with the given parameters.
 
@@ -35,7 +35,7 @@ class OperationLifecycleManager:
             queue: The operations queue.
             operation_manager: The operations manager.
             executor: The operations operation_executor.
-            logger: Logger for logging lifecycle-related information.
+            logger: CustomLogger for logging lifecycle-related information.
             error_handler: Handler for managing errors.
         """
         self.queue = queue
@@ -56,14 +56,12 @@ class OperationLifecycleManager:
                     if operation.status == "idle":
                         operation.init_operation()
                         await operation.start()
-                        self.logger.info(f"start_operations: [START] {operation.name} - {operation.status}")
                     current_node = current_node.next_node
             else:
                 operation = operation_chain.operation
                 if operation.status == "idle":
                     operation.init_operation()
                     await operation.start()
-                    self.logger.info(f"start_operations: [START] {operation.name} - {operation.status}")
 
     async def stop_all_operations(self):
         """Stops all operations in the queue."""
@@ -90,15 +88,13 @@ class OperationLifecycleManager:
 
     async def exec_loop(self):
         """Executes the main loop of the operations manager."""
-        self.logger.debug("Starting exec_loop")
+        tasks = [self.persistent_operation_checker.check_persistent_operations(),
+                 self.start_all_operations(),
+                 self.operation_executor.execute_ready_operations(),
+                 self.task_monitor.handle_tasks()]
 
-        while True:
-            try:
-                await self.persistent_operation_checker.check_persistent_operations()
-                await self.start_all_operations()
-                await self.operation_executor.execute_ready_operations()
-                await self.task_monitor.handle_tasks()
-            except Exception as e:
-                self.error_handler.handle_error(e, self)
-            finally:
-                await asyncio.sleep(0.15)
+        try:
+            await asyncio.gather(*tasks)
+        except Exception as e:
+            self.error_handler.handle_error(e, self)
+            self.logger.error(f"OperationLifecycleManager.exec_loop: Exception occurred: {e}")

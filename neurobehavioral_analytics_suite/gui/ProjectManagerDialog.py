@@ -19,7 +19,7 @@ import dearpygui.dearpygui as dpg
 import asyncio
 from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
 from neurobehavioral_analytics_suite.data_engine.project.save_project import save_project
-from neurobehavioral_analytics_suite.data_engine.DataEngine import DataEngine
+from neurobehavioral_analytics_suite.data_engine.UnifiedDataEngine import DataEngine
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
 from neurobehavioral_analytics_suite.operation_manager.operations.project.CreateProjectOperation import (
     CreateProjectOperation)

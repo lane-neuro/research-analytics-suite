@@ -1,25 +1,19 @@
 """
-Logger Module.
+CustomLogger Module
 
-This module defines the Logger class, which is responsible for logging messages within the neurobehavioral analytics
-suite. It sets up a logger with a specific format, handles different log levels, & queues log messages for asynchronous
+This module defines the CustomLogger class, which is responsible for logging messages within the neurobehavioral analytics
+suite. It sets up a logger with a specific format, handles different log levels, and queues log messages for asynchronous
 processing.
 
 Author: Lane
-Copyright: Lane
-Credits: Lane
-License: BSD 3-Clause License
-Version: 0.0.0.1
-Maintainer: Lane
-Email: justlane@uw.edu
-Status: Prototype
 """
 
 import asyncio
 import logging
+from typing import List
 
 
-class Logger:
+class CustomLogger:
     """
     A class to handle logging within the neurobehavioral analytics suite.
 
@@ -29,7 +23,7 @@ class Logger:
 
     def __init__(self, log_level=logging.INFO):
         """
-        Initializes the Logger with a specified log level.
+        Initializes the CustomLogger with a specified log level.
 
         Args:
             log_level (int): The logging level (e.g., logging.INFO, logging.DEBUG).
@@ -45,7 +39,7 @@ class Logger:
         Sets up the logger with a timestamp formatter and a stream handler.
         """
         handler = logging.StreamHandler()
-        formatter = logging.Formatter('[(%(asctime)s) %(name)s - %(levelname)s]:   %(message)s',
+        formatter = logging.Formatter('[(%(asctime)s) %(name)s - %(levelname)s]: %(message)s',
                                       datefmt='%Y-%m-%d %H:%M:%S')
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
@@ -61,14 +55,18 @@ class Logger:
         self.log_message_queue.put_nowait(message)
         print(message)
 
-    def info(self, message: str) -> None:
+    def info(self, message) -> None:
         """
         Logs an info message.
 
         Args:
-            message (str): The message to log.
+            message: The message to log.
         """
-        self.logger.info(message)
+        if isinstance(message, List):
+            for msg in message:
+                self.logger.info(msg)
+        else:
+            self.logger.info(message)
 
     def debug(self, message: str) -> None:
         """

@@ -16,11 +16,10 @@ Status: Prototype
 """
 import dask.distributed
 
-from neurobehavioral_analytics_suite.machine_learning.MachineLearning import MachineLearning
-from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.computation.DaskOperation import DaskOperation
-from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import (
-    ResourceMonitorOperation)
+from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
+    ResourceMonitorOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
@@ -38,7 +37,7 @@ class UserInputManager:
 
         Args:
             operation_control: Control interface for operations.
-            logger: Logger instance for logging messages.
+            logger: CustomLogger instance for logging messages.
             error_handler (ErrorHandler): Error handler for managing errors.
         """
         self.operation_control = operation_control
@@ -70,9 +69,13 @@ class UserInputManager:
                                  "-arenaOct3shuffle1_200000_filtered.csv")
                 return df.compute()
 
-            await self.operation_control.operation_manager.add_operation(
-                operation_type=DaskOperation, error_handler=self.error_handler, func=load_data,
-                name="LoadData", local_vars=self.operation_control.local_vars, client=dask.distributed.Client())
+            await self.operation_control.operation_manager.add_operation(logger=self.logger,
+                                                                         operation_type=DaskOperation,
+                                                                         error_handler=self.error_handler,
+                                                                         func=load_data,
+                                                                         name="LoadData",
+                                                                         local_vars=self.operation_control.local_vars,
+                                                                         client=dask.distributed.Client())
 
         elif user_input == "machine_learning":
             self.logger.error("UserInputManager.process_user_input: Machine Learning not implemented.")
@@ -101,7 +104,7 @@ class UserInputManager:
             for operation_list in self.operation_control.queue.queue:
                 operation_node = self.operation_control.queue.get_head_operation_from_chain(operation_list)
                 if isinstance(operation_node, ResourceMonitorOperation):
-                    self.logger.info(operation_node.print_memory_usage())
+                    self.logger.info(operation_node.output_memory_usage())
             return "UserInputManager.process_user_input: Displaying system resources."
 
         elif user_input == "tasks":
@@ -125,8 +128,9 @@ class UserInputManager:
 
         else:
             self.logger.info(f"UserInputManager.process_user_input: Executing custom operation with func: {user_input}")
-            await self.operation_control.operation_manager.add_operation(operation_type=CustomOperation,
-                                                                         func=user_input, name="ConsoleInput",
+            await self.operation_control.operation_manager.add_operation(operation_type=ABCOperation,
+                                                                         func=user_input, name="ConsoleCommand",
                                                                          local_vars=self.operation_control.local_vars,
-                                                                         error_handler=self.error_handler)
+                                                                         error_handler=self.error_handler,
+                                                                         logger=self.logger)
             return f"UserInputManager.process_user_input: Added custom operation with func: {user_input}"

@@ -21,8 +21,8 @@ from typing import Optional, Any
 import dearpygui.dearpygui as dpg
 from neurobehavioral_analytics_suite.gui.modules.OperationModule import OperationModule
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
-from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
-from neurobehavioral_analytics_suite.utils.Logger import Logger
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class OperationManagerDialog:
@@ -32,13 +32,13 @@ class OperationManagerDialog:
     TILE_WIDTH = 300  # Fixed width for each operation tile
     TILE_HEIGHT = 300  # Fixed height for each operation tile
 
-    def __init__(self, operation_control: OperationControl, logger: Logger, container_width: int = 900):
+    def __init__(self, operation_control: OperationControl, logger: CustomLogger, container_width: int = 900):
         """
         Initializes the OperationManagerDialog with the given operation control, logger, and container width.
 
         Args:
             operation_control (OperationControl): Control interface for operations.
-            logger (Logger): Logger instance for logging messages.
+            logger (CustomLogger): Logger instance for logging messages.
             container_width (int): Initial width of the container.
         """
         self.window = dpg.add_group(label="Operation Manager", parent="operation_pane", tag="operation_gallery",
@@ -63,7 +63,7 @@ class OperationManagerDialog:
         """
         return max(1, width // self.TILE_WIDTH) - 1
 
-    async def initialize(self) -> None:
+    async def initialize_dialog(self) -> None:
         """Initializes the operation manager dialog by adding the update operation."""
         self.update_operation = await self.add_update_operation()
         dpg.set_viewport_resize_callback(self.on_resize)
@@ -77,9 +77,9 @@ class OperationManagerDialog:
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=CustomOperation, name="gui_OperationManagerUpdateTask",
+                operation_type=ABCOperation, name="gui_OperationManagerUpdateTask", logger=self.logger,
                 local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
-                func=self.display_operations, persistent=True)
+                func=self.display_operations, persistent=True, concurrent=True)
             return operation
         except Exception as e:
             self.logger.error(f"Error creating task: {e}")
@@ -98,7 +98,7 @@ class OperationManagerDialog:
                         self.add_operation_tile(node.operation)
             await asyncio.sleep(self.SLEEP_DURATION)
 
-    def add_operation_tile(self, operation: CustomOperation) -> None:
+    def add_operation_tile(self, operation: ABCOperation) -> None:
         """
         Adds a new operations tile to the GUI.
 

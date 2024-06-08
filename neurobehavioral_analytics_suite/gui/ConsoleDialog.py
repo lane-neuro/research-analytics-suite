@@ -19,22 +19,22 @@ import asyncio
 from typing import Optional, Any
 import dearpygui.dearpygui as dpg
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
-from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
-from neurobehavioral_analytics_suite.utils.Logger import Logger
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class ConsoleDialog:
     """A class to create a console dialog for user input and operations control."""
 
-    def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl, logger: Logger):
+    def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl, logger: CustomLogger):
         """
         Initializes the ConsoleDialog with the given user input handler, operations control, and logger.
 
         Args:
             user_input_handler (UserInputManager): Instance to handle user inputs.
             operation_control (OperationControl): Control interface for operations.
-            logger (Logger): Logger instance for logging messages.
+            logger (CustomLogger): Logger instance for logging messages.
         """
         self.logger = logger
         self.window = dpg.add_child_window(tag="console_window", parent="bottom_pane")
@@ -65,9 +65,9 @@ class ConsoleDialog:
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=CustomOperation, name="gui_ConsoleUpdateTask",
+                operation_type=ABCOperation, name="gui_ConsoleUpdateTask",
                 local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
-                func=self.update_logger_output, persistent=True)
+                logger=self.logger, func=self.update_logger_output, persistent=True)
             return operation
         except Exception as e:
             self.logger.error(f"Error creating task: {e}")

@@ -14,7 +14,7 @@ class MLEvaluationOperation(Operation):
     def start(self):
         """Initialize evaluation parameters."""
         self.status = "started"
-        self.log_to_gui("Evaluation operation started")
+        self.add_log_entry("Evaluation operation started")
 
     async def execute(self):
         """Evaluate the machine learning model."""
@@ -22,9 +22,9 @@ class MLEvaluationOperation(Operation):
             self.status = "running"
             metrics = await Evaluator.evaluate(self.model, self.test_data, self.test_target)
             self.status = "completed"
-            self.log_to_gui("Evaluation completed successfully")
+            self.add_log_entry("Evaluation completed successfully")
             return metrics
         except Exception as e:
             self._error_handler.handle_error(e, self)
             self.status = "error"
-            self.log_to_gui(f"Error during evaluation: {e}")
+            self.add_log_entry(f"Error during evaluation: {e}")

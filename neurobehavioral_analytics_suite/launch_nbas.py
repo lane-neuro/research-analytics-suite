@@ -5,13 +5,6 @@ This module contains the main entry point for launching the NeuroBehavioral Anal
 for parsing command line arguments and launching the application.
 
 Author: Lane
-Copyright: Lane
-Credits: Lane
-License: BSD 3-Clause License
-Version: 0.0.0.1
-Maintainer: Lane
-Email: justlane@uw.edu
-Status: Prototype
 """
 
 import argparse
@@ -20,11 +13,11 @@ import logging
 
 import nest_asyncio
 
-from neurobehavioral_analytics_suite.data_engine.project.new_project import new_project
-from neurobehavioral_analytics_suite.data_engine.project.load_project import load_project
 from neurobehavioral_analytics_suite.gui.GuiLauncher import GuiLauncher
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
-from neurobehavioral_analytics_suite.utils.Logger import Logger
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
+from neurobehavioral_analytics_suite.data_engine.Workspace import Workspace
+from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
 async def launch_nbas():
@@ -37,31 +30,41 @@ async def launch_nbas():
     Raises:
         AssertionError: If no active project is open.
     """
-
-    args, extra = launch_args().parse_known_args()
-    print("Initiating Logger - Logging Level: INFO")
-    logger = Logger(logging.INFO)
+    args = launch_args().parse_args()
+    print("Initiating CustomLogger - Logging Level: INFO")
+    logger = CustomLogger(logging.INFO)
+    error_handler = ErrorHandler()
     launch_tasks = []
+
+    # Initialize Workspace
+    workspace = Workspace(logger=logger, error_handler=error_handler)
 
     # Checks args for -o '--open_project' flag.
     # If it exists, open the project from the file
     if args.open_project is None:
         logger.info('New Project Parameters Detected - Creating New Project')
-        data_engine = new_project(args.directory, args.user_name, args.subject_name,
-                                  args.camera_framerate, args.file_list, logger)
+        data_engine = workspace.create_project(args.directory, args.user_name, args.subject_name,
+                                               args.camera_framerate, args.file_list)
     else:
         logger.info('Project File Detected - Loading Project at: ' + args.open_project)
-        data_engine = load_project(args.open_project)
-        data_engine.attach_logger(logger)
+        data_engine = workspace.load_workspace(args.open_project)
 
     nest_asyncio.apply()
-    operation_control = OperationControl(logger)
+    operation_control = OperationControl(logger=logger, error_handler=error_handler, workspace=workspace)
 
     launch_tasks.append(operation_control.exec_loop())
+    gui_launcher = None
 
     if args.gui is not None and args.gui.lower() == 'true':
-        gui_launcher = GuiLauncher(data_engine, operation_control, logger)
-        launch_tasks.append(gui_launcher.setup_main_window())
+        try:
+            gui_launcher = GuiLauncher(data_engine=data_engine, operation_control=operation_control,
+                                       logger=logger, error_handler=error_handler, workspace=workspace)
+        except Exception as e:
+            logger.error(f"launch_nbas: {e}")
+        finally:
+            launch_tasks.append(gui_launcher.setup_main_window())
+
+    print("Launching NBAS")
 
     try:
         await asyncio.gather(*launch_tasks)
@@ -79,16 +82,14 @@ def launch_args():
     Returns:
         argparse.ArgumentParser: The argument parser with the parsed command line arguments.
     """
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-g', '--gui', help='Launches the NeuroBehavioral Analytics Suite GUI')
     parser.add_argument('-o', '--open_project', help='Opens an existing project from the specified file')
     parser.add_argument('-u', '--user_name', help='Name of user/experimenter')
     parser.add_argument('-d', '--directory', help='Directory where project files will be located')
-    parser.add_argument('-s', '--subject_name',
-                        help='Name of the experimental subject (e.g., mouse, human, etc.)')
-    parser.add_argument('-f', '--file_list', help='List of files containing experimental func')
+    parser.add_argument('-s', '--subject_name', help='Name of the experimental subject (e.g., mouse, human, etc.)')
+    parser.add_argument('-f', '--file_list', help='List of files containing experimental data')
     parser.add_argument('-c', '--camera_framerate', help='Camera Framerate')
 
     return parser

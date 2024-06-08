@@ -13,25 +13,25 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
-from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
-from neurobehavioral_analytics_suite.operation_manager.operations.computation.DaskOperation import DaskOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
 
 
 class TaskMonitor:
     """Monitors and manages tasks."""
 
-    def __init__(self, task_creator, queue, logger, error_handler):
+    def __init__(self, operation_control, task_creator, queue, logger, error_handler):
         """
         Initializes the TaskMonitor with the given parameters.
 
         Args:
+            operation_control: The operation control interface.
             task_creator: The task creator.
             queue: The operations queue.
-            logger: Logger for task-related logs.
+            logger: CustomLogger for task-related logs.
             error_handler: Handler for managing errors.
         """
+        self.op_control = operation_control
         self.task_creator = task_creator
         self.queue = queue
         self.logger = logger
@@ -47,14 +47,9 @@ class TaskMonitor:
                 try:
                     self.logger.debug(f"handle_tasks: [OP] {task.get_name()}")
                     if operation is not None:
-                        await operation.task
-                        if isinstance(operation, CustomOperation):
+                        if isinstance(operation, ABCOperation):
                             output = operation.get_result()
-                            self.queue.local_vars = output
-                            self.logger.info(f"handle_tasks: [OUTPUT] {output}")
-                        elif isinstance(operation, DaskOperation):
-                            output = operation.get_result()
-                            self.logger.info(f"handle_tasks: [OUTPUT] {output}")
+                            operation.add_log_entry(f"handle_tasks: [OUTPUT] {output}")
 
                         self.logger.info(f"handle_tasks: [DONE] {task.get_name()}")
                     else:
@@ -68,4 +63,4 @@ class TaskMonitor:
                             self.queue.remove_operation_from_queue(operation)
 
                         if isinstance(operation, ConsoleOperation):
-                            self.queue.console_operation_in_progress = False
+                            self.op_control.console_operation_in_progress = False

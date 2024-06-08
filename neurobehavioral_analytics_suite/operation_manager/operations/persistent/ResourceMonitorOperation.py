@@ -20,40 +20,32 @@ please refer to the project documentation: https://github.com/lane-neuro/neurobe
 import asyncio
 import cProfile
 import os
-import sys
+from typing import List
 
 import psutil
 
-from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
-from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 
 
-class ResourceMonitorOperation(Operation):
+class ResourceMonitorOperation(ABCOperation):
 
-    def __init__(self, error_handler: ErrorHandler, cpu_threshold=90, memory_threshold=95):
+    def __init__(self, *args, **kwargs):
         """
-        
+        Initializes the `ResourceMonitorOperation` with the specified error handler and thresholds for
+        CPU and memory usage
     
         Args:
-            error_handler (ErrorHandler): An instance of `ErrorHandler` to handle any exceptions that occur.
             cpu_threshold (int, optional): The CPU usage threshold. Defaults to 90.
             memory_threshold (int, optional): The memory usage threshold. Defaults to 90.
         """
-        super().__init__(name="ResourceMonitorOperation", error_handler=error_handler, persistent=True,
-                         func=self.execute)
+        self.cpu_threshold = kwargs.pop("cpu_threshold", 90)
+        self.memory_threshold = kwargs.pop("memory_threshold", 95)
+
+        super().__init__(*args, **kwargs, name="ResourceMonitorOperation", func=self.execute)
 
         self.cpu_usage = 0
-        self.cpu_threshold = cpu_threshold
         self.total_memory_usage = 0
         self.process_memory_usage = 0
-        self.memory_threshold = memory_threshold
-
-        self.persistent = True
-        self.error_handler = error_handler
-        self.task = None
-        self.name = "ResourceMonitorOperation"
-        self._status = "idle"
-        self.type = type(self)
 
         self.process = psutil.Process(os.getpid())
         self.profiler = cProfile.Profile()
@@ -65,19 +57,19 @@ class ResourceMonitorOperation(Operation):
         """
 
         self._status = "running"
+        self.add_log_entry(f"[RUN] {self._name}")
 
         while True:
             self.cpu_usage = self.process.cpu_percent()
             self.total_memory_usage = psutil.virtual_memory().percent
             self.process_memory_usage = self.process.memory_info().rss / (1024 ** 3)  # Corrected to output in GB
             if (self.cpu_usage / psutil.cpu_count()) > self.cpu_threshold:
-                self.error_handler.handle_error(Exception(f"CPU usage has exceeded {self.cpu_threshold}%: "
-                                                          f"current usage is {self.cpu_usage}%"), "resource_monitor")
+                self._handle_error(Exception(f"CPU usage has exceeded {self.cpu_threshold}%: "
+                                             f"current usage is {self.cpu_usage}%"))
 
             if self.total_memory_usage > self.memory_threshold:
-                self.error_handler.handle_error(Exception(f"Memory usage has exceeded {self.memory_threshold}%: "
-                                                          f"current usage is {self.total_memory_usage}%"),
-                                                "resource_monitor")
+                self._handle_error(Exception(f"Memory usage has exceeded {self.memory_threshold}%: "
+                                             f"current usage is {self.total_memory_usage}%"))
 
             await asyncio.sleep(.01)
 
@@ -93,7 +85,7 @@ class ResourceMonitorOperation(Operation):
                 f"({round(self.process_memory_usage, 3)} GB / "
                 f"{round(psutil.virtual_memory().total / (1024 ** 3), 3)} GB)")
 
-    def print_memory_usage(self):
-        self.profiler.print_stats('calls')
-        print(self.get_cpu_formatted())
-        print(self.get_memory_formatted())
+    def output_memory_usage(self) -> List[str]:
+        return [self.profiler.print_stats('calls'),
+                self.get_cpu_formatted(),
+                self.get_memory_formatted()]

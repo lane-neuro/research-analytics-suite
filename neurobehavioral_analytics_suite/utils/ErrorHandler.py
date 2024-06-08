@@ -39,7 +39,7 @@ class ErrorHandler:
 
         self.has_error = False
         self.error = None
-        self.logger = logging.getLogger('user_input_handler')
+        self.logger = logging.getLogger('NBAS Error Logger')
         self.logger.setLevel(logging.ERROR)
         console_handler = logging.StreamHandler()
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')

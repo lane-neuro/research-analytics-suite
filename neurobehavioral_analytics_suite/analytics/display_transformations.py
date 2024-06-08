@@ -2,7 +2,7 @@
 Module for applying and visualizing transformations in the NeuroBehavioral Analytics Suite.
 
 This module defines a function to apply a series of transformations to a given dataset and visualize the results
-using matplotlib. It includes methods for deep copying func, applying transformations, and plotting the results.
+using matplotlib. It includes methods for deep copying _func, applying transformations, and plotting the results.
 
 Author: Lane
 Copyright: Lane
@@ -38,7 +38,7 @@ def display_transformations(data_in, transformations, cmap='viridis'):
     # Create a colormap based on the number of transformations
     colormap = plt.get_cmap(cmap, len(transformations) + 1)
 
-    # Plot the original func first
+    # Plot the original _func first
     x_original = []
     y_original = []
     for frame in data_in.pose.frames:

@@ -17,9 +17,8 @@ Status: Prototype
 
 import asyncio
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
-from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
-from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
 from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
 
 
 class OperationExecutor:
@@ -38,7 +37,7 @@ class OperationExecutor:
             operation_control: Control interface for operations.
             queue: Queue holding operations to be executed.
             task_creator: Task creator for generating asyncio tasks.
-            logger: Logger instance for logging messages.
+            logger: CustomLogger instance for logging messages.
             error_handler: Error handler for managing errors.
         """
         self.op_control = operation_control
@@ -59,7 +58,6 @@ class OperationExecutor:
         """
         try:
             if operation.status == "started":
-                self.logger.info(f"execute_operation: [RUN] {operation.name}")
                 await operation.execute()
                 return operation.task
         except Exception as e:
@@ -90,17 +88,18 @@ class OperationExecutor:
 
             for operation in chain_operations:
                 if not operation.task or operation.task.done():
-                    if isinstance(operation, CustomOperation) and not self.op_control.console_operation_in_progress:
+                    if isinstance(operation, ConsoleOperation) and not self.op_control.console_operation_in_progress:
                         continue
                     self.logger.debug(f"execute_all: [OP] {operation.name} - {operation.status} - {operation.task}")
 
                     if not operation.task and operation.is_ready():
                         try:
-                            operation.task = await self.task_creator.create_task(
+                            operation.task = self.task_creator.create_task(
                                 self.execute_operation(operation),
                                 name=operation.name
                             )
+                            operation.add_log_entry(f"[TASK] {operation.name}")
                         except Exception as e:
                             self.error_handler.handle_error(e, self)
-                    if isinstance(operation, CustomOperation):
+                    if isinstance(operation, ConsoleOperation):
                         self.op_control.console_operation_in_progress = True

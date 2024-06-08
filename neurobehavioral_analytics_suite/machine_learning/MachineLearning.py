@@ -1,7 +1,4 @@
 import os
-
-from neurobehavioral_analytics_suite.data_engine.data_processing.DataExtractor import DataExtractor
-from neurobehavioral_analytics_suite.data_engine.data_processing.DataLoader import DataLoader
 from neurobehavioral_analytics_suite.machine_learning import Model, Preprocessor, MLTrainingOperation, \
     MLEvaluationOperation, Predictor
 from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
@@ -29,9 +26,10 @@ class MachineLearning(Operation):
     async def load_data(self, file_path=None, data_destination=os.path.join(os.getcwd(), "../data")):
         """Initialize DataLoader operation."""
         try:
+            '''
             self.data_loader_operation = await self.operation_control.operation_manager.add_operation(
                 operation_type=DataLoader, name="ML_dataLoader", error_handler=self._error_handler,
-                transformed_data=self.transformed_data, data_destination=data_destination)
+                transformed_data=self.transformed_data, data_destination=data_destination)'''
             print("MachineLearningOperation.load_data: Loading data...")
             return self.data_loader_operation
         except Exception as e:
@@ -39,8 +37,8 @@ class MachineLearning(Operation):
 
     async def extract_data(self, file_path):
         """Extract data from the given file path."""
-        self.data_extractor_operation = await self.operation_control.operation_manager.add_operation(
-            operation_type=DataExtractor, error_handler=self._error_handler, data_source=file_path, data_format='csv')
+        # self.data_extractor_operation = await self.operation_control.operation_manager.add_operation(
+        #    operation_type=DataExtractor, error_handler=self._error_handler, data_source=file_path, data_format='csv')
         return await self.data_extractor_operation.execute()
 
     def preprocess_data(self, data):

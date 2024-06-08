@@ -24,7 +24,7 @@ class MLTrainingOperation(Operation):
         self.train_data = (X_train, y_train)
         self.val_data = (X_val, y_val)
         self._status = "started"
-        self.log_to_gui("Training operation started")
+        self.add_log_entry("Training operation started")
 
     async def execute(self):
         """Train the machine learning model."""
@@ -33,8 +33,8 @@ class MLTrainingOperation(Operation):
             X_train, y_train = self.train_data
             self.model.train(X_train, y_train)
             self._status = "completed"
-            self.log_to_gui("Training completed successfully")
+            self.add_log_entry("Training completed successfully")
         except Exception as e:
             self._error_handler.handle_error(e, self)
             self._status = "error"
-            self.log_to_gui(f"Error during training: {e}")
+            self.add_log_entry(f"Error during training: {e}")

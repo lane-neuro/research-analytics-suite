@@ -17,7 +17,8 @@ Status: Prototype
 
 from collections import deque
 from typing import Optional, Any
-from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
+
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
 
 
@@ -34,14 +35,14 @@ class OperationQueue:
         Initializes the OperationQueue with a logger and error handler.
 
         Args:
-            logger: Logger instance for logging messages.
+            logger: CustomLogger instance for logging messages.
             error_handler: Error handler for managing errors.
         """
         self.queue = deque()
         self.logger = logger
         self.error_handler = error_handler
 
-    async def add_operation_to_queue(self, operation: Operation) -> Operation:
+    async def add_operation_to_queue(self, operation: ABCOperation):
         """
         Adds an operation to the queue.
 
@@ -60,9 +61,7 @@ class OperationQueue:
             if op_head:
                 op_head.add_operation_to_chain(operation)
 
-        return self.get_operation_in_chain(self.get_chain_by_operation(operation), operation)
-
-    def insert_operation_in_chain(self, index: int, operation_chain: OperationChain, operation: Operation) -> None:
+    def insert_operation_in_chain(self, index: int, operation_chain: OperationChain, operation: ABCOperation) -> None:
         """
         Inserts an operation in a chain at a specific index.
 
@@ -79,7 +78,7 @@ class OperationQueue:
             if current_node:
                 current_node.operation = operation
 
-    def remove_operation_from_chain(self, operation_chain: OperationChain, operation: Operation) -> None:
+    def remove_operation_from_chain(self, operation_chain: OperationChain, operation: ABCOperation) -> None:
         """
         Removes an operation from a chain.
 
@@ -92,7 +91,7 @@ class OperationQueue:
             if operation_chain.is_empty():
                 self.queue.remove(operation_chain)
 
-    def move_operation(self, operation: Operation, new_index: int) -> None:
+    def move_operation(self, operation: ABCOperation, new_index: int) -> None:
         """
         Moves an operation to a new index in its chain.
 
@@ -105,7 +104,7 @@ class OperationQueue:
             operation_chain.remove_operation(operation)
             self.insert_operation_in_chain(new_index, operation_chain, operation)
 
-    def remove_operation_from_queue(self, operation: Operation) -> None:
+    def remove_operation_from_queue(self, operation: ABCOperation) -> None:
         """
         Removes an operation from the queue.
 
@@ -114,14 +113,14 @@ class OperationQueue:
         """
         if isinstance(operation, OperationChain):
             self.queue.remove(operation)
-        elif isinstance(operation, Operation):
+        elif isinstance(operation, ABCOperation):
             operation_chain = next((op for op in self.queue if op.head.operation == operation), None)
             if operation_chain:
                 operation_chain.remove_operation(operation)
                 if operation_chain.is_empty():
                     self.queue.remove(operation_chain)
 
-    def get_head_operation_from_chain(self, operation_chain: OperationChain) -> Operation:
+    def get_head_operation_from_chain(self, operation_chain: OperationChain) -> ABCOperation:
         """
         Gets the head operation from a chain.
 
@@ -134,7 +133,7 @@ class OperationQueue:
         if isinstance(operation_chain, OperationChain):
             return operation_chain.head.operation
 
-    def get_chain_by_operation(self, operation: Operation) -> OperationChain:
+    def get_chain_by_operation(self, operation: ABCOperation) -> OperationChain:
         """
         Gets the operation chain that contains a specific operation.
 
@@ -146,7 +145,7 @@ class OperationQueue:
         """
         return next((op for op in self.queue if op.head.operation == operation), None)
 
-    def get_operation_in_chain(self, operation_chain: OperationChain, operation: Operation) -> Operation:
+    def get_operation_in_chain(self, operation_chain: OperationChain, operation: ABCOperation) -> ABCOperation:
         """
         Gets a specific operation in a chain.
 
@@ -180,7 +179,7 @@ class OperationQueue:
                     return node.operation
         self.logger.error(f"No operation found of type {operation_type.__name__}")
 
-    def find_operation_by_task(self, task) -> Operation:
+    def find_operation_by_task(self, task) -> ABCOperation:
         """
         Finds an operation by its associated task.
 
@@ -218,7 +217,7 @@ class OperationQueue:
         """Clears the queue."""
         self.queue.clear()
 
-    def contains(self, operation: Operation) -> bool:
+    def contains(self, operation: ABCOperation) -> bool:
         """
         Checks if the queue contains a specific operation.
 
@@ -230,7 +229,7 @@ class OperationQueue:
         """
         if isinstance(operation, OperationChain):
             return operation in self.queue
-        elif isinstance(operation, Operation):
+        elif isinstance(operation, ABCOperation):
             return any(op.head.operation == operation for op in self.queue)
 
     async def has_waiting_operations(self) -> bool:
@@ -240,7 +239,7 @@ class OperationQueue:
         Returns:
             bool: True if the queue has waiting operations, False otherwise.
         """
-        return any(await self.get_head_operation_from_chain(op).status == "waiting" for op in self.queue)
+        return any(self.get_head_operation_from_chain(op).status == "waiting" for op in self.queue)
 
     async def dequeue(self) -> Optional[Any]:
         """

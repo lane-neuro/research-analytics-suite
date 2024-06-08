@@ -42,37 +42,3 @@ class Operation(ABCOperation):
             parent_operation (ABCOperation, optional): The parent operation. Defaults to None.
         """
         super().__init__(*args, **kwargs)
-
-    def init_operation(self):
-        """
-        Initialize any resources or setup required for the operation before it starts.
-        """
-        pass
-
-    async def _execute_func(self):
-        """
-        Execute the function associated with the operation.
-        """
-        if self._is_cpu_bound:
-            with ProcessPoolExecutor() as executor:
-                self._result_output = executor.submit(self._func).result()
-        else:
-            if asyncio.iscoroutinefunction(self._func):
-                self._result_output = await self._func()
-            else:
-                self._result_output = await asyncio.get_event_loop().run_in_executor(None, self._func)
-
-    def get_result(self):
-        """
-        Retrieve the result of the operation, if applicable.
-
-        Returns:
-            The result of the operation.
-        """
-        return self._result_output
-
-    def cleanup_operation(self):
-        """
-        Clean up any resources or perform any necessary teardown after the operation has completed or been stopped.
-        """
-        super().cleanup_operation()

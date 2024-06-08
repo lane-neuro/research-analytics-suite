@@ -22,7 +22,7 @@ from neurobehavioral_analytics_suite.operation_manager.operations.persistent.Con
 from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
     ResourceMonitorOperation
 from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
-from neurobehavioral_analytics_suite.utils.Logger import Logger
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class PersistentOperationChecker:
@@ -35,7 +35,7 @@ class PersistentOperationChecker:
     """
 
     def __init__(self, operation_control: any, operation_manager: OperationManager, queue: OperationQueue,
-                 task_creator: TaskCreator, logger: Logger, error_handler: ErrorHandler):
+                 task_creator: TaskCreator, logger: CustomLogger, error_handler: ErrorHandler):
         """
         Initializes the PersistentOperationChecker with the necessary components.
 
@@ -44,7 +44,7 @@ class PersistentOperationChecker:
         - operation_manager (OperationManager): The manager responsible for operations.
         - queue (OperationQueue): The queue that holds operations to be executed.
         - task_creator (TaskCreator): The task creator that handles task generation.
-        - logger (Logger): The logger for logging information and errors.
+        - logger (CustomLogger): The logger for logging information and errors.
         - error_handler (ErrorHandler): The handler for managing errors.
         """
         self.op_control = operation_control
@@ -64,12 +64,14 @@ class PersistentOperationChecker:
         if not self.op_control.console_operation_in_progress:
             await self.op_manager.add_operation_if_not_exists(operation_type=ConsoleOperation,
                                                               error_handler=self.error_handler,
-                                                              user_input_handler=self.op_control.user_input_handler,
+                                                              user_input_manager=self.op_control.user_input_manager,
                                                               logger=self.logger, local_vars=self.op_control.local_vars,
-                                                              name="ConsoleOperation", prompt="")
+                                                              func=self.op_control.user_input_manager.process_user_input,
+                                                              name="ConsoleOperation", prompt="", concurrent=True)
             self.op_control.console_operation_in_progress = True
 
         # Check if a ResourceMonitorOperation is already running
         if not any(isinstance(task, ResourceMonitorOperation) for task in self.task_creator.tasks):
             await self.op_manager.add_operation_if_not_exists(operation_type=ResourceMonitorOperation,
-                                                              error_handler=self.error_handler)
+                                                              logger=self.logger, error_handler=self.error_handler,
+                                                              concurrent=True)

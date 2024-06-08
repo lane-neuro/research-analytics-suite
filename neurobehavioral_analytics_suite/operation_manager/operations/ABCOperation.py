@@ -14,8 +14,9 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
-from abc import ABC, abstractmethod
+import types
+from abc import ABC
+from concurrent.futures import ProcessPoolExecutor
 from typing import Tuple, List, Any, Dict
 import asyncio
 
@@ -31,16 +32,26 @@ class ABCOperation(ABC):
 
         Args:
             error_handler (ErrorHandler): The error handler for managing errors.
-            func (callable, optional): The function to be executed by the operation.
+            logger (CustomLogger): The logger for logging information.
+            func (callable): The function to be executed by the operation.
             name (str, optional): The name of the operation. Defaults to "Operation".
+            local_vars (dict, optional): Local variables for the function execution. Defaults to locals().
             persistent (bool, optional): Whether the operation should run indefinitely. Defaults to False.
             is_cpu_bound (bool, optional): Whether the operation is CPU-bound. Defaults to False.
             concurrent (bool, optional): Whether child operations should run concurrently. Defaults to False.
             parent_operation (ABCOperation, optional): The parent operation. Defaults to None.
         """
+
+        error_handler = kwargs.get('error_handler')
+        if error_handler is None:
+            raise ValueError("error_handler is required")
+        self._error_handler = error_handler
+        self._logger = kwargs.get('logger')
+        self.operation_logs = []
+
         self._name = kwargs.get('name', "Operation")
-        self._func = kwargs.get('func', None)
-        self._local_vars = kwargs.get('local_vars', None)
+        self._func = kwargs.get('func')
+        self._local_vars = kwargs.get('local_vars', locals())
         self._persistent = kwargs.get('persistent', False)
         self._is_cpu_bound = kwargs.get('is_cpu_bound', False)
         self._status = "idle"
@@ -50,11 +61,6 @@ class ABCOperation(ABC):
         self._pause_event = asyncio.Event()
         self._pause_event.set()
 
-        error_handler = kwargs.get('error_handler')
-        if error_handler is None:
-            raise ValueError("error_handler is required")
-        self._error_handler = error_handler
-
         self._parent_operation = kwargs.get('parent_operation', None)
         self._child_operations: List['ABCOperation'] = []
         self._concurrent = kwargs.get('concurrent', False)
@@ -62,6 +68,8 @@ class ABCOperation(ABC):
         self._result_output: Any = None
 
         self._dependencies: Dict[str, List[str]] = {}
+
+        self._process_func()
 
     @property
     def name(self) -> str:
@@ -72,20 +80,8 @@ class ABCOperation(ABC):
     def name(self, value: str):
         """Sets the name of the operation."""
         if not isinstance(value, str):
-            raise ValueError("Name must be a string")
+            self._handle_error("\'name\' property must be a string")
         self._name = value
-
-    @property
-    def func(self):
-        """Gets the function to be executed by the operation."""
-        return self._func
-
-    @func.setter
-    def func(self, value):
-        """Sets the function to be executed by the operation."""
-        if not callable(value) and not isinstance(value, str):
-            raise ValueError("func must be a callable or a string")
-        self._func = value
 
     @property
     def local_vars(self):
@@ -96,8 +92,18 @@ class ABCOperation(ABC):
     def local_vars(self, value):
         """Sets the local variables for the function execution."""
         if not isinstance(value, dict):
-            raise ValueError("local_vars must be a dictionary")
+            self._handle_error("Local variables \'local_vars\' must be a dictionary")
         self._local_vars = value
+
+    @property
+    def func(self) -> callable:
+        """Gets the function to be executed by the operation."""
+        return self._func
+
+    @func.setter
+    def func(self, value):
+        """Sets the function to be executed by the operation."""
+        self._func = value
 
     @property
     def persistent(self) -> bool:
@@ -108,7 +114,7 @@ class ABCOperation(ABC):
     def persistent(self, value: bool):
         """Sets whether the operation should run indefinitely."""
         if not isinstance(value, bool):
-            raise ValueError("Persistent must be a boolean")
+            self._handle_error("\'persistent\' property must be a boolean")
         self._persistent = value
 
     @property
@@ -120,7 +126,7 @@ class ABCOperation(ABC):
     def is_cpu_bound(self, value: bool):
         """Sets whether the operation is CPU-bound."""
         if not isinstance(value, bool):
-            raise ValueError("is_cpu_bound must be a boolean")
+            self._handle_error("\'is_cpu_bound\' property must be a boolean")
         self._is_cpu_bound = value
 
     @property
@@ -133,7 +139,7 @@ class ABCOperation(ABC):
         """Sets the status of the operation."""
         valid_statuses = ["idle", "started", "waiting", "running", "paused", "stopped", "completed", "error"]
         if value not in valid_statuses:
-            raise ValueError(f"Invalid status: {value}")
+            self._handle_error(f"Invalid status: {value}")
         self._status = value
 
     @property
@@ -142,7 +148,7 @@ class ABCOperation(ABC):
         return self._task
 
     @task.setter
-    def task(self, value):
+    def task(self, value: asyncio.Task):
         """Sets the task associated with the operation."""
         self._task = value
 
@@ -155,7 +161,7 @@ class ABCOperation(ABC):
     def progress(self, value: int):
         """Sets the progress of the operation."""
         if not isinstance(value, int):
-            raise ValueError("Progress must be an integer")
+            self._handle_error("\'progress\' property must be an integer")
         self._progress = value
 
     @property
@@ -172,7 +178,7 @@ class ABCOperation(ABC):
     def parent_operation(self, value):
         """Sets the parent operation."""
         if value is not None and not isinstance(value, ABCOperation):
-            raise ValueError("parent_operation must be an instance of ABCOperation or None")
+            self._handle_error("\'parent_operation\' must be an instance of Operation")
         self._parent_operation = value
 
     @property
@@ -184,7 +190,7 @@ class ABCOperation(ABC):
     def concurrent(self, value: bool):
         """Sets whether child operations should run concurrently."""
         if not isinstance(value, bool):
-            raise ValueError("concurrent must be a boolean")
+            self._handle_error("\'concurrent\' property must be a boolean")
         self._concurrent = value
 
     @property
@@ -197,7 +203,6 @@ class ABCOperation(ABC):
         """Sets the GUI module attached to the operation."""
         self._gui_module = value
 
-    @abstractmethod
     def init_operation(self):
         """Initialize any resources or setup required for the operation before it starts."""
         pass
@@ -211,7 +216,7 @@ class ABCOperation(ABC):
         Returns:
             bool: True if the operation is ready, False otherwise.
         """
-        return all(child.is_complete() for child in self._child_operations if not child.concurrent)
+        return all(child.is_complete() for child in self._child_operations if not child._concurrent)
 
     async def start(self):
         """
@@ -222,7 +227,6 @@ class ABCOperation(ABC):
             self._status = "started"
         except Exception as e:
             self._handle_error(e)
-            self._status = "error"
 
     async def execute(self):
         """
@@ -230,19 +234,74 @@ class ABCOperation(ABC):
         """
         try:
             await self._execute_child_operations()
-            self._status = "running"
-            await self._execute_func()
-            self._status = "completed"
+            await self._run_operations([self])
+            if not self._persistent:
+                self._status = "completed"
+                self.add_log_entry(f"[COMPLETE]")
         except Exception as e:
             self._handle_error(e)
-            self._status = "error"
 
-    @abstractmethod
-    async def _execute_func(self):
-        """Execute the main function of the operation."""
-        pass
+    async def _run_operations(self, operations):
+        tasks = []
+        for op in operations:
+            if op.status != "completed":
+                if op.func is not None:
+                    tasks.append(op.execute_func())
 
-    @abstractmethod
+        if self._concurrent and tasks and len(tasks) > 0:
+            await asyncio.gather(*tasks)
+        elif not self._concurrent and tasks and len(tasks) > 0:
+            for task in tasks:
+                self._result_output = await task
+
+    def _process_func(self):
+        """
+        Process the function associated with the operation.
+        """
+        try:
+            if isinstance(self._func, str):  # If self._func is a string of code
+                code = self._func
+                self._func = lambda: exec(code, {}, self._local_vars)
+                self.add_log_entry(f"[CODE] {code}")
+            elif callable(self._func):  # If self._func is a callable function
+                if isinstance(self._func, types.MethodType):  # If self._func is a bound method
+                    self._func = self._func
+                else:
+                    t_func = self._func
+                    self._func = lambda: t_func()
+            else:
+                self._handle_error(Exception("Invalid function type"))
+        except Exception as e:
+            self._handle_error(e)
+
+    async def execute_func(self):
+        """
+        Execute the function associated with the operation.
+        """
+        try:
+            if self._is_cpu_bound:
+                with ProcessPoolExecutor() as executor:
+                    self._status = "running"
+                    self.add_log_entry(f"[RUN] {self.name}: CPU-bound Operation")
+                    loop = asyncio.get_event_loop()
+                    await loop.run_in_executor(executor, self._func)
+            else:
+                if self._func is not None:
+                    if callable(self._func):
+                        self._status = "running"
+                        self.add_log_entry(f"[RUN] {self._name}")
+                        if asyncio.iscoroutinefunction(self._func):
+                            await self._func()
+                        else:
+                            self._func()
+                else:
+                    self._handle_error(Exception("No function provided for operation"))
+        except Exception as e:
+            self._handle_error(e)
+        finally:
+            self._result_output = self._local_vars
+            return self._result_output
+
     def get_result(self):
         """Retrieve the result of the operation, if applicable."""
         return self._result_output
@@ -324,10 +383,13 @@ class ABCOperation(ABC):
 
         Args:
             operation (ABCOperation): The child operation to be added.
-            dependencies (List[str], optional): List of operation names that the child operation depends on. Defaults to None.
+            dependencies (List[str], optional): List of operation names that the child operation depends on.
+                                                Defaults to None.
         """
         if not isinstance(operation, ABCOperation):
-            raise ValueError("operation must be an instance of ABCOperation")
+            self._handle_error("operation must be an instance of ABCOperation")
+            return
+
         self._child_operations.append(operation)
         if dependencies:
             self._dependencies[operation.name] = dependencies
@@ -340,7 +402,9 @@ class ABCOperation(ABC):
             operation (ABCOperation): The child operation to be removed.
         """
         if not isinstance(operation, ABCOperation):
-            raise ValueError("operation must be an instance of ABCOperation")
+            self._handle_error("operation must be an instance of ABCOperation")
+            return
+
         self._child_operations.remove(operation)
         if operation.name in self._dependencies:
             del self._dependencies[operation.name]
@@ -352,17 +416,24 @@ class ABCOperation(ABC):
         Args:
             gui_module: The GUI module to be attached.
         """
-        self._gui_module = gui_module
+        try:
+            self._gui_module = gui_module
+            self.add_log_entry(f"[GUI] Hooked module")
+        except Exception as e:
+            self._handle_error(e)
 
-    def log_to_gui(self, message: str):
+    def add_log_entry(self, message: str):
         """
         Log a message to the GUI.
 
         Args:
             message (str): The message to log.
         """
-        if self._gui_module is not None:
-            self._gui_module.log_event(message)
+        if self._status == "error":
+            self._error_handler.handle_error(message, self)
+        else:
+            self.operation_logs.insert(0, message)
+            self._logger.info(f"[{self._name}] {message}")
 
     def _handle_error(self, e):
         """
@@ -372,7 +443,7 @@ class ABCOperation(ABC):
             e: The exception that occurred.
         """
         self._status = "error"
-        self._error_handler.handle_error(e, self)
+        self.add_log_entry(e)
 
     def cleanup_operation(self):
         """
@@ -387,18 +458,22 @@ class ABCOperation(ABC):
         Start all child operations.
         """
         tasks = [op.start() for op in self._child_operations]
-        if self._concurrent:
-            await asyncio.gather(*tasks)
-        else:
-            for task in tasks:
-                await task
+        try:
+            if self._concurrent:
+                await asyncio.gather(*tasks)
+            else:
+                for task in tasks:
+                    await task
+        except Exception as e:
+            self._handle_error(e)
 
     async def _execute_child_operations(self):
         """
         Execute all child operations.
         """
         if not self._dependencies:
-            await self._run_operations(self._child_operations)
+            if self._child_operations is not None:
+                await self._run_operations(self._child_operations)
         else:
             execution_order = self._determine_execution_order()
             await self._run_operations(execution_order)
@@ -431,20 +506,6 @@ class ABCOperation(ABC):
         tasks = [op.reset() for op in self._child_operations]
         await asyncio.gather(*tasks)
 
-    async def _run_operations(self, operations):
-        """
-        Run the specified operations.
-
-        Args:
-            operations (List[ABCOperation]): The operations to run.
-        """
-        tasks = [op.execute() for op in operations if not op.is_complete()]
-        if self._concurrent:
-            await asyncio.gather(*tasks)
-        else:
-            for task in tasks:
-                await task
-
     def _determine_execution_order(self) -> List['ABCOperation']:
         """
         Determine the execution order of child operations based on dependencies.
@@ -452,6 +513,7 @@ class ABCOperation(ABC):
         Returns:
             List[ABCOperation]: The execution order of child operations.
         """
+        self.add_log_entry(f"Determining execution order")
         execution_order = []
         processed = set()
         while len(processed) < len(self._child_operations):

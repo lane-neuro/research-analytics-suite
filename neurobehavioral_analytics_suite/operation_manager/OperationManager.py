@@ -13,8 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
-from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 
 
 class OperationManager:
@@ -32,7 +31,7 @@ class OperationManager:
             operation_control: Control interface for operations.
             queue: Queue holding operations to be managed.
             task_creator: Task creator for generating asyncio tasks.
-            logger: Logger instance for logging messages.
+            logger: CustomLogger instance for logging messages.
             error_handler: Error handler for managing errors.
         """
         self.op_control = operation_control
@@ -41,7 +40,7 @@ class OperationManager:
         self.logger = logger
         self.error_handler = error_handler
 
-    async def add_operation(self, operation_type, *args, **kwargs) -> Operation:
+    async def add_operation(self, operation_type, *args, **kwargs) -> ABCOperation:
         """
         Creates a new Operation and adds it to the queue.
 
@@ -56,12 +55,12 @@ class OperationManager:
         try:
             operation = operation_type(*args, **kwargs)
             await self.queue.add_operation_to_queue(operation)
-            self.logger.info(f"add_operation: [QUEUE] {operation.name}")
+            operation.add_log_entry(f"[QUEUE] {operation.name}")
             return operation
         except Exception as e:
-            self.logger.error(f"add_operation: {e}")
+            self.error_handler.handle_error(e, operation_type)
 
-    async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> None:
+    async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> ABCOperation:
         """
         Adds an operation to the queue if it does not already exist.
 
@@ -71,33 +70,33 @@ class OperationManager:
             **kwargs: Arbitrary keyword arguments.
         """
         if not self.task_creator.task_exists(operation_type):
-            await self.add_operation(operation_type, *args, **kwargs)
+            return await self.add_operation(operation_type=operation_type, *args, **kwargs)
 
-    async def resume_operation(self, operation: Operation) -> None:
+    async def resume_operation(self, operation: ABCOperation) -> None:
         """
         Resumes a specific operation.
 
         Args:
-            operation (Operation): The operation to resume.
+            operation (ABCOperation): The operation to resume.
         """
         if operation.status == "paused":
             await operation.resume()
 
-    async def pause_operation(self, operation: Operation) -> None:
+    async def pause_operation(self, operation: ABCOperation) -> None:
         """
         Pauses a specific operation.
 
         Args:
-            operation (Operation): The operation to pause.
+            operation (ABCOperation): The operation to pause.
         """
         if operation.status == "running":
             await operation.pause()
 
-    async def stop_operation(self, operation: Operation) -> None:
+    async def stop_operation(self, operation: ABCOperation) -> None:
         """
         Stops a specific operation.
 
         Args:
-            operation (Operation): The operation to stop.
+            operation (ABCOperation): The operation to stop.
         """
         await operation.stop()

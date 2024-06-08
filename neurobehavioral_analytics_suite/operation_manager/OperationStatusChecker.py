@@ -16,7 +16,7 @@ Status: Prototype
 """
 
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
-from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 
 
 class OperationStatusChecker:
@@ -38,12 +38,12 @@ class OperationStatusChecker:
         self.op_control = operation_control
         self.queue = queue
 
-    def get_operation_status(self, operation: Operation) -> str:
+    def get_operation_status(self, operation: ABCOperation) -> str:
         """
         Returns the status of a specific operation.
 
         Args:
-            operation (Operation): The operation to get the status of.
+            operation (ABCOperation): The operation to get the status of.
 
         Returns:
             str: The status of the operation.

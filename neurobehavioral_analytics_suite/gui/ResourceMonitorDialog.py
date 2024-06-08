@@ -19,7 +19,7 @@ from typing import Optional, Any
 import dearpygui.dearpygui as dpg
 import asyncio
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
-from neurobehavioral_analytics_suite.operation_manager.operations.CustomOperation import CustomOperation
+from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import (
     ResourceMonitorOperation)
 
@@ -37,7 +37,7 @@ class ResourceMonitorDialog:
         Args:
             operation_control (OperationControl): Control interface for operations.
             launcher: Launcher instance for initiating tasks.
-            logger: Logger instance for logging messages.
+            logger: CustomLogger instance for logging messages.
         """
         self.operation_control = operation_control
         self.launcher = launcher
@@ -76,7 +76,7 @@ class ResourceMonitorDialog:
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=CustomOperation, name="gui_ResourceUpdateTask",
+                operation_type=ABCOperation, name="gui_ResourceUpdateTask", logger=self.logger,
                 local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
                 func=self.update_resource_usage, persistent=True)
             return operation

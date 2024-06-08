@@ -1,5 +1,5 @@
 """
-Analytical Engine to process neurobehavioral func from NBAS-DataEngine.
+Analytical Engine to process neurobehavioral _func from NBAS-DataEngine.
 
 This module defines the AnalyticsCore class which is designed to apply a series of transformations
 to a given datapoint. It includes methods for initializing the transformation list, adding a transformation,
@@ -76,7 +76,7 @@ class AnalyticsCore:
         """
 
         self.logger = logger
-        self.logger.info("Logger attached to AnalyticsCore object.")
+        self.logger.info("CustomLogger attached to AnalyticsCore object.")
 
     def transform(self, datapoint):
         """

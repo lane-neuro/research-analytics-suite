@@ -28,7 +28,7 @@ class DaskOperation(Operation):
     This class provides methods for setting the Dask computation to be processed and executing the operations.
 
     Attributes:
-        func (callable): A Dask computation function to be executed.
+        _func (callable): A Dask computation function to be executed.
         error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
         local_vars (dict): Local variables to be used in the function execution.
         client (dask.distributed.Client): The Dask client for managing the computation.
@@ -72,7 +72,7 @@ class DaskOperation(Operation):
         if self.client is None:
             self.client = dask.distributed.Client()
 
-    async def _execute_func(self):
+    async def execute_func(self):
         """
         Execute the Dask computation associated with the operation.
 
@@ -81,18 +81,6 @@ class DaskOperation(Operation):
         """
         temp_vars = self._local_vars.copy()
         try:
-            if isinstance(self._func, str):  # If self._func is a string of code
-                code = self._func
-                self._func = lambda: exec(code, {}, temp_vars)
-            elif callable(self._func):  # If self._func is a callable function
-                if isinstance(self._func, types.MethodType):  # If self._func is a bound method
-                    self._func = self._func
-                else:
-                    func = self._func
-                    self._func = lambda: func()
-            else:
-                raise TypeError("self._func must be a string of Python code, a callable function, or a bound method.")
-
             # Execute the Dask computation
             future = self.client.submit(self._func)
             self._result_output = future.result()

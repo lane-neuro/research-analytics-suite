@@ -26,7 +26,7 @@ class TaskCreator:
         Initializes the TaskCreator with the given logger.
 
         Args:
-            logger: Logger for task-related logs.
+            logger: CustomLogger for task-related logs.
         """
         self.task_counter = TaskCounter(logger)
         self.queue = queue
@@ -48,7 +48,7 @@ class TaskCreator:
                 or any(isinstance(operation_chain.head.operation, operation_type) for operation_chain in
                        self.queue.queue))
 
-    async def create_task(self, coro, name):
+    def create_task(self, coro, name):
         """
         Creates and schedules a new asynchronous task.
 

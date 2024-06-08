@@ -16,12 +16,15 @@ Status: Prototype
 """
 
 import asyncio
+
+from neurobehavioral_analytics_suite.data_engine.Workspace import Workspace
 from neurobehavioral_analytics_suite.operation_manager.OperationExecutor import OperationExecutor
 from neurobehavioral_analytics_suite.operation_manager.OperationManager import OperationManager
 from neurobehavioral_analytics_suite.operation_manager.OperationStatusChecker import OperationStatusChecker
 from neurobehavioral_analytics_suite.operation_manager.PersistentOperationChecker import PersistentOperationChecker
-from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 from neurobehavioral_analytics_suite.operation_manager.OperationQueue import OperationQueue
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
+from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 from neurobehavioral_analytics_suite.utils.UserInputManager import UserInputManager
 from neurobehavioral_analytics_suite.operation_manager.OperationLifecycleManager import OperationLifecycleManager
 from neurobehavioral_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
@@ -30,24 +33,27 @@ from neurobehavioral_analytics_suite.operation_manager.task.TaskMonitor import T
 
 class OperationControl:
     """A class for handling the lifecycle of Operation instances."""
+    SLEEP_TIME = 0.15
 
-    def __init__(self, logger, sleep_time: float = 0.15):
+    def __init__(self, workspace: Workspace, logger: CustomLogger, error_handler: ErrorHandler,
+                 sleep_time: float = 0.15):
         """
         Initializes the OperationControl with various components.
         """
         self.logger = logger
-        self.error_handler = ErrorHandler()
+        self.workspace = workspace
+        self.error_handler = error_handler
         self.main_loop = asyncio.get_event_loop()
+        self.console_operation_in_progress = False
 
         self.queue = OperationQueue(logger=self.logger, error_handler=self.error_handler)
         self.task_creator = TaskCreator(logger=self.logger, queue=self.queue)
         self.task_monitor = TaskMonitor(task_creator=self.task_creator, queue=self.queue, logger=self.logger,
-                                        error_handler=self.error_handler)
+                                        error_handler=self.error_handler, operation_control=self)
 
-        self.console_operation_in_progress = False
         self.local_vars = locals()
 
-        self.sleep_time = sleep_time
+        self.SLEEP_TIME = sleep_time
 
         self.operation_manager = OperationManager(operation_control=self, queue=self.queue,
                                                   task_creator=self.task_creator, logger=self.logger,
@@ -56,14 +62,14 @@ class OperationControl:
                                                     task_creator=self.task_creator, logger=self.logger,
                                                     error_handler=self.error_handler)
         self.operation_status_checker = OperationStatusChecker(operation_control=self, queue=self.queue)
+        self.user_input_manager = UserInputManager(operation_control=self, logger=self.logger,
+                                                   error_handler=self.error_handler)
         self.persistent_operation_checker = PersistentOperationChecker(operation_control=self,
                                                                        operation_manager=self.operation_manager,
                                                                        queue=self.queue,
                                                                        task_creator=self.task_creator,
                                                                        logger=self.logger,
                                                                        error_handler=self.error_handler)
-        self.user_input_handler = UserInputManager(operation_control=self, logger=self.logger,
-                                                   error_handler=self.error_handler)
         self.lifecycle_manager = OperationLifecycleManager(queue=self.queue, operation_manager=self.operation_manager,
                                                            executor=self.operation_executor,
                                                            task_monitor=self.task_monitor, logger=self.logger,
@@ -76,4 +82,6 @@ class OperationControl:
 
     async def exec_loop(self):
         """Executes the main loop of the operations manager."""
-        await self.lifecycle_manager.exec_loop()
+        while True:
+            await self.lifecycle_manager.exec_loop()
+            await asyncio.sleep(self.SLEEP_TIME)
