@@ -29,7 +29,6 @@ class UnifiedDataEngine:
     Attributes:
         data: The data point.
         backend: The backend to use ('dask' or 'torch').
-        logger: CustomLogger instance for logging.
         dask_client: Dask client instance.
         analytics: AnalyticsCore instance for analytics operations.
         dask_data: DaskData instance for handling data with Dask.
@@ -37,20 +36,19 @@ class UnifiedDataEngine:
         data_cache: DataCache instance for caching data.
         live_input_source: Live data input source instance.
     """
-    def __init__(self, backend='dask', logger=None, dask_client=None, data=None, data_name=None):
+    def __init__(self, backend='dask', dask_client=None, data=None, data_name=None):
         """
         Initializes the UnifiedDataEngine instance.
 
         Args:
             backend (str): The backend to use ('dask' or 'torch'). Default is 'dask'.
-            logger (CustomLogger): Logger instance for logging. Default is None.
             dask_client: Dask client instance. Default is None.
             data: The data point. Default is None.
         """
         self.data = data
         self.data_name = f"{data_name}_{uuid.uuid4()}" if data_name else f"data_{uuid.uuid4()}"
         self.backend = backend
-        self.logger = logger  # Pointer to CustomLogger
+        self._logger = CustomLogger()
         self.dask_client = dask_client  # Pointer to primary Dask client
         self.analytics = AnalyticsCore()  # Initialize AnalyticsCore Engine
         self.dask_data = DaskData(data)
@@ -67,7 +65,7 @@ class UnifiedDataEngine:
             file_path (str): The path to the data file.
         """
         data_type = DataTypeDetector.detect_type(file_path)
-        self.logger.info(f"Loading data from {file_path} as {data_type}")
+        self._logger.info(f"Loading data from {file_path} as {data_type}")
 
         if data_type == 'csv':
             self.data = dd.read_csv(file_path)
@@ -83,7 +81,7 @@ class UnifiedDataEngine:
         else:
             raise ValueError(f"Unsupported data type: {data_type}")
 
-        self.logger.info("Data loaded")
+        self._logger.info("Data loaded")
 
     def save_data(self, file_path):
         """
@@ -93,7 +91,7 @@ class UnifiedDataEngine:
             file_path (str): The path to the data file.
         """
         data_type = DataTypeDetector.detect_type(file_path)
-        self.logger.info(f"Saving data to {file_path} as {data_type}")
+        self._logger.info(f"Saving data to {file_path} as {data_type}")
 
         if data_type == 'csv':
             self.data.to_csv(file_path, single_file=True)
@@ -109,7 +107,7 @@ class UnifiedDataEngine:
         else:
             raise ValueError(f"Unsupported data type: {data_type}")
 
-        self.logger.info("Data saved")
+        self._logger.info("Data saved")
 
     def save_engine(self, instance_path):
         engine_path = os.path.join(instance_path, 'engines', self.engine_id)
@@ -134,7 +132,7 @@ class UnifiedDataEngine:
         with open(os.path.join(engine_path, 'engine_state.joblib'), 'wb') as state_file:
             joblib.dump(engine_state, state_file)
 
-        self.logger.info(f"Instance saved to {instance_path}")
+        self._logger.info(f"Instance saved to {instance_path}")
 
     @staticmethod
     def load_engine(instance_path, engine_id):
@@ -205,17 +203,6 @@ class UnifiedDataEngine:
         else:
             raise RuntimeError("DataLoader is only available for 'torch' backend")
 
-    def attach_logger(self, logger: CustomLogger):
-        """
-        Attaches a logger to the data engine.
-
-        Args:
-            logger (CustomLogger): The logger to attach.
-        """
-        self.logger = logger
-        self.logger.info("CustomLogger attached to UnifiedDataEngine object.")
-        self.analytics.attach_logger(logger)
-
     def get_pickleable_data(self):
         data = self.__dict__.copy()
         data.pop('logger', None)
@@ -240,7 +227,7 @@ class UnifiedDataEngine:
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self.logger = None
+        self._logger = None
         self.dask_client = None
         self.live_input_source = None
 

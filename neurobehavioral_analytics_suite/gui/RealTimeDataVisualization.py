@@ -15,16 +15,15 @@ from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 class RealTimeDataVisualization:
     """Class to create and manage the Real-Time Data Visualization pane."""
 
-    def __init__(self, data_engine: DataEngineOptimized, logger: CustomLogger):
+    def __init__(self, data_engine: DataEngineOptimized):
         """
         Initializes the RealTimeDataVisualization instance.
 
         Args:
             data_engine (DataEngineOptimized): The data engine with real-time data.
-            logger (CustomLogger): CustomLogger for logging information and errors.
         """
         self.data_engine = data_engine
-        self.logger = logger
+        self._logger = CustomLogger()
 
     async def initialize(self):
         """Initializes the Real-Time Data Visualization pane."""
@@ -36,10 +35,10 @@ class RealTimeDataVisualization:
 
     def start_visualization(self):
         """Starts real-time data visualization."""
-        self.logger.info("Starting real-time data visualization")
+        self._logger.info("Starting real-time data visualization")
         # Placeholder for starting real-time data visualization
 
     def stop_visualization(self):
         """Stops real-time data visualization."""
-        self.logger.info("Stopping real-time data visualization")
+        self._logger.info("Stopping real-time data visualization")
         # Placeholder for stopping real-time data visualization

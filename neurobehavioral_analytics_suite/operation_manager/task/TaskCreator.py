@@ -16,21 +16,22 @@ Status: Prototype
 
 import asyncio
 from neurobehavioral_analytics_suite.operation_manager.task.TaskCounter import TaskCounter
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class TaskCreator:
     """Handles the creation and scheduling of tasks."""
 
-    def __init__(self, queue, logger):
+    def __init__(self, queue):
         """
         Initializes the TaskCreator with the given logger.
 
         Args:
-            logger: CustomLogger for task-related logs.
+            queue: The queue to which tasks are added.
         """
-        self.task_counter = TaskCounter(logger)
+        self.task_counter = TaskCounter()
         self.queue = queue
-        self.logger = logger
+        self._logger = CustomLogger()
 
         self.tasks = set()
 

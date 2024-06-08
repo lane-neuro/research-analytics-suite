@@ -32,7 +32,7 @@ class OperationManagerDialog:
     TILE_WIDTH = 300  # Fixed width for each operation tile
     TILE_HEIGHT = 300  # Fixed height for each operation tile
 
-    def __init__(self, operation_control: OperationControl, logger: CustomLogger, container_width: int = 900):
+    def __init__(self, operation_control: OperationControl, container_width: int = 900):
         """
         Initializes the OperationManagerDialog with the given operation control, logger, and container width.
 
@@ -44,7 +44,7 @@ class OperationManagerDialog:
         self.window = dpg.add_group(label="Operation Manager", parent="operation_pane", tag="operation_gallery",
                                     horizontal=False)
         self.operation_control = operation_control
-        self.logger = logger
+        self._logger = CustomLogger()
         self.operation_items = {}  # Store operation GUI items
         self.update_operation = None
         self.container_width = container_width
@@ -77,12 +77,12 @@ class OperationManagerDialog:
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=ABCOperation, name="gui_OperationManagerUpdateTask", logger=self.logger,
-                local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
+                operation_type=ABCOperation, name="gui_OperationManagerUpdateTask",
+                local_vars=self.operation_control.local_vars,
                 func=self.display_operations, persistent=True, concurrent=True)
             return operation
         except Exception as e:
-            self.logger.error(f"Error creating task: {e}")
+            self._logger.error(f"Error creating task: {e}")
         return None
 
     async def display_operations(self) -> None:
@@ -92,8 +92,7 @@ class OperationManagerDialog:
             for operation_chain in queue_copy:
                 for node in operation_chain:
                     if node.operation not in self.operation_items and node.operation.name != "gui_OperationUpdateTask":
-                        self.operation_items[node.operation] = OperationModule(node.operation, self.operation_control,
-                                                                               self.logger)
+                        self.operation_items[node.operation] = OperationModule(node.operation, self.operation_control)
                         await self.operation_items[node.operation].initialize()
                         self.add_operation_tile(node.operation)
             await asyncio.sleep(self.SLEEP_DURATION)
@@ -108,10 +107,10 @@ class OperationManagerDialog:
         if (self.current_row_group is None
                 or len(dpg.get_item_children(self.current_row_group)[1]) >= self.tiles_per_row):
             self.current_row_group = dpg.add_group(horizontal=True, parent=self.window)
-            self.logger.debug(f"Created new row group: {self.current_row_group}")
+            self._logger.debug(f"Created new row group: {self.current_row_group}")
         child_window = dpg.add_child_window(width=self.TILE_WIDTH, height=self.TILE_HEIGHT,
                                             parent=self.current_row_group)
-        self.logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
+        self._logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
         self.operation_items[operation].draw(parent=child_window)
 
     def on_resize(self, sender: str, data: dict) -> None:

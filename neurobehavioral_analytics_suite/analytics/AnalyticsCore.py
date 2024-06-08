@@ -35,7 +35,7 @@ class AnalyticsCore:
             transformations (list): The list of transformations to be applied.
         """
 
-        self.logger = None
+        self._logger = None
 
         if transformations is None:
             self.transformations = []
@@ -56,27 +56,14 @@ class AnalyticsCore:
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # Exclude self.logger
-        state.pop('logger', None)
+        # Exclude self._logger
+        state.pop('_logger', None)
         return state
 
     def __setstate__(self, state):
         # Restore non-serializable attributes here
         self.__dict__.update(state)
-        self.logger = None
-
-    def attach_logger(self, logger):
-        """
-        Attaches a logger to the AnalyticsCore object.
-
-        This method attaches a logger to the AnalyticsCore object.
-
-        Args:
-            logger: The logger to attach.
-        """
-
-        self.logger = logger
-        self.logger.info("CustomLogger attached to AnalyticsCore object.")
+        self._logger = None
 
     def transform(self, datapoint):
         """

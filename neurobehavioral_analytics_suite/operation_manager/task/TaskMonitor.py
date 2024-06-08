@@ -15,12 +15,13 @@ Status: Prototype
 """
 from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class TaskMonitor:
     """Monitors and manages tasks."""
 
-    def __init__(self, operation_control, task_creator, queue, logger, error_handler):
+    def __init__(self, operation_control, task_creator, queue):
         """
         Initializes the TaskMonitor with the given parameters.
 
@@ -28,34 +29,32 @@ class TaskMonitor:
             operation_control: The operation control interface.
             task_creator: The task creator.
             queue: The operations queue.
-            logger: CustomLogger for task-related logs.
-            error_handler: Handler for managing errors.
         """
         self.op_control = operation_control
         self.task_creator = task_creator
         self.queue = queue
-        self.logger = logger
-        self.error_handler = error_handler
+        self._logger = CustomLogger()
 
     async def handle_tasks(self):
         """Handles the execution and monitoring of tasks."""
-        self.logger.debug("handle_tasks: [INIT]")
+        self._logger.debug("handle_tasks: [INIT]")
         for task in self.task_creator.tasks.copy():
-            self.logger.debug(f"handle_tasks: [CHECK] {task.get_name()}")
+            self._logger.debug(f"handle_tasks: [CHECK] {task.get_name()}")
             if task.done():
                 operation = self.queue.find_operation_by_task(task)
                 try:
-                    self.logger.debug(f"handle_tasks: [OP] {task.get_name()}")
+                    self._logger.debug(f"handle_tasks: [OP] {task.get_name()}")
                     if operation is not None:
                         if isinstance(operation, ABCOperation):
                             output = operation.get_result()
                             operation.add_log_entry(f"handle_tasks: [OUTPUT] {output}")
 
-                        self.logger.info(f"handle_tasks: [DONE] {task.get_name()}")
+                        self._logger.info(f"handle_tasks: [DONE] {task.get_name()}")
                     else:
-                        self.logger.error(f"handle_tasks: [ERROR] No operations found for task {task.get_name()}")
+                        self._logger.error(Exception(
+                            f"handle_tasks: [ERROR] No operations found for task {task.get_name()}"), self)
                 except Exception as e:
-                    self.error_handler.handle_error(e, self)
+                    self._logger.error(e, self)
                 finally:
                     if operation:
                         self.task_creator.tasks.remove(task)

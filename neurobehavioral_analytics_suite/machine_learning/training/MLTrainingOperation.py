@@ -1,13 +1,12 @@
 from neurobehavioral_analytics_suite.machine_learning import Model
 from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
-from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 from sklearn.model_selection import train_test_split
 import asyncio
 
 
 class MLTrainingOperation(Operation):
-    def __init__(self, error_handler: ErrorHandler, model: Model, data, target, test_size=0.2, random_state=42):
-        super().__init__(error_handler=error_handler, func=None, name="MLTrainingOperation")
+    def __init__(self, model: Model, data, target, test_size=0.2, random_state=42):
+        super().__init__(func=None, name="MLTrainingOperation")
         self.model = model
         self.data = data
         self.target = target
@@ -35,6 +34,6 @@ class MLTrainingOperation(Operation):
             self._status = "completed"
             self.add_log_entry("Training completed successfully")
         except Exception as e:
-            self._error_handler.handle_error(e, self)
+            self._logger.error(e, self)
             self._status = "error"
             self.add_log_entry(f"Error during training: {e}")

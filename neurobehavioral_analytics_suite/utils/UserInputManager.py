@@ -19,7 +19,7 @@ from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation i
 from neurobehavioral_analytics_suite.operation_manager.operations.computation.DaskOperation import DaskOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
     ResourceMonitorOperation
-from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class UserInputManager:
@@ -30,18 +30,15 @@ class UserInputManager:
     and displaying system resources, tasks, and queue status.
     """
 
-    def __init__(self, operation_control, logger, error_handler: ErrorHandler):
+    def __init__(self, operation_control):
         """
         Initializes the UserInputManager with the necessary components.
 
         Args:
             operation_control: Control interface for operations.
-            logger: CustomLogger instance for logging messages.
-            error_handler (ErrorHandler): Error handler for managing errors.
         """
         self.operation_control = operation_control
-        self.logger = logger
-        self.error_handler = error_handler
+        self._logger = CustomLogger()
 
     async def process_user_input(self, user_input: str) -> str:
         """
@@ -68,23 +65,21 @@ class UserInputManager:
                                  "-arenaOct3shuffle1_200000_filtered.csv")
                 return df.compute()
 
-            await self.operation_control.operation_manager.add_operation(logger=self.logger,
-                                                                         operation_type=DaskOperation,
-                                                                         error_handler=self.error_handler,
+            await self.operation_control.operation_manager.add_operation(operation_type=DaskOperation,
                                                                          func=load_data,
                                                                          name="LoadData",
                                                                          local_vars=self.operation_control.local_vars,
                                                                          client=dask.distributed.Client())
 
         elif user_input == "machine_learning":
-            self.logger.error("UserInputManager.process_user_input: Machine Learning not implemented.")
+            self._logger.error(Exception("UserInputManager.process_user_input: Machine Learning not implemented."))
             return "UserInputManager.process_user_input: Machine Learning not implemented."
 
-            # ml_operation = MachineLearning(operation_control=self.operation_control,
-            # error_handler=self.error_handler) result = await ml_operation.extract_data(
+            # ml_operation = MachineLearning(operation_control=self.operation_control
+            # ) result = await ml_operation.extract_data(
             # file_path="../../../sample_datasets/2024-Tariq-et-al_olfaction/8-30-2021-2-08
             # PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv") print(
-            # result) self.logger.info("UserInputManager.process_user_input: Attached machine learning...") data =
+            # result) self._logger.info("UserInputManager.process_user_input: Attached machine learning...") data =
             # await ml_operation.extract_data(file_path="../../sample_datasets/2024-Tariq-et-al_olfaction/8-30
             # -2021-2-08 PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv
             # ") train_data, test_data = ml_operation.split_data(data, 7, test_size=0.2)
@@ -103,33 +98,31 @@ class UserInputManager:
             for operation_list in self.operation_control.queue.queue:
                 operation_node = self.operation_control.queue.get_head_operation_from_chain(operation_list)
                 if isinstance(operation_node, ResourceMonitorOperation):
-                    self.logger.info(operation_node.output_memory_usage())
+                    self._logger.info(operation_node.output_memory_usage())
             return "UserInputManager.process_user_input: Displaying system resources."
 
         elif user_input == "tasks":
             for task in self.operation_control.task_creator.tasks:
                 operation = self.operation_control.queue.find_operation_by_task(task)
                 if operation:
-                    self.logger.info(f"UserInputManager.process_user_input: Task: {task.get_name()} - "
+                    self._logger.info(f"UserInputManager.process_user_input: Task: {task.get_name()} - "
                                      f"{operation.status}")
             return "UserInputManager.process_user_input: Displaying all tasks..."
 
         elif user_input == "queue":
             for queue_chain in self.operation_control.queue.queue:
                 operation = queue_chain.head.operation
-                self.logger.info(f"UserInputManager.process_user_input: Operation: {operation.task.get_name()} - "
+                self._logger.info(f"UserInputManager.process_user_input: Operation: {operation.task.get_name()} - "
                                  f"{operation.status}")
             return "UserInputManager.process_user_input: Displaying all operations in the queue..."
 
         elif user_input == "vars":
-            self.logger.info(f"UserInputManager.process_user_input: Local Vars: {self.operation_control.local_vars}")
+            self._logger.info(f"UserInputManager.process_user_input: Local Vars: {self.operation_control.local_vars}")
             return "UserInputManager.process_user_input: Displaying local vars..."
 
         else:
-            self.logger.info(f"UserInputManager.process_user_input: Executing custom operation with func: {user_input}")
+            self._logger.info(f"UserInputManager.process_user_input: Executing custom operation with func: {user_input}")
             await self.operation_control.operation_manager.add_operation(operation_type=ABCOperation,
                                                                          func=user_input, name="ConsoleCommand",
-                                                                         local_vars=self.operation_control.local_vars,
-                                                                         error_handler=self.error_handler,
-                                                                         logger=self.logger)
+                                                                         local_vars=self.operation_control.local_vars)
             return f"UserInputManager.process_user_input: Added custom operation with func: {user_input}"

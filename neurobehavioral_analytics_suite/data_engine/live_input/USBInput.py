@@ -12,9 +12,8 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
+from neurobehavioral_analytics_suite.data_engine.live_input.BaseInput import BaseInput
 import serial
-from .base_input import BaseInput
 
 
 class USBInput(BaseInput):

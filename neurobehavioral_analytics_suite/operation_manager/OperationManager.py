@@ -14,6 +14,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class OperationManager:
@@ -23,7 +24,7 @@ class OperationManager:
     This class provides methods to add operations to the queue, and to resume, pause, and stop operations.
     """
 
-    def __init__(self, operation_control, queue, task_creator, logger, error_handler):
+    def __init__(self, operation_control, queue, task_creator):
         """
         Initializes the OperationManager with the necessary components.
 
@@ -31,14 +32,11 @@ class OperationManager:
             operation_control: Control interface for operations.
             queue: Queue holding operations to be managed.
             task_creator: Task creator for generating asyncio tasks.
-            logger: CustomLogger instance for logging messages.
-            error_handler: Error handler for managing errors.
         """
         self.op_control = operation_control
         self.queue = queue
         self.task_creator = task_creator
-        self.logger = logger
-        self.error_handler = error_handler
+        self._logger = CustomLogger()
 
     async def add_operation(self, operation_type, *args, **kwargs) -> ABCOperation:
         """
@@ -58,7 +56,7 @@ class OperationManager:
             operation.add_log_entry(f"[QUEUE] {operation.name}")
             return operation
         except Exception as e:
-            self.error_handler.handle_error(e, operation_type)
+            self._logger.error(e, operation_type)
 
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> ABCOperation:
         """

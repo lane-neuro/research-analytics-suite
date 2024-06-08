@@ -13,5 +13,5 @@ class SaveProjectOperation(Operation):
             self.data_engine = save_project(param1, param2, ...)  # replace with actual parameters
             self.status = "completed"
         except Exception as e:
-            self.error_handler.handle_error(e, self)
+            self._logger.error(e, self)
             self.status = "error"

@@ -22,39 +22,34 @@ from neurobehavioral_analytics_suite.operation_manager.OperationControl import O
 from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 from neurobehavioral_analytics_suite.data_engine.live_input.LiveDataHandler import LiveDataHandler
 from neurobehavioral_analytics_suite.data_engine.Workspace import Workspace
-from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
 class GuiLauncher:
     """Class to launch the GUI for the NeuroBehavioral Analytics Suite."""
 
-    def __init__(self, data_engine: DataEngineOptimized, operation_control: OperationControl, logger: CustomLogger,
-                 error_handler: ErrorHandler, workspace: Workspace):
+    def __init__(self, data_engine: DataEngineOptimized, operation_control: OperationControl, workspace: Workspace):
         """
         Initializes the GUI launcher with necessary components.
 
         Args:
             data_engine (DataEngineOptimized): The data engine for handling data operation.
             operation_control (OperationControl): The control manager for operations.
-            logger (CustomLogger): The logger for logging information and errors.
-            error_handler (ErrorHandler): The error handler for handling errors.
             workspace (Workspace): The workspace manager for saving and loading workspaces.
         """
         self.dpg_async = DearPyGuiAsync()
-        self.logger = logger
-        self.error_handler = error_handler
+        self._logger = CustomLogger()
         self.operation_control = operation_control
         self.data_engine = data_engine
         self.workspace = workspace
         self.data_engine_dialog = None
         self.data_import_wizard = None
         self.real_time_data_visualization = None
-        self.settings_dialog = SettingsDialog(logger)
+        self.settings_dialog = SettingsDialog()
         self.console = None
         self.operation_window = None
 
         # Initialize live data handler
-        self.data_engine.live_data_handler = LiveDataHandler(data_engine, logger)
+        self.data_engine.live_data_handler = LiveDataHandler(data_engine)
 
     def setup_navigation_menu(self) -> None:
         """Sets up the navigation menu on the left pane."""
@@ -102,7 +97,7 @@ class GuiLauncher:
         with dpg.group(parent="bottom_pane"):
             dpg.add_text("Console/Log Output", tag="console_log_output")
 
-        self.console = ConsoleDialog(self.operation_control.user_input_manager, self.operation_control, self.logger)
+        self.console = ConsoleDialog(self.operation_control.user_input_manager, self.operation_control)
         await self.console.initialize()
 
     async def setup_operation_pane(self) -> None:
@@ -110,28 +105,28 @@ class GuiLauncher:
         with dpg.group(parent="operation_pane"):
             dpg.add_text("Operation Manager")
 
-        self.operation_window = OperationManagerDialog(self.operation_control, self.logger)
+        self.operation_window = OperationManagerDialog(self.operation_control)
         await self.operation_window.initialize_dialog()
 
     async def setup_data_engine_pane(self) -> None:
         """Sets up the data engine pane asynchronously."""
         with dpg.group(parent="import_data_pane"):
             dpg.add_text("Data Engine")
-            self.data_engine_dialog = DataEngineDialog(self.data_engine, self.logger)
+            self.data_engine_dialog = DataEngineDialog(self.data_engine)
             await self.data_engine_dialog.initialize()
 
     async def setup_data_import_wizard_pane(self) -> None:
         """Sets up the data import wizard pane asynchronously."""
         with dpg.group(parent="data_import_pane"):
             dpg.add_text("Data Import Wizard")
-            self.data_import_wizard = DataImportWizard(self.data_engine, self.logger)
+            self.data_import_wizard = DataImportWizard(self.data_engine)
             await self.data_import_wizard.initialize()
 
     async def setup_real_time_visualization_pane(self) -> None:
         """Sets up the real-time data visualization pane asynchronously."""
         with dpg.group(parent="real_time_visualization_pane"):
             dpg.add_text("Real-Time Data Visualization")
-            self.real_time_data_visualization = RealTimeDataVisualization(self.data_engine, self.logger)
+            self.real_time_data_visualization = RealTimeDataVisualization(self.data_engine)
             await self.real_time_data_visualization.initialize()
 
     async def setup_panes(self) -> None:
@@ -200,4 +195,4 @@ class GuiLauncher:
             workspace_name = "default_name"
         self.workspace.save_current_workspace()
         # dpg.set_value("workspace_status", f"Workspace '{workspace_name}' saved successfully")
-        self.logger.info(f"Workspace '{workspace_name}' saved successfully")
+        self._logger.info(f"Workspace '{workspace_name}' saved successfully")

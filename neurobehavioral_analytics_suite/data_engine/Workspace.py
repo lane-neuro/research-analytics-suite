@@ -15,7 +15,6 @@ from neurobehavioral_analytics_suite.data_engine.DataCache import DataCache
 from neurobehavioral_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
 from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 from neurobehavioral_analytics_suite.data_engine.DataEngineOptimized import DataEngineOptimized
-from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
 class Workspace:
@@ -23,20 +22,19 @@ class Workspace:
     A class to manage multiple data engines, allowing flexible interaction with specific datasets.
     """
 
-    def __init__(self, logger: CustomLogger, error_handler: ErrorHandler, distributed=False):
+    def __init__(self, distributed=False):
         """
         Initializes the Workspace instance.
 
         Args:
-            logger (CustomLogger): CustomLogger for logging information and errors.
             distributed (bool): Whether to use distributed computing. Default is False.
         """
         self._data_engines = {}
         self._dependencies = defaultdict(list)
         self._data_cache = DataCache()
         self._distributed = distributed
-        self.logger = logger
-        self._error_handler = error_handler
+        self._logger = CustomLogger()
+        self._config = Config()
 
     def add_data_engine(self, data_engine):
         """
@@ -89,28 +87,28 @@ class Workspace:
         Returns:
             DataEngineOptimized: The initialized data engine for the new project.
         """
-        data_engine = DataEngineOptimized(logger=self.logger, workspace=self)
+        data_engine = DataEngineOptimized(workspace=self)
         self.add_data_engine(data_engine=data_engine)
         return data_engine
 
     def save_current_workspace(self):
-        os.makedirs(Config.BASE_DIR, exist_ok=True)
-        os.makedirs(Config.DATA_DIR, exist_ok=True)
-        os.makedirs(Config.LOG_DIR, exist_ok=True)
-        os.makedirs(Config.WORKSPACE_DIR, exist_ok=True)
-        os.makedirs(Config.BACKUP_DIR, exist_ok=True)
-        os.makedirs(Config.ENGINE_DIR, exist_ok=True)
+        os.makedirs(self._config.BASE_DIR, exist_ok=True)
+        os.makedirs(self._config.DATA_DIR, exist_ok=True)
+        os.makedirs(self._config.LOG_DIR, exist_ok=True)
+        os.makedirs(self._config.WORKSPACE_DIR, exist_ok=True)
+        os.makedirs(self._config.BACKUP_DIR, exist_ok=True)
+        os.makedirs(self._config.ENGINE_DIR, exist_ok=True)
 
         for engine_id, data_engine in self._data_engines.items():
-            engine_path = os.path.join(Config.ENGINE_DIR, f'{engine_id}')
+            engine_path = os.path.join(self._config.ENGINE_DIR, f'{engine_id}')
             os.makedirs(engine_path, exist_ok=True)
-            data_engine.save_engine(Config.BASE_DIR)
+            data_engine.save_engine(self._config.BASE_DIR)
 
-        config_path = os.path.join(Config.BASE_DIR, 'config.json')
+        config_path = os.path.join(self._config.BASE_DIR, 'config.json')
         with open(config_path, 'w') as config_file:
             config_file.write(self._get_config_settings())
 
-        self.logger.info(f"Workspace saved at {Config.BASE_DIR}")
+        self._logger.info(f"Workspace saved at {self._config.BASE_DIR}")
 
     @staticmethod
     def load_workspace(workspace_path):
@@ -118,68 +116,65 @@ class Workspace:
             config = json.load(config_file)
 
         workspace_path = os.path.dirname(workspace_path)
-
-        logger = CustomLogger()
-        error_handler = ErrorHandler()
-        workspace = Workspace(logger, error_handler, config.get('distributed', False))
+        workspace = Workspace(config.get('distributed', False))
 
         for engine_id in os.listdir(os.path.join(workspace_path, 'engines')):
             data_engine = UnifiedDataEngine.load_engine(workspace_path, engine_id)
             workspace.add_data_engine(data_engine)
 
-        workspace.logger.info("Workspace loaded successfully")
+        workspace._logger.info("Workspace loaded successfully")
         return workspace
 
     def _get_config_settings(self):
         """
-        Retrieves the current configuration settings.
+        Retrieves the current self._configuration settings.
 
         Returns:
-            str: The configuration settings in JSON format.
+            str: The self._configuration settings in JSON format.
         """
         return json.dumps({
-            'workspace_name': Config.WORKSPACE_NAME,
-            'base_dir': Config.BASE_DIR,
-            'data_dir': Config.DATA_DIR,
-            'log_dir': Config.LOG_DIR,
-            'workspace_dir': Config.WORKSPACE_DIR,
-            'backup_dir': Config.BACKUP_DIR,
-            'engine_dir': Config.ENGINE_DIR,
+            'workspace_name': self._config.WORKSPACE_NAME,
+            'base_dir': self._config.BASE_DIR,
+            'data_dir': self._config.DATA_DIR,
+            'log_dir': self._config.LOG_DIR,
+            'workspace_dir': self._config.WORKSPACE_DIR,
+            'backup_dir': self._config.BACKUP_DIR,
+            'engine_dir': self._config.ENGINE_DIR,
 
-            'memory_limit': Config.MEMORY_LIMIT,
+            'memory_limit': self._config.MEMORY_LIMIT,
 
-            'log_level': Config.LOG_LEVEL,
-            'log_file': Config.LOG_FILE,
-            'log_rotation': Config.LOG_ROTATION,
-            'log_retention': Config.LOG_RETENTION,
+            'log_level': self._config.LOG_LEVEL,
+            'log_file': self._config.LOG_FILE,
+            'log_rotation': self._config.LOG_ROTATION,
+            'log_retention': self._config.LOG_RETENTION,
 
-            'cache_size': Config.CACHE_SIZE,
-            'num_threads': Config.NUM_THREADS,
+            'cache_size': self._config.CACHE_SIZE,
+            'num_threads': self._config.NUM_THREADS,
 
-            'db_host': Config.DB_HOST,
-            'db_port': Config.DB_PORT,
-            'db_user': Config.DB_USER,
-            'db_password': Config.DB_PASSWORD,
-            'db_name': Config.DB_NAME,
+            'db_host': self._config.DB_HOST,
+            'db_port': self._config.DB_PORT,
+            'db_user': self._config.DB_USER,
+            'db_password': self._config.DB_PASSWORD,
+            'db_name': self._config.DB_NAME,
 
-            'api_base_url': Config.API_BASE_URL,
-            'api_key': Config.API_KEY,
+            'api_base_url': self._config.API_BASE_URL,
+            'api_key': self._config.API_KEY,
 
-            'email_host': Config.EMAIL_HOST,
-            'email_port': Config.EMAIL_PORT,
-            'email_user': Config.EMAIL_USER,
-            'email_password': Config.EMAIL_PASSWORD,
-            'email_use_tls': Config.EMAIL_USE_TLS,
-            'email_use_ssl': Config.EMAIL_USE_SSL,
+            'email_host': self._config.EMAIL_HOST,
+            'email_port': self._config.EMAIL_PORT,
+            'email_user': self._config.EMAIL_USER,
+            'email_password': self._config.EMAIL_PASSWORD,
+            'email_use_tls': self._config.EMAIL_USE_TLS,
+            'email_use_ssl': self._config.EMAIL_USE_SSL,
 
-            'theme': Config.THEME,
-            'language': Config.LANGUAGE,
+            'theme': self._config.THEME,
+            'language': self._config.LANGUAGE,
 
-            'encryption_key': Config.ENCRYPTION_KEY,
-            'authentication_method': Config.AUTHENTICATION_METHOD,
+            'encryption_key': self._config.ENCRYPTION_KEY,
+            'authentication_method': self._config.AUTHENTICATION_METHOD,
 
-            'batch_size': Config.BATCH_SIZE,
-            'transformations': Config.TRANSFORMATIONS,
+            'batch_size': self._config.BATCH_SIZE,
+            'transformations': self._config.TRANSFORMATIONS,
 
-            'scheduler_interval': Config.SCHEDULER_INTERVAL,
+            'scheduler_interval': self._config.SCHEDULER_INTERVAL,
         }, indent=4)

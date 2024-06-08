@@ -29,6 +29,9 @@ def main():
         asyncio.run(launch_nbas())
     except KeyboardInterrupt:
         print('Exiting NeuroBehavioral Analytics Suite...')
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        print("Exiting NeuroBehavioral Analytics Suite...")
     finally:
         print("Cleaning up...")
         asyncio.get_event_loop().close()

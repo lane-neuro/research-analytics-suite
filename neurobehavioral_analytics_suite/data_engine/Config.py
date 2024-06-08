@@ -9,69 +9,138 @@ Author: Lane
 
 import os
 import psutil
+import asyncio
 
 
 class Config:
-    # Workspace settings
-    WORKSPACE_NAME = "default_workspace"
-    BASE_DIR = os.path.abspath(os.path.join(os.path.expanduser('~'), 'Documents', 'NBAS Workspaces', WORKSPACE_NAME))
+    _instance = None
+    _lock = asyncio.Lock()
 
-    # Paths
-    DATA_DIR = os.path.join(BASE_DIR, 'data')
-    LOG_DIR = os.path.join(BASE_DIR, 'logs')
-    WORKSPACE_DIR = os.path.join(BASE_DIR, 'workspace')
-    BACKUP_DIR = os.path.join(BASE_DIR, 'backup')
-    ENGINE_DIR = os.path.join(BASE_DIR, 'engines')
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls, *args, **kwargs)
+        return cls._instance
 
-    # Memory settings
-    MEMORY_LIMIT = psutil.virtual_memory().total * 0.5  # 50% of available memory
+    def __init__(self):
+        if not hasattr(self, '_initialized'):
+            self.WORKSPACE_NAME = None
+            self.BASE_DIR = None
+            self.DATA_DIR = None
+            self.LOG_DIR = None
+            self.WORKSPACE_DIR = None
+            self.BACKUP_DIR = None
+            self.ENGINE_DIR = None
+            self.MEMORY_LIMIT = None
+            self.LOG_LEVEL = None
+            self.LOG_FILE = None
+            self.LOG_ROTATION = None
+            self.LOG_RETENTION = None
+            self.CACHE_SIZE = None
+            self.NUM_THREADS = None
+            self.DB_HOST = None
+            self.DB_PORT = None
+            self.DB_USER = None
+            self.DB_PASSWORD = None
+            self.DB_NAME = None
+            self.API_BASE_URL = None
+            self.API_KEY = None
+            self.EMAIL_HOST = None
+            self.EMAIL_PORT = None
+            self.EMAIL_USER = None
+            self.EMAIL_PASSWORD = None
+            self.EMAIL_USE_TLS = None
+            self.EMAIL_USE_SSL = None
+            self.THEME = None
+            self.LANGUAGE = None
+            self.ENCRYPTION_KEY = None
+            self.AUTHENTICATION_METHOD = None
+            self.BATCH_SIZE = None
+            self.TRANSFORMATIONS = None
+            self.SCHEDULER_INTERVAL = None
+            self._initialized = False
 
-    # Logging settings
-    LOG_LEVEL = 'INFO'
-    LOG_FILE = os.path.join(LOG_DIR, 'app.log')
-    LOG_ROTATION = '1 week'  # Rotate logs every week
-    LOG_RETENTION = '4 weeks'  # Retain logs for 4 weeks
+    async def initialize(self):
+        if not self._initialized:
+            async with Config._lock:
+                if not self._initialized:
+                    self._initialize()
+                    self._initialized = True
 
-    # Data engine settings
-    CACHE_SIZE = 2e9  # 2GB cache size by default
-    NUM_THREADS = 4  # Number of threads for processing
+    def _initialize(self):
+        self.reset_to_defaults()
 
-    # Database settings
-    DB_HOST = 'localhost'
-    DB_PORT = 5432
-    DB_USER = 'user'
-    DB_PASSWORD = 'password'
-    DB_NAME = 'database'
+    def reset_to_defaults(self):
+        # Workspace settings
+        self.WORKSPACE_NAME = "default_workspace"
+        self.BASE_DIR = os.path.abspath(os.path.join(os.path.expanduser('~'), 'Documents', 'NBAS Workspaces',
+                                                     self.WORKSPACE_NAME))
 
-    # API settings
-    API_BASE_URL = 'https://api.example.com'
-    API_KEY = 'your_api_key_here'
+        # Paths
+        self.DATA_DIR = os.path.join(self.BASE_DIR, 'data')
+        self.LOG_DIR = os.path.join(self.BASE_DIR, 'logs')
+        self.WORKSPACE_DIR = os.path.join(self.BASE_DIR, 'workspace')
+        self.BACKUP_DIR = os.path.join(self.BASE_DIR, 'backup')
+        self.ENGINE_DIR = os.path.join(self.BASE_DIR, 'engines')
 
-    # Notification settings
-    EMAIL_HOST = 'smtp.example.com'
-    EMAIL_PORT = 587
-    EMAIL_USER = 'user@example.com'
-    EMAIL_PASSWORD = 'password'
-    EMAIL_USE_TLS = True
-    EMAIL_USE_SSL = False
+        # Memory settings
+        self.MEMORY_LIMIT = psutil.virtual_memory().total * 0.5  # 50% of available memory
 
-    # UI settings
-    THEME = 'light'  # Options: 'light', 'dark'
-    LANGUAGE = 'en'  # Default language
+        # Logging settings
+        self.LOG_LEVEL = 'INFO'
+        self.LOG_FILE = os.path.join(self.LOG_DIR, 'app.log')
+        self.LOG_ROTATION = '1 week'  # Rotate logs every week
+        self.LOG_RETENTION = '4 weeks'  # Retain logs for 4 weeks
 
-    # Security settings
-    ENCRYPTION_KEY = 'your_encryption_key_here'
-    AUTHENTICATION_METHOD = 'token'  # Options: 'token', 'oauth', 'basic'
+        # Data engine settings
+        self.CACHE_SIZE = 2e9  # 2GB cache size by default
+        self.NUM_THREADS = 4  # Number of threads for processing
 
-    # Performance settings
-    BATCH_SIZE = 100  # Default batch size for processing
+        # Database settings
+        self.DB_HOST = 'localhost'
+        self.DB_PORT = 5432
+        self.DB_USER = 'user'
+        self.DB_PASSWORD = 'password'
+        self.DB_NAME = 'database'
 
-    # Data transformation settings
-    TRANSFORMATIONS = {
-        'normalize': True,
-        'standardize': False,
-        'remove_outliers': True
-    }
+        # API settings
+        self.API_BASE_URL = 'https://api.example.com'
+        self.API_KEY = 'your_api_key_here'
 
-    # Scheduler settings
-    SCHEDULER_INTERVAL = 'daily'  # Options: 'hourly', 'daily', 'weekly'
+        # Notification settings
+        self.EMAIL_HOST = 'smtp.example.com'
+        self.EMAIL_PORT = 587
+        self.EMAIL_USER = 'user@example.com'
+        self.EMAIL_PASSWORD = 'password'
+        self.EMAIL_USE_TLS = True
+        self.EMAIL_USE_SSL = False
+
+        # UI settings
+        self.THEME = 'light'  # Options: 'light', 'dark'
+        self.LANGUAGE = 'en'  # Default language
+
+        # Security settings
+        self.ENCRYPTION_KEY = 'your_encryption_key_here'
+        self.AUTHENTICATION_METHOD = 'token'  # Options: 'token', 'oauth', 'basic'
+
+        # Performance settings
+        self.BATCH_SIZE = 100  # Default batch size for processing
+
+        # Data transformation settings
+        self.TRANSFORMATIONS = {
+            'normalize': True,
+            'standardize': False,
+            'remove_outliers': True
+        }
+
+        # Scheduler settings
+        self.SCHEDULER_INTERVAL = 'daily'  # Options: 'hourly', 'daily', 'weekly'
+
+    async def update_setting(self, key, value):
+        if hasattr(self, key):
+            setattr(self, key, value)
+        else:
+            raise AttributeError(f"Config has no attribute '{key}'")
+
+    async def reload(self, new_config):
+        for key, value in new_config.items():
+            await self.update_setting(key, value)

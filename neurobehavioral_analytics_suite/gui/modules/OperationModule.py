@@ -27,18 +27,17 @@ from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 class OperationModule:
     """A class to manage operations and their GUI representation."""
 
-    def __init__(self, operation: ABCOperation, operation_control: Any, logger: CustomLogger):
+    def __init__(self, operation: ABCOperation, operation_control: Any):
         """
         Initializes the OperationModule with the given operation, control, and logger.
 
         Args:
             operation (ABCOperation): An instance of ABCOperation.
             operation_control: Control interface for operations.
-            logger (CustomLogger): Logger instance for logging messages.
         """
         self.operation = operation
         self.operation_control = operation_control
-        self.logger = logger
+        self._logger = CustomLogger()
         self.update_operation = None
         self.unique_id = None
         self.log_id = None
@@ -54,7 +53,7 @@ class OperationModule:
         try:
             self.operation.attach_gui_module(self)
         except Exception as e:
-            self.logger.error(f"Error initializing resources: {e}")
+            self._logger.error(e, self)
 
     async def add_update_operation(self) -> ABCOperation:
         """
@@ -65,12 +64,12 @@ class OperationModule:
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=ABCOperation, name="gui_OperationUpdateTask", logger=self.logger,
-                local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
+                operation_type=ABCOperation, name="gui_OperationUpdateTask", logger=self._logger,
+                local_vars=self.operation_control.local_vars,
                 func=self.update_gui, persistent=True)
             return operation
         except Exception as e:
-            self.logger.error(f"Error creating task: {e}")
+            self._logger.error(e, self)
             self.operation.add_log_entry(f"Error creating task: {e}")
 
     async def start_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
@@ -85,7 +84,7 @@ class OperationModule:
         try:
             await self.operation.start()
         except Exception as e:
-            self.logger.error(f"Error starting operations: {e}")
+            self._logger.error(e, self)
             self.operation.status = "error"
             self.operation.add_log_entry(f"Error starting operations: {e}")
 
@@ -101,7 +100,7 @@ class OperationModule:
         try:
             await self.operation.stop()
         except Exception as e:
-            self.logger.error(f"Error stopping operations: {e}")
+            self._logger.error(e, self)
             self.operation.status = "error"
             self.operation.add_log_entry(f"Error stopping operations: {e}")
 
@@ -117,7 +116,7 @@ class OperationModule:
         try:
             await self.operation.pause()
         except Exception as e:
-            self.logger.error(f"Error pausing operations: {e}")
+            self._logger.error(e, self)
             self.operation.status = "error"
             self.operation.add_log_entry(f"Error pausing operations: {e}")
 
@@ -133,7 +132,7 @@ class OperationModule:
         try:
             await self.operation.resume()
         except Exception as e:
-            self.logger.error(f"Error resuming operations: {e}")
+            self._logger.error(e, self)
             self.operation.status = "error"
             self.operation.add_log_entry(f"Error resuming operations: {e}")
 
@@ -149,7 +148,7 @@ class OperationModule:
         try:
             await self.operation.reset()
         except Exception as e:
-            self.logger.error(f"Error resetting operations: {e}")
+            self._logger.error(e, self)
             self.operation.status = "error"
             self.operation.add_log_entry(f"Error resetting operations: {e}")
 

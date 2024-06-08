@@ -19,7 +19,6 @@ from neurobehavioral_analytics_suite.operation_manager.OperationChain import Ope
 from neurobehavioral_analytics_suite.operation_manager.OperationExecutor import OperationExecutor
 from neurobehavioral_analytics_suite.operation_manager.OperationQueue import OperationQueue
 from neurobehavioral_analytics_suite.operation_manager.task.TaskMonitor import TaskMonitor
-from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -27,7 +26,7 @@ class OperationLifecycleManager:
     """Manages the lifecycle of operations."""
 
     def __init__(self, queue: OperationQueue, operation_manager, executor: OperationExecutor,
-                 persistent_op_checker, task_monitor: TaskMonitor, logger: CustomLogger, error_handler: ErrorHandler):
+                 persistent_op_checker, task_monitor: TaskMonitor):
         """
         Initializes the OperationLifecycleManager with the given parameters.
 
@@ -35,16 +34,13 @@ class OperationLifecycleManager:
             queue: The operations queue.
             operation_manager: The operations manager.
             executor: The operations operation_executor.
-            logger: CustomLogger for logging lifecycle-related information.
-            error_handler: Handler for managing errors.
         """
         self.queue = queue
         self.operation_manager = operation_manager
         self.operation_executor = executor
         self.persistent_operation_checker = persistent_op_checker
         self.task_monitor = task_monitor
-        self.logger = logger
-        self.error_handler = error_handler
+        self._logger = CustomLogger()
 
     async def start_all_operations(self):
         """Starts all operations in the queue."""
@@ -96,5 +92,4 @@ class OperationLifecycleManager:
         try:
             await asyncio.gather(*tasks)
         except Exception as e:
-            self.error_handler.handle_error(e, self)
-            self.logger.error(f"OperationLifecycleManager.exec_loop: Exception occurred: {e}")
+            self._logger.error(e, self)

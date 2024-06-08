@@ -20,6 +20,8 @@ from concurrent.futures import ProcessPoolExecutor
 from typing import Tuple, List, Any, Dict
 import asyncio
 
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
+
 
 class ABCOperation(ABC):
     """
@@ -31,8 +33,6 @@ class ABCOperation(ABC):
         Initialize the operation instance.
 
         Args:
-            error_handler (ErrorHandler): The error handler for managing errors.
-            logger (CustomLogger): The logger for logging information.
             func (callable): The function to be executed by the operation.
             name (str, optional): The name of the operation. Defaults to "Operation".
             local_vars (dict, optional): Local variables for the function execution. Defaults to locals().
@@ -41,12 +41,7 @@ class ABCOperation(ABC):
             concurrent (bool, optional): Whether child operations should run concurrently. Defaults to False.
             parent_operation (ABCOperation, optional): The parent operation. Defaults to None.
         """
-
-        error_handler = kwargs.get('error_handler')
-        if error_handler is None:
-            raise ValueError("error_handler is required")
-        self._error_handler = error_handler
-        self._logger = kwargs.get('logger')
+        self._logger = CustomLogger()
         self.operation_logs = []
 
         self._name = kwargs.get('name', "Operation")
@@ -422,15 +417,15 @@ class ABCOperation(ABC):
         except Exception as e:
             self._handle_error(e)
 
-    def add_log_entry(self, message: str):
+    def add_log_entry(self, message):
         """
         Log a message to the GUI.
 
         Args:
             message (str): The message to log.
         """
-        if self._status == "error":
-            self._error_handler.handle_error(message, self)
+        if self._status == "error" and isinstance(message, Exception):
+            self._logger.error(message, self)
         else:
             self.operation_logs.insert(0, message)
             self._logger.info(f"[{self._name}] {message}")

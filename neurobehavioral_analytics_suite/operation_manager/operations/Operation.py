@@ -13,11 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
-import asyncio
-from concurrent.futures import ProcessPoolExecutor
 from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
-from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
 class Operation(ABCOperation):
@@ -32,7 +28,6 @@ class Operation(ABCOperation):
         Initialize the operation instance.
 
         Args:
-            error_handler (ErrorHandler): The error handler for managing errors.
             func (callable, optional): The function to be executed by the operation.
             name (str, optional): The name of the operation. Defaults to "Operation".
             local_vars (dict, optional): Local variables for the function execution. Defaults to None.

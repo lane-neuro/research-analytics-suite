@@ -15,7 +15,6 @@ Status: Prototype
 """
 import aioconsole
 from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
-from neurobehavioral_analytics_suite.utils import ErrorHandler
 
 
 class ConsoleOperation(ABCOperation):
@@ -30,7 +29,6 @@ class ConsoleOperation(ABCOperation):
         Initializes the ConsoleOperation with a prompt for user input and the _func to be processed.
 
         Args:
-            error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
             prompt (str): A string that is displayed as a prompt for user input.
             data (str): A formatted string to print out the _func that the operations will process.
         """

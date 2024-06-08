@@ -17,7 +17,7 @@ class DataEngineDialog:
     """
     A class to create a dialog for interacting with the DataEngine.
     """
-    def __init__(self, data_engine: UnifiedDataEngine, logger: CustomLogger):
+    def __init__(self, data_engine: UnifiedDataEngine):
         """
         Initializes the DataEngineDialog instance.
 

@@ -21,16 +21,15 @@ class LiveDataHandler:
         logger (CustomLogger): CustomLogger for logging information and errors.
         live_inputs (list): List of live data inputs.
     """
-    def __init__(self, data_engine: DataEngineOptimized, logger: CustomLogger):
+    def __init__(self, data_engine: DataEngineOptimized):
         """
         Initializes the LiveDataHandler instance.
 
         Args:
             data_engine (DataEngineOptimized): The data engine to update with live data.
-            logger (CustomLogger): CustomLogger for logging information and errors.
         """
         self.data_engine = data_engine
-        self.logger = logger
+        self._logger = CustomLogger()
         self.live_inputs = []
 
     def add_live_input(self, live_input: BaseInput):
@@ -58,4 +57,4 @@ class LiveDataHandler:
             new_data = live_input.read()
             if new_data is not None:
                 self.data_engine.update_live_data(new_data)
-                self.logger.info("Data engine updated with new live data")
+                self._logger.info("Data engine updated with new live data")

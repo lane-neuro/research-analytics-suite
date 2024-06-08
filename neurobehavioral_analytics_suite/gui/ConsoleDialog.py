@@ -27,23 +27,22 @@ from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 class ConsoleDialog:
     """A class to create a console dialog for user input and operations control."""
 
-    def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl, logger: CustomLogger):
+    def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl):
         """
         Initializes the ConsoleDialog with the given user input handler, operations control, and logger.
 
         Args:
             user_input_handler (UserInputManager): Instance to handle user inputs.
             operation_control (OperationControl): Control interface for operations.
-            logger (CustomLogger): Logger instance for logging messages.
         """
-        self.logger = logger
+        self._logger = CustomLogger()
         self.window = dpg.add_child_window(tag="console_window", parent="bottom_pane")
 
         with dpg.group(horizontal=True, parent=self.window):
             dpg.add_input_text(label="", tag="input_text")
             dpg.add_button(label="Submit", callback=self.submit_command)
 
-        self.logger_output = dpg.add_text(default_value="", parent=self.window, wrap=600)
+        self._logger_output = dpg.add_text(default_value="", parent=self.window, wrap=600)
         self.user_input_handler = user_input_handler
         self.operation_control = operation_control
         self.command_history = []
@@ -66,11 +65,11 @@ class ConsoleDialog:
         try:
             operation = await self.operation_control.operation_manager.add_operation(
                 operation_type=ABCOperation, name="gui_ConsoleUpdateTask",
-                local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
-                logger=self.logger, func=self.update_logger_output, persistent=True)
+                local_vars=self.operation_control.local_vars,
+                logger=self._logger, func=self.update_logger_output, persistent=True)
             return operation
         except Exception as e:
-            self.logger.error(f"Error creating task: {e}")
+            self._logger.error(e, self)
         return None
 
     async def submit_command(self, sender: str, app_data: dict) -> None:
@@ -87,27 +86,27 @@ class ConsoleDialog:
         if command.startswith("help"):
             _, command = command.split()
             help_text = self.command_help.get(command, "No help available for this command")
-            dpg.set_value(self.logger_output, help_text)
+            dpg.set_value(self._logger_output, help_text)
         else:
             try:
                 await self.user_input_handler.process_user_input(command)
                 self.command_history.append(command)
             except Exception as e:
-                self.logger.error(f"Error processing command: {e}")
+                self._logger.error(e, self)
         dpg.set_value('input_text', "")  # Clear the input field
 
     async def update_logger_output(self) -> None:
         """Continuously updates the logger output with new messages."""
         while True:
-            new_log = await self.logger.log_message_queue.get()
-            current_logs = dpg.get_value(self.logger_output)
+            new_log = await self._logger.log_message_queue.get()
+            current_logs = dpg.get_value(self._logger_output)
             updated_logs = new_log + "\n" + current_logs
-            dpg.set_value(self.logger_output, updated_logs)
+            dpg.set_value(self._logger_output, updated_logs)
             await asyncio.sleep(0.01)
 
     def clear_logger_output(self) -> None:
         """Clears the logger output display."""
-        dpg.set_value(self.logger_output, "")
+        dpg.set_value(self._logger_output, "")
 
     def search_command(self, sender: str, app_data: dict) -> None:
         """
@@ -118,8 +117,8 @@ class ConsoleDialog:
             app_data (dict): Additional application data.
         """
         search_text = dpg.get_value('search_text')
-        console_output = dpg.get_value(self.logger_output)
+        console_output = dpg.get_value(self._logger_output)
         if search_text in console_output:
-            dpg.set_value(self.logger_output, search_text)
+            dpg.set_value(self._logger_output, search_text)
         else:
-            dpg.set_value(self.logger_output, "Text not found")
+            dpg.set_value(self._logger_output, "Text not found")

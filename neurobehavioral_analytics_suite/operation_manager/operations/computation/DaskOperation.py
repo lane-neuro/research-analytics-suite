@@ -16,7 +16,6 @@ Status: Prototype
 
 import types
 from neurobehavioral_analytics_suite.operation_manager.operations.Operation import Operation
-from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 import dask
 import dask.distributed
 
@@ -29,7 +28,6 @@ class DaskOperation(Operation):
 
     Attributes:
         _func (callable): A Dask computation function to be executed.
-        error_handler (ErrorHandler): An instance of ErrorHandler to handle any exceptions that occur.
         local_vars (dict): Local variables to be used in the function execution.
         client (dask.distributed.Client): The Dask client for managing the computation.
     """
@@ -39,7 +37,6 @@ class DaskOperation(Operation):
         Initialize the Dask operation instance.
 
         Args:
-            error_handler (ErrorHandler): The error handler for managing errors.
             func (callable, optional): The Dask computation to be executed by the operation.
             name (str, optional): The name of the operation. Defaults to "DaskOperation".
             persistent (bool, optional): Whether the operation should run indefinitely. Defaults to False.

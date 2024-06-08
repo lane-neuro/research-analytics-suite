@@ -16,16 +16,15 @@ class DataImportWizard:
     """
     A class to guide users through the process of importing data.
     """
-    def __init__(self, data_engine: UnifiedDataEngine, logger: CustomLogger):
+    def __init__(self, data_engine: UnifiedDataEngine):
         """
         Initializes the DataImportWizard instance.
 
         Args:
             data_engine (UnifiedDataEngine): The data engine for handling data operations.
-            logger (CustomLogger): CustomLogger for logging information and errors.
         """
         self._data_engine = data_engine
-        self._logger = logger
+        self._logger = CustomLogger()
 
     async def initialize(self):
         """

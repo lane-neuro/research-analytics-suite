@@ -17,8 +17,10 @@ Status: Prototype
 from collections import deque
 from typing import Optional, Any
 
+from neurobehavioral_analytics_suite.operation_manager.OperationNode import OperationNode
 from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class OperationQueue:
@@ -29,7 +31,7 @@ class OperationQueue:
     and execution of operations.
     """
 
-    def __init__(self, logger, error_handler):
+    def __init__(self):
         """
         Initializes the OperationQueue with a logger and error handler.
 
@@ -38,8 +40,7 @@ class OperationQueue:
             error_handler: Error handler for managing errors.
         """
         self.queue = deque()
-        self.logger = logger
-        self.error_handler = error_handler
+        self._logger = CustomLogger()
 
     async def add_operation_to_queue(self, operation: ABCOperation):
         """
@@ -180,7 +181,7 @@ class OperationQueue:
             for node in chain:
                 if isinstance(type(node.operation), operation_type):
                     return node.operation
-        self.logger.error(f"No operation found of type {operation_type.__name__}")
+        self._logger.error(f"No operation found of type {operation_type.__name__}")
         return None
 
     def find_operation_by_task(self, task) -> Optional[ABCOperation]:
@@ -197,7 +198,7 @@ class OperationQueue:
             for node in chain:
                 if node.operation.task == task:
                     return node.operation
-        self.logger.error(f"No operation found for task {task}")
+        self._logger.error(f"No operation found for task {task}")
         return None
 
     def is_empty(self) -> bool:

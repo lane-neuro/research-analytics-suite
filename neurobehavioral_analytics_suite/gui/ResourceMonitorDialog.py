@@ -22,6 +22,7 @@ from neurobehavioral_analytics_suite.operation_manager.OperationControl import O
 from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import (
     ResourceMonitorOperation)
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class ResourceMonitorDialog:
@@ -30,18 +31,17 @@ class ResourceMonitorDialog:
     SLEEP_DURATION = 0.05
     MAX_DATA_POINTS = 100
 
-    def __init__(self, operation_control: OperationControl, launcher, logger):
+    def __init__(self, operation_control: OperationControl, launcher):
         """
         Initializes the ResourceMonitorDialog with the given operation control, launcher, and logger.
 
         Args:
             operation_control (OperationControl): Control interface for operations.
             launcher: Launcher instance for initiating tasks.
-            logger: CustomLogger instance for logging messages.
         """
         self.operation_control = operation_control
         self.launcher = launcher
-        self.logger = logger
+        self._logger = CustomLogger()
 
         self.resource_monitor_operation = None
         self.update_operation = None
@@ -76,12 +76,12 @@ class ResourceMonitorDialog:
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=ABCOperation, name="gui_ResourceUpdateTask", logger=self.logger,
-                local_vars=self.operation_control.local_vars, error_handler=self.operation_control.error_handler,
+                operation_type=ABCOperation, name="gui_ResourceUpdateTask", logger=self._logger,
+                local_vars=self.operation_control.local_vars,
                 func=self.update_resource_usage, persistent=True)
             return operation
         except Exception as e:
-            self.logger.error(f"Error creating task: {e}")
+            self._logger.error(f"Error creating task: {e}")
         return None
 
     def setup_cpu_monitor(self, parent: int) -> None:

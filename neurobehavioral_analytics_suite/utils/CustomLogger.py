@@ -10,6 +10,7 @@ Author: Lane
 
 import asyncio
 import logging
+import traceback
 from typing import List
 
 
@@ -20,19 +21,29 @@ class CustomLogger:
     This class sets up a logger with a specific format, handles different log levels, and queues log messages for
     asynchronous processing.
     """
+    _instance = None
+    _lock = asyncio.Lock()
 
-    def __init__(self, log_level=logging.INFO):
+    def __new__(cls, *args, **kwargs):
+        """
+        Creates a new instance of the CustomLogger class. If an instance already exists,
+        returns the existing instance.
+        """
+        if not cls._instance:
+            cls._instance = super().__new__(cls, *args, **kwargs)
+        return cls._instance
+
+    def __init__(self):
         """
         Initializes the CustomLogger with a specified log level.
-
-        Args:
-            log_level (int): The logging level (e.g., logging.INFO, logging.DEBUG).
         """
-        self.logger = logging.getLogger('NBAS')
-        self.logger.setLevel(log_level)
-        self.log_message_queue = asyncio.Queue()
+        if not hasattr(self, '_logger'):
+            self._logger = logging.getLogger('NBAS')
+            self._logger.setLevel(logging.INFO)
+            self.log_message_queue = asyncio.Queue()
 
-        self.setup_logger()
+            self.setup_logger()
+            self.info(f"[{self._logger.name}] CustomLogger initialized")
 
     def setup_logger(self) -> None:
         """
@@ -42,10 +53,10 @@ class CustomLogger:
         formatter = logging.Formatter('[(%(asctime)s) %(name)s - %(levelname)s]: %(message)s',
                                       datefmt='%Y-%m-%d %H:%M:%S')
         handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
-        self.logger.addFilter(lambda record: self.log_message(record.getMessage()))
+        self._logger.addHandler(handler)
+        self._logger.addFilter(lambda record: self._log_message(record.getMessage()))
 
-    def log_message(self, message: str) -> None:
+    def _log_message(self, message: str) -> None:
         """
         Sends a log message to the queue.
 
@@ -64,9 +75,9 @@ class CustomLogger:
         """
         if isinstance(message, List):
             for msg in message:
-                self.logger.info(msg)
+                self._logger.info(msg)
         else:
-            self.logger.info(message)
+            self._logger.info(message)
 
     def debug(self, message: str) -> None:
         """
@@ -75,17 +86,20 @@ class CustomLogger:
         Args:
             message (str): The message to log.
         """
-        self.logger.debug(message)
+        self._logger.debug(message)
 
-    def error(self, message: str) -> None:
+    def error(self, exception, context=None):
         """
         Logs an error message.
 
         Args:
-            message (str): The message to log.
+            exception (Exception): The exception to log.
+            context: The context in which the error occurred.
         """
-        self.logger.error(message)
-        print(message)
+        error_info = traceback.format_exc()
+        error_message = f"An error occurred in {context}: {exception}\n{error_info}"
+        self._logger.error(error_message)
+        print(error_message)
 
     def warning(self, message: str) -> None:
         """
@@ -94,4 +108,4 @@ class CustomLogger:
         Args:
             message (str): The message to log.
         """
-        self.logger.warning(message)
+        self._logger.warning(message)

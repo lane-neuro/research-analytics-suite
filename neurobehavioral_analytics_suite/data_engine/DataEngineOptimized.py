@@ -23,19 +23,21 @@ class DataEngineOptimized(UnifiedDataEngine):
         memory_limit (float): Memory limit for caching, in bytes.
         workspace (Workspace): Workspace instance for managing saving and loading workspaces.
     """
-    def __init__(self, logger: CustomLogger, workspace, data=None):
+    def __init__(self, workspace, data=None):
         """
         Initializes the DataEngineOptimized instance.
 
         Args:
             data: The initial data for the data engine.
-            logger (CustomLogger): CustomLogger for logging information and errors.
             workspace (Workspace): Workspace instance for managing saving and loading workspaces.
         """
-        super().__init__(data=data, logger=logger)
-        self.cache = DataCache(Config.CACHE_SIZE)
+        super().__init__(data=data)
+        self._logger = CustomLogger()
+        self._config = Config()
+
+        self.cache = DataCache(self._config.CACHE_SIZE)
         self.cache.register()
-        self.memory_limit = Config.MEMORY_LIMIT
+        self.memory_limit = self._config.MEMORY_LIMIT
         self.workspace = workspace
 
     def perform_operation(self, operation_name):
@@ -45,10 +47,10 @@ class DataEngineOptimized(UnifiedDataEngine):
         Args:
             operation_name (str): The name of the operation to perform.
         """
-        self.logger.info(f"Performing operation: {operation_name}")
+        self._logger.info(f"Performing operation: {operation_name}")
         result = self.data.map_partitions(self._apply_operation, operation_name)
         self.cache.set(operation_name, result)
-        self.logger.info("Operation performed and result cached")
+        self._logger.info("Operation performed and result cached")
         return result
 
     def _apply_operation(self, df, operation_name):
@@ -74,10 +76,10 @@ class DataEngineOptimized(UnifiedDataEngine):
         Args:
             new_data: The new live data.
         """
-        self.logger.info("Updating live data")
+        self._logger.info("Updating live data")
         self.data = self.data.append(new_data)
         self.cache.set('live_data', self.data)
-        self.logger.info("Live data updated and cached")
+        self._logger.info("Live data updated and cached")
 
     def monitor_memory_usage(self):
         """
@@ -85,6 +87,6 @@ class DataEngineOptimized(UnifiedDataEngine):
         """
         memory_used = psutil.virtual_memory().used
         if memory_used > self.memory_limit:
-            self.logger.warning("Memory limit exceeded, clearing cache")
+            self._logger.warning("Memory limit exceeded, clearing cache")
             self.cache.clear()
-            self.logger.info("Cache cleared to free up memory")
+            self._logger.info("Cache cleared to free up memory")

@@ -13,6 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class TaskCounter:
@@ -23,15 +24,12 @@ class TaskCounter:
     identifiers. It also logs the creation of each new task.
     """
 
-    def __init__(self, logger):
+    def __init__(self):
         """
         Initializes the TaskCounter with a logger.
-
-        Args:
-            logger: CustomLogger instance for logging messages.
         """
         self.counter = 0
-        self.logger = logger
+        self._logger = CustomLogger()
 
     def new_task(self, name: str) -> str:
         """
@@ -44,5 +42,5 @@ class TaskCounter:
             str: The new task name with a unique identifier.
         """
         self.counter += 1
-        self.logger.info(f"TaskCounter.new_task: [NEW] [{self.counter}]{name}")
+        self._logger.info(f"TaskCounter.new_task: [NEW] [{self.counter}]{name}")
         return f"[{self.counter}]{name}"

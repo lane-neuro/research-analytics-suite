@@ -19,6 +19,7 @@ import asyncio
 from neurobehavioral_analytics_suite.operation_manager.OperationChain import OperationChain
 from neurobehavioral_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from neurobehavioral_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
+from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class OperationExecutor:
@@ -29,7 +30,7 @@ class OperationExecutor:
     are updated accordingly.
     """
 
-    def __init__(self, operation_control, queue, task_creator, logger, error_handler):
+    def __init__(self, operation_control, queue, task_creator):
         """
         Initializes the OperationExecutor with the necessary components.
 
@@ -37,14 +38,11 @@ class OperationExecutor:
             operation_control: Control interface for operations.
             queue: Queue holding operations to be executed.
             task_creator: Task creator for generating asyncio tasks.
-            logger: CustomLogger instance for logging messages.
-            error_handler: Error handler for managing errors.
         """
         self.op_control = operation_control
         self.queue = queue
         self.task_creator = task_creator
-        self.logger = logger
-        self.error_handler = error_handler
+        self._logger = CustomLogger()
 
     async def execute_operation(self, operation: ABCOperation) -> asyncio.Task:
         """
@@ -61,7 +59,7 @@ class OperationExecutor:
                 await operation.execute()
                 return operation.task
         except Exception as e:
-            self.error_handler.handle_error(e, self)
+            self._logger.error(e, self)
 
     async def execute_ready_operations(self) -> None:
         """
@@ -74,7 +72,7 @@ class OperationExecutor:
             Exception: If an exception occurs during the execution of an operation, it is caught and handled by the
             ErrorHandler instance.
         """
-        self.logger.debug("OperationControl: Queue Size: " + str(self.queue.size()))
+        self._logger.debug("OperationControl: Queue Size: " + str(self.queue.size()))
 
         # Create a copy of the queue for iteration
         queue_copy = set(self.queue.queue)
@@ -90,7 +88,7 @@ class OperationExecutor:
                 if not operation.task or operation.task.done():
                     if isinstance(operation, ConsoleOperation) and not self.op_control.console_operation_in_progress:
                         continue
-                    self.logger.debug(f"execute_all: [OP] {operation.name} - {operation.status} - {operation.task}")
+                    self._logger.debug(f"execute_all: [OP] {operation.name} - {operation.status} - {operation.task}")
 
                     if not operation.task and operation.is_ready():
                         try:
@@ -100,6 +98,6 @@ class OperationExecutor:
                             )
                             operation.add_log_entry(f"[TASK] {operation.name}")
                         except Exception as e:
-                            self.error_handler.handle_error(e, self)
+                            self._logger.error(e, self)
                     if isinstance(operation, ConsoleOperation):
                         self.op_control.console_operation_in_progress = True

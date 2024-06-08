@@ -13,11 +13,11 @@ import logging
 
 import nest_asyncio
 
+from neurobehavioral_analytics_suite.data_engine.Config import Config
 from neurobehavioral_analytics_suite.gui.GuiLauncher import GuiLauncher
 from neurobehavioral_analytics_suite.operation_manager.OperationControl import OperationControl
 from neurobehavioral_analytics_suite.utils.CustomLogger import CustomLogger
 from neurobehavioral_analytics_suite.data_engine.Workspace import Workspace
-from neurobehavioral_analytics_suite.utils.ErrorHandler import ErrorHandler
 
 
 async def launch_nbas():
@@ -30,15 +30,20 @@ async def launch_nbas():
     Raises:
         AssertionError: If no active project is open.
     """
-    nest_asyncio.apply()
+    # Parse command line arguments, if any
     args = launch_args().parse_args()
-    print("Initiating CustomLogger - Logging Level: INFO")
-    logger = CustomLogger(logging.INFO)
-    error_handler = ErrorHandler()
+
+    # Apply nest_asyncio to allow asyncio to run in Jupyter notebooks
+    nest_asyncio.apply()
+
+    # Initialize the Config, Logger, and ErrorHandler
+    config = Config()
+    await config.initialize()
+    logger = CustomLogger()
     launch_tasks = []
 
-    # Initialize Workspace
-    workspace = Workspace(logger=logger, error_handler=error_handler)
+    # Initialize new Workspace and Config
+    workspace = Workspace()
 
     # Checks args for -o '--open_project' flag.
     # If it exists, open the project from the file
@@ -51,7 +56,7 @@ async def launch_nbas():
         data_engine = workspace.load_workspace(args.open_project)
 
     nest_asyncio.apply()
-    operation_control = OperationControl(logger=logger, error_handler=error_handler, workspace=workspace)
+    operation_control = OperationControl(workspace=workspace)
 
     launch_tasks.append(operation_control.exec_loop())
     gui_launcher = None
@@ -59,9 +64,9 @@ async def launch_nbas():
     if args.gui is not None and args.gui.lower() == 'true':
         try:
             gui_launcher = GuiLauncher(data_engine=data_engine, operation_control=operation_control,
-                                       logger=logger, error_handler=error_handler, workspace=workspace)
+                                       workspace=workspace)
         except Exception as e:
-            logger.error(f"launch_nbas: {e}")
+            logger.error(e)
         finally:
             launch_tasks.append(gui_launcher.setup_main_window())
 
@@ -70,7 +75,7 @@ async def launch_nbas():
     try:
         await asyncio.gather(*launch_tasks)
     except Exception as e:
-        logger.error(f"launch_nbas: {e}")
+        logger.error(e)
     finally:
         logger.info("Cleaning up...")
         workspace.save_current_workspace()
