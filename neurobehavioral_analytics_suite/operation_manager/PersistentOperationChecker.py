@@ -62,10 +62,11 @@ class PersistentOperationChecker:
                                                               user_input_manager=self.op_control.user_input_manager,
                                                               local_vars=self.op_control.local_vars,
                                                               func=self.op_control.user_input_manager.process_user_input,
-                                                              name="ConsoleOperation", prompt="", concurrent=True)
+                                                              name="ConsoleOperation", prompt="", concurrent=True,
+                                                              persistent=True)
             self.op_control.console_operation_in_progress = True
 
         # Check if a ResourceMonitorOperation is already running
         if not any(isinstance(task, ResourceMonitorOperation) for task in self.task_creator.tasks):
             await self.op_manager.add_operation_if_not_exists(operation_type=ResourceMonitorOperation,
-                                                              concurrent=True)
+                                                              concurrent=True, persistent=True)

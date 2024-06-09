@@ -27,10 +27,11 @@ class OperationManagerDialog:
     """A class to manage the dialog for displaying and controlling operations."""
 
     SLEEP_DURATION = 0.05
-    TILE_WIDTH = 300  # Fixed width for each operation tile
-    TILE_HEIGHT = 300  # Fixed height for each operation tile
+    TILE_WIDTH = 530  # Fixed width for each operation tile
+    TILE_HEIGHT = 470  # Fixed height for each operation tile
+    TILE_PADDING = 20  # Padding between tiles
 
-    def __init__(self, operation_control: OperationControl, container_width: int = 900):
+    def __init__(self, operation_control: OperationControl, container_width: int = 1700):
         """
         Initializes the OperationManagerDialog with the given operation control, logger, and container width.
 
@@ -58,7 +59,7 @@ class OperationManagerDialog:
         Returns:
             int: Number of tiles that fit in the given width.
         """
-        return max(1, width // self.TILE_WIDTH) - 1
+        return max(1, width // (self.TILE_WIDTH + self.TILE_PADDING))
 
     async def initialize_dialog(self) -> None:
         """Initializes the operation manager dialog by adding the update operation."""
@@ -89,7 +90,8 @@ class OperationManagerDialog:
             for operation_chain in queue_copy:
                 for node in operation_chain:
                     if node.operation not in self.operation_items and node.operation.name != "gui_OperationUpdateTask":
-                        self.operation_items[node.operation] = OperationModule(node.operation, self.operation_control)
+                        self.operation_items[node.operation] = OperationModule(node.operation, self.operation_control,
+                                                                               self.TILE_WIDTH, self.TILE_HEIGHT)
                         await self.operation_items[node.operation].initialize()
                         self.add_operation_tile(node.operation)
             await asyncio.sleep(self.SLEEP_DURATION)
@@ -118,7 +120,7 @@ class OperationManagerDialog:
             sender (str): The sender of the event.
             data (dict): The data associated with the event.
         """
-        new_width = dpg.get_viewport_client_width()
+        new_width = dpg.get_viewport_client_width() - 220
         new_tiles_per_row = self.calculate_tiles_per_row(new_width)
         if new_tiles_per_row != self.tiles_per_row:
             self.tiles_per_row = new_tiles_per_row

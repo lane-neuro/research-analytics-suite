@@ -88,8 +88,9 @@ class GuiLauncher:
         """Sets up the data visualization pane asynchronously."""
         with dpg.group(parent="visualize_data_pane"):
             dpg.add_text("Data Visualization Tools")
-            self.visualization_dialog = RealTimeDataVisualization(self.data_engine)
-            await self.visualization_dialog.initialize()
+
+        # self.visualization_dialog = RealTimeDataVisualization(self.data_engine)
+        # await self.visualization_dialog.initialize()
 
     async def setup_console_log_viewer(self) -> None:
         """Sets up the console/log viewer asynchronously."""
@@ -104,7 +105,7 @@ class GuiLauncher:
         with dpg.group(parent="operation_pane"):
             dpg.add_text("Operation Manager")
 
-        self.operation_window = OperationManagerDialog(self.operation_control)
+        self.operation_window = OperationManagerDialog(self.operation_control, dpg.get_item_width("operation_pane"))
         await self.operation_window.initialize_dialog()
 
     async def setup_data_engine_pane(self) -> None:
@@ -120,13 +121,6 @@ class GuiLauncher:
             dpg.add_text("Data Import Wizard")
             self.data_import_wizard = DataImportWizard(self.data_engine)
             await self.data_import_wizard.initialize()
-
-    async def setup_real_time_visualization_pane(self) -> None:
-        """Sets up the real-time data visualization pane asynchronously."""
-        with dpg.group(parent="real_time_visualization_pane"):
-            dpg.add_text("Real-Time Data Visualization")
-            self.real_time_data_visualization = RealTimeDataVisualization(self.data_engine)
-            await self.real_time_data_visualization.initialize()
 
     async def setup_panes(self) -> None:
         """Sets up all the panes asynchronously."""
