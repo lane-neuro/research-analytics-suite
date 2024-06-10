@@ -1,4 +1,4 @@
-name: nbas
+name: research-analytics-suite
 channels:
   - anaconda
   - defaults
@@ -188,4 +188,4 @@ dependencies:
       - wcwidth==0.2.13
       - webencodings==0.5.1
       - yarg==0.1.9
-prefix: C:\Users\lane\.conda\envs\nbas-dev
+prefix: C:\Users\lane\.conda\envs\ras-dev
