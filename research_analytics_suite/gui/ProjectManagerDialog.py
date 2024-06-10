@@ -14,16 +14,12 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-import dearpygui.dearpygui as dpg
 import asyncio
+
+import dearpygui.dearpygui as dpg
+
 from research_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
-from research_analytics_suite.operation_manager.operations.project.CreateProjectOperation import (
-    CreateProjectOperation)
-from research_analytics_suite.operation_manager.operations.project.LoadProjectOperation import (
-    LoadProjectOperation)
-from research_analytics_suite.operation_manager.operations.project.SaveProjectOperation import (
-    SaveProjectOperation)
 
 
 class ProjectManagerDialog:

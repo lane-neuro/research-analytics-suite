@@ -19,17 +19,17 @@ import os
 
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
+
 from research_analytics_suite.data_engine.DataEngineOptimized import DataEngineOptimized
+from research_analytics_suite.data_engine.Workspace import Workspace
+from research_analytics_suite.data_engine.live_input.LiveDataHandler import LiveDataHandler
 from research_analytics_suite.gui.ConsoleDialog import ConsoleDialog
 from research_analytics_suite.gui.DataEngineDialog import DataEngineDialog
 from research_analytics_suite.gui.DataImportWizard import DataImportWizard
 from research_analytics_suite.gui.OperationManagerDialog import OperationManagerDialog
-from research_analytics_suite.gui.RealTimeDataVisualization import RealTimeDataVisualization
 from research_analytics_suite.gui.SettingsDialog import SettingsDialog
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.utils.CustomLogger import CustomLogger
-from research_analytics_suite.data_engine.live_input.LiveDataHandler import LiveDataHandler
-from research_analytics_suite.data_engine.Workspace import Workspace
 
 
 class GuiLauncher:

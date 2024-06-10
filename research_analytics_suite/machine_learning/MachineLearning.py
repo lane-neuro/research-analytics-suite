@@ -1,8 +1,8 @@
 import os
+
 from research_analytics_suite.machine_learning import Model, Preprocessor, MLTrainingOperation, \
     MLEvaluationOperation, Predictor
 from research_analytics_suite.operation_manager.operations.Operation import Operation
-import asyncio
 
 
 class MachineLearning(Operation):

@@ -14,9 +14,11 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from typing import Optional, Any
-import dearpygui.dearpygui as dpg
 import asyncio
+from typing import Optional, Any
+
+import dearpygui.dearpygui as dpg
+
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from research_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import (

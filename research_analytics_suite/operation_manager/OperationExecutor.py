@@ -16,6 +16,7 @@ Status: Prototype
 """
 
 import asyncio
+
 from research_analytics_suite.operation_manager.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from research_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation

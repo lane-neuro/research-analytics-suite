@@ -7,14 +7,15 @@ including caching, dependency management, and handling live data inputs within t
 Author: Lane
 """
 
-import os
 import json
+import os
 from collections import defaultdict
+
 from research_analytics_suite.data_engine.Config import Config
 from research_analytics_suite.data_engine.DataCache import DataCache
+from research_analytics_suite.data_engine.DataEngineOptimized import DataEngineOptimized
 from research_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
 from research_analytics_suite.utils.CustomLogger import CustomLogger
-from research_analytics_suite.data_engine.DataEngineOptimized import DataEngineOptimized
 
 
 class Workspace:

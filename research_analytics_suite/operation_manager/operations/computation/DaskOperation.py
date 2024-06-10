@@ -14,10 +14,10 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-import types
-from research_analytics_suite.operation_manager.operations.Operation import Operation
 import dask
 import dask.distributed
+
+from research_analytics_suite.operation_manager.operations.Operation import Operation
 
 
 class DaskOperation(Operation):

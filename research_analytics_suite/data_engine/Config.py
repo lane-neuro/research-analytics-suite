@@ -7,9 +7,10 @@ paths, memory limits, logging, and other necessary parameters.
 Author: Lane
 """
 
-import os
-import psutil
 import asyncio
+import os
+
+import psutil
 
 
 class Config:

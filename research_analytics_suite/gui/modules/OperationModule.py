@@ -18,8 +18,10 @@ Status: Prototype
 
 import asyncio
 import uuid
-from typing import Optional, Any
+from typing import Any
+
 import dearpygui.dearpygui as dpg
+
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 

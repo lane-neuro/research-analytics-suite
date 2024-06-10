@@ -14,11 +14,11 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+import asyncio
 import types
 from abc import ABC
 from concurrent.futures import ProcessPoolExecutor
 from typing import Tuple, List, Any, Dict
-import asyncio
 
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 

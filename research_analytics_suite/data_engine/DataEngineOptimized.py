@@ -7,11 +7,12 @@ caching mechanisms and memory management techniques.
 
 Author: Lane
 """
-from research_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
-from research_analytics_suite.utils.CustomLogger import CustomLogger
+import psutil
+
 from research_analytics_suite.data_engine.Config import Config
 from research_analytics_suite.data_engine.DataCache import DataCache
-import psutil
+from research_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
+from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class DataEngineOptimized(UnifiedDataEngine):

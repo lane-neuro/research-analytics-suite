@@ -15,11 +15,11 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 from collections import deque
-from typing import Optional, Any
+from typing import Optional
 
+from research_analytics_suite.operation_manager.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.OperationNode import OperationNode
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
-from research_analytics_suite.operation_manager.OperationChain import OperationChain
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

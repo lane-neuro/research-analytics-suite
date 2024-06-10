@@ -17,10 +17,10 @@ Status: Prototype
 
 from research_analytics_suite.operation_manager.OperationManager import OperationManager
 from research_analytics_suite.operation_manager.OperationQueue import OperationQueue
-from research_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
 from research_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
 from research_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
     ResourceMonitorOperation
+from research_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

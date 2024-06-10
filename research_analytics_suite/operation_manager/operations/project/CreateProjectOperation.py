@@ -1,4 +1,3 @@
-from research_analytics_suite.data_engine.project.new_project import new_project
 from research_analytics_suite.operation_manager.operations.Operation import Operation
 
 

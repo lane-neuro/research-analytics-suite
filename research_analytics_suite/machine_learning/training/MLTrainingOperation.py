@@ -1,7 +1,7 @@
+from sklearn.model_selection import train_test_split
+
 from research_analytics_suite.machine_learning import Model
 from research_analytics_suite.operation_manager.operations.Operation import Operation
-from sklearn.model_selection import train_test_split
-import asyncio
 
 
 class MLTrainingOperation(Operation):

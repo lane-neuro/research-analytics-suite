@@ -14,9 +14,9 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-import os
-import dask.dataframe as dd
 import json
+
+import dask.dataframe as dd
 
 
 class DataTypeDetector:

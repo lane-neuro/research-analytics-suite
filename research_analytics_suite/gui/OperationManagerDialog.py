@@ -16,7 +16,9 @@ Status: Prototype
 """
 import asyncio
 from typing import Optional, Any
+
 import dearpygui.dearpygui as dpg
+
 from research_analytics_suite.gui.modules.OperationModule import OperationModule
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation

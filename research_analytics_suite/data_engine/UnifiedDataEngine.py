@@ -7,19 +7,21 @@ to provide a unified interface for handling data.
 Author: Lane
 """
 import json
+import os
 import uuid
-from torch.utils.data import DataLoader
+
 import dask.dataframe as dd
+import joblib
 import pandas as pd
+from torch.utils.data import DataLoader
+
 from research_analytics_suite.analytics.AnalyticsCore import AnalyticsCore
 from research_analytics_suite.data_engine.DaskData import DaskData
 from research_analytics_suite.data_engine.DataCache import DataCache
+from research_analytics_suite.data_engine.DataTypeDetector import DataTypeDetector
 from research_analytics_suite.data_engine.TorchData import TorchData
 from research_analytics_suite.data_engine.live_input.BaseInput import BaseInput
-from research_analytics_suite.data_engine.DataTypeDetector import DataTypeDetector
 from research_analytics_suite.utils.CustomLogger import CustomLogger
-import joblib
-import os
 
 
 class UnifiedDataEngine:
@@ -205,7 +207,7 @@ class UnifiedDataEngine:
 
     def get_pickleable_data(self):
         data = self.__dict__.copy()
-        data.pop('logger', None)
+        data.pop('_logger', None)
         data.pop('dask_client', None)
         data.pop('live_input_source', None)
         return data
@@ -213,7 +215,7 @@ class UnifiedDataEngine:
     def __getstate__(self):
         state = self.__dict__.copy()
         print(state)
-        state['logger'] = None
+        state['_logger'] = None
         state['dask_client'] = None
         state['live_input_source'] = None
         state['cache'] = None

@@ -11,5 +11,4 @@ __maintainer__ = 'Lane'
 __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
 
-import os
 #DEBUG = True and "DEBUG" in os.environ["DEBUG"]

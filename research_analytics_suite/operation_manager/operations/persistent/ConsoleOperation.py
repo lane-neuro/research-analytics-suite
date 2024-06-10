@@ -14,6 +14,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import aioconsole
+
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 
 
