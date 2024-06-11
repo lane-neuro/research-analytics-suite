@@ -2,7 +2,7 @@
 Workspace Module
 
 This module defines the Workspace class, which manages multiple data engines and provides advanced data operations,
-including caching, dependency management, and handling live data inputs within the research analytics suite.
+including caching, dependency management, and handling live data inputs within the Research Analytics Suite.
 
 Author: Lane
 """
