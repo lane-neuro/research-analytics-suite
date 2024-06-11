@@ -82,8 +82,7 @@ class OperationExecutor:
             chain_operations = set()
             if isinstance(operation_chain, OperationChain):
                 for node in operation_chain:
-                    if node.operation.is_ready():
-                        chain_operations.add(node.operation)
+                    chain_operations.add(node.operation)
 
             for operation in chain_operations:
                 if not operation.task or operation.task.done():

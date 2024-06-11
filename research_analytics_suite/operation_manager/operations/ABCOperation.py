@@ -228,7 +228,7 @@ class ABCOperation(ABC):
         Execute the operation and all child operations.
         """
         try:
-            await self._execute_child_operations()
+            await self.execute_child_operations()
             await self._run_operations([self])
             if not self._persistent:
                 self._status = "completed"
@@ -372,7 +372,7 @@ class ABCOperation(ABC):
                 self._progress += 1
             await asyncio.sleep(1)
 
-    def add_child_operation(self, operation: 'ABCOperation', dependencies: List[str] = None):
+    async def add_child_operation(self, operation: 'ABCOperation', dependencies: List[str] = None):
         """
         Add a child operation to the current operation.
 
@@ -385,9 +385,15 @@ class ABCOperation(ABC):
             self._handle_error("operation must be an instance of ABCOperation")
             return
 
+        operation.parent_operation = self
         self._child_operations.append(operation)
+
+        await operation.start()
+
         if dependencies:
             self._dependencies[operation.name] = dependencies
+
+        self.add_log_entry(f"[CHILD] (new) {operation.name}")
 
     def remove_child_operation(self, operation: 'ABCOperation'):
         """
@@ -462,7 +468,7 @@ class ABCOperation(ABC):
         except Exception as e:
             self._handle_error(e)
 
-    async def _execute_child_operations(self):
+    async def execute_child_operations(self):
         """
         Execute all child operations.
         """

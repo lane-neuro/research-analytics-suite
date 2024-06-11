@@ -34,10 +34,6 @@ class OperationQueue:
     def __init__(self):
         """
         Initializes the OperationQueue with a logger and error handler.
-
-        Args:
-            logger: CustomLogger instance for logging messages.
-            error_handler: Error handler for managing errors.
         """
         self.queue = deque()
         self._logger = CustomLogger()

@@ -62,7 +62,7 @@ class PersistentOperationChecker:
                                                               user_input_manager=self.op_control.user_input_manager,
                                                               local_vars=self.op_control.local_vars,
                                                               func=self.op_control.user_input_manager.process_user_input,
-                                                              name="ConsoleOperation", prompt="", concurrent=True,
+                                                              prompt="", concurrent=True,
                                                               persistent=True)
             self.op_control.console_operation_in_progress = True
 

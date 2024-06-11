@@ -91,7 +91,10 @@ class OperationManagerDialog:
             queue_copy = set(self.operation_control.queue.queue)
             for operation_chain in queue_copy:
                 for node in operation_chain:
-                    if node.operation not in self.operation_items and node.operation.name != "gui_OperationUpdateTask":
+                    if (node.operation not in self.operation_items
+                            and node.operation.name != "gui_OperationUpdateTask"
+                            and not node.operation.name.startswith("gui_")
+                            and not node.operation.name.startswith("sys_")):
                         self.operation_items[node.operation] = OperationModule(node.operation, self.operation_control,
                                                                                self.TILE_WIDTH, self.TILE_HEIGHT)
                         await self.operation_items[node.operation].initialize()

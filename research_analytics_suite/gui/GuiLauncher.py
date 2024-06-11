@@ -28,6 +28,7 @@ from research_analytics_suite.gui.DataEngineDialog import DataEngineDialog
 from research_analytics_suite.gui.DataImportWizard import DataImportWizard
 from research_analytics_suite.gui.OperationManagerDialog import OperationManagerDialog
 from research_analytics_suite.gui.SettingsDialog import SettingsDialog
+from research_analytics_suite.gui.modules.TimelineModule import TimelineModule
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -44,6 +45,7 @@ class GuiLauncher:
             operation_control (OperationControl): The control manager for operations.
             workspace (Workspace): The workspace manager for saving and loading workspaces.
         """
+        self.timeline = None
         self.dpg_async = DearPyGuiAsync()
         self._logger = CustomLogger()
         self.operation_control = operation_control
@@ -71,6 +73,8 @@ class GuiLauncher:
             dpg.add_button(label="Settings", callback=lambda: self.switch_pane("settings"))
             dpg.add_button(label="Save Workspace", callback=self.save_workspace)
             dpg.add_button(label="Configuration", callback=self.settings_dialog.show)
+            dpg.add_button(label="Console/Log", callback=lambda: self.switch_pane("console_log_output"))
+            dpg.add_button(label="Exit", callback=dpg.stop_dearpygui)
 
     def switch_pane(self, pane_name: str) -> None:
         """
@@ -81,7 +85,7 @@ class GuiLauncher:
         """
         # Hide all panes first
         for pane in ["operation_pane", "analyze_data_pane", "visualize_data_pane",
-                     "manage_projects_pane", "reports_pane", "settings_pane"]:
+                     "manage_projects_pane", "reports_pane", "settings_pane", "console_log_output_pane"]:
             dpg.configure_item(pane, show=False)
 
         # Show the selected pane
@@ -100,30 +104,43 @@ class GuiLauncher:
 
         dpg.bind_theme(global_theme)
 
-        # Load and set custom fonts
         font_paths = []
-        for root, _, files in os.walk("fonts"):
-            for file in files:
-                if file.endswith(".ttf"):
-                    font_paths.append(os.path.join(root, file))
+        font_directory = "gui/fonts"
+
+        if os.path.exists(font_directory) and os.path.isdir(font_directory):
+            for root, _, files in os.walk(font_directory):
+                for file in files:
+                    if file.endswith(".ttf"):
+                        font_paths.append(os.path.join(root, file))
+        else:
+            self._logger.error(Exception(f"Font directory {font_directory} does not exist."), self)
 
         with dpg.font_registry():
             default_font = None
-            for font_path in font_paths:
-                font = dpg.add_font(font_path, 20)
-                if default_font is None:
-                    default_font = font
+            self._logger.info(f"Loading {len(font_paths)} fonts")
 
-            # Set default font
+            for font_path in font_paths:
+                try:
+                    font = dpg.add_font(font_path, 10)
+                    if "default" in font_path:
+                        default_font = font
+                except Exception as e:
+                    self._logger.error(Exception(f"Failed to load font {font_path}: {e}"), self)
+
             if default_font is not None:
                 dpg.bind_font(default_font)
+                self._logger.info(f"Font set: {default_font}")
+            else:
+                self._logger.error(Exception("No default font found, using DearPyGui's default font."), self)
+
+            dpg.show_font_manager()
 
     async def setup_main_window(self) -> None:
         """Sets up the main window of the GUI and runs the event loop."""
         dpg.create_context()
+        # self.apply_theme()  # Apply theme after setup
         dpg.create_viewport(title='Research Analytics Suite', width=1920, height=1080)
         dpg.setup_dearpygui()
-        self.apply_theme()  # Apply theme after setup
 
         dpg.show_viewport()
         await self.dpg_async.start()
@@ -137,11 +154,10 @@ class GuiLauncher:
                     await self.setup_panes()
 
             with dpg.child_window(tag="bottom_pane", height=300, parent="main_window"):
-                await self.setup_console_log_viewer()
+                await self.setup_timeline_pane()
 
         dpg.set_primary_window("main_window", True)
 
-        # Keep the event loop running until the DearPyGui window is closed
         while dpg.is_dearpygui_running():
             await asyncio.sleep(0.01)
 
@@ -167,24 +183,34 @@ class GuiLauncher:
         with dpg.child_window(tag="settings_pane", parent="right_pane", show=False):
             dpg.add_text("Settings Pane")
 
+        with dpg.child_window(tag="console_log_output_pane", parent="right_pane", show=False):
+            await self.setup_console_log_viewer_pane()
+
     async def setup_data_analysis_pane(self) -> None:
         """Sets up the data analysis pane asynchronously."""
         with dpg.group(parent="analyze_data_pane"):
             dpg.add_text("Data Analysis Tools")
-            # Add more widgets for data analysis
 
     async def setup_visualization_pane(self) -> None:
         """Sets up the data visualization pane asynchronously."""
         with dpg.group(parent="visualize_data_pane"):
             dpg.add_text("Data Visualization Tools")
 
-    async def setup_console_log_viewer(self) -> None:
+    async def setup_console_log_viewer_pane(self) -> None:
         """Sets up the console/log viewer asynchronously."""
-        with dpg.group(parent="bottom_pane"):
+        with dpg.group(parent="console_log_output_pane"):
             dpg.add_text("Console/Log Output", tag="console_log_output")
 
         self.console = ConsoleDialog(self.operation_control.user_input_manager, self.operation_control)
         await self.console.initialize()
+
+    async def setup_timeline_pane(self) -> None:
+        """Sets up the timeline pane asynchronously."""
+        with dpg.group(parent="bottom_pane"):
+            self.timeline = TimelineModule(width=dpg.get_item_width("bottom_pane"), height=280,
+                                           operation_control=self.operation_control,
+                                           operation_queue=self.operation_control.queue)
+            await self.timeline.initialize_dialog()
 
     async def setup_operation_pane(self) -> None:
         """Sets up the operations pane asynchronously."""

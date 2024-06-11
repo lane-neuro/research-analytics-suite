@@ -174,12 +174,14 @@ class OperationModule:
 
                 # Child Operations
                 dpg.add_text("Child Operations:")
-                if self.operation.child_operations:
-                    for child_op in self.operation.child_operations:
-                        dpg.add_text(f"Child Operation: {child_op.name} - Status: {child_op.status} - Concurrent: "
-                                     f"{child_op.concurrent}")
-                else:
-                    dpg.add_button(label="Add Child Operation", callback=self.open_add_child_dialog, width=-1)
+                with dpg.group(tag=f"child_ops_{self.unique_id}", width=-1):
+                    if self.operation.child_operations:
+                        for child_op in self.operation.child_operations:
+                            dpg.add_text(f"Child Operation: {child_op.name} - Status: {child_op.status} - Concurrent: "
+                                         f"{child_op.concurrent}", parent=f"child_ops_{self.unique_id}")
+                dpg.add_button(label="Add Child Operation", callback=self.open_add_child_dialog, width=-1)
+                dpg.add_button(label="Execute Child Operations", callback=self.operation.execute_child_operations,
+                               width=-1)
 
             # Section C: Logs & Results
             child_height = int((self.height * 0.85) * 0.5) - 18
@@ -219,6 +221,14 @@ class OperationModule:
             if dpg.does_item_exist(self.log_id):
                 dpg.set_value(self.log_id, list(reversed(self.operation.operation_logs)))
 
+            if dpg.does_item_exist(f"child_ops_{self.unique_id}"):
+                dpg.delete_item(f"child_ops_{self.unique_id}", children_only=True)
+                if self.operation.child_operations:
+                    for child_op in self.operation.child_operations:
+                        dpg.add_text(f"{child_op.name}\n- Status: {child_op.status}\n- Concurrent: "
+                                     f"{child_op.concurrent}", parent=f"child_ops_{self.unique_id}",
+                                     wrap=200, bullet=True)
+
             if dpg.does_item_exist(self.result_id):
                 result = self.operation.get_result()
                 dpg.set_value(self.result_id, str(result))
@@ -236,9 +246,9 @@ class OperationModule:
         result = self.operation.get_result()
         self.operation.add_log_entry(f"Result viewed: {result}")
 
-    def add_child_operation(self, child_operation: ABCOperation) -> None:
+    async def add_child_operation(self, child_operation: ABCOperation) -> None:
         """Adds a child operation to the current operation."""
-        self.operation.add_child_operation(child_operation)
+        await self.operation.add_child_operation(child_operation)
 
     def remove_child_operation(self, child_operation: ABCOperation) -> None:
         """Removes a child operation from the current operation."""
@@ -254,18 +264,20 @@ class OperationModule:
                 dpg.add_input_text(label="Local Vars", tag="child_op_local_vars", default_value="{}")
                 dpg.add_checkbox(label="Persistent", tag="child_op_persistent")
                 dpg.add_checkbox(label="CPU Bound", tag="child_op_cpu_bound")
+                dpg.add_checkbox(label="Concurrent", tag="child_op_concurrent")
                 dpg.add_button(label="Add", callback=self.add_child_operation_from_dialog)
                 dpg.add_button(label="Cancel", callback=lambda: dpg.hide_item(self.add_child_dialog_id))
         else:
             dpg.show_item(self.add_child_dialog_id)
 
-    def add_child_operation_from_dialog(self, sender: Any, app_data: Any, user_data: Any) -> None:
+    async def add_child_operation_from_dialog(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Adds a child operation from the dialog inputs."""
         try:
             name = dpg.get_value("child_op_name")
-            func = eval(dpg.get_value("child_op_func"))  # This assumes the input is a valid function
+            func = dpg.get_value("child_op_func")
             local_vars = eval(dpg.get_value("child_op_local_vars"))  # This assumes the input is a valid dictionary
             persistent = dpg.get_value("child_op_persistent")
+            concurrent = dpg.get_value("child_op_concurrent")
             is_cpu_bound = dpg.get_value("child_op_cpu_bound")
 
             new_child_op = ABCOperation(
@@ -273,9 +285,10 @@ class OperationModule:
                 func=func,
                 local_vars=local_vars,
                 persistent=persistent,
+                concurrent=concurrent,
                 is_cpu_bound=is_cpu_bound
             )
-            self.add_child_operation(new_child_op)
+            await self.add_child_operation(new_child_op)
             dpg.hide_item(self.add_child_dialog_id)
         except Exception as e:
             self._logger.error(e, self)

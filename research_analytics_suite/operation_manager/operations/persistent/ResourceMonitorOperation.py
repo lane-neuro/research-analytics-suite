@@ -41,7 +41,7 @@ class ResourceMonitorOperation(ABCOperation):
         self.cpu_threshold = kwargs.pop("cpu_threshold", 90)
         self.memory_threshold = kwargs.pop("memory_threshold", 95)
 
-        super().__init__(*args, **kwargs, name="ResourceMonitorOperation", func=self.execute)
+        super().__init__(*args, **kwargs, name="sys_ResourceMonitorOperation", func=self.execute)
 
         self.cpu_usage = 0
         self.total_memory_usage = 0
