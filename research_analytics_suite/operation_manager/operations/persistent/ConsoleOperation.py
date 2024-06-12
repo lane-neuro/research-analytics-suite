@@ -37,6 +37,7 @@ class ConsoleOperation(ABCOperation):
         self._user_input_manager = kwargs.pop("user_input_manager")
 
         super().__init__(*args, **kwargs, name="sys_ConsoleOperation")
+        self.is_ready = True
 
     async def execute(self) -> None:
         """Processes user input and sends it to the operation handler."""

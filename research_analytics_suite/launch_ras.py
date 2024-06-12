@@ -77,7 +77,7 @@ async def launch_ras():
         logger.error(e)
     finally:
         logger.info("Cleaning up...")
-        workspace.save_current_workspace()
+        await workspace.save_current_workspace()
         logger.info("Exiting Research Analytics Suite...")
         asyncio.get_event_loop().close()
 

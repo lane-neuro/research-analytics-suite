@@ -18,3 +18,5 @@ cachey>=0.2.1
 pandas>=2.0.3
 joblib>=1.4.0
 dask>=2024.5.0
+aiofiles>=22.1.0
+aiosqlite>=0.18.0

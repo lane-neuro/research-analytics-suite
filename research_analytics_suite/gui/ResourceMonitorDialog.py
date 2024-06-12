@@ -79,7 +79,8 @@ class ResourceMonitorDialog:
             operation = await self.operation_control.operation_manager.add_operation(
                 operation_type=ABCOperation, name="gui_ResourceUpdateTask", logger=self._logger,
                 local_vars=self.operation_control.local_vars,
-                func=self.update_resource_usage, persistent=True)
+                func=self.update_resource_usage, persistent=True, concurrent=True)
+            operation.is_ready = True
             return operation
         except Exception as e:
             self._logger.error(e, self)

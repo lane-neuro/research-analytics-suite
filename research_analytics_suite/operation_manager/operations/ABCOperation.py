@@ -55,6 +55,7 @@ class ABCOperation(ABC):
         self._complete = False
         self._pause_event = asyncio.Event()
         self._pause_event.set()
+        self._is_ready = False
 
         self._parent_operation = kwargs.get('parent_operation', None)
         self._child_operations: List['ABCOperation'] = []
@@ -202,16 +203,26 @@ class ABCOperation(ABC):
         """Initialize any resources or setup required for the operation before it starts."""
         pass
 
+    @property
     def is_ready(self) -> bool:
+        """Check if the operation is ready to be executed."""
+        return self._is_ready
+
+    @is_ready.setter
+    def is_ready(self, value: bool):
         """
         Check if the operation is ready to be executed.
-
-        An operation is considered ready if all its child operations are complete.
-
-        Returns:
-            bool: True if the operation is ready, False otherwise.
         """
-        return all(child.is_complete() for child in self._child_operations if not child._concurrent)
+        if not isinstance(value, bool):
+            self._handle_error("\'is_ready\' property must be a boolean")
+        if not value:
+            self._is_ready = False
+            return
+
+        self._is_ready = True
+        for child in self._child_operations:
+            if not child.is_complete() and not child._concurrent:
+                self._is_ready = False
 
     async def start(self):
         """

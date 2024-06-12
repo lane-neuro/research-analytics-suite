@@ -7,15 +7,16 @@ including caching, dependency management, and handling live data inputs within t
 Author: Lane
 """
 
-import json
 import os
+import json
+import aiofiles
 from collections import defaultdict
-
 from research_analytics_suite.data_engine.Config import Config
 from research_analytics_suite.data_engine.DataCache import DataCache
 from research_analytics_suite.data_engine.DataEngineOptimized import DataEngineOptimized
 from research_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
 from research_analytics_suite.utils.CustomLogger import CustomLogger
+from research_analytics_suite.data_engine.variable_management import UserVariablesManager, SQLiteStorage, MemoryStorage
 
 
 class Workspace:
@@ -23,12 +24,14 @@ class Workspace:
     A class to manage multiple data engines, allowing flexible interaction with specific datasets.
     """
 
-    def __init__(self, distributed=False):
+    def __init__(self, distributed=False, storage_type='memory', db_path=None):
         """
         Initializes the Workspace instance.
 
         Args:
             distributed (bool): Whether to use distributed computing. Default is False.
+            storage_type (str): The type of storage to use ('sqlite' or 'memory'). Default is 'memory'.
+            db_path (str): The path to the SQLite database file (required if storage_type is 'sqlite').
         """
         self._data_engines = {}
         self._dependencies = defaultdict(list)
@@ -36,6 +39,19 @@ class Workspace:
         self._distributed = distributed
         self._logger = CustomLogger()
         self._config = Config()
+
+        storage = None
+        if storage_type == 'sqlite':
+            if db_path is None:
+                db_path = os.path.join(self._config.BASE_DIR, 'user_variables.db')
+            storage = SQLiteStorage(db_path)
+        elif storage_type == 'memory':
+            storage = MemoryStorage()
+        else:
+            self._logger.error(ValueError(f"Unsupported storage type: {storage_type}"), self)
+
+        self._user_variables = UserVariablesManager(storage)
+        self._logger.info("Workspace initialized successfully")
 
     def add_data_engine(self, data_engine):
         """
@@ -45,6 +61,7 @@ class Workspace:
             data_engine (DataEngineOptimized): The data engine to add.
         """
         self._data_engines[data_engine.engine_id] = data_engine
+        self._logger.info(f"Data engine '{data_engine.engine_id}' added to workspace")
 
     def remove_data_engine(self, name):
         """
@@ -61,6 +78,8 @@ class Workspace:
         for deps in self._dependencies.values():
             if name in deps:
                 deps.remove(name)
+
+        self._logger.info(f"Data engine '{name}' removed from workspace")
 
     def get_data_engine(self, name):
         """
@@ -90,41 +109,47 @@ class Workspace:
         """
         data_engine = DataEngineOptimized(workspace=self)
         self.add_data_engine(data_engine=data_engine)
+        self._logger.info(f"Project created at {project_directory}")
         return data_engine
 
-    def save_current_workspace(self):
-        os.makedirs(self._config.BASE_DIR, exist_ok=True)
-        os.makedirs(self._config.DATA_DIR, exist_ok=True)
-        os.makedirs(self._config.LOG_DIR, exist_ok=True)
-        os.makedirs(self._config.WORKSPACE_DIR, exist_ok=True)
-        os.makedirs(self._config.BACKUP_DIR, exist_ok=True)
-        os.makedirs(self._config.ENGINE_DIR, exist_ok=True)
+    async def save_current_workspace(self):
+        try:
+            os.makedirs(self._config.BASE_DIR, exist_ok=True)
+            os.makedirs(self._config.DATA_DIR, exist_ok=True)
+            os.makedirs(self._config.LOG_DIR, exist_ok=True)
+            os.makedirs(self._config.WORKSPACE_DIR, exist_ok=True)
+            os.makedirs(self._config.BACKUP_DIR, exist_ok=True)
+            os.makedirs(self._config.ENGINE_DIR, exist_ok=True)
 
-        for engine_id, data_engine in self._data_engines.items():
-            engine_path = os.path.join(self._config.ENGINE_DIR, f'{engine_id}')
-            os.makedirs(engine_path, exist_ok=True)
-            data_engine.save_engine(self._config.BASE_DIR)
+            for engine_id, data_engine in self._data_engines.items():
+                engine_path = os.path.join(self._config.ENGINE_DIR, f'{engine_id}')
+                os.makedirs(engine_path, exist_ok=True)
+                await data_engine.save_engine(self._config.BASE_DIR)
 
-        config_path = os.path.join(self._config.BASE_DIR, 'config.json')
-        with open(config_path, 'w') as config_file:
-            config_file.write(self._get_config_settings())
+            config_path = os.path.join(self._config.BASE_DIR, 'config.json')
+            async with aiofiles.open(config_path, 'w') as config_file:
+                await config_file.write(self._get_config_settings())
 
-        self._logger.info(f"Workspace saved at {self._config.BASE_DIR}")
+            self._logger.info(f"Workspace saved at {self._config.BASE_DIR}")
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to save current workspace: {e}"), self)
 
-    @staticmethod
-    def load_workspace(workspace_path):
-        with open(os.path.join(workspace_path), 'r') as config_file:
-            config = json.load(config_file)
+    async def load_workspace(self, workspace_path) -> 'Workspace':
+        try:
+            async with aiofiles.open(os.path.join(workspace_path), 'r') as config_file:
+                config = json.loads(await config_file.read())
 
-        workspace_path = os.path.dirname(workspace_path)
-        workspace = Workspace(config.get('distributed', False))
+            workspace_path = os.path.dirname(workspace_path)
+            workspace = Workspace(config.get('distributed', False))
 
-        for engine_id in os.listdir(os.path.join(workspace_path, 'engines')):
-            data_engine = UnifiedDataEngine.load_engine(workspace_path, engine_id)
-            workspace.add_data_engine(data_engine)
+            for engine_id in os.listdir(os.path.join(workspace_path, 'engines')):
+                data_engine = await UnifiedDataEngine.load_engine(workspace_path, engine_id)
+                workspace.add_data_engine(data_engine)
 
-        workspace._logger.info("Workspace loaded successfully")
-        return workspace
+            workspace._logger.info("Workspace loaded successfully")
+            return workspace
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to load workspace: {e}"), self)
 
     def _get_config_settings(self):
         """
@@ -179,3 +204,58 @@ class Workspace:
 
             'scheduler_interval': self._config.SCHEDULER_INTERVAL,
         }, indent=4)
+
+    # Methods to interact with UserVariables
+    async def add_user_variable(self, name, value):
+        try:
+            await self._user_variables.add_variable(name, value)
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to add user variable '{name}': {e}"), self)
+
+    async def get_user_variable(self, name):
+        try:
+            return await self._user_variables.get_variable(name)
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to get user variable '{name}': {e}"), self)
+
+    async def remove_user_variable(self, name):
+        try:
+            await self._user_variables.remove_variable(name)
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to remove user variable '{name}': {e}"), self)
+
+    async def list_user_variables(self):
+        try:
+            return await self._user_variables.list_variables()
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to list user variables: {e}"), self)
+
+    # Methods to backup and restore UserVariables
+    async def backup_user_variables(self, backup_path):
+        """
+        Backups the user variables database to the specified path.
+
+        Args:
+            backup_path (str): The path to save the backup file.
+        """
+        try:
+            async with aiofiles.open(self._user_variables.storage.db_path, 'rb') as src, aiofiles.open(backup_path, 'wb') as dst:
+                await dst.write(await src.read())
+            self._logger.info(f"User variables backed up to {backup_path}")
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to backup user variables: {e}"), self)
+
+    async def restore_user_variables(self, backup_path):
+        """
+        Restores the user variables database from the specified backup file.
+
+        Args:
+            backup_path (str): The path of the backup file to restore from.
+        """
+        try:
+            async with (aiofiles.open(backup_path, 'rb') as src,
+                        aiofiles.open(self._user_variables.storage.db_path, 'wb') as dst):
+                await dst.write(await src.read())
+            self._logger.info(f"User variables restored from {backup_path}")
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to restore user variables: {e}"), self)

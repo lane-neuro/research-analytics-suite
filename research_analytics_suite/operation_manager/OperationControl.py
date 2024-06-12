@@ -1,5 +1,5 @@
 """
-OperationControl Module.
+OperationControl Module
 
 This module defines the OperationControl class, which is responsible for managing and executing operations in the
 queue. It integrates various components like the operations queue, manager, operation_executor, and checker to manage the

@@ -15,10 +15,10 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
+import uuid
 from typing import Optional, Any
 
 import dearpygui.dearpygui as dpg
-
 from research_analytics_suite.gui.modules.OperationModule import OperationModule
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
@@ -80,6 +80,7 @@ class OperationManagerDialog:
                 operation_type=ABCOperation, name="gui_OperationManagerUpdateTask",
                 local_vars=self.operation_control.local_vars,
                 func=self.display_operations, persistent=True, concurrent=True)
+            operation.is_ready = True
             return operation
         except Exception as e:
             self._logger.error(e, self)
@@ -95,8 +96,10 @@ class OperationManagerDialog:
                             and node.operation.name != "gui_OperationUpdateTask"
                             and not node.operation.name.startswith("gui_")
                             and not node.operation.name.startswith("sys_")):
-                        self.operation_items[node.operation] = OperationModule(node.operation, self.operation_control,
-                                                                               self.TILE_WIDTH, self.TILE_HEIGHT)
+                        self.operation_items[node.operation] = OperationModule(operation=node.operation,
+                                                                               operation_control=self.operation_control,
+                                                                               width=self.TILE_WIDTH,
+                                                                               height=self.TILE_HEIGHT)
                         await self.operation_items[node.operation].initialize()
                         self.add_operation_tile(node.operation)
             await asyncio.sleep(self.SLEEP_DURATION)
@@ -112,10 +115,11 @@ class OperationManagerDialog:
                 or len(dpg.get_item_children(self.current_row_group)[1]) >= self.tiles_per_row):
             self.current_row_group = dpg.add_group(horizontal=True, parent=self.window)
             self._logger.debug(f"Created new row group: {self.current_row_group}")
+        tag = f"{operation.name}_{uuid.uuid4()}"
         child_window = dpg.add_child_window(width=self.TILE_WIDTH, height=self.TILE_HEIGHT,
-                                            parent=self.current_row_group)
+                                            parent=self.current_row_group, tag=tag)
         self._logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
-        self.operation_items[operation].draw(parent=child_window)
+        self.operation_items[operation].draw(parent=tag)
 
     def on_resize(self, sender: str, data: dict) -> None:
         """

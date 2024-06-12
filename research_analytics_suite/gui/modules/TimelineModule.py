@@ -19,7 +19,8 @@ class TimelineModule:
     """A class to manage a multi-layered timeline interface for reordering OperationModule instances."""
 
     def __init__(self, operation_control, operation_queue, width: int, height: int):
-        self.window = dpg.add_group(label="Timeline", parent="bottom_pane", tag="timeline_manager", horizontal=False)
+        self.window = dpg.add_group(label="Timeline", parent="bottom_pane_group", tag="timeline_manager",
+                                    horizontal=False)
         self._logger = CustomLogger()
         self.update_operation = None
         self.operation_control = operation_control
@@ -39,6 +40,7 @@ class TimelineModule:
                 operation_type=ABCOperation, name="gui_TimelineUpdateTask",
                 local_vars=self.operation_control.local_vars,
                 func=self.draw_timeline, persistent=True, concurrent=True)
+            operation.is_ready = True
             return operation
         except Exception as e:
             self._logger.error(e, self)
@@ -46,7 +48,7 @@ class TimelineModule:
 
     async def draw_timeline(self) -> None:
         if not dpg.does_item_exist(self.unique_id):
-            dpg.add_child_window(tag=self.unique_id, width=self.width, height=self.height, border=True,
+            dpg.add_child_window(tag=self.unique_id, border=True, width=self.width,
                                  parent="timeline_manager")
 
         while True:

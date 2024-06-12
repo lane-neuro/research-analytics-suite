@@ -8,7 +8,6 @@ Author: Lane
 """
 
 from .BaseInput import BaseInput
-from ..DataEngineOptimized import DataEngineOptimized
 from ...utils.CustomLogger import CustomLogger
 
 
@@ -18,10 +17,9 @@ class LiveDataHandler:
 
     Attributes:
         data_engine (DataEngineOptimized): The data engine to update with live data.
-        logger (CustomLogger): CustomLogger for logging information and errors.
         live_inputs (list): List of live data inputs.
     """
-    def __init__(self, data_engine: DataEngineOptimized):
+    def __init__(self, data_engine):
         """
         Initializes the LiveDataHandler instance.
 

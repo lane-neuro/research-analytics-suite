@@ -53,6 +53,7 @@ class OperationManager:
         try:
             operation = operation_type(*args, **kwargs)
             await self.queue.add_operation_to_queue(operation)
+
             operation.add_log_entry(f"[QUEUE] {operation.name}")
             return operation
         except Exception as e:

@@ -50,6 +50,7 @@ class ResourceMonitorOperation(ABCOperation):
         self.process = psutil.Process(os.getpid())
         self.profiler = cProfile.Profile()
         self.profiler.enable()
+        self.is_ready = True
 
     async def execute(self) -> None:
         """

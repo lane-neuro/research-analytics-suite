@@ -12,6 +12,7 @@ import psutil
 from research_analytics_suite.data_engine.Config import Config
 from research_analytics_suite.data_engine.DataCache import DataCache
 from research_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
+from research_analytics_suite.data_engine.live_input.LiveDataHandler import LiveDataHandler
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -40,6 +41,8 @@ class DataEngineOptimized(UnifiedDataEngine):
         self.cache.register()
         self.memory_limit = self._config.MEMORY_LIMIT
         self.workspace = workspace
+
+        self.live_data_handler = LiveDataHandler(data_engine=self)
 
     def perform_operation(self, operation_name):
         """

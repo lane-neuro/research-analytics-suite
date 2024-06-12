@@ -41,7 +41,7 @@ def main():
 
 if __name__ == '__main__':
     sys.argv = ['__main__.py',
-                # '-o', "C:\\Users\\lane\\Documents\\RAS Workspaces\\default_workspace\\config.json",
+                '-o', "C:\\Users\\lane\\Documents\\RAS Workspaces\\default_workspace\\config.json",
                 '-g', 'True',
                 '-u', 'dev_test',
                 '-d', '..\\..\\RAS-test-output\\',

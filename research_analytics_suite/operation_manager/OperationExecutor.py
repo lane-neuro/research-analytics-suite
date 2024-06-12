@@ -90,7 +90,7 @@ class OperationExecutor:
                         continue
                     self._logger.debug(f"execute_all: [OP] {operation.name} - {operation.status} - {operation.task}")
 
-                    if not operation.task and operation.is_ready():
+                    if not operation.task and operation.is_ready:
                         try:
                             operation.task = self.task_creator.create_task(
                                 self.execute_operation(operation),

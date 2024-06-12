@@ -22,13 +22,14 @@ from dearpygui_async import DearPyGuiAsync
 
 from research_analytics_suite.data_engine.DataEngineOptimized import DataEngineOptimized
 from research_analytics_suite.data_engine.Workspace import Workspace
-from research_analytics_suite.data_engine.live_input.LiveDataHandler import LiveDataHandler
 from research_analytics_suite.gui.ConsoleDialog import ConsoleDialog
 from research_analytics_suite.gui.DataEngineDialog import DataEngineDialog
 from research_analytics_suite.gui.DataImportWizard import DataImportWizard
 from research_analytics_suite.gui.OperationManagerDialog import OperationManagerDialog
 from research_analytics_suite.gui.SettingsDialog import SettingsDialog
+from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
 from research_analytics_suite.gui.modules.TimelineModule import TimelineModule
+from research_analytics_suite.gui.modules.WorkspaceModule import WorkspaceModule
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -56,11 +57,12 @@ class GuiLauncher:
         self.data_import_wizard = None
         self.real_time_data_visualization = None
         self.settings_dialog = SettingsDialog()
+        self.create_operation_module = CreateOperationModule(operation_control=self.operation_control,
+                                                             height=400, width=400,
+                                                             parent_operation=None)
         self.console = None
         self.operation_window = None
-
-        # Initialize live data handler
-        self.data_engine.live_data_handler = LiveDataHandler(data_engine)
+        self.workspace_dialog = None
 
     def setup_navigation_menu(self) -> None:
         """Sets up the navigation menu on the left pane."""
@@ -145,7 +147,8 @@ class GuiLauncher:
         dpg.show_viewport()
         await self.dpg_async.start()
 
-        with dpg.window(label="RAS", tag="main_window"):
+        with dpg.window(label="RAS", tag="main_window",
+                        width=dpg.get_viewport_width(), height=dpg.get_viewport_height()):
             with dpg.group(horizontal=True, tag="main_pane", height=dpg.get_viewport_height() - 370):
                 with dpg.child_window(tag="left_pane", width=200):
                     self.setup_navigation_menu()
@@ -153,8 +156,10 @@ class GuiLauncher:
                 with dpg.child_window(tag="right_pane"):
                     await self.setup_panes()
 
-            with dpg.child_window(tag="bottom_pane", height=300, parent="main_window"):
-                await self.setup_timeline_pane()
+            with dpg.child_window(tag="bottom_pane", parent="main_window"):
+                with dpg.group(horizontal=True, tag="bottom_pane_group"):
+                    await self.setup_timeline_pane()
+                    await self.setup_workspace_pane()
 
         dpg.set_primary_window("main_window", True)
 
@@ -204,20 +209,13 @@ class GuiLauncher:
         self.console = ConsoleDialog(self.operation_control.user_input_manager, self.operation_control)
         await self.console.initialize()
 
-    async def setup_timeline_pane(self) -> None:
-        """Sets up the timeline pane asynchronously."""
-        with dpg.group(parent="bottom_pane"):
-            self.timeline = TimelineModule(width=dpg.get_item_width("bottom_pane"), height=280,
-                                           operation_control=self.operation_control,
-                                           operation_queue=self.operation_control.queue)
-            await self.timeline.initialize_dialog()
-
     async def setup_operation_pane(self) -> None:
         """Sets up the operations pane asynchronously."""
-        with dpg.group(parent="operation_pane"):
+        with dpg.group(parent="operation_pane", horizontal=True):
             dpg.add_text("Operation Manager")
+            self.create_operation_module.draw_button(parent="operation_pane", label="Create New Operation")
 
-        self.operation_window = OperationManagerDialog(self.operation_control, dpg.get_item_width("operation_pane"))
+        self.operation_window = OperationManagerDialog(operation_control=self.operation_control)
         await self.operation_window.initialize_dialog()
 
     async def setup_data_engine_pane(self) -> None:
@@ -234,13 +232,29 @@ class GuiLauncher:
             self.data_import_wizard = DataImportWizard(self.data_engine)
             await self.data_import_wizard.initialize()
 
-    def save_workspace(self):
+    async def setup_timeline_pane(self) -> None:
+        """Sets up the timeline pane asynchronously."""
+        with dpg.group(parent="bottom_pane_group", tag="timeline_group", horizontal=True):
+            self.timeline = TimelineModule(width=int(dpg.get_viewport_width() * 0.5),
+                                           height=300,
+                                           operation_control=self.operation_control,
+                                           operation_queue=self.operation_control.queue)
+            await self.timeline.initialize_dialog()
+
+    async def setup_workspace_pane(self) -> None:
+        """Sets up the workspace pane asynchronously."""
+        with dpg.group(parent="bottom_pane_group", horizontal=True, tag="workspace_group"):
+            self.workspace_dialog = WorkspaceModule(workspace=self.workspace, operation_control=self.operation_control,
+                                                    height=300, width=int(dpg.get_viewport_width() * 0.5))
+            await self.workspace_dialog.initialize()
+
+    async def save_workspace(self):
         """
         Saves the current workspace, including data, configuration settings, and user information.
         """
         workspace_name = dpg.get_value("workspace_name_input")
         if workspace_name is None or workspace_name == "":
             workspace_name = "default_name"
-        self.workspace.save_current_workspace()
+        await self.workspace.save_current_workspace()
         # dpg.set_value("workspace_status", f"Workspace '{workspace_name}' saved successfully")
         self._logger.info(f"Workspace '{workspace_name}' saved successfully")

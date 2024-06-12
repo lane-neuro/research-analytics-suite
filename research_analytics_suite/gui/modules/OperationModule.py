@@ -2,7 +2,7 @@
 OperationModule
 
 This module defines the OperationModule class, which is responsible for managing operations and their GUI representation
-within the research analytics suite. It handles the initialization, starting, stopping, pausing, resuming, and
+within the research analytics suite. It handles the initialization, execution, stopping, pausing, resuming, and
 resetting of operations and updates the GUI accordingly.
 
 Author: Lane
@@ -22,6 +22,7 @@ from typing import Any
 
 import dearpygui.dearpygui as dpg
 
+from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -39,18 +40,19 @@ class OperationModule:
             width (int): The width of the module.
             height (int): The height of the module.
         """
+        self.child_ops_parent = None
+        self.log_container_id = None
         self.operation = operation
         self.operation_control = operation_control
         self.width = int(width * 1.0)
         self.height = int(height * 1.0)
         self._logger = CustomLogger()
         self.update_operation = None
-        self.unique_id = None
+        self.unique_id = str(uuid.uuid4())
         self.log_id = None
         self.result_id = None
         self.persistent_id = None
         self.cpu_bound_id = None
-        self.add_child_dialog_id = None
 
     async def initialize(self) -> None:
         """Initializes resources and adds the update operation."""
@@ -75,21 +77,21 @@ class OperationModule:
             operation = await self.operation_control.operation_manager.add_operation(
                 operation_type=ABCOperation, name="gui_OperationUpdateTask", logger=self._logger,
                 local_vars=self.operation_control.local_vars,
-                func=self.update_gui, persistent=True)
+                func=self.update_gui, persistent=True, concurrent=True)
+            operation.is_ready = True
             return operation
         except Exception as e:
             self._logger.error(e, self)
             self.operation.add_log_entry(f"Error creating task: {e}")
 
-    async def start_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
-        """Starts the operation."""
-        if not self.operation.persistent:
-            try:
-                await self.operation.start()
-            except Exception as e:
-                self._logger.error(e, self)
-                self.operation.status = "error"
-                self.operation.add_log_entry(f"Error starting operation: {e}")
+    async def execute_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+        """Executes the operation."""
+        try:
+            self.operation.is_ready = True
+        except Exception as e:
+            self._logger.error(e, self)
+            self.operation.status = "error"
+            self.operation.add_log_entry(f"Error executing operation: {e}")
 
     async def stop_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Stops the operation."""
@@ -130,16 +132,14 @@ class OperationModule:
             self.operation.status = "error"
             self.operation.add_log_entry(f"Error resetting operation: {e}")
 
-    def draw(self, parent: int) -> None:
+    def draw(self, parent) -> None:
         """Draws the GUI elements for the operation."""
         with dpg.group(parent=parent, height=int(self.height * 0.14) - 2):
-            self.unique_id = str(uuid.uuid4())
             self.log_id = f"log_{self.unique_id}"
             self.result_id = f"result_{self.unique_id}"
             self.persistent_id = f"persistent_{self.unique_id}"
             self.cpu_bound_id = f"cpu_bound_{self.unique_id}"
 
-            # Section A: Details
             with dpg.child_window(height=-1, width=-1, border=True):
                 dpg.add_text(f"Operation: {self.operation.name}")
                 dpg.add_separator()
@@ -151,20 +151,18 @@ class OperationModule:
                     dpg.add_text(f"CPU Bound: {self.operation.is_cpu_bound}", tag=self.cpu_bound_id)
 
         with dpg.group(parent=parent, horizontal=True):
-
-            # Section B: Interaction & Child Operations
             with dpg.child_window(height=int(self.height * 0.85) - 12, width=int(self.width * 0.4) - 15, border=True):
                 dpg.add_progress_bar(
                     default_value=self.operation.progress[0] / 100,
                     tag=f"progress_{self.operation.name}_{self.unique_id}",
                     overlay="%.1f%%" % self.operation.progress[0],
-                    width=-1)
+                    width=-1
+                )
                 dpg.add_separator()
 
-                # Interaction buttons
                 button_width = int(((self.width * 0.4) - 45) / 3)
                 with dpg.group(horizontal=True):
-                    dpg.add_button(label="Start", callback=self.start_operation, width=button_width)
+                    dpg.add_button(label="Execute", callback=self.execute_operation, width=button_width)
                     dpg.add_button(label="Stop", callback=self.stop_operation, width=button_width)
                     dpg.add_button(label="Pause", callback=self.pause_operation, width=button_width)
                 with dpg.group(horizontal=True):
@@ -172,18 +170,31 @@ class OperationModule:
                     dpg.add_button(label="Reset", callback=self.reset_operation, width=button_width)
                 dpg.add_separator()
 
-                # Child Operations
                 dpg.add_text("Child Operations:")
-                with dpg.group(tag=f"child_ops_{self.unique_id}", width=-1):
-                    if self.operation.child_operations:
-                        for child_op in self.operation.child_operations:
-                            dpg.add_text(f"Child Operation: {child_op.name} - Status: {child_op.status} - Concurrent: "
-                                         f"{child_op.concurrent}", parent=f"child_ops_{self.unique_id}")
-                dpg.add_button(label="Add Child Operation", callback=self.open_add_child_dialog, width=-1)
-                dpg.add_button(label="Execute Child Operations", callback=self.operation.execute_child_operations,
-                               width=-1)
+                self.child_ops_parent = f"child_ops_{self.unique_id}"
+                with dpg.group(tag=f"container_{self.unique_id}"):
+                    with dpg.group(tag=self.child_ops_parent):
+                        if self.operation.child_operations:
+                            for child_op in self.operation.child_operations:
+                                dpg.add_text(
+                                    label=f"Child Operation: {child_op.name} - Status: {child_op.status} - "
+                                          f"Concurrent: {child_op.concurrent}",
+                                    parent=self.child_ops_parent
+                                )
+                                dpg.add_separator()
 
-            # Section C: Logs & Results
+                    dpg.add_separator()
+                    dpg.add_button(
+                        label="Execute Child Operations",
+                        callback=self.operation.execute_child_operations,
+                        width=-1, parent=f"container_{self.unique_id}"
+                    )
+                    create_operation_module = CreateOperationModule(operation_control=self.operation_control,
+                                                                    width=self.width,
+                                                                    height=self.height,
+                                                                    parent_operation=self.operation)
+                    create_operation_module.draw_button(parent=f"container_{self.unique_id}", label="Add Child Operation")
+
             child_height = int((self.height * 0.85) * 0.5) - 18
             with dpg.child_window(height=int(self.height * 0.85) - 12, width=int(self.width * 0.6) - 10, border=True):
                 logs_results_tag = f"logs_results_{self.unique_id}"
@@ -199,7 +210,6 @@ class OperationModule:
                     dpg.add_separator()
 
                     with dpg.child_window(border=False, parent=logs_results_tag):
-                        # Section D: Results
                         dpg.add_text("Result")
                         dpg.add_separator()
                         dpg.add_input_text(tag=self.result_id, readonly=True, multiline=True, width=-1)
@@ -210,34 +220,48 @@ class OperationModule:
         """Updates the GUI with the current status and progress."""
         while True:
             if dpg.does_item_exist(f"status_{self.operation.name}_{self.unique_id}"):
-                dpg.set_value(f"status_{self.operation.name}_{self.unique_id}", f"Status:  "
-                                                                                f"{self.operation.status}\t\t")
+                dpg.set_value(f"status_{self.operation.name}_{self.unique_id}", f"Status: {self.operation.status}")
 
             if dpg.does_item_exist(f"progress_{self.operation.name}_{self.unique_id}"):
                 dpg.set_value(f"progress_{self.operation.name}_{self.unique_id}", self.operation.progress[0] / 100)
                 dpg.configure_item(f"progress_{self.operation.name}_{self.unique_id}",
                                    overlay="%.1f%%" % self.operation.progress[0])
 
-            if dpg.does_item_exist(self.log_id):
-                dpg.set_value(self.log_id, list(reversed(self.operation.operation_logs)))
+            if dpg.does_item_exist(self.log_container_id):
+                logs = self.operation.operation_logs
+                children = dpg.get_item_children(self.log_container_id, slot=1)
+                if len(children) != len(logs):
+                    dpg.delete_item(self.log_container_id, children_only=True)
+                    for log in logs:
+                        dpg.add_text(log, parent=self.log_container_id)
 
-            if dpg.does_item_exist(f"child_ops_{self.unique_id}"):
-                dpg.delete_item(f"child_ops_{self.unique_id}", children_only=True)
-                if self.operation.child_operations:
-                    for child_op in self.operation.child_operations:
-                        dpg.add_text(f"{child_op.name}\n- Status: {child_op.status}\n- Concurrent: "
-                                     f"{child_op.concurrent}", parent=f"child_ops_{self.unique_id}",
-                                     wrap=200, bullet=True)
+            if dpg.does_item_exist(self.child_ops_parent):
+                current_child_operations = {child_op.name for child_op in self.operation.child_operations}
+                existing_children = {dpg.get_item_label(child) for child in
+                                     dpg.get_item_children(self.child_ops_parent, slot=1)}
+
+                # Remove old child operations
+                for child in existing_children - current_child_operations:
+                    for child_id in dpg.get_item_children(self.child_ops_parent, slot=1):
+                        if dpg.get_item_label(child_id) == child:
+                            dpg.delete_item(child_id)
+
+                # Add new child operations
+                for child_op in self.operation.child_operations:
+                    if child_op.name not in existing_children:
+                        dpg.add_text(
+                            f"Child Operation: {child_op.name} - Status: {child_op.status} - Concurrent: {child_op.concurrent}",
+                            parent=self.child_ops_parent, wrap=200, bullet=True)
 
             if dpg.does_item_exist(self.result_id):
                 result = self.operation.get_result()
                 dpg.set_value(self.result_id, str(result))
 
             if dpg.does_item_exist(self.persistent_id):
-                dpg.set_value(self.persistent_id, f"Persistent:  {self.operation.persistent}\t\t")
+                dpg.set_value(self.persistent_id, f"Persistent: {self.operation.persistent}")
 
             if dpg.does_item_exist(self.cpu_bound_id):
-                dpg.set_value(self.cpu_bound_id, f"CPU Bound:  {self.operation.is_cpu_bound}")
+                dpg.set_value(self.cpu_bound_id, f"CPU Bound: {self.operation.is_cpu_bound}")
 
             await asyncio.sleep(0.05)
 
@@ -253,43 +277,3 @@ class OperationModule:
     def remove_child_operation(self, child_operation: ABCOperation) -> None:
         """Removes a child operation from the current operation."""
         self.operation.remove_child_operation(child_operation)
-
-    def open_add_child_dialog(self, sender: Any, app_data: Any, user_data: Any) -> None:
-        """Opens a dialog to add a child operation."""
-        if self.add_child_dialog_id is None:
-            self.add_child_dialog_id = dpg.generate_uuid()
-            with dpg.window(label="Add Child Operation", modal=True, tag=self.add_child_dialog_id):
-                dpg.add_input_text(label="Operation Name", tag="child_op_name")
-                dpg.add_input_text(label="Function", tag="child_op_func")
-                dpg.add_input_text(label="Local Vars", tag="child_op_local_vars", default_value="{}")
-                dpg.add_checkbox(label="Persistent", tag="child_op_persistent")
-                dpg.add_checkbox(label="CPU Bound", tag="child_op_cpu_bound")
-                dpg.add_checkbox(label="Concurrent", tag="child_op_concurrent")
-                dpg.add_button(label="Add", callback=self.add_child_operation_from_dialog)
-                dpg.add_button(label="Cancel", callback=lambda: dpg.hide_item(self.add_child_dialog_id))
-        else:
-            dpg.show_item(self.add_child_dialog_id)
-
-    async def add_child_operation_from_dialog(self, sender: Any, app_data: Any, user_data: Any) -> None:
-        """Adds a child operation from the dialog inputs."""
-        try:
-            name = dpg.get_value("child_op_name")
-            func = dpg.get_value("child_op_func")
-            local_vars = eval(dpg.get_value("child_op_local_vars"))  # This assumes the input is a valid dictionary
-            persistent = dpg.get_value("child_op_persistent")
-            concurrent = dpg.get_value("child_op_concurrent")
-            is_cpu_bound = dpg.get_value("child_op_cpu_bound")
-
-            new_child_op = ABCOperation(
-                name=name,
-                func=func,
-                local_vars=local_vars,
-                persistent=persistent,
-                concurrent=concurrent,
-                is_cpu_bound=is_cpu_bound
-            )
-            await self.add_child_operation(new_child_op)
-            dpg.hide_item(self.add_child_dialog_id)
-        except Exception as e:
-            self._logger.error(e, self)
-            self.operation.add_log_entry(f"Error adding child operation: {e}")
