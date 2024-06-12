@@ -15,6 +15,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
+import ctypes
 import os
 
 import dearpygui.dearpygui as dpg
@@ -72,7 +73,6 @@ class GuiLauncher:
             dpg.add_button(label="Manage Projects", callback=lambda: self.switch_pane("manage_projects"))
             dpg.add_button(label="Reports", callback=lambda: self.switch_pane("reports"))
             dpg.add_button(label="Settings", callback=lambda: self.switch_pane("settings"))
-            dpg.add_button(label="Save Workspace", callback=self.save_workspace)
             dpg.add_button(label="Configuration", callback=self.settings_dialog.show)
             dpg.add_button(label="Console/Log", callback=lambda: self.switch_pane("console_log_output"))
             dpg.add_button(label="Exit", callback=dpg.stop_dearpygui)
@@ -92,16 +92,11 @@ class GuiLauncher:
         # Show the selected pane
         dpg.configure_item(f"{pane_name}_pane", show=True)
 
-    def apply_theme(self):
+    async def apply_theme(self):
         """Applies the custom theme to the GUI and loads fonts dynamically."""
         with dpg.theme() as global_theme:
             with dpg.theme_component(dpg.mvAll):
-                # dpg.add_theme_color(dpg.mvThemeCol_WindowBg, (30, 30, 30))
-                # dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 255, 255))
-                # dpg.add_theme_color(dpg.mvThemeCol_Button, (50, 50, 150))
-                # dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (70, 70, 170))
                 dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (90, 90, 190))
-                # Add more theme settings as needed
 
         dpg.bind_theme(global_theme)
 
@@ -116,15 +111,20 @@ class GuiLauncher:
         else:
             self._logger.error(Exception(f"Font directory {font_directory} does not exist."), self)
 
+        await self.load_fonts(font_paths)
+
+    async def load_fonts(self, font_paths):
         with dpg.font_registry():
             default_font = None
             self._logger.info(f"Loading {len(font_paths)} fonts")
 
             for font_path in font_paths:
                 try:
-                    font = dpg.add_font(font_path, 10)
-                    if "default" in font_path:
+                    if "OpenSans-Regular.ttf" in font_path:
+                        font = dpg.add_font(font_path, 16)
                         default_font = font
+                        dpg.set_global_font_scale(1.0)
+                    await asyncio.sleep(0)  # Yield control to the event loop
                 except Exception as e:
                     self._logger.error(Exception(f"Failed to load font {font_path}: {e}"), self)
 
@@ -134,14 +134,15 @@ class GuiLauncher:
             else:
                 self._logger.error(Exception("No default font found, using DearPyGui's default font."), self)
 
-            dpg.show_font_manager()
+            # dpg.show_font_manager()
 
     async def setup_main_window(self) -> None:
         """Sets up the main window of the GUI and runs the event loop."""
         dpg.create_context()
-        # self.apply_theme()  # Apply theme after setup
         dpg.create_viewport(title='Research Analytics Suite', width=1920, height=1080)
         dpg.setup_dearpygui()
+        await self.apply_theme()  # Apply theme after setup
+        dpg.show_metrics()
 
         dpg.show_viewport()
         await self.dpg_async.start()
@@ -246,14 +247,3 @@ class GuiLauncher:
             self.workspace_dialog = WorkspaceModule(operation_control=self.operation_control,
                                                     height=300, width=int(dpg.get_viewport_width() * 0.5))
             await self.workspace_dialog.initialize()
-
-    async def save_workspace(self):
-        """
-        Saves the current workspace, including data, configuration settings, and user information.
-        """
-        workspace_name = dpg.get_value("workspace_name_input")
-        if workspace_name is None or workspace_name == "":
-            workspace_name = "default_name"
-        await self.workspace.save_current_workspace()
-        # dpg.set_value("workspace_status", f"Workspace '{workspace_name}' saved successfully")
-        self._logger.info(f"Workspace '{workspace_name}' saved successfully")

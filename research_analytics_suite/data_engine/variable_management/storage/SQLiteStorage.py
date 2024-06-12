@@ -53,7 +53,7 @@ class SQLiteStorage(BaseStorage):
         except Exception as e:
             self._logger.error(Exception(f"Error adding variable '{name}': {e}"), self)
 
-    async def get_variable(self, name):
+    async def get_variable_value(self, name):
         """
         Retrieves the value of a variable by name from the SQLite database.
 
@@ -67,7 +67,7 @@ class SQLiteStorage(BaseStorage):
             async with aiosqlite.connect(self.db_path) as conn:
                 async with conn.execute("SELECT value FROM variables WHERE name = ?", (name,)) as cursor:
                     row = await cursor.fetchone()
-                    return json.loads(row[0]) if row else None
+                    return json.loads(row[0]).value if row else None
         except Exception as e:
             self._logger.error(Exception(f"Error retrieving variable '{name}': {e}"), self)
 

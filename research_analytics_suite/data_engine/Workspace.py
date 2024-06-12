@@ -9,6 +9,8 @@ Author: Lane
 
 import os
 import json
+import pickle
+
 import aiofiles
 from collections import defaultdict
 from research_analytics_suite.data_engine.Config import Config
@@ -59,7 +61,7 @@ class Workspace:
             else:
                 self._logger.error(ValueError(f"Unsupported storage type: {storage_type}"), self)
 
-            self._user_variables = UserVariablesManager(storage)
+            self.user_variables = UserVariablesManager(storage)
             self._logger.info("Workspace initialized successfully")
             self._initialized = True
 
@@ -219,34 +221,30 @@ class Workspace:
     # Methods to interact with UserVariables
     async def add_user_variable(self, name, value):
         try:
-            await self._user_variables.add_variable(name, value)
+            await self.user_variables.add_variable(name, value)
         except Exception as e:
             self._logger.error(Exception(f"Failed to add user variable '{name}': {e}"), self)
 
     async def get_user_variable(self, name):
         try:
-            return await self._user_variables.get_variable(name)
+            return await self.user_variables.get_variable(name)
         except Exception as e:
             self._logger.error(Exception(f"Failed to get user variable '{name}': {e}"), self)
 
     async def remove_user_variable(self, name):
         try:
-            await self._user_variables.remove_variable(name)
+            await self.user_variables.remove_variable(name)
         except Exception as e:
             self._logger.error(Exception(f"Failed to remove user variable '{name}': {e}"), self)
 
-    async def list_user_variables(self):
+    async def list_user_variables(self) -> dict:
         try:
-            return await self._user_variables.list_variables()
+            return await self.user_variables.list_variables()
         except Exception as e:
             self._logger.error(Exception(f"Failed to list user variables: {e}"), self)
 
     async def save_user_variables(self, file_path):
         try:
-            # Ensure the directory for the db_path exists
-            db_directory = os.path.dirname(self._user_variables.storage.db_path)
-            os.makedirs(db_directory, exist_ok=True)
-
             # Ensure the directory for the save file exists
             save_directory = os.path.dirname(file_path)
             os.makedirs(save_directory, exist_ok=True)
@@ -256,10 +254,8 @@ class Workspace:
                 async with aiofiles.open(file_path, 'w') as temp_file:
                     await temp_file.write('')
 
-            # Perform the save operation
-            async with (aiofiles.open(self._user_variables.storage.db_path, 'rb') as src,
-                        aiofiles.open(file_path, 'wb') as dst):
-                await dst.write(await src.read())
+            async with aiofiles.open(file_path, 'wb') as dst:
+                await dst.write(pickle.dumps(await self.user_variables.list_variables()))
 
             self._logger.info(f"User variables saved to {file_path}")
 
@@ -274,9 +270,11 @@ class Workspace:
             file_path (str): The path of the save file to restore from.
         """
         try:
-            async with (aiofiles.open(file_path, 'rb') as src,
-                        aiofiles.open(self._user_variables.storage.db_path, 'wb') as dst):
-                await dst.write(await src.read())
+            async with aiofiles.open(file_path, 'rb') as src:
+                variables = pickle.loads(await src.read())
+                for name, value in variables.items():
+                    await self.user_variables.add_variable(name, value)
             self._logger.info(f"User variables restored from {file_path}")
         except Exception as e:
             self._logger.error(Exception(f"Failed to restore user variables: {e}"), self)
+

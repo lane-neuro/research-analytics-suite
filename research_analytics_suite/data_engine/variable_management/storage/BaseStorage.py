@@ -42,7 +42,7 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    async def get_variable(self, name):
+    async def get_variable_value(self, name):
         """
         Retrieves the value of a variable by name from the storage.
 

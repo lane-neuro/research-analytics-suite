@@ -64,7 +64,6 @@ class WorkspaceModule:
     async def setup_workspace_pane(self) -> None:
         """Sets up the workspace pane asynchronously."""
         with dpg.group(tag="workspace_pane_group", horizontal=True, parent="workspace_group"):
-
             with dpg.child_window(tag="user_variables_pane",
                                   width=self._user_vars_width,
                                   border=True, parent="workspace_pane_group"):
@@ -115,34 +114,34 @@ class WorkspaceModule:
                 else:
                     self._logger.error(Exception("Expected list of user variables, got something else", self))
 
+                # Remove old variables
+                for name, value in self.user_vars.items():
+                    if name not in new_user_vars_dict:
+                        await self.remove_user_variable_from_gui(name)
+
                 # Update existing variables and add new ones
                 for name, value in new_user_vars_dict.items():
                     if name in self.user_vars:
                         if self.user_vars[name] != value:
                             dpg.set_value(f"user_var_value_{name}", value)
                     else:
-                        self.add_user_variable_to_gui(name, value)
-
-                # Remove old variables
-                for name in list(self.user_vars.keys()):
-                    if name not in new_user_vars_dict:
-                        self.remove_user_variable_from_gui(name)
+                        await self.add_user_variable_to_gui(name, value)
 
                 self.user_vars = new_user_vars_dict
             except Exception as e:
                 self._logger.error(Exception(f"Error updating user variables: {e}", self))
             await asyncio.sleep(0.1)
 
-    def add_user_variable_to_gui(self, name: str, value: str) -> None:
+    async def add_user_variable_to_gui(self, name, value) -> None:
         """Adds a user variable to the GUI."""
-        with dpg.group(parent=self.user_var_list_id, tag=f"user_var_group_{name}"):
+        with dpg.group(parent=self.user_var_list_id, tag=f"user_var_group_{name}", horizontal=True):
             dpg.add_text(f"Name: {name}, Value: ", parent=f"user_var_group_{name}")
             dpg.add_text(value, tag=f"user_var_value_{name}", parent=f"user_var_group_{name}")
-            dpg.add_button(label=f"Remove {name}",
-                           callback=lambda s, a, u=name: asyncio.create_task(self.remove_user_variable(u)),
+            dpg.add_button(label=f"Remove",
+                           callback=lambda: asyncio.create_task(self.remove_user_variable(name)),
                            parent=f"user_var_group_{name}")
 
-    def remove_user_variable_from_gui(self, name: str) -> None:
+    async def remove_user_variable_from_gui(self, name) -> None:
         """Removes a user variable from the GUI."""
         dpg.delete_item(f"user_var_group_{name}")
 
@@ -156,7 +155,9 @@ class WorkspaceModule:
     async def remove_user_variable(self, name) -> None:
         """Removes a user variable."""
         try:
+            self._logger.debug(f"Removing user variable '{name}'")
             await self._workspace.remove_user_variable(name)
+
         except Exception as e:
             self._logger.error(Exception(f"Failed to remove user variable '{name}': {e}", self))
 
@@ -165,7 +166,7 @@ class WorkspaceModule:
         try:
             save_path = dpg.get_value("save_path_input")
             await self._workspace.save_user_variables(save_path)
-            self._logger.info(f"User variables saved to {save_path}")
+            self._logger.debug(f"User variables saved to {save_path}")
         except Exception as e:
             self._logger.error(Exception(f"Failed to save user variables: {e}", self))
 
@@ -174,7 +175,7 @@ class WorkspaceModule:
         try:
             save_path = dpg.get_value("save_path_input")
             await self._workspace.restore_user_variables(save_path)
-            self._logger.info(f"User variables restored from {save_path}")
+            self._logger.debug(f"User variables restored from {save_path}")
         except Exception as e:
             self._logger.error(Exception(f"Failed to restore user variables: {e}", self))
 

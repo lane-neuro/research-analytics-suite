@@ -37,7 +37,7 @@ class MemoryStorage(BaseStorage):
         except Exception as e:
             self._logger.error(Exception(f"Error adding variable '{name}': {e}"), self)
 
-    async def get_variable(self, name):
+    async def get_variable_value(self, name):
         """
         Retrieves the value of a variable by name from the in-memory storage.
 
@@ -48,7 +48,7 @@ class MemoryStorage(BaseStorage):
             The value of the variable.
         """
         try:
-            return self._variables.get(name, None)
+            return self._variables[name]
         except Exception as e:
             self._logger.error(Exception(f"Error retrieving variable '{name}': {e}"), self)
 
@@ -65,7 +65,7 @@ class MemoryStorage(BaseStorage):
         except Exception as e:
             self._logger.error(Exception(f"Error removing variable '{name}': {e}"), self)
 
-    async def list_variables(self):
+    async def list_variables(self) -> dict:
         """
         Lists all variables from the in-memory storage.
 
