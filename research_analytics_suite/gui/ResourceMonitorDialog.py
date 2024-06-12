@@ -106,7 +106,7 @@ class ResourceMonitorDialog:
 
     async def update_resource_usage(self) -> None:
         """Continuously updates the resource usage displays."""
-        while True:
+        while self.update_operation.concurrent and self.update_operation.persistent:
             await self.update_cpu_usage()
             await self.update_memory_usage()
             await asyncio.sleep(self.SLEEP_DURATION)

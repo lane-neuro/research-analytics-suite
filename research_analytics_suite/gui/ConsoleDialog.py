@@ -67,7 +67,7 @@ class ConsoleDialog:
             operation = await self.operation_control.operation_manager.add_operation(
                 operation_type=ABCOperation, name="gui_ConsoleUpdateTask",
                 local_vars=self.operation_control.local_vars,
-                logger=self._logger, func=self.update_logger_output, persistent=True)
+                logger=self._logger, func=self.update_logger_output, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation
         except Exception as e:

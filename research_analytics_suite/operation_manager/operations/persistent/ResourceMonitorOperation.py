@@ -60,7 +60,7 @@ class ResourceMonitorOperation(ABCOperation):
         self._status = "running"
         self.add_log_entry(f"[RUN] {self._name}")
 
-        while True:
+        while self.concurrent and self.persistent:
             self.cpu_usage = self.process.cpu_percent()
             self.total_memory_usage = psutil.virtual_memory().percent
             self.process_memory_usage = self.process.memory_info().rss / (1024 ** 3)  # Corrected to output in GB

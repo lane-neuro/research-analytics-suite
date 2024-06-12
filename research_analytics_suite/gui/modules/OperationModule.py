@@ -42,7 +42,7 @@ class OperationModule:
         """
         self.child_ops_parent = None
         self.log_container_id = None
-        self.operation = operation
+        self._operation = operation
         self.operation_control = operation_control
         self.width = int(width * 1.0)
         self.height = int(height * 1.0)
@@ -56,13 +56,13 @@ class OperationModule:
 
     async def initialize(self) -> None:
         """Initializes resources and adds the update operation."""
-        self.initialize_resources()
         self.update_operation = await self.add_update_operation()
+        self.initialize_resources()
 
     def initialize_resources(self) -> None:
         """Initializes necessary resources and logs the event."""
         try:
-            self.operation.attach_gui_module(self)
+            self._operation.attach_gui_module(self)
         except Exception as e:
             self._logger.error(e, self)
 
@@ -82,55 +82,55 @@ class OperationModule:
             return operation
         except Exception as e:
             self._logger.error(e, self)
-            self.operation.add_log_entry(f"Error creating task: {e}")
+            self._operation.add_log_entry(f"Error creating task: {e}")
 
     async def execute_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Executes the operation."""
         try:
-            self.operation.is_ready = True
+            self._operation.is_ready = True
         except Exception as e:
             self._logger.error(e, self)
-            self.operation.status = "error"
-            self.operation.add_log_entry(f"Error executing operation: {e}")
+            self._operation.status = "error"
+            self._operation.add_log_entry(f"Error executing operation: {e}")
 
     async def stop_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Stops the operation."""
-        if not self.operation.persistent:
+        if not self._operation.persistent:
             try:
-                await self.operation.stop()
+                await self._operation.stop()
             except Exception as e:
                 self._logger.error(e, self)
-                self.operation.status = "error"
-                self.operation.add_log_entry(f"Error stopping operation: {e}")
+                self._operation.status = "error"
+                self._operation.add_log_entry(f"Error stopping operation: {e}")
 
     async def pause_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Pauses the operation."""
-        if not self.operation.persistent:
+        if not self._operation.persistent:
             try:
-                await self.operation.pause()
+                await self._operation.pause()
             except Exception as e:
                 self._logger.error(e, self)
-                self.operation.status = "error"
-                self.operation.add_log_entry(f"Error pausing operation: {e}")
+                self._operation.status = "error"
+                self._operation.add_log_entry(f"Error pausing operation: {e}")
 
     async def resume_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Resumes the operation."""
-        if not self.operation.persistent:
+        if not self._operation.persistent:
             try:
-                await self.operation.resume()
+                await self._operation.resume()
             except Exception as e:
                 self._logger.error(e, self)
-                self.operation.status = "error"
-                self.operation.add_log_entry(f"Error resuming operation: {e}")
+                self._operation.status = "error"
+                self._operation.add_log_entry(f"Error resuming operation: {e}")
 
     async def reset_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Resets the operation."""
         try:
-            await self.operation.reset()
+            await self._operation.reset()
         except Exception as e:
             self._logger.error(e, self)
-            self.operation.status = "error"
-            self.operation.add_log_entry(f"Error resetting operation: {e}")
+            self._operation.status = "error"
+            self._operation.add_log_entry(f"Error resetting operation: {e}")
 
     def draw(self, parent) -> None:
         """Draws the GUI elements for the operation."""
@@ -141,21 +141,21 @@ class OperationModule:
             self.cpu_bound_id = f"cpu_bound_{self.unique_id}"
 
             with dpg.child_window(height=-1, width=-1, border=True):
-                dpg.add_text(f"Operation: {self.operation.name}")
+                dpg.add_text(f"Operation: {self._operation.name}")
                 dpg.add_separator()
 
                 with dpg.group(horizontal=True, width=-1, height=-1):
-                    dpg.add_text(f"Status: {self.operation.status}",
-                                 tag=f"status_{self.operation.name}_{self.unique_id}")
-                    dpg.add_text(f"Persistent: {self.operation.persistent}", tag=self.persistent_id)
-                    dpg.add_text(f"CPU Bound: {self.operation.is_cpu_bound}", tag=self.cpu_bound_id)
+                    dpg.add_text(f"Status: {self._operation.status}",
+                                 tag=f"status_{self._operation.name}_{self.unique_id}")
+                    dpg.add_text(f"Persistent: {self._operation.persistent}", tag=self.persistent_id)
+                    dpg.add_text(f"CPU Bound: {self._operation.is_cpu_bound}", tag=self.cpu_bound_id)
 
         with dpg.group(parent=parent, horizontal=True):
             with dpg.child_window(height=int(self.height * 0.85) - 12, width=int(self.width * 0.4) - 15, border=True):
                 dpg.add_progress_bar(
-                    default_value=self.operation.progress[0] / 100,
-                    tag=f"progress_{self.operation.name}_{self.unique_id}",
-                    overlay="%.1f%%" % self.operation.progress[0],
+                    default_value=self._operation.progress[0] / 100,
+                    tag=f"progress_{self._operation.name}_{self.unique_id}",
+                    overlay="%.1f%%" % self._operation.progress[0],
                     width=-1
                 )
                 dpg.add_separator()
@@ -174,8 +174,8 @@ class OperationModule:
                 self.child_ops_parent = f"child_ops_{self.unique_id}"
                 with dpg.group(tag=f"container_{self.unique_id}"):
                     with dpg.group(tag=self.child_ops_parent):
-                        if self.operation.child_operations:
-                            for child_op in self.operation.child_operations:
+                        if self._operation.child_operations:
+                            for child_op in self._operation.child_operations:
                                 dpg.add_text(
                                     label=f"Child Operation: {child_op.name} - Status: {child_op.status} - "
                                           f"Concurrent: {child_op.concurrent}",
@@ -186,14 +186,15 @@ class OperationModule:
                     dpg.add_separator()
                     dpg.add_button(
                         label="Execute Child Operations",
-                        callback=self.operation.execute_child_operations,
+                        callback=self._operation.execute_child_operations,
                         width=-1, parent=f"container_{self.unique_id}"
                     )
                     create_operation_module = CreateOperationModule(operation_control=self.operation_control,
-                                                                    width=self.width,
-                                                                    height=self.height,
-                                                                    parent_operation=self.operation)
-                    create_operation_module.draw_button(parent=f"container_{self.unique_id}", label="Add Child Operation")
+                                                                    width=700,
+                                                                    height=400,
+                                                                    parent_operation=self._operation)
+                    create_operation_module.draw_button(parent=f"container_{self.unique_id}",
+                                                        label="Add Child Operation")
 
             child_height = int((self.height * 0.85) * 0.5) - 18
             with dpg.child_window(height=int(self.height * 0.85) - 12, width=int(self.width * 0.6) - 10, border=True):
@@ -204,7 +205,7 @@ class OperationModule:
                         dpg.add_separator()
                         log_container_id = f"log_container_{self.unique_id}"
                         with dpg.child_window(tag=log_container_id, width=-1, border=False):
-                            for log in self.operation.operation_logs:
+                            for log in self._operation.operation_logs:
                                 dpg.add_text(log, parent=log_container_id)
 
                     dpg.add_separator()
@@ -219,16 +220,16 @@ class OperationModule:
     async def update_gui(self) -> None:
         """Updates the GUI with the current status and progress."""
         while True:
-            if dpg.does_item_exist(f"status_{self.operation.name}_{self.unique_id}"):
-                dpg.set_value(f"status_{self.operation.name}_{self.unique_id}", f"Status: {self.operation.status}")
+            if dpg.does_item_exist(f"status_{self._operation.name}_{self.unique_id}"):
+                dpg.set_value(f"status_{self._operation.name}_{self.unique_id}", f"Status: {self._operation.status}")
 
-            if dpg.does_item_exist(f"progress_{self.operation.name}_{self.unique_id}"):
-                dpg.set_value(f"progress_{self.operation.name}_{self.unique_id}", self.operation.progress[0] / 100)
-                dpg.configure_item(f"progress_{self.operation.name}_{self.unique_id}",
-                                   overlay="%.1f%%" % self.operation.progress[0])
+            if dpg.does_item_exist(f"progress_{self._operation.name}_{self.unique_id}"):
+                dpg.set_value(f"progress_{self._operation.name}_{self.unique_id}", self._operation.progress[0] / 100)
+                dpg.configure_item(f"progress_{self._operation.name}_{self.unique_id}",
+                                   overlay="%.1f%%" % self._operation.progress[0])
 
             if dpg.does_item_exist(self.log_container_id):
-                logs = self.operation.operation_logs
+                logs = self._operation.operation_logs
                 children = dpg.get_item_children(self.log_container_id, slot=1)
                 if len(children) != len(logs):
                     dpg.delete_item(self.log_container_id, children_only=True)
@@ -236,44 +237,44 @@ class OperationModule:
                         dpg.add_text(log, parent=self.log_container_id)
 
             if dpg.does_item_exist(self.child_ops_parent):
-                current_child_operations = {child_op.name for child_op in self.operation.child_operations}
+                current_child_operations = {child_op.name for child_op in self._operation.child_operations}
                 existing_children = {dpg.get_item_label(child) for child in
-                                     dpg.get_item_children(self.child_ops_parent, slot=1)}
+                                     dpg.get_item_children(self.child_ops_parent, slot=0)}
 
                 # Remove old child operations
                 for child in existing_children - current_child_operations:
-                    for child_id in dpg.get_item_children(self.child_ops_parent, slot=1):
+                    for child_id in dpg.get_item_children(self.child_ops_parent, slot=0):
                         if dpg.get_item_label(child_id) == child:
                             dpg.delete_item(child_id)
 
                 # Add new child operations
-                for child_op in self.operation.child_operations:
+                for child_op in self._operation.child_operations:
                     if child_op.name not in existing_children:
                         dpg.add_text(
                             f"Child Operation: {child_op.name} - Status: {child_op.status} - Concurrent: {child_op.concurrent}",
                             parent=self.child_ops_parent, wrap=200, bullet=True)
 
             if dpg.does_item_exist(self.result_id):
-                result = self.operation.get_result()
+                result = self._operation.get_result()
                 dpg.set_value(self.result_id, str(result))
 
             if dpg.does_item_exist(self.persistent_id):
-                dpg.set_value(self.persistent_id, f"Persistent: {self.operation.persistent}")
+                dpg.set_value(self.persistent_id, f"Persistent: {self._operation.persistent}")
 
             if dpg.does_item_exist(self.cpu_bound_id):
-                dpg.set_value(self.cpu_bound_id, f"CPU Bound: {self.operation.is_cpu_bound}")
+                dpg.set_value(self.cpu_bound_id, f"CPU Bound: {self._operation.is_cpu_bound}")
 
             await asyncio.sleep(0.05)
 
     def view_result(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Handles the event when the user clicks the 'View Result' button."""
-        result = self.operation.get_result()
-        self.operation.add_log_entry(f"Result viewed: {result}")
+        result = self._operation.get_result()
+        self._operation.add_log_entry(f"Result viewed: {result}")
 
     async def add_child_operation(self, child_operation: ABCOperation) -> None:
         """Adds a child operation to the current operation."""
-        await self.operation.add_child_operation(child_operation)
+        await self._operation.add_child_operation(child_operation)
 
     def remove_child_operation(self, child_operation: ABCOperation) -> None:
         """Removes a child operation from the current operation."""
-        self.operation.remove_child_operation(child_operation)
+        self._operation.remove_child_operation(child_operation)

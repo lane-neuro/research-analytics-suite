@@ -58,7 +58,7 @@ class GuiLauncher:
         self.real_time_data_visualization = None
         self.settings_dialog = SettingsDialog()
         self.create_operation_module = CreateOperationModule(operation_control=self.operation_control,
-                                                             height=400, width=400,
+                                                             height=400, width=800,
                                                              parent_operation=None)
         self.console = None
         self.operation_window = None

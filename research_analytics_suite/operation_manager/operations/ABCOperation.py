@@ -204,12 +204,12 @@ class ABCOperation(ABC):
         pass
 
     @property
-    def is_ready(self) -> bool:
+    def is_ready(self):
         """Check if the operation is ready to be executed."""
         return self._is_ready
 
     @is_ready.setter
-    def is_ready(self, value: bool):
+    def is_ready(self, value):
         """
         Check if the operation is ready to be executed.
         """

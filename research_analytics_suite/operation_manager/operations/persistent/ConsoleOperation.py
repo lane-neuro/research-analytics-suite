@@ -44,7 +44,7 @@ class ConsoleOperation(ABCOperation):
         self._status = "running"
         self.add_log_entry(f"[RUN] {self._name}")
 
-        while True:  # Loop until a specific user input is received
+        while self.concurrent and self.persistent:  # Loop until a specific user input is received
             try:
                 user_input = await aioconsole.ainput(self._prompt)  # Read user input
                 user_input = user_input.strip()  # strip newline

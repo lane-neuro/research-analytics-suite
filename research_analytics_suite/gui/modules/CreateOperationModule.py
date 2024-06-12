@@ -32,7 +32,10 @@ class CreateOperationModule:
 
     def open_create_operation_dialog(self, sender: Any, app_data: Any) -> None:
         """Opens a dialog to create a new operation."""
-        with dpg.window(label="Create New Operation", modal=True, tag=f"new_{self.create_operation_dialog_id}"):
+        if dpg.does_item_exist(f"new_{self.create_operation_dialog_id}"):
+            dpg.delete_item(f"new_{self.create_operation_dialog_id}")
+        with dpg.window(label="Create New Operation", modal=True, tag=f"new_{self.create_operation_dialog_id}",
+                        width=self.width, height=self.height):
             dpg.add_input_text(label="Operation Name", tag=self._new_op_name)
             dpg.add_input_text(label="Function Code", tag=self._new_op_func, multiline=True)
             dpg.add_input_text(label="Local Variables", tag=self._new_op_local_vars, default_value="{}")
@@ -59,6 +62,7 @@ class CreateOperationModule:
                 parent_operation=self._parent_operation
             )
             dpg.hide_item(f"new_{self.create_operation_dialog_id}")
+            dpg.delete_item(f"new_{self.create_operation_dialog_id}")
         except Exception as e:
             self._logger.error(e, self)
             self.operation_control.add_log_entry(f"Error creating new operation: {e}")
