@@ -37,21 +37,20 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class GuiLauncher:
     """Class to launch the GUI for the Research Analytics Suite."""
 
-    def __init__(self, data_engine: DataEngineOptimized, operation_control: OperationControl, workspace: Workspace):
+    def __init__(self, data_engine: DataEngineOptimized, operation_control: OperationControl):
         """
         Initializes the GUI launcher with necessary components.
 
         Args:
             data_engine (DataEngineOptimized): The data engine for handling data operation.
             operation_control (OperationControl): The control manager for operations.
-            workspace (Workspace): The workspace manager for saving and loading workspaces.
         """
         self.timeline = None
         self.dpg_async = DearPyGuiAsync()
         self._logger = CustomLogger()
         self.operation_control = operation_control
         self.data_engine = data_engine
-        self.workspace = workspace
+        self.workspace = Workspace()
         self.visualization_dialog = None
         self.data_engine_dialog = None
         self.data_import_wizard = None
@@ -244,7 +243,7 @@ class GuiLauncher:
     async def setup_workspace_pane(self) -> None:
         """Sets up the workspace pane asynchronously."""
         with dpg.group(parent="bottom_pane_group", horizontal=True, tag="workspace_group"):
-            self.workspace_dialog = WorkspaceModule(workspace=self.workspace, operation_control=self.operation_control,
+            self.workspace_dialog = WorkspaceModule(operation_control=self.operation_control,
                                                     height=300, width=int(dpg.get_viewport_width() * 0.5))
             await self.workspace_dialog.initialize()
 

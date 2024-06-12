@@ -30,6 +30,8 @@
   <p align="left">
     The <strong>Research Analytics Suite (RAS)</strong>, developed within Gire Lab at the University of Washington, is a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse sources. RAS is designed to be free and accessible, addressing financial and accessibility barriers in scientific research.
     <br /><br />
+    <b>Please note: RAS is currently under active development and is not yet ready for general use. This repository is intended for demonstration purposes and to showcase the project's structure and features.</b>
+    <br /><br />
     <strong>Key Features:</strong>
     <ul>
       <li><strong>Data Management Engine (DME)</strong>: Filters and aggregates large, complex datasets from multiple sources.</li>

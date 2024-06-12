@@ -16,24 +16,23 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class WorkspaceModule:
     """A class to manage the GUI representation of the Workspace."""
 
-    def __init__(self, workspace: Workspace, operation_control, width: int, height: int):
+    def __init__(self, operation_control, width: int, height: int):
         """
         Initializes the WorkspaceModule with the given workspace.
 
         Args:
-            workspace (Workspace): An instance of Workspace.
             operation_control: The operation control instance.
             width (int): The width of the module.
             height (int): The height of the module.
         """
-        self.workspace = workspace
+        self._workspace = Workspace()
+        self._logger = CustomLogger()
+        self._config = Config()
         self._operation_control = operation_control
         self.width = width
         self._user_vars_width = int(self.width * 0.6)
         self._management_width = int(self.width * 0.31)
         self.height = height
-        self._logger = CustomLogger()
-        self._config = Config()
         self.update_operation = None
         self.unique_id = str(uuid.uuid4())
         self.user_var_list_id = f"user_var_list_{self.unique_id}"
@@ -85,31 +84,31 @@ class WorkspaceModule:
                 dpg.add_input_text(tag="workspace_name_input", default_value="default_name")
                 dpg.add_separator()
 
-                dpg.add_text("Backup and Restore")
+                dpg.add_text("Save and Restore")
                 dpg.add_separator()
-                dpg.add_button(label="Backup User Variables", callback=self.backup_user_variables)
+                dpg.add_button(label="Save User Variables", callback=self.save_user_variables)
                 dpg.add_button(label="Restore User Variables", callback=self.restore_user_variables)
                 dpg.add_separator()
-                dpg.add_text("Backup File Path:")
-                dpg.add_input_text(tag="backup_path_input",
-                                   default_value=os.path.join(self._config.BASE_DIR, 'user_variables_backup.db'))
+                dpg.add_text("File Path:")
+                dpg.add_input_text(tag="save_path_input",
+                                   default_value=os.path.join(self._config.BASE_DIR, 'user_variables.db'), width=-1)
 
     async def update_user_variables_list(self) -> None:
         """Updates the user variables list in the GUI."""
         while True:
             try:
-                new_user_vars = await self.workspace.list_user_variables()
+                new_user_vars = await self._workspace.list_user_variables()
                 new_user_vars_dict = {}
 
                 if isinstance(new_user_vars, dict):
                     for var in new_user_vars:
                         if isinstance(var, dict) and 'name' in var:
                             name = var['name']
-                            value = await self.workspace.get_user_variable(name)
+                            value = await self._workspace.get_user_variable(name)
                             new_user_vars_dict[name] = value
                         elif isinstance(var, str):
                             name = var
-                            value = await self.workspace.get_user_variable(name)
+                            value = await self._workspace.get_user_variable(name)
                             new_user_vars_dict[name] = value
                         else:
                             self._logger.error(Exception(f"Unexpected variable structure: {var}", self))
@@ -150,39 +149,39 @@ class WorkspaceModule:
     async def add_user_variable(self, name, value) -> None:
         """Adds a user variable."""
         try:
-            await self.workspace.add_user_variable(name, value)
+            await self._workspace.add_user_variable(name, value)
         except Exception as e:
             self._logger.error(Exception(f"Failed to add user variable '{name}': {e}", self))
 
     async def remove_user_variable(self, name) -> None:
         """Removes a user variable."""
         try:
-            await self.workspace.remove_user_variable(name)
+            await self._workspace.remove_user_variable(name)
         except Exception as e:
             self._logger.error(Exception(f"Failed to remove user variable '{name}': {e}", self))
 
-    async def backup_user_variables(self) -> None:
+    async def save_user_variables(self) -> None:
         """Backups the user variables."""
         try:
-            backup_path = dpg.get_value("backup_path_input")
-            await self.workspace.backup_user_variables(backup_path)
-            self._logger.info(f"User variables backed up to {backup_path}")
+            save_path = dpg.get_value("save_path_input")
+            await self._workspace.save_user_variables(save_path)
+            self._logger.info(f"User variables saved to {save_path}")
         except Exception as e:
-            self._logger.error(Exception(f"Failed to backup user variables: {e}", self))
+            self._logger.error(Exception(f"Failed to save user variables: {e}", self))
 
     async def restore_user_variables(self) -> None:
         """Restores the user variables."""
         try:
-            backup_path = dpg.get_value("backup_path_input")
-            await self.workspace.restore_user_variables(backup_path)
-            self._logger.info(f"User variables restored from {backup_path}")
+            save_path = dpg.get_value("save_path_input")
+            await self._workspace.restore_user_variables(save_path)
+            self._logger.info(f"User variables restored from {save_path}")
         except Exception as e:
             self._logger.error(Exception(f"Failed to restore user variables: {e}", self))
 
     async def save_workspace(self) -> None:
         """Saves the current workspace."""
         try:
-            await self.workspace.save_current_workspace()
+            await self._workspace.save_current_workspace()
             self._logger.info("Workspace saved successfully")
         except Exception as e:
             self._logger.error(Exception(f"Failed to save current workspace: {e}", self))
@@ -191,7 +190,7 @@ class WorkspaceModule:
         """Loads a workspace."""
         try:
             workspace_path = dpg.get_value("workspace_path_input")
-            await self.workspace.load_workspace(workspace_path)
+            await self._workspace.load_workspace(workspace_path)
             self._logger.info("Workspace loaded successfully")
         except Exception as e:
             self._logger.error(Exception(f"Failed to load workspace: {e}", self))

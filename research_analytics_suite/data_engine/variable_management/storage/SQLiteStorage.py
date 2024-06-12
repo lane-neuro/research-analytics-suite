@@ -17,10 +17,9 @@ class SQLiteStorage(BaseStorage):
     SQLite storage implementation for user variables.
     """
 
-    def __init__(self, db_path):
-        super().__init__()
-        self.db_path = db_path
-        self._logger.info(f"[SQLite] Class initialized. Path: {db_path}")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._logger.info(f"[SQLite] Class initialized. Path: {self.db_path}")
 
     async def setup(self):
         """

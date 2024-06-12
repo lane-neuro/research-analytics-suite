@@ -124,7 +124,8 @@ class UnifiedDataEngine:
         metadata = {
             'data_name': self.data_name,
             'backend': self.backend,
-            'engine_id': self.engine_id
+            'engine_id': self.engine_id,
+
         }
         with open(os.path.join(engine_path, 'metadata.json'), 'w') as metadata_file:
             json.dump(metadata, metadata_file)

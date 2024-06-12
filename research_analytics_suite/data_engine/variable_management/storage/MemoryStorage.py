@@ -15,10 +15,10 @@ class MemoryStorage(BaseStorage):
     In-memory storage implementation for user variables.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._variables = {}
-        self._logger.info("[Memory] Class initialized.")
+        self._logger.info(f"[Memory] Class initialized. Backup path: {self.db_path}")
 
     async def setup(self):
         # No setup required for in-memory storage

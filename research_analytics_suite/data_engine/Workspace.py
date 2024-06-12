@@ -23,6 +23,12 @@ class Workspace:
     """
     A class to manage multiple data engines, allowing flexible interaction with specific datasets.
     """
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls, *args, **kwargs)
+        return cls._instance
 
     def __init__(self, distributed=False, storage_type='memory', db_path=None):
         """
@@ -33,25 +39,29 @@ class Workspace:
             storage_type (str): The type of storage to use ('sqlite' or 'memory'). Default is 'memory'.
             db_path (str): The path to the SQLite database file (required if storage_type is 'sqlite').
         """
-        self._data_engines = {}
-        self._dependencies = defaultdict(list)
-        self._data_cache = DataCache()
-        self._distributed = distributed
-        self._logger = CustomLogger()
-        self._config = Config()
+        if not hasattr(self, '_initialized'):
+            self._logger = CustomLogger()
+            self._config = Config()
 
-        storage = None
-        if storage_type == 'sqlite':
+            self._data_engines = {}
+            self._dependencies = defaultdict(list)
+            self._data_cache = DataCache()
+            self._distributed = distributed
+
+            storage = None
             if db_path is None:
                 db_path = os.path.join(self._config.BASE_DIR, 'user_variables.db')
-            storage = SQLiteStorage(db_path)
-        elif storage_type == 'memory':
-            storage = MemoryStorage()
-        else:
-            self._logger.error(ValueError(f"Unsupported storage type: {storage_type}"), self)
+                self._logger.info(f"Using default database path: {db_path}")
+            if storage_type == 'sqlite':
+                storage = SQLiteStorage(db_path=db_path)
+            elif storage_type == 'memory':
+                storage = MemoryStorage(db_path=db_path)
+            else:
+                self._logger.error(ValueError(f"Unsupported storage type: {storage_type}"), self)
 
-        self._user_variables = UserVariablesManager(storage)
-        self._logger.info("Workspace initialized successfully")
+            self._user_variables = UserVariablesManager(storage)
+            self._logger.info("Workspace initialized successfully")
+            self._initialized = True
 
     def add_data_engine(self, data_engine):
         """
@@ -124,7 +134,7 @@ class Workspace:
             for engine_id, data_engine in self._data_engines.items():
                 engine_path = os.path.join(self._config.ENGINE_DIR, f'{engine_id}')
                 os.makedirs(engine_path, exist_ok=True)
-                await data_engine.save_engine(self._config.BASE_DIR)
+                data_engine.save_engine(self._config.BASE_DIR)
 
             config_path = os.path.join(self._config.BASE_DIR, 'config.json')
             async with aiofiles.open(config_path, 'w') as config_file:
@@ -140,10 +150,11 @@ class Workspace:
                 config = json.loads(await config_file.read())
 
             workspace_path = os.path.dirname(workspace_path)
+            self.__dict__.clear()
             workspace = Workspace(config.get('distributed', False))
 
             for engine_id in os.listdir(os.path.join(workspace_path, 'engines')):
-                data_engine = await UnifiedDataEngine.load_engine(workspace_path, engine_id)
+                data_engine = UnifiedDataEngine.load_engine(workspace_path, engine_id)
                 workspace.add_data_engine(data_engine)
 
             workspace._logger.info("Workspace loaded successfully")
@@ -230,32 +241,42 @@ class Workspace:
         except Exception as e:
             self._logger.error(Exception(f"Failed to list user variables: {e}"), self)
 
-    # Methods to backup and restore UserVariables
-    async def backup_user_variables(self, backup_path):
-        """
-        Backups the user variables database to the specified path.
-
-        Args:
-            backup_path (str): The path to save the backup file.
-        """
+    async def save_user_variables(self, file_path):
         try:
-            async with aiofiles.open(self._user_variables.storage.db_path, 'rb') as src, aiofiles.open(backup_path, 'wb') as dst:
+            # Ensure the directory for the db_path exists
+            db_directory = os.path.dirname(self._user_variables.storage.db_path)
+            os.makedirs(db_directory, exist_ok=True)
+
+            # Ensure the directory for the save file exists
+            save_directory = os.path.dirname(file_path)
+            os.makedirs(save_directory, exist_ok=True)
+
+            # Check if the save file exists, if not create it
+            if not os.path.exists(file_path):
+                async with aiofiles.open(file_path, 'w') as temp_file:
+                    await temp_file.write('')
+
+            # Perform the save operation
+            async with (aiofiles.open(self._user_variables.storage.db_path, 'rb') as src,
+                        aiofiles.open(file_path, 'wb') as dst):
                 await dst.write(await src.read())
-            self._logger.info(f"User variables backed up to {backup_path}")
-        except Exception as e:
-            self._logger.error(Exception(f"Failed to backup user variables: {e}"), self)
 
-    async def restore_user_variables(self, backup_path):
+            self._logger.info(f"User variables saved to {file_path}")
+
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to save user variables: {e}"), self)
+
+    async def restore_user_variables(self, file_path):
         """
-        Restores the user variables database from the specified backup file.
+        Restores the user variables database from the specified save file.
 
         Args:
-            backup_path (str): The path of the backup file to restore from.
+            file_path (str): The path of the save file to restore from.
         """
         try:
-            async with (aiofiles.open(backup_path, 'rb') as src,
+            async with (aiofiles.open(file_path, 'rb') as src,
                         aiofiles.open(self._user_variables.storage.db_path, 'wb') as dst):
                 await dst.write(await src.read())
-            self._logger.info(f"User variables restored from {backup_path}")
+            self._logger.info(f"User variables restored from {file_path}")
         except Exception as e:
             self._logger.error(Exception(f"Failed to restore user variables: {e}"), self)

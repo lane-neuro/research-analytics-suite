@@ -34,12 +34,12 @@ class OperationControl:
     """A class for handling the lifecycle of Operation instances."""
     SLEEP_TIME = 0.15
 
-    def __init__(self, workspace: Workspace, sleep_time: float = 0.15):
+    def __init__(self, sleep_time: float = 0.15):
         """
         Initializes the OperationControl with various components.
         """
         self._logger = CustomLogger()
-        self.workspace = workspace
+        self.workspace = Workspace()
         self.main_loop = asyncio.get_event_loop()
         self.console_operation_in_progress = False
 

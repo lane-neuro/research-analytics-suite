@@ -17,10 +17,11 @@ class BaseStorage(ABC):
     Abstract base class for storage backends.
     """
 
-    def __init__(self):
-        self.db_path = None
+    def __init__(self, *args, **kwargs):
         self._logger = CustomLogger()
         self._config = Config()
+
+        self.db_path = kwargs.get('db_path', None)
 
     @abstractmethod
     async def setup(self):

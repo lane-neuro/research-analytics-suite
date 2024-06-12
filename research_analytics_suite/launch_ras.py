@@ -42,28 +42,27 @@ async def launch_ras():
     launch_tasks = []
 
     # Initialize new Workspace and Config
-    workspace = Workspace()
+    _workspace = Workspace()
 
     # Checks args for -o '--open_project' flag.
     # If it exists, open the project from the file
     if args.open_project is None:
         logger.info('New Project Parameters Detected - Creating New Project')
-        data_engine = workspace.create_project(args.directory, args.user_name, args.subject_name,
-                                               args.camera_framerate, args.file_list)
+        data_engine = _workspace.create_project(args.directory, args.user_name, args.subject_name,
+                                                args.camera_framerate, args.file_list)
     else:
         logger.info('Project File Detected - Loading Project at: ' + args.open_project)
-        data_engine = workspace.load_workspace(args.open_project)
+        data_engine = await _workspace.load_workspace(args.open_project)
 
     nest_asyncio.apply()
-    operation_control = OperationControl(workspace=workspace)
+    operation_control = OperationControl()
 
     launch_tasks.append(operation_control.exec_loop())
     gui_launcher = None
 
     if args.gui is not None and args.gui.lower() == 'true':
         try:
-            gui_launcher = GuiLauncher(data_engine=data_engine, operation_control=operation_control,
-                                       workspace=workspace)
+            gui_launcher = GuiLauncher(data_engine=data_engine, operation_control=operation_control)
         except Exception as e:
             logger.error(e)
         finally:
@@ -77,7 +76,7 @@ async def launch_ras():
         logger.error(e)
     finally:
         logger.info("Cleaning up...")
-        await workspace.save_current_workspace()
+        await _workspace.save_current_workspace()
         logger.info("Exiting Research Analytics Suite...")
         asyncio.get_event_loop().close()
 

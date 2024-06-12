@@ -1,25 +1,13 @@
-"""
-This module defines the abstract base class ABCOperation, providing a common interface for all operations in the
-Research Analytics Suite. The ABCOperation class requires any child class to implement execute, start, pause,
-stop, and resume methods. It also provides a property for the status of the operation, which can be "idle", "started",
-"paused", "running", or "stopped". This class is designed to be inherited by other classes that represent specific
-operations.
+# abc_operation.py
 
-Author: Lane
-Copyright: Lane
-Credits: Lane
-License: BSD 3-Clause License
-Version: 0.0.0.1
-Maintainer: Lane
-Email: justlane@uw.edu
-Status: Prototype
-"""
 import asyncio
 import types
+import uuid
 from abc import ABC
 from concurrent.futures import ProcessPoolExecutor
 from typing import Tuple, List, Any, Dict
 
+from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -35,18 +23,18 @@ class ABCOperation(ABC):
         Args:
             func (callable): The function to be executed by the operation.
             name (str, optional): The name of the operation. Defaults to "Operation".
-            local_vars (dict, optional): Local variables for the function execution. Defaults to locals().
             persistent (bool, optional): Whether the operation should run indefinitely. Defaults to False.
             is_cpu_bound (bool, optional): Whether the operation is CPU-bound. Defaults to False.
             concurrent (bool, optional): Whether child operations should run concurrently. Defaults to False.
             parent_operation (ABCOperation, optional): The parent operation. Defaults to None.
         """
+        self._workspace = Workspace()
         self._logger = CustomLogger()
         self.operation_logs = []
+        self._unique_id = str(uuid.uuid4())
 
         self._name = kwargs.get('name', "Operation")
         self._func = kwargs.get('func')
-        self._local_vars = kwargs.get('local_vars', locals())
         self._persistent = kwargs.get('persistent', False)
         self._is_cpu_bound = kwargs.get('is_cpu_bound', False)
         self._status = "idle"
@@ -78,18 +66,6 @@ class ABCOperation(ABC):
         if not isinstance(value, str):
             self._handle_error("\'name\' property must be a string")
         self._name = value
-
-    @property
-    def local_vars(self):
-        """Gets the local variables for the function execution."""
-        return self._local_vars
-
-    @local_vars.setter
-    def local_vars(self, value):
-        """Sets the local variables for the function execution."""
-        if not isinstance(value, dict):
-            self._handle_error("Local variables \'local_vars\' must be a dictionary")
-        self._local_vars = value
 
     @property
     def func(self) -> callable:
@@ -267,7 +243,7 @@ class ABCOperation(ABC):
         try:
             if isinstance(self._func, str):  # If self._func is a string of code
                 code = self._func
-                self._func = lambda: exec(code, {}, self._local_vars)
+                self._func = lambda: exec(code, {}, self._workspace._user_variables)
                 self.add_log_entry(f"[CODE] {code}")
             elif callable(self._func):  # If self._func is a callable function
                 if isinstance(self._func, types.MethodType):  # If self._func is a bound method
@@ -305,7 +281,7 @@ class ABCOperation(ABC):
         except Exception as e:
             self._handle_error(e)
         finally:
-            self._result_output = self._local_vars
+            self._result_output = await self._workspace.get_user_variable(f'result_{self._unique_id}')
             return self._result_output
 
     def get_result(self):
@@ -534,3 +510,4 @@ class ABCOperation(ABC):
                     execution_order.append(op)
                     processed.add(op.name)
         return execution_order
+
