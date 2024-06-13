@@ -219,9 +219,9 @@ class Workspace:
         }, indent=4)
 
     # Methods to interact with UserVariables
-    async def add_user_variable(self, name, value=None) -> dict:
+    async def add_user_variable(self, name, value=None, memory_id=None) -> dict:
         try:
-            return await self.user_variables.add_variable(name, value)
+            return await self.user_variables.add_variable(name=name, value=value, memory_id=memory_id)
         except Exception as e:
             self._logger.error(Exception(f"Failed to add user variable '{name}': {e}"), self)
 

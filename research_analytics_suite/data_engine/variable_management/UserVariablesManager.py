@@ -30,16 +30,17 @@ class UserVariablesManager:
         self._logger = CustomLogger()
         asyncio.run(self.storage.setup())
 
-    async def add_variable(self, name, value) -> dict:
+    async def add_variable(self, name, value, memory_id) -> dict:
         """
         Adds a new variable to the storage.
 
         Args:
             name (str): The name of the variable.
             value: The value of the variable.
+            memory_id (str, optional): The ID of the memory to which the variable belongs.
         """
         try:
-            return await self.storage.add_variable(name, value)
+            return await self.storage.add_variable(name, value, memory_id)
         except Exception as e:
             self._logger.error(Exception(f"Error adding variable '{name}': {e}"), self)
 

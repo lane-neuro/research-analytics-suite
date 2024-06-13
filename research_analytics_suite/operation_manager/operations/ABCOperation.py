@@ -25,7 +25,7 @@ class ABCOperation(ABC):
         self.operation_logs = []
 
         self._name = kwargs.get('name', "Operation")
-        self._unique_id = f"{self._name}_{uuid.uuid4()}"
+        self._unique_id = f"{uuid.uuid4().hex[:8]}"
         self._func = kwargs.get('func')
         self._persistent = kwargs.get('persistent', False)
         self._is_cpu_bound = kwargs.get('is_cpu_bound', False)
@@ -43,6 +43,11 @@ class ABCOperation(ABC):
         self.result_output = dict()
 
         self._dependencies: Dict[str, List[str]] = {}
+
+    @property
+    def unique_id(self) -> str:
+        """Gets the unique ID of the operation."""
+        return f"{self._name}_{self._unique_id}"
 
     @property
     def name(self) -> str:
@@ -257,8 +262,9 @@ class ABCOperation(ABC):
                     self._status = "running"
                     self.add_log_entry(f"[RUN] {self.name}: CPU-bound Operation")
                     await asyncio.get_event_loop().run_in_executor(executor, self._func)
-                    self.result_output = await self._workspace.add_user_variable(f'result_{self._unique_id}',
-                                                                                 self.result_output)
+                    self.result_output = await self._workspace.add_user_variable(name=f"[RESULT] {self._name}",
+                                                                                 value=self.result_output,
+                                                                                 memory_id=f'result_{self._unique_id}')
                     self.add_log_entry(f"[RESULT] {self.result_output}")
             else:
                 if self._func is not None:
@@ -268,14 +274,18 @@ class ABCOperation(ABC):
                             self.add_log_entry(f"[RUN - ASYNC] {self._name}")
                             await self._func()
                             self.add_log_entry(f"[RESULT] {self.result_output}")
-                            self.result_output = await self._workspace.add_user_variable(f'result_{self._unique_id}',
-                                                                                         self.result_output)
+                            self.result_output = await self._workspace.add_user_variable(name=f"[RESULT] {self._name}",
+                                                                                         value=self.result_output,
+                                                                                         memory_id=
+                                                                                         f'result_{self._unique_id}')
                         else:
                             self.add_log_entry(f"[RUN] {self._name}")
                             self._func()
                             self.add_log_entry(f"[RESULT] {self.result_output}")
-                            self.result_output = await self._workspace.add_user_variable(f'result_{self._unique_id}',
-                                                                                         self.result_output)
+                            self.result_output = await self._workspace.add_user_variable(name=f"[RESULT] {self._name}",
+                                                                                         value=self.result_output,
+                                                                                         memory_id=
+                                                                                         f'result_{self._unique_id}')
                 else:
                     self._handle_error(Exception("No function provided for operation"))
         except Exception as e:

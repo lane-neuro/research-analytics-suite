@@ -214,7 +214,7 @@ class OperationModule:
 
     def dict_to_listbox_items(self, dictionary) -> list[str]:
         """Converts a dictionary to a list of strings for use in a listbox."""
-        return [f"{key}: {value}" for key, value in dictionary.items()]
+        return [f"{key}:\t{value}" for key, value in dictionary.items()]
 
     async def update_gui(self) -> None:
         """Updates the GUI with the current status and progress."""
