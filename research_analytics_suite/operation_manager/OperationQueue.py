@@ -177,7 +177,7 @@ class OperationQueue:
             for node in chain:
                 if isinstance(type(node.operation), operation_type):
                     return node.operation
-        self._logger.error(f"No operation found of type {operation_type.__name__}")
+        self._logger.error(Exception(f"No operation found of type {operation_type.__name__}"), self)
         return None
 
     def find_operation_by_task(self, task) -> Optional[ABCOperation]:
@@ -194,7 +194,7 @@ class OperationQueue:
             for node in chain:
                 if node.operation.task == task:
                     return node.operation
-        self._logger.error(f"No operation found for task {task}")
+        self._logger.error(Exception(f"No operation found for task {task}"), self)
         return None
 
     def is_empty(self) -> bool:

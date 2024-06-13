@@ -27,15 +27,13 @@ class OperationStatusChecker:
     the queue.
     """
 
-    def __init__(self, operation_control, queue):
+    def __init__(self, queue):
         """
         Initializes the OperationStatusChecker with the necessary components.
 
         Args:
-            operation_control: Control interface for operations.
             queue: Queue holding operations to be checked.
         """
-        self.op_control = operation_control
         self.queue = queue
 
     def get_operation_status(self, operation: ABCOperation) -> str:

@@ -41,6 +41,9 @@ async def launch_ras():
     logger = CustomLogger()
     launch_tasks = []
 
+    operation_control = OperationControl()
+    await operation_control.initialize()
+
     # Initialize new Workspace and Config
     _workspace = Workspace()
 
@@ -54,15 +57,12 @@ async def launch_ras():
         logger.info('Project File Detected - Loading Project at: ' + args.open_project)
         data_engine = await _workspace.load_workspace(args.open_project)
 
-    nest_asyncio.apply()
-    operation_control = OperationControl()
-
     launch_tasks.append(operation_control.exec_loop())
     gui_launcher = None
 
     if args.gui is not None and args.gui.lower() == 'true':
         try:
-            gui_launcher = GuiLauncher(data_engine=data_engine, operation_control=operation_control)
+            gui_launcher = GuiLauncher(data_engine=data_engine)
         except Exception as e:
             logger.error(e)
         finally:

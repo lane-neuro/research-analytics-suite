@@ -22,6 +22,10 @@ class ABCOperation(ABC):
         """
         self._workspace = Workspace()
         self._logger = CustomLogger()
+
+        from research_analytics_suite.operation_manager.OperationControl import OperationControl
+        self._operation_control = OperationControl()
+
         self.operation_logs = []
 
         self._name = kwargs.get('name', "Operation")
@@ -380,9 +384,8 @@ class ABCOperation(ABC):
             return
 
         operation.parent_operation = self
+        operation = await self._operation_control.operation_manager.add_operation(operation)
         self._child_operations.append(operation)
-
-        await operation.start()
 
         if dependencies:
             self._dependencies[operation.name] = dependencies

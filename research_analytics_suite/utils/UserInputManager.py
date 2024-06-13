@@ -31,14 +31,13 @@ class UserInputManager:
     and displaying system resources, tasks, and queue status.
     """
 
-    def __init__(self, operation_control):
+    def __init__(self):
         """
         Initializes the UserInputManager with the necessary components.
-
-        Args:
-            operation_control: Control interface for operations.
         """
-        self.operation_control = operation_control
+        from research_analytics_suite.operation_manager.OperationControl import OperationControl
+        self._operation_control = OperationControl()
+
         self._logger = CustomLogger()
 
     async def process_user_input(self, user_input: str) -> str:
@@ -55,7 +54,7 @@ class UserInputManager:
             str: The response to the user input.
         """
         if user_input == "stop":
-            await self.operation_control.stop_all_operations()
+            await self._operation_control.operation_manager.stop_all_operations()
             return "UserInputManager.process_user_input: Stopping all operations..."
 
         elif user_input == "load_data":
@@ -66,10 +65,10 @@ class UserInputManager:
                                  "-arenaOct3shuffle1_200000_filtered.csv")
                 return df.compute()
 
-            await self.operation_control.operation_manager.add_operation(operation_type=DaskOperation,
-                                                                         func=load_data,
-                                                                         name="LoadData",
-                                                                         client=dask.distributed.Client())
+            await self._operation_control.operation_manager.add_operation(operation_type=DaskOperation,
+                                                                          func=load_data,
+                                                                          name="LoadData",
+                                                                          client=dask.distributed.Client())
 
         elif user_input == "machine_learning":
             self._logger.error(Exception("UserInputManager.process_user_input: Machine Learning not implemented."))
@@ -87,41 +86,41 @@ class UserInputManager:
             # return f"UserInputManager.process_user_input: Attached machine learning..."
 
         elif user_input == "pause":
-            await self.operation_control.pause_all_operations()
+            await self._operation_control.operation_manager.pause_all_operations()
             return "UserInputManager.process_user_input: Pausing all operations..."
 
         elif user_input == "resume":
-            await self.operation_control.resume_all_operations()
+            await self._operation_control.operation_manager.resume_all_operations()
             return "UserInputManager.process_user_input: Resuming all operations..."
 
         elif user_input == "resources":
-            for operation_list in self.operation_control.queue.queue:
-                operation_node = self.operation_control.queue.get_head_operation_from_chain(operation_list)
+            for operation_list in self._operation_control.queue.queue:
+                operation_node = self._operation_control.queue.get_head_operation_from_chain(operation_list)
                 if isinstance(operation_node, ResourceMonitorOperation):
                     self._logger.info(operation_node.output_memory_usage())
             return "UserInputManager.process_user_input: Displaying system resources."
 
         elif user_input == "tasks":
-            for task in self.operation_control.task_creator.tasks:
-                operation = self.operation_control.queue.find_operation_by_task(task)
+            for task in self._operation_control.task_creator.tasks:
+                operation = self._operation_control.queue.find_operation_by_task(task)
                 if operation:
                     self._logger.info(f"UserInputManager.process_user_input: Task: {task.get_name()} - "
-                                     f"{operation.status}")
+                                      f"{operation.status}")
             return "UserInputManager.process_user_input: Displaying all tasks..."
 
         elif user_input == "queue":
-            for queue_chain in self.operation_control.queue.queue:
+            for queue_chain in self._operation_control.queue.queue:
                 operation = queue_chain.head.operation
                 self._logger.info(f"UserInputManager.process_user_input: Operation: {operation.task.get_name()} - "
-                                 f"{operation.status}")
+                                  f"{operation.status}")
             return "UserInputManager.process_user_input: Displaying all operations in the queue..."
 
         elif user_input == "vars":
-            self._logger.info(f"UserInputManager.process_user_input: Local Vars: {self.operation_control.local_vars}")
+
             return "UserInputManager.process_user_input: Displaying local vars..."
 
         else:
             self._logger.info(f"UserInputManager.process_user_input: Executing custom operation with func: {user_input}")
-            await self.operation_control.operation_manager.add_operation(operation_type=ABCOperation,
-                                                                         func=user_input, name="ConsoleCommand")
+            await self._operation_control.operation_manager.add_operation(operation_type=ABCOperation,
+                                                                          func=user_input, name="ConsoleCommand")
             return f"UserInputManager.process_user_input: Added custom operation with func: {user_input}"

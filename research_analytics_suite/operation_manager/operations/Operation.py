@@ -30,7 +30,6 @@ class Operation(ABCOperation):
         Args:
             func (callable, optional): The function to be executed by the operation.
             name (str, optional): The name of the operation. Defaults to "Operation".
-            local_vars (dict, optional): Local variables for the function execution. Defaults to None.
             persistent (bool, optional): Whether the operation should run indefinitely. Defaults to False.
             is_cpu_bound (bool, optional): Whether the operation is CPU-bound. Defaults to False.
             concurrent (bool, optional): Whether child operations should run concurrently. Defaults to False.

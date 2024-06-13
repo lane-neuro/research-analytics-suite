@@ -32,15 +32,14 @@ class ResourceMonitorDialog:
     SLEEP_DURATION = 0.05
     MAX_DATA_POINTS = 100
 
-    def __init__(self, operation_control: OperationControl, launcher):
+    def __init__(self, launcher):
         """
         Initializes the ResourceMonitorDialog with the given operation control, launcher, and logger.
 
         Args:
-            operation_control (OperationControl): Control interface for operations.
             launcher: Launcher instance for initiating tasks.
         """
-        self.operation_control = operation_control
+        self.operation_control = OperationControl()
         self.launcher = launcher
         self._logger = CustomLogger()
 

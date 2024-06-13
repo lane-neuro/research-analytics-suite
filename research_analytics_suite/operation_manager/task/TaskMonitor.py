@@ -21,19 +21,20 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class TaskMonitor:
     """Monitors and manages tasks."""
 
-    def __init__(self, operation_control, task_creator, queue):
+    def __init__(self, task_creator, queue):
         """
         Initializes the TaskMonitor with the given parameters.
 
         Args:
-            operation_control: The operation control interface.
             task_creator: The task creator.
             queue: The operations queue.
         """
-        self.op_control = operation_control
         self.task_creator = task_creator
         self.queue = queue
         self._logger = CustomLogger()
+
+        from research_analytics_suite.operation_manager.OperationControl import OperationControl
+        self.op_control = OperationControl()
 
     async def handle_tasks(self):
         """Handles the execution and monitoring of tasks."""
@@ -62,4 +63,4 @@ class TaskMonitor:
                             self.queue.remove_operation_from_queue(operation)
 
                         if isinstance(operation, ConsoleOperation):
-                            self.op_control.console_operation_in_progress = False
+                            self.queue.op_.console_operation_in_progress = False

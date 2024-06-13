@@ -28,15 +28,15 @@ from research_analytics_suite.utils.UserInputManager import UserInputManager
 class ConsoleDialog:
     """A class to create a console dialog for user input and operations control."""
 
-    def __init__(self, user_input_handler: UserInputManager, operation_control: OperationControl):
+    def __init__(self, user_input_handler: UserInputManager):
         """
         Initializes the ConsoleDialog with the given user input handler, operations control, and logger.
 
         Args:
             user_input_handler (UserInputManager): Instance to handle user inputs.
-            operation_control (OperationControl): Control interface for operations.
         """
         self._logger = CustomLogger()
+        self.operation_control = OperationControl()
         self.window = dpg.add_child_window(tag="console_window", parent="bottom_pane")
 
         with dpg.group(horizontal=True, parent=self.window):
@@ -45,7 +45,6 @@ class ConsoleDialog:
 
         self._logger_output = dpg.add_text(default_value="", parent=self.window, wrap=-1)
         self.user_input_handler = user_input_handler
-        self.operation_control = operation_control
         self.command_history = []
         self.command_help = {"command1": "This is command1", "command2": "This is command2"}
         self.command_aliases = {"c1": "command1", "c2": "command2"}

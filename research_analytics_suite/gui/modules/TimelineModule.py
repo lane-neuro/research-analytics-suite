@@ -11,6 +11,8 @@ from typing import Optional, Any
 
 import dearpygui.dearpygui as dpg
 from uuid import uuid4
+
+from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -18,12 +20,12 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class TimelineModule:
     """A class to manage a multi-layered timeline interface for reordering OperationModule instances."""
 
-    def __init__(self, operation_control, operation_queue, width: int, height: int):
+    def __init__(self, operation_queue, width: int, height: int):
         self.window = dpg.add_group(label="Timeline", parent="bottom_pane_group", tag="timeline_manager",
                                     horizontal=False)
         self._logger = CustomLogger()
         self.update_operation = None
-        self.operation_control = operation_control
+        self.operation_control = OperationControl()
         self.width = width
         self.height = height
         self.operation_queue = operation_queue

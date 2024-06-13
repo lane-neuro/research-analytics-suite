@@ -3,6 +3,7 @@ import uuid
 import dearpygui.dearpygui as dpg
 from typing import Any
 
+from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -10,9 +11,9 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class CreateOperationModule:
     """A class to create custom instances of ABCOperation with user-defined parameters."""
 
-    def __init__(self, operation_control, width: int, height: int, parent_operation=None):
+    def __init__(self, width: int, height: int, parent_operation=None):
         self._logger = CustomLogger()
-        self.operation_control = operation_control
+        self.operation_control = OperationControl()
         self._parent_operation = parent_operation
         self.width = width
         self.height = height
@@ -61,4 +62,3 @@ class CreateOperationModule:
             dpg.delete_item(f"new_{self.create_operation_dialog_id}")
         except Exception as e:
             self._logger.error(e, self)
-            self.operation_control.add_log_entry(f"Error creating new operation: {e}")

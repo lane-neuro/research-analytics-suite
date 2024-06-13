@@ -33,17 +33,16 @@ class OperationManagerDialog:
     TILE_HEIGHT = 470  # Fixed height for each operation tile
     TILE_PADDING = 20  # Padding between tiles
 
-    def __init__(self, operation_control: OperationControl, container_width: int = 1700):
+    def __init__(self, container_width: int = 1700):
         """
         Initializes the OperationManagerDialog with the given operation control, logger, and container width.
 
         Args:
-            operation_control (OperationControl): Control interface for operations.
             container_width (int): Initial width of the container.
         """
         self.window = dpg.add_group(label="Operation Manager", parent="operation_pane", tag="operation_gallery",
                                     horizontal=False)
-        self.operation_control = operation_control
+        self.operation_control = OperationControl()
         self._logger = CustomLogger()
         self.operation_items = {}  # Store operation GUI items
         self.update_operation = None
@@ -96,7 +95,6 @@ class OperationManagerDialog:
                             and not node.operation.name.startswith("gui_")
                             and not node.operation.name.startswith("sys_")):
                         self.operation_items[node.operation] = OperationModule(operation=node.operation,
-                                                                               operation_control=self.operation_control,
                                                                                width=self.TILE_WIDTH,
                                                                                height=self.TILE_HEIGHT)
                         await self.operation_items[node.operation].initialize()

@@ -31,16 +31,17 @@ class OperationExecutor:
     are updated accordingly.
     """
 
-    def __init__(self, operation_control, queue, task_creator):
+    def __init__(self, queue, task_creator):
         """
         Initializes the OperationExecutor with the necessary components.
 
         Args:
-            operation_control: Control interface for operations.
             queue: Queue holding operations to be executed.
             task_creator: Task creator for generating asyncio tasks.
         """
-        self.op_control = operation_control
+        from research_analytics_suite.operation_manager.OperationControl import OperationControl
+        self.op_control = OperationControl()
+
         self.queue = queue
         self.task_creator = task_creator
         self._logger = CustomLogger()

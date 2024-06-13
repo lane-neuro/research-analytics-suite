@@ -15,7 +15,6 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
-import ctypes
 import os
 
 import dearpygui.dearpygui as dpg
@@ -38,18 +37,17 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class GuiLauncher:
     """Class to launch the GUI for the Research Analytics Suite."""
 
-    def __init__(self, data_engine: DataEngineOptimized, operation_control: OperationControl):
+    def __init__(self, data_engine: DataEngineOptimized):
         """
         Initializes the GUI launcher with necessary components.
 
         Args:
             data_engine (DataEngineOptimized): The data engine for handling data operation.
-            operation_control (OperationControl): The control manager for operations.
         """
         self.timeline = None
         self.dpg_async = DearPyGuiAsync()
         self._logger = CustomLogger()
-        self.operation_control = operation_control
+        self.operation_control = OperationControl()
         self.data_engine = data_engine
         self.workspace = Workspace()
         self.visualization_dialog = None
@@ -57,8 +55,7 @@ class GuiLauncher:
         self.data_import_wizard = None
         self.real_time_data_visualization = None
         self.settings_dialog = SettingsDialog()
-        self.create_operation_module = CreateOperationModule(operation_control=self.operation_control,
-                                                             height=400, width=800,
+        self.create_operation_module = CreateOperationModule(height=400, width=800,
                                                              parent_operation=None)
         self.console = None
         self.operation_window = None
@@ -206,7 +203,7 @@ class GuiLauncher:
         with dpg.group(parent="console_log_output_pane"):
             dpg.add_text("Console/Log Output", tag="console_log_output")
 
-        self.console = ConsoleDialog(self.operation_control.user_input_manager, self.operation_control)
+        self.console = ConsoleDialog(self.operation_control.user_input_manager)
         await self.console.initialize()
 
     async def setup_operation_pane(self) -> None:
@@ -215,7 +212,7 @@ class GuiLauncher:
             dpg.add_text("Operation Manager", parent="operation_pane")
             self.create_operation_module.draw_button(label="Create New Operation", width=200, parent="operation_pane")
 
-        self.operation_window = OperationManagerDialog(operation_control=self.operation_control)
+        self.operation_window = OperationManagerDialog()
         await self.operation_window.initialize_dialog()
 
     async def setup_data_engine_pane(self) -> None:
@@ -237,13 +234,12 @@ class GuiLauncher:
         with dpg.group(parent="bottom_pane_group", tag="timeline_group", horizontal=True):
             self.timeline = TimelineModule(width=int(dpg.get_viewport_width() * 0.5),
                                            height=300,
-                                           operation_control=self.operation_control,
                                            operation_queue=self.operation_control.queue)
             await self.timeline.initialize_dialog()
 
     async def setup_workspace_pane(self) -> None:
         """Sets up the workspace pane asynchronously."""
         with dpg.group(parent="bottom_pane_group", horizontal=True, tag="workspace_group"):
-            self.workspace_dialog = WorkspaceModule(operation_control=self.operation_control,
-                                                    height=300, width=int(dpg.get_viewport_width() * 0.5))
+            self.workspace_dialog = WorkspaceModule(height=300,
+                                                    width=int(dpg.get_viewport_width() * 0.5))
             await self.workspace_dialog.initialize()

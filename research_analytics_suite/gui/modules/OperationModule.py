@@ -23,6 +23,7 @@ from typing import Any
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
+from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -30,20 +31,19 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class OperationModule:
     """A class to manage operations and their GUI representation."""
 
-    def __init__(self, operation: ABCOperation, operation_control: Any, width: int, height: int):
+    def __init__(self, operation: ABCOperation, width: int, height: int):
         """
         Initializes the OperationModule with the given operation, control, and logger.
 
         Args:
             operation (ABCOperation): An instance of ABCOperation.
-            operation_control: Control interface for operations.
             width (int): The width of the module.
             height (int): The height of the module.
         """
         self.child_ops_parent = None
         self.log_container_id = None
         self._operation = operation
-        self.operation_control = operation_control
+        self.operation_control = OperationControl()
         self.width = int(width * 1.0)
         self.height = int(height * 1.0)
         self._logger = CustomLogger()
@@ -54,6 +54,8 @@ class OperationModule:
         self.log_id = f"log_{self.unique_id}"
         self.persistent_id = f"persistent_{self.unique_id}"
         self.cpu_bound_id = f"cpu_bound_{self.unique_id}"
+        self.parent_id = f"parent_{self.unique_id}"
+        self.left_panel_id = f"left_panel_{self.unique_id}"
 
     @property
     def operation(self) -> ABCOperation:
@@ -141,7 +143,10 @@ class OperationModule:
         """Draws the GUI elements for the operation."""
         with dpg.group(parent=parent, height=int(self.height * 0.14) - 2):
             with dpg.child_window(height=-1, width=-1, border=True):
-                dpg.add_text(f"Operation: {self._operation.name}")
+                dpg.add_text(f"Operation:\t\t{self._operation.name}")
+                dpg.add_text(f"Parent Operation:\t\t"
+                             f"{self._operation.parent_operation.name if self._operation.parent_operation else 'None'}",
+                             tag=self.parent_id)
                 dpg.add_separator()
 
                 with dpg.group(horizontal=True, width=-1, height=-1):
@@ -150,8 +155,9 @@ class OperationModule:
                     dpg.add_text(f"Persistent: {self._operation.persistent}", tag=self.persistent_id)
                     dpg.add_text(f"CPU Bound: {self._operation.is_cpu_bound}", tag=self.cpu_bound_id)
 
-        with dpg.group(parent=parent, horizontal=True):
-            with dpg.child_window(height=int(self.height * 0.85) - 12, width=int(self.width * 0.4) - 15, border=True):
+        with dpg.group(parent=parent, horizontal=True, tag=self.left_panel_id):
+            with dpg.child_window(height=int(self.height * 0.85) - 12, width=int(self.width * 0.4) - 15, border=True,
+                                  parent=self.left_panel_id):
                 dpg.add_progress_bar(
                     default_value=self._operation.progress[0] / 100,
                     tag=f"progress_{self._operation.name}_{self.unique_id}",
@@ -173,24 +179,31 @@ class OperationModule:
                 dpg.add_text("Child Operations:")
                 self.child_ops_parent = f"child_ops_{self.unique_id}"
                 with dpg.group(tag=f"container_{self.unique_id}"):
-                    with dpg.group(tag=self.child_ops_parent):
+                    with dpg.group(tag=self.child_ops_parent, parent=f"container_{self.unique_id}"):
                         if self._operation.child_operations:
                             for child_op in self._operation.child_operations:
-                                dpg.add_text(
-                                    label=f"Child Operation: {child_op.name} - Status: {child_op.status} - "
-                                          f"Concurrent: {child_op.concurrent}",
-                                    parent=self.child_ops_parent
-                                )
-                                dpg.add_separator()
-                            dpg.add_button(
-                                label="Execute Child Operations",
-                                callback=self._operation.execute_child_operations,
-                                width=-1, parent=f"container_{self.unique_id}"
-                            )
+                                with dpg.group(parent=self.child_ops_parent,
+                                               tag=f"{child_op.unique_id}_{self.unique_id}"):
+                                    # Display child operation name, status, and concurrency
+                                    dpg.add_text(default_value=f"Child Operation: {child_op.name}",
+                                                 parent=f"{child_op.unique_id}_{self.unique_id}",
+                                                 tag=f"name_{child_op.unique_id}_{self.unique_id}")
+                                    dpg.add_text(default_value=f"Status: {child_op.status}",
+                                                 parent=f"{child_op.unique_id}_{self.unique_id}",
+                                                 tag=f"status_{child_op.unique_id}_{self.unique_id}")
+                                    dpg.add_text(f"Concurrent: {child_op.concurrent}",
+                                                 parent=f"{child_op.unique_id}_{self.unique_id}",
+                                                 tag=f"concurrent_{child_op.unique_id}_{self.unique_id}")
 
                     dpg.add_separator()
-                    create_operation_module = CreateOperationModule(operation_control=self.operation_control,
-                                                                    width=700,
+                    dpg.add_button(
+                        label="Execute Child Operations",
+                        callback=self._operation.execute_child_operations,
+                        width=-1, parent=f"container_{self.unique_id}"
+                    )
+
+                    dpg.add_separator()
+                    create_operation_module = CreateOperationModule(width=700,
                                                                     height=400,
                                                                     parent_operation=self._operation)
                     create_operation_module.draw_button(parent=f"container_{self.unique_id}",
@@ -241,22 +254,15 @@ class OperationModule:
                         dpg.add_text(log, parent=self.log_container_id)
 
             if dpg.does_item_exist(self.child_ops_parent):
-                current_child_operations = {child_op.name for child_op in self._operation.child_operations}
-                existing_children = {dpg.get_item_label(child) for child in
-                                     dpg.get_item_children(self.child_ops_parent, slot=1)}
-
-                # Remove old child operations
-                for child in existing_children - current_child_operations:
-                    for child_id in dpg.get_item_children(self.child_ops_parent, slot=1):
-                        if dpg.get_item_label(child_id) == child:
-                            dpg.delete_item(child_id)
-
-                # Add new child operations
-                for child_op in self._operation.child_operations:
-                    if child_op.name not in existing_children:
-                        dpg.add_text(
-                            f"Child Operation: {child_op.name} - Status: {child_op.status} - Concurrent: {child_op.concurrent}",
-                            parent=self.child_ops_parent, wrap=200, bullet=True)
+                child_operations = self._operation.child_operations
+                children = dpg.get_item_children(self.child_ops_parent, slot=1)
+                if len(children) != len(child_operations):
+                    dpg.delete_item(self.child_ops_parent, children_only=True)
+                    for child_op in child_operations:
+                        dpg.add_text(f"Child Operation: {child_op.name}", parent=self.child_ops_parent)
+                        dpg.add_text(f"Status: {child_op.status}", parent=self.child_ops_parent)
+                        dpg.add_text(f"Concurrent: {child_op.concurrent}", parent=self.child_ops_parent)
+                        dpg.add_separator(parent=self.child_ops_parent)
 
             if dpg.does_item_exist(self.result_id):
                 result = self._operation.get_result()

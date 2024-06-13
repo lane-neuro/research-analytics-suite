@@ -14,7 +14,6 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
 from research_analytics_suite.operation_manager.OperationManager import OperationManager
 from research_analytics_suite.operation_manager.OperationQueue import OperationQueue
 from research_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
@@ -33,7 +32,7 @@ class PersistentOperationChecker:
     present, it adds them to the operation queue.
     """
 
-    def __init__(self, operation_control: any, operation_manager: OperationManager, queue: OperationQueue,
+    def __init__(self, operation_manager: OperationManager, queue: OperationQueue,
                  task_creator: TaskCreator):
         """
         Initializes the PersistentOperationChecker with the necessary components.
@@ -44,7 +43,9 @@ class PersistentOperationChecker:
         - queue (OperationQueue): The queue that holds operations to be executed.
         - task_creator (TaskCreator): The task creator that handles task generation.
         """
-        self.op_control = operation_control
+        from research_analytics_suite.operation_manager.OperationControl import OperationControl
+        self._operation_control = OperationControl()
+
         self.op_manager = operation_manager
         self.queue = queue
         self.task_creator = task_creator
@@ -57,14 +58,13 @@ class PersistentOperationChecker:
         This method ensures that a ConsoleOperation is in progress and a ResourceMonitorOperation is running. If these
         operations are not present, they are added to the operation queue.
         """
-        if not self.op_control.console_operation_in_progress:
+        if not self._operation_control.console_operation_in_progress:
             await self.op_manager.add_operation_if_not_exists(operation_type=ConsoleOperation,
-                                                              user_input_manager=self.op_control.user_input_manager,
-                                                              local_vars=self.op_control.local_vars,
-                                                              func=self.op_control.user_input_manager.process_user_input,
+                                                              user_input_manager=self._operation_control.user_input_manager,
+                                                              func=self._operation_control.user_input_manager.process_user_input,
                                                               prompt="", concurrent=True,
                                                               persistent=True)
-            self.op_control.console_operation_in_progress = True
+            self._operation_control.console_operation_in_progress = True
 
         # Check if a ResourceMonitorOperation is already running
         if not any(isinstance(task, ResourceMonitorOperation) for task in self.task_creator.tasks):

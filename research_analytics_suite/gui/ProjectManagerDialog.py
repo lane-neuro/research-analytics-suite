@@ -25,20 +25,19 @@ from research_analytics_suite.operation_manager.OperationControl import Operatio
 class ProjectManagerDialog:
     """A class to manage the dialog for creating, loading, and saving projects."""
 
-    def __init__(self, data_engine: UnifiedDataEngine, operation_control: OperationControl):
+    def __init__(self, data_engine: UnifiedDataEngine):
         """
         Initializes the ProjectManagerDialog with the given data engine and operations control.
 
         Args:
             data_engine (DataEngine): Instance to manage project data.
-            operation_control (OperationControl): Control interface for operations.
         """
         self.window = dpg.add_window(label="Project Manager")
         dpg.add_button(label="Create Project", callback=self.create_project_wrapper, parent=self.window)
         dpg.add_button(label="Load Project", callback=self.load_project_wrapper, parent=self.window)
         dpg.add_button(label="Save Project", callback=self.save_project_wrapper, parent=self.window)
         self.data_engine = data_engine
-        self.operation_control = operation_control
+        self.operation_control = OperationControl()
 
     async def create_project(self, sender: str, data: dict) -> None:
         """

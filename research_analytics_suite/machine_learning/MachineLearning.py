@@ -2,16 +2,17 @@ import os
 
 from research_analytics_suite.machine_learning import Model, Preprocessor, MLTrainingOperation, \
     MLEvaluationOperation, Predictor
+from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.Operation import Operation
 
 
 class MachineLearning(Operation):
-    def __init__(self, operation_control, data=None, model_type="logistic_regression",
+    def __init__(self, data=None, model_type="logistic_regression",
                  name="MachineLearningOperation"):
         super().__init__(name=name, func=self.evaluate_model)
         self.name = name
         self.data = data
-        self.operation_control = operation_control
+        self.operation_control = OperationControl()
         self.target = None
         self.model = Model(model_type=model_type)
         self.preprocessor = Preprocessor()

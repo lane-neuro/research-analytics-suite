@@ -9,6 +9,7 @@ import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.data_engine.Config import Config
 from research_analytics_suite.data_engine.Workspace import Workspace
+from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -16,19 +17,18 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class WorkspaceModule:
     """A class to manage the GUI representation of the Workspace."""
 
-    def __init__(self, operation_control, width: int, height: int):
+    def __init__(self, width: int, height: int):
         """
         Initializes the WorkspaceModule with the given workspace.
 
         Args:
-            operation_control: The operation control instance.
             width (int): The width of the module.
             height (int): The height of the module.
         """
         self._workspace = Workspace()
         self._logger = CustomLogger()
         self._config = Config()
-        self._operation_control = operation_control
+        self._operation_control = OperationControl()
         self.width = width
         self._user_vars_width = int(self.width * 0.6)
         self._management_width = int(self.width * 0.31)
