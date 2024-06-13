@@ -43,7 +43,7 @@ class ConsoleDialog:
             dpg.add_input_text(label="", tag="input_text", width=500)
             dpg.add_button(label="Submit", callback=self.submit_command)
 
-        self._logger_output = dpg.add_text(default_value="", parent=self.window, wrap=600)
+        self._logger_output = dpg.add_text(default_value="", parent=self.window, wrap=-1)
         self.user_input_handler = user_input_handler
         self.operation_control = operation_control
         self.command_history = []

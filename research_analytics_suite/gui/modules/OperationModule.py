@@ -55,6 +55,11 @@ class OperationModule:
         self.persistent_id = f"persistent_{self.unique_id}"
         self.cpu_bound_id = f"cpu_bound_{self.unique_id}"
 
+    @property
+    def operation(self) -> ABCOperation:
+        """Returns the operation."""
+        return self._operation
+
     async def initialize(self) -> None:
         """Initializes resources and adds the update operation."""
         self.update_operation = await self.add_update_operation()
@@ -238,11 +243,11 @@ class OperationModule:
             if dpg.does_item_exist(self.child_ops_parent):
                 current_child_operations = {child_op.name for child_op in self._operation.child_operations}
                 existing_children = {dpg.get_item_label(child) for child in
-                                     dpg.get_item_children(self.child_ops_parent, slot=0)}
+                                     dpg.get_item_children(self.child_ops_parent, slot=1)}
 
                 # Remove old child operations
                 for child in existing_children - current_child_operations:
-                    for child_id in dpg.get_item_children(self.child_ops_parent, slot=0):
+                    for child_id in dpg.get_item_children(self.child_ops_parent, slot=1):
                         if dpg.get_item_label(child_id) == child:
                             dpg.delete_item(child_id)
 

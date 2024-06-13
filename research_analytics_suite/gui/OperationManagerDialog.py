@@ -114,7 +114,7 @@ class OperationManagerDialog:
                 or len(dpg.get_item_children(self.current_row_group)[1]) >= self.tiles_per_row):
             self.current_row_group = dpg.add_group(horizontal=True, parent=self.window)
             self._logger.debug(f"Created new row group: {self.current_row_group}")
-        tag = f"{operation.name}_{uuid.uuid4()}"
+        tag = f"{operation.unique_id}_tile"
         child_window = dpg.add_child_window(width=self.TILE_WIDTH, height=self.TILE_HEIGHT,
                                             parent=self.current_row_group, tag=tag)
         self._logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
@@ -138,5 +138,5 @@ class OperationManagerDialog:
         """Refreshes the display to adjust the tiles per row."""
         dpg.delete_item(self.window, children_only=True)
         self.current_row_group = None
-        for operation in self.operation_items.values():
-            self.add_operation_tile(operation.operation)
+        for operation_module in self.operation_items.values():
+            self.add_operation_tile(operation_module.operation)
