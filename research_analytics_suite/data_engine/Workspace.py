@@ -159,7 +159,9 @@ class Workspace:
             async with aiofiles.open(config_path, 'w') as config_file:
                 await config_file.write(self._get_config_settings())
 
+            await self.save_user_variables(os.path.join(self._config.BASE_DIR, 'user_variables.db'))
             self._logger.info(f"Workspace saved at {self._config.BASE_DIR}")
+
         except Exception as e:
             self._logger.error(Exception(f"Failed to save current workspace: {e}"), self)
 
@@ -294,4 +296,3 @@ class Workspace:
             self._logger.info(f"User variables restored from {file_path}")
         except Exception as e:
             self._logger.error(Exception(f"Failed to restore user variables: {e}"), self)
-

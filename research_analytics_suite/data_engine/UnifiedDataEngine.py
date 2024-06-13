@@ -215,7 +215,6 @@ class UnifiedDataEngine:
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        print(state)
         state['_logger'] = None
         state['dask_client'] = None
         state['live_input_source'] = None
@@ -225,7 +224,6 @@ class UnifiedDataEngine:
         state['dask_data'] = None
         state['workspace'] = None
         state['live_data_handler'] = None
-        print(state)
         return state
 
     def __setstate__(self, state):

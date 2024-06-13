@@ -135,7 +135,7 @@ class GuiLauncher:
         dpg.create_viewport(title='Research Analytics Suite', width=1920, height=1080)
         dpg.setup_dearpygui()
         await self.apply_theme()  # Apply theme after setup
-        dpg.show_metrics()
+        # dpg.show_metrics()
 
         dpg.show_viewport()
         await self.dpg_async.start()
@@ -159,6 +159,8 @@ class GuiLauncher:
         while dpg.is_dearpygui_running():
             await asyncio.sleep(0.01)
 
+        self._logger.info("Shutting down GUI...")
+        await self.workspace.save_current_workspace()
         dpg.destroy_context()
 
     async def setup_panes(self) -> None:

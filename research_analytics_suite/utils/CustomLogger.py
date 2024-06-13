@@ -101,7 +101,6 @@ class CustomLogger:
         error_info = traceback.format_exc()
         error_message = f"An error occurred in {context}: {exception}\n{error_info}"
         self._logger.error(error_message)
-        print(error_message)
 
     def warning(self, message: str) -> None:
         """
