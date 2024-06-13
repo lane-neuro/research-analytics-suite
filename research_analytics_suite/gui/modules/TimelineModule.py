@@ -38,7 +38,6 @@ class TimelineModule:
         try:
             operation = await self.operation_control.operation_manager.add_operation(
                 operation_type=ABCOperation, name="gui_TimelineUpdateTask",
-                local_vars=self.operation_control.local_vars,
                 func=self.draw_timeline, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation

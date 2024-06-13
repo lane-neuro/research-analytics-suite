@@ -48,11 +48,12 @@ class OperationModule:
         self.height = int(height * 1.0)
         self._logger = CustomLogger()
         self.update_operation = None
+
         self.unique_id = str(uuid.uuid4())
-        self.log_id = None
-        self.result_id = None
-        self.persistent_id = None
-        self.cpu_bound_id = None
+        self.result_id = f"result_{self.unique_id}"
+        self.log_id = f"log_{self.unique_id}"
+        self.persistent_id = f"persistent_{self.unique_id}"
+        self.cpu_bound_id = f"cpu_bound_{self.unique_id}"
 
     async def initialize(self) -> None:
         """Initializes resources and adds the update operation."""
@@ -75,8 +76,7 @@ class OperationModule:
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=ABCOperation, name="gui_OperationUpdateTask", logger=self._logger,
-                local_vars=self.operation_control.local_vars,
+                operation_type=ABCOperation, name="gui_OperationUpdateTask",
                 func=self.update_gui, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation
@@ -135,11 +135,6 @@ class OperationModule:
     def draw(self, parent) -> None:
         """Draws the GUI elements for the operation."""
         with dpg.group(parent=parent, height=int(self.height * 0.14) - 2):
-            self.log_id = f"log_{self.unique_id}"
-            self.result_id = f"result_{self.unique_id}"
-            self.persistent_id = f"persistent_{self.unique_id}"
-            self.cpu_bound_id = f"cpu_bound_{self.unique_id}"
-
             with dpg.child_window(height=-1, width=-1, border=True):
                 dpg.add_text(f"Operation: {self._operation.name}")
                 dpg.add_separator()
@@ -182,13 +177,13 @@ class OperationModule:
                                     parent=self.child_ops_parent
                                 )
                                 dpg.add_separator()
+                            dpg.add_button(
+                                label="Execute Child Operations",
+                                callback=self._operation.execute_child_operations,
+                                width=-1, parent=f"container_{self.unique_id}"
+                            )
 
                     dpg.add_separator()
-                    dpg.add_button(
-                        label="Execute Child Operations",
-                        callback=self._operation.execute_child_operations,
-                        width=-1, parent=f"container_{self.unique_id}"
-                    )
                     create_operation_module = CreateOperationModule(operation_control=self.operation_control,
                                                                     width=700,
                                                                     height=400,
@@ -196,7 +191,7 @@ class OperationModule:
                     create_operation_module.draw_button(parent=f"container_{self.unique_id}",
                                                         label="Add Child Operation")
 
-            child_height = int((self.height * 0.85) * 0.5) - 18
+            child_height = int((self.height * 0.85) * 0.5) - 20
             with dpg.child_window(height=int(self.height * 0.85) - 12, width=int(self.width * 0.6) - 10, border=True):
                 logs_results_tag = f"logs_results_{self.unique_id}"
                 with dpg.group(tag=logs_results_tag, width=-1, height=child_height):
@@ -211,11 +206,15 @@ class OperationModule:
                     dpg.add_separator()
 
                     with dpg.child_window(border=False, parent=logs_results_tag):
-                        dpg.add_text("Result")
-                        dpg.add_separator()
-                        dpg.add_input_text(tag=self.result_id, readonly=True, multiline=True, width=-1)
+                        dpg.add_text("Results")
+                        dpg.add_listbox(tag=self.result_id, width=-1,
+                                        label="Results", num_items=3, items=["Results unavailable."])
                         dpg.add_separator()
                         dpg.add_button(label="View Result", callback=self.view_result, width=-1)
+
+    def dict_to_listbox_items(self, dictionary) -> list[str]:
+        """Converts a dictionary to a list of strings for use in a listbox."""
+        return [f"{key}: {value}" for key, value in dictionary.items()]
 
     async def update_gui(self) -> None:
         """Updates the GUI with the current status and progress."""
@@ -256,7 +255,8 @@ class OperationModule:
 
             if dpg.does_item_exist(self.result_id):
                 result = self._operation.get_result()
-                dpg.set_value(self.result_id, str(result))
+                result = self.dict_to_listbox_items(result)
+                dpg.configure_item(self.result_id, items=result if result else ["Results unavailable."])
 
             if dpg.does_item_exist(self.persistent_id):
                 dpg.set_value(self.persistent_id, f"Persistent: {self._operation.persistent}")

@@ -49,7 +49,6 @@ class WorkspaceModule:
         try:
             operation = await self._operation_control.operation_manager.add_operation(
                 operation_type=ABCOperation, name="gui_WorkspaceUpdateTask",
-                local_vars=self._operation_control.local_vars,
                 func=self.update_user_variables_list, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation
@@ -64,11 +63,10 @@ class WorkspaceModule:
     async def setup_workspace_pane(self) -> None:
         """Sets up the workspace pane asynchronously."""
         with dpg.group(tag="workspace_pane_group", horizontal=True, parent="workspace_group"):
-            with dpg.child_window(tag="user_variables_pane",
+            with dpg.child_window(label="User Variables",
+                                  tag="user_variables_pane",
                                   width=self._user_vars_width,
                                   border=True, parent="workspace_pane_group"):
-                dpg.add_text("User Variables")
-                dpg.add_separator()
                 dpg.add_button(label="Add User Variable", callback=self.open_add_var_dialog)
                 dpg.add_group(tag=self.user_var_list_id)  # Create the group for user variables list
 

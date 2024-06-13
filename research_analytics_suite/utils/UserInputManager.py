@@ -69,7 +69,6 @@ class UserInputManager:
             await self.operation_control.operation_manager.add_operation(operation_type=DaskOperation,
                                                                          func=load_data,
                                                                          name="LoadData",
-                                                                         local_vars=self.operation_control.local_vars,
                                                                          client=dask.distributed.Client())
 
         elif user_input == "machine_learning":
@@ -124,6 +123,5 @@ class UserInputManager:
         else:
             self._logger.info(f"UserInputManager.process_user_input: Executing custom operation with func: {user_input}")
             await self.operation_control.operation_manager.add_operation(operation_type=ABCOperation,
-                                                                         func=user_input, name="ConsoleCommand",
-                                                                         local_vars=self.operation_control.local_vars)
+                                                                         func=user_input, name="ConsoleCommand")
             return f"UserInputManager.process_user_input: Added custom operation with func: {user_input}"

@@ -78,7 +78,6 @@ class OperationManagerDialog:
         try:
             operation = await self.operation_control.operation_manager.add_operation(
                 operation_type=ABCOperation, name="gui_OperationManagerUpdateTask",
-                local_vars=self.operation_control.local_vars,
                 func=self.display_operations, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation

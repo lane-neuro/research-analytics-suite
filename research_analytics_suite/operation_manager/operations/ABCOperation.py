@@ -5,7 +5,7 @@ import types
 import uuid
 from abc import ABC
 from concurrent.futures import ProcessPoolExecutor
-from typing import Tuple, List, Any, Dict
+from typing import Tuple, List, Dict
 
 from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -19,29 +19,19 @@ class ABCOperation(ABC):
     def __init__(self, *args, **kwargs):
         """
         Initialize the operation instance.
-
-        Args:
-            func (callable): The function to be executed by the operation.
-            name (str, optional): The name of the operation. Defaults to "Operation".
-            persistent (bool, optional): Whether the operation should run indefinitely. Defaults to False.
-            is_cpu_bound (bool, optional): Whether the operation is CPU-bound. Defaults to False.
-            concurrent (bool, optional): Whether child operations should run concurrently. Defaults to False.
-            parent_operation (ABCOperation, optional): The parent operation. Defaults to None.
         """
-        self._memory_pointer = None
         self._workspace = Workspace()
         self._logger = CustomLogger()
         self.operation_logs = []
-        self._unique_id = str(uuid.uuid4())
 
         self._name = kwargs.get('name', "Operation")
+        self._unique_id = f"{self._name}_{uuid.uuid4()}"
         self._func = kwargs.get('func')
         self._persistent = kwargs.get('persistent', False)
         self._is_cpu_bound = kwargs.get('is_cpu_bound', False)
         self._status = "idle"
         self._task = None
         self._progress = 0
-        self._complete = False
         self._pause_event = asyncio.Event()
         self._pause_event.set()
         self._is_ready = False
@@ -50,6 +40,7 @@ class ABCOperation(ABC):
         self._child_operations: List['ABCOperation'] = []
         self._concurrent = kwargs.get('concurrent', False)
         self._gui_module = None
+        self.result_output = dict()
 
         self._dependencies: Dict[str, List[str]] = {}
 
@@ -198,12 +189,31 @@ class ABCOperation(ABC):
             if not child.is_complete() and not child._concurrent:
                 self._is_ready = False
 
+    async def _process_func(self):
+        """
+        Process the function associated with the operation.
+        """
+        try:
+            if isinstance(self._func, str):  # If self._func is a string of code
+                code = self._func
+                self._func = lambda: exec(code, {}, self.result_output)
+                self.add_log_entry(f"[CODE] {code}")
+            elif callable(self._func):  # If self._func is a callable function
+                if isinstance(self._func, types.MethodType):  # If self._func is a bound method
+                    self._func = self._func
+                else:
+                    t_func = self._func
+                    self._func = lambda: t_func()
+            else:
+                self._handle_error(Exception("Invalid function type"))
+        except Exception as e:
+            self._handle_error(e)
+
     async def start(self):
         """
         Start the operation and all child operations.
         """
         try:
-            self._memory_pointer = await self._workspace.add_user_variable(f'result_{self._unique_id}', None)
             await self._process_func()
             await self._start_child_operations()
             self._status = "started"
@@ -234,27 +244,8 @@ class ABCOperation(ABC):
             await asyncio.gather(*tasks)
         elif not self._concurrent and tasks and len(tasks) > 0:
             for task in tasks:
-                self._memory_pointer = await task
-
-    async def _process_func(self):
-        """
-        Process the function associated with the operation.
-        """
-        try:
-            if isinstance(self._func, str):  # If self._func is a string of code
-                code = self._func
-                self._func = lambda: exec(code, {}, self._memory_pointer)
-                self.add_log_entry(f"[CODE] {code}")
-            elif callable(self._func):  # If self._func is a callable function
-                if isinstance(self._func, types.MethodType):  # If self._func is a bound method
-                    self._func = self._func
-                else:
-                    t_func = self._func
-                    self._func = lambda: t_func()
-            else:
-                self._handle_error(Exception("Invalid function type"))
-        except Exception as e:
-            self._handle_error(e)
+                await task
+                self.add_log_entry(f"[RESULT] {self.result_output}")
 
     async def execute_func(self):
         """
@@ -265,30 +256,34 @@ class ABCOperation(ABC):
                 with ProcessPoolExecutor() as executor:
                     self._status = "running"
                     self.add_log_entry(f"[RUN] {self.name}: CPU-bound Operation")
-                    loop = asyncio.get_event_loop()
-                    await loop.run_in_executor(executor, self._func)
+                    await asyncio.get_event_loop().run_in_executor(executor, self._func)
+                    self.result_output = await self._workspace.add_user_variable(f'result_{self._unique_id}',
+                                                                                 self.result_output)
+                    self.add_log_entry(f"[RESULT] {self.result_output}")
             else:
                 if self._func is not None:
                     if callable(self._func):
                         self._status = "running"
-                        self.add_log_entry(f"[RUN] {self._name}")
                         if asyncio.iscoroutinefunction(self._func):
-                            result = await self._func()
-                            await self._workspace.add_user_variable(f'result_{self._unique_id}', result)
+                            self.add_log_entry(f"[RUN - ASYNC] {self._name}")
+                            await self._func()
+                            self.add_log_entry(f"[RESULT] {self.result_output}")
+                            self.result_output = await self._workspace.add_user_variable(f'result_{self._unique_id}',
+                                                                                         self.result_output)
                         else:
-                            result = self._func()
-                            await self._workspace.add_user_variable(f'result_{self._unique_id}', result)
+                            self.add_log_entry(f"[RUN] {self._name}")
+                            self._func()
+                            self.add_log_entry(f"[RESULT] {self.result_output}")
+                            self.result_output = await self._workspace.add_user_variable(f'result_{self._unique_id}',
+                                                                                         self.result_output)
                 else:
                     self._handle_error(Exception("No function provided for operation"))
         except Exception as e:
             self._handle_error(e)
-        finally:
-            self._memory_pointer = await self._workspace.get_user_variable(f'result_{self._unique_id}')
-            return self._memory_pointer
 
     def get_result(self):
         """Retrieve the result of the operation, if applicable."""
-        return self._memory_pointer
+        return self.result_output
 
     async def pause(self):
         """
@@ -512,4 +507,3 @@ class ABCOperation(ABC):
                     execution_order.append(op)
                     processed.add(op.name)
         return execution_order
-

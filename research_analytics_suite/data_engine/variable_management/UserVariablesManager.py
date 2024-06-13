@@ -8,6 +8,8 @@ Author: Lane
 """
 
 import asyncio
+from typing import Mapping, Any
+
 from research_analytics_suite.data_engine.variable_management.storage.BaseStorage import BaseStorage
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -28,7 +30,7 @@ class UserVariablesManager:
         self._logger = CustomLogger()
         asyncio.run(self.storage.setup())
 
-    async def add_variable(self, name, value):
+    async def add_variable(self, name, value) -> dict:
         """
         Adds a new variable to the storage.
 
@@ -37,11 +39,11 @@ class UserVariablesManager:
             value: The value of the variable.
         """
         try:
-            await self.storage.add_variable(name, value)
+            return await self.storage.add_variable(name, value)
         except Exception as e:
             self._logger.error(Exception(f"Error adding variable '{name}': {e}"), self)
 
-    async def get_variable(self, name):
+    async def get_variable(self, name) -> Mapping[str, Any]:
         """
         Retrieves the value of a variable by name from the storage.
 
