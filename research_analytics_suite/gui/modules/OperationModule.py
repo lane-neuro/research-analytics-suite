@@ -194,8 +194,7 @@ class OperationModule:
                                     dpg.add_text(f"Concurrent: {child_op.concurrent}",
                                                  parent=f"{child_op.unique_id}_{self.unique_id}",
                                                  tag=f"concurrent_{child_op.unique_id}_{self.unique_id}")
-
-                    dpg.add_separator()
+                                    dpg.add_separator(parent=f"{child_op.unique_id}_{self.unique_id}")
                     dpg.add_button(
                         label="Execute Child Operations",
                         callback=self._operation.execute_child_operations,

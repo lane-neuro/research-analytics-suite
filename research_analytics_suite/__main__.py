@@ -15,6 +15,8 @@ Status: Prototype
 import asyncio
 import sys
 
+import nest_asyncio
+
 from research_analytics_suite.launch_ras import launch_ras
 
 
@@ -25,14 +27,20 @@ def main():
     This function prints the version of the suite, imports the launch_ras module,
     and calls it to start the suite.
     """
-    print('Starting Research Analytics Suite v0.0.0.1')
     try:
+        # Apply nest_asyncio to allow asyncio to run in Jupyter notebooks
+        nest_asyncio.apply()
+
+        # Run the Research Analytics Suite
         asyncio.run(launch_ras())
+
     except KeyboardInterrupt:
         print('Exiting Research Analytics Suite...')
+
     except Exception as e:
         print(f"An error occurred: {e}")
         print("Exiting Research Analytics Suite...")
+
     finally:
         print("Cleaning up...")
         asyncio.get_event_loop().close()

@@ -31,13 +31,14 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    async def add_variable(self, name, value):
+    async def add_variable(self, name, value, memory_id=None):
         """
         Adds a new variable to the storage.
 
         Args:
             name (str): The name of the variable.
             value: The value of the variable.
+            memory_id (str, optional): The ID of the memory to which the variable belongs.
         """
         pass
 

@@ -10,8 +10,6 @@ Author: Lane
 import argparse
 import asyncio
 
-import nest_asyncio
-
 from research_analytics_suite.data_engine.Config import Config
 from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.gui.GuiLauncher import GuiLauncher
@@ -31,21 +29,20 @@ async def launch_ras():
     """
     # Parse command line arguments, if any
     args = launch_args().parse_args()
+    launch_tasks = []
 
-    # Apply nest_asyncio to allow asyncio to run in Jupyter notebooks
-    nest_asyncio.apply()
-
-    # Initialize the Config, Logger, and ErrorHandler
+    # Initialize the Config and Logger
     config = Config()
     await config.initialize()
+
     logger = CustomLogger()
-    launch_tasks = []
 
     operation_control = OperationControl()
     await operation_control.initialize()
 
     # Initialize new Workspace and Config
     _workspace = Workspace()
+    await _workspace.initialize()
 
     # Checks args for -o '--open_project' flag.
     # If it exists, open the project from the file

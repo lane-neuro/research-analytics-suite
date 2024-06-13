@@ -6,7 +6,7 @@ including caching, dependency management, and handling live data inputs within t
 
 Author: Lane
 """
-
+import asyncio
 import os
 import json
 import pickle
@@ -26,6 +26,7 @@ class Workspace:
     A class to manage multiple data engines, allowing flexible interaction with specific datasets.
     """
     _instance = None
+    _lock = asyncio.Lock()
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
@@ -45,25 +46,41 @@ class Workspace:
             self._logger = CustomLogger()
             self._config = Config()
 
-            self._data_engines = {}
-            self._dependencies = defaultdict(list)
-            self._data_cache = DataCache()
+            self._data_engines = None
+            self._dependencies = None
+            self._data_cache = None
+
             self._distributed = distributed
+            self._storage_type = storage_type
+            self._db_path = db_path
 
-            storage = None
-            if db_path is None:
-                db_path = os.path.join(self._config.BASE_DIR, 'user_variables.db')
-                self._logger.info(f"Using default database path: {db_path}")
-            if storage_type == 'sqlite':
-                storage = SQLiteStorage(db_path=db_path)
-            elif storage_type == 'memory':
-                storage = MemoryStorage(db_path=db_path)
-            else:
-                self._logger.error(ValueError(f"Unsupported storage type: {storage_type}"), self)
+            self._storage = None
 
-            self.user_variables = UserVariablesManager(storage)
-            self._logger.info("Workspace initialized successfully")
-            self._initialized = True
+            self.user_variables = None
+            self._initialized = False
+
+    async def initialize(self):
+        if not self._initialized:
+            async with Workspace._lock:
+                if not self._initialized:
+                    self._data_engines = {}
+                    self._dependencies = defaultdict(list)
+                    self._data_cache = DataCache()
+
+                    if self._db_path is None:
+                        self._db_path = os.path.join(self._config.BASE_DIR, 'user_variables.db')
+                        self._logger.info(f"Using default database path: {self._db_path}")
+                    if self._storage_type == 'sqlite':
+                        self._storage = SQLiteStorage(db_path=self._db_path)
+                    elif self._storage_type == 'memory':
+                        self._storage = MemoryStorage(db_path=self._db_path)
+                    else:
+                        self._logger.error(ValueError(f"Unsupported storage type: {self._storage_type}"), self)
+
+                    self.user_variables = UserVariablesManager(self._storage)
+
+                    self._logger.info("Workspace initialized successfully")
+                    self._initialized = True
 
     def add_data_engine(self, data_engine):
         """

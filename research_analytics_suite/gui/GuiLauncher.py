@@ -113,7 +113,6 @@ class GuiLauncher:
     async def load_fonts(self, font_paths):
         with dpg.font_registry():
             default_font = None
-            self._logger.info(f"Loading {len(font_paths)} fonts")
 
             for font_path in font_paths:
                 try:
@@ -127,11 +126,8 @@ class GuiLauncher:
 
             if default_font is not None:
                 dpg.bind_font(default_font)
-                self._logger.info(f"Font set: {default_font}")
             else:
                 self._logger.error(Exception("No default font found, using DearPyGui's default font."), self)
-
-            # dpg.show_font_manager()
 
     async def setup_main_window(self) -> None:
         """Sets up the main window of the GUI and runs the event loop."""

@@ -383,14 +383,12 @@ class ABCOperation(ABC):
             self._handle_error("operation must be an instance of ABCOperation")
             return
 
-        operation.parent_operation = self
-        operation = await self._operation_control.operation_manager.add_operation(operation)
         self._child_operations.append(operation)
 
         if dependencies:
             self._dependencies[operation.name] = dependencies
 
-        self.add_log_entry(f"[CHILD] (new) {operation.name}")
+        self.add_log_entry(f"[CHILD] (added) {operation.name}")
 
     def remove_child_operation(self, operation: 'ABCOperation'):
         """

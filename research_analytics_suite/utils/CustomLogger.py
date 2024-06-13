@@ -54,17 +54,19 @@ class CustomLogger:
                                       datefmt='%Y-%m-%d %H:%M:%S')
         handler.setFormatter(formatter)
         self._logger.addHandler(handler)
-        self._logger.addFilter(lambda record: self._log_message(record.getMessage()))
+        self._logger.addFilter(self._log_message)
 
-    def _log_message(self, message: str) -> None:
+    def _log_message(self, record: logging.LogRecord) -> bool:
         """
         Sends a log message to the queue.
 
         Args:
-            message (str): The log message to send to the queue.
+            record (logging.LogRecord): The log record to send to the queue.
         """
+        message = record.getMessage()
         self.log_message_queue.put_nowait(message)
-        print(message)
+        # print(message)
+        return True  # Allow the log record to be logged
 
     def info(self, message) -> None:
         """
