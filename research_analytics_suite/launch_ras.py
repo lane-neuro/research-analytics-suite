@@ -32,7 +32,7 @@ async def launch_ras():
     _args = launch_args().parse_args()
     _launch_tasks = []
 
-    # Initialize the Config and Logger
+    # Initialize the Config, Logger, and OperationControl
     _config = Config()
     await _config.initialize()
 
@@ -42,27 +42,42 @@ async def launch_ras():
     _operation_control = OperationControl()
     await _operation_control.initialize()
 
-    # Initialize new Workspace and Config
+    # Initialize Workspace
     _workspace = Workspace()
     await _workspace.initialize()
 
-    # Checks args for -o '--open_workspace' flag.
-    # If it exists, open the workspace from the file
+    # Checks args for -o '--open_workspace' flag and -c '--config' flag
+    # If -o flag is present, but -c flag is not, set the config path to the open_workspace path
+    # If -c flag is present, but -o flag is not, set the open_workspace path to the directory of the config path
+    # If neither are present, create a new workspace
     if _args.open_workspace is None and _args.config is None:
         _logger.info('New Workspace Parameters Detected - Creating New Workspace')
         try:
+            # Set default directory if not specified
+            # TODO: Ensure to accomodate all operating systems (e.g. ~ for Unix, %UserProfile% for Windows)
             if _args.directory is None:
                 _args.directory = os.path.expanduser(f"~/Research-Analytics-Suite/workspaces/")
-            os.makedirs(_args.directory, exist_ok=True)
 
+            # Create the directory if it doesn't exist
+            try:
+                os.makedirs(_args.directory, exist_ok=True)
+            except Exception as e:
+                _logger.error(e)
+                return
+
+            # Set default name if not specified
             if _args.name is None:
                 _args.name = "default_workspace"
                 workspace_path = os.path.join(_args.directory, _args.name)
+
+                # Check if the workspace already exists
                 try:
                     os.makedirs(workspace_path, exist_ok=False)
                 except FileExistsError:
                     _logger.info(f"Workspace with name '{_args.name}' already exists in directory "
                                  f"'{_args.directory}'... Finding next available workspace name...")
+
+                    # Find the next available workspace name
                     i = 1
                     while True:
                         _args.name = f"default_workspace_{i}"
@@ -73,6 +88,7 @@ async def launch_ras():
                         except FileExistsError:
                             i += 1
 
+            # Create the new workspace based on the directory and name
             else:
                 workspace_path = os.path.join(_args.directory, _args.name)
                 try:
@@ -81,11 +97,13 @@ async def launch_ras():
                     _logger.info(f"Workspace with name '{_args.name}' already exists in directory "
                                  f"'{_args.directory}'... Finding next available workspace name...")
                     i = 1
+                    _name_base = _args.name
                     while True:
-                        _args.name = f"{_args.name}_{i}"
-                        workspace_path = os.path.join(_args.directory, _args.name)
+                        _name_attempt = f"{_name_base}_{i}"
+                        workspace_path = os.path.join(_args.directory, _name_attempt)
                         try:
                             os.makedirs(workspace_path, exist_ok=False)
+                            _args.name = _name_attempt
                             break
                         except FileExistsError:
                             i += 1
@@ -94,21 +112,25 @@ async def launch_ras():
             _workspace = await _workspace.create_workspace(_args.directory, _args.name)
         except Exception as e:
             _logger.error(e)
+
+    # If -o '--open_workspace' flag is present, open the existing workspace
     else:
         if _args.open_workspace is not None and _args.config is None:
-            _args.config = os.path.join(_args.open_workspace, 'config.json')
+            _args.config = os.path.join(f"{_args.open_workspace}", 'config.json')
         elif _args.open_workspace is None and _args.config is not None:
             _args.open_workspace = os.path.dirname(_args.config)
 
         if not os.path.exists(_args.open_workspace):
             _logger.error(Exception(f"Workspace folder '{_args.open_workspace}' does not exist."))
             return
-        _logger.info('Opening Existing Workspace at: ' + _args.open_workspace)
+        _logger.info('Opening Existing Workspace at: ' + f"{_args.open_workspace}")
         _workspace = await _workspace.load_workspace(_args.open_workspace)
 
+    # Initialize the OperationControl and GUI Launcher
     _launch_tasks.append(_operation_control.exec_loop())
     _gui_launcher = None
 
+    # Launch the GUI if specified
     if _args.gui is not None and _args.gui.lower() == 'true':
         try:
             _gui_launcher = GuiLauncher()
@@ -119,12 +141,13 @@ async def launch_ras():
 
     _logger.info("Launching RAS")
 
+    # Run the event loop
     try:
         await asyncio.gather(*_launch_tasks)
     except Exception as e:
         _logger.error(e)
     finally:
-        _logger.info("Cleaning up...")
+        _logger.info("Saving Workspace...")
         await _workspace.save_current_workspace()
         _logger.info("Exiting Research Analytics Suite...")
         asyncio.get_event_loop().close()

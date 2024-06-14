@@ -14,8 +14,9 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+import json
 from collections import deque
-from typing import Optional
+from typing import Optional, List, Dict
 
 from research_analytics_suite.operation_manager.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.OperationNode import OperationNode
@@ -250,3 +251,64 @@ class OperationQueue:
         if self.is_empty():
             return None
         return self.queue.popleft()
+
+    def to_dict(self) -> List[Dict]:
+        """
+        Converts the queue to a list of dictionaries.
+
+        Returns:
+            List[Dict]: The queue represented as a list of dictionaries.
+        """
+        queue_dict = []
+        for chain in self.queue:
+            chain_dict = {
+                "operations": []
+            }
+            current_node = chain.head
+            while current_node:
+                chain_dict["operations"].append({
+                    "operation_name": current_node.operation.name,
+                    "operation_id": current_node.operation.unique_id,
+                    "operation_type": type(current_node.operation),
+                    "operation_status": current_node.operation.status,
+                })
+                current_node = current_node.next_node
+            queue_dict.append(chain_dict)
+        return queue_dict
+
+    def to_json(self) -> str:
+        """
+        Converts the queue to a JSON string.
+
+        Returns:
+            str: The queue represented as a JSON string.
+        """
+        return json.dumps(self.to_dict(), indent=4)
+
+    def __str__(self) -> str:
+        """
+        Converts the queue to a string.
+
+        Returns:
+            str: The queue represented as a string.
+        """
+        _queue_dict = self.to_dict()
+        _queue_text = ""
+        if not _queue_dict:
+            _queue_text = "Queue is empty."
+        else:
+            for _chain in _queue_dict:
+                _head_text = (f"\nHead: {_chain['operations'][0]['operation_name']} "
+                              f"({_chain['operations'][0]['operation_status']})")
+                _children_text = "\n\t->\t".join(
+                    [f"{operation['operation_name']} "
+                     f"({operation['operation_status']})" for operation in _chain['operations'][1:]])
+                _chain_text = f"{_head_text}\n\t->\t{_children_text}"
+                _queue_text += f"{_chain_text}\n"
+        return _queue_text
+
+    def print_queue(self) -> None:
+        """
+        Prints the queue in a readable format.
+        """
+        print(self)

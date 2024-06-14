@@ -165,6 +165,10 @@ class Workspace:
                         exist_ok=True)
             os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.WORKSPACE_DIR),
                         exist_ok=True)
+            os.makedirs(
+                os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
+                             self._config.WORKSPACE_OPERATIONS_DIR),
+                        exist_ok=True)
             os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.BACKUP_DIR),
                         exist_ok=True)
             os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR),

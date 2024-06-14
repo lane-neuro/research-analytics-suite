@@ -49,8 +49,6 @@ def main():
 if __name__ == '__main__':
     sys.argv = ['__main__.py',
                 '-g', 'True',
-                '-n', "dev-test",
-                # '-d', 'C:\\Users\\lane\\Research-Analytics-Suite\\workspaces',
-                # '-n', 'lane_dev'
+                '-n', "lane_dev",
                 ]
     main()

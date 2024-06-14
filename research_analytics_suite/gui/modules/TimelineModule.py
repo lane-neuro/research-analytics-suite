@@ -24,8 +24,8 @@ class TimelineModule:
         self.window = dpg.add_group(label="Timeline", parent="bottom_pane_group", tag="timeline_manager",
                                     horizontal=False)
         self._logger = CustomLogger()
-        self.update_operation = None
         self.operation_control = OperationControl()
+        self.update_operation = None
         self.width = width
         self.height = height
         self.operation_queue = operation_queue
@@ -51,6 +51,8 @@ class TimelineModule:
         if not dpg.does_item_exist(self.unique_id):
             dpg.add_child_window(tag=self.unique_id, border=True, width=self.width,
                                  parent="timeline_manager")
+
+        dpg.add_button(label="Print Queue", callback=self.operation_queue.print_queue, parent=self.unique_id)
 
         while True:
             for layer_index, operation_chain in enumerate(self.operation_queue.queue):
@@ -87,5 +89,5 @@ class TimelineModule:
     def update_all_elements(self) -> None:
         for layer_index, operation_chain in enumerate(self.operation_queue.queue):
             for idx, node in enumerate(operation_chain):
-                if not node.operation.name.startswith("gui_"):
+                if not node.operation.name.startswith("gui_") and not node.operation.name.startswith("sys_"):
                     self.update_operation_element(node.operation, layer_index, idx)

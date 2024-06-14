@@ -40,6 +40,10 @@ class SettingsDialog:
             dpg.add_input_text(label="Log Directory", default_value=self._config.LOG_DIR, tag="log_dir")
             dpg.add_input_text(label="Workspace Directory", default_value=self._config.WORKSPACE_DIR,
                                tag="workspace_dir")
+            dpg.add_input_text(label="Workspace Operations Directory",
+                               default_value=self._config.WORKSPACE_OPERATIONS_DIR,
+                               tag="workspace_operations_dir")
+            dpg.add_input_text(label="Engine Directory", default_value=self._config.ENGINE_DIR, tag="engine_dir")
             dpg.add_input_text(label="Backup Directory", default_value=self._config.BACKUP_DIR, tag="backup_dir")
 
             dpg.add_separator()
@@ -135,6 +139,7 @@ class SettingsDialog:
         self._config.DATA_DIR = dpg.get_value("data_dir")
         self._config.LOG_DIR = dpg.get_value("log_dir")
         self._config.WORKSPACE_DIR = dpg.get_value("workspace_dir")
+        self._config.WORKSPACE_OPERATIONS_DIR = dpg.get_value("workspace_operations_dir")
         self._config.BACKUP_DIR = dpg.get_value("backup_dir")
         self._config.ENGINE_DIR = dpg.get_value("engine_dir")
 

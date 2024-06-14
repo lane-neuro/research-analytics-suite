@@ -31,6 +31,7 @@ class Config:
             self.DATA_DIR = None
             self.LOG_DIR = None
             self.WORKSPACE_DIR = None
+            self.WORKSPACE_OPERATIONS_DIR = None
             self.BACKUP_DIR = None
             self.ENGINE_DIR = None
             self.DISTRIBUTED = None
@@ -82,6 +83,7 @@ class Config:
         self.DATA_DIR = 'data'
         self.LOG_DIR = 'logs'
         self.WORKSPACE_DIR = 'workspace'
+        self.WORKSPACE_OPERATIONS_DIR = os.path.join(self.WORKSPACE_DIR, 'operations')
         self.BACKUP_DIR = 'backup'
         self.ENGINE_DIR = 'engine'
 

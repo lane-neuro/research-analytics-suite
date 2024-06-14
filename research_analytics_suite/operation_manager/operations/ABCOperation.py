@@ -1,11 +1,15 @@
 # abc_operation.py
 
 import asyncio
+import pickle
 import types
 import uuid
 from abc import ABC
 from concurrent.futures import ProcessPoolExecutor
+from copy import deepcopy
 from typing import Tuple, List, Dict
+
+import aiofiles
 
 from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -518,3 +522,64 @@ class ABCOperation(ABC):
                     execution_order.append(op)
                     processed.add(op.name)
         return execution_order
+
+    async def save_to_disk(self, file_path: str):
+        """Save the ABCOperation object to disk."""
+
+        # Exclude non-serializable attributes and save task state
+        stripped_state = self._pack_non_serializable_attributes()
+        self._task_state = self._save_task_state()
+
+        async with aiofiles.open(file_path, 'wb') as file:
+            await file.write(pickle.dumps(self))
+
+    def _pack_non_serializable_attributes(self):
+        """Exclude non-serializable attributes before saving."""
+        _self_copy = deepcopy(self)
+        _self_copy._operation_control = None
+        _self_copy._logger = None
+        _self_copy._workspace = None
+        _self_copy._pause_event = None
+        return _self_copy
+
+    def _save_task_state(self):
+        """Save the state needed to recreate the task."""
+        if self._task:
+            return {
+                'func': self._func,
+                'status': self._status,
+                'progress': self._progress,
+                'result_output': self.result_output
+            }
+        return None
+
+    async def load_from_disk(file_path: str) -> 'ABCOperation':
+        """Load an ABCOperation object from disk."""
+        async with aiofiles.open(file_path, 'rb') as file:
+            data = await file.read()
+            operation = pickle.loads(data)
+            # Re-initialize excluded attributes
+            operation._reinitialize_non_serializable_attributes()
+            if operation._task_state:
+                await operation._recreate_task(operation._task_state)
+            return operation
+
+    def _reinitialize_non_serializable_attributes(self):
+        """Reinitialize attributes that were excluded during saving."""
+        from research_analytics_suite.data_engine.Workspace import Workspace
+        from research_analytics_suite.utils.CustomLogger import CustomLogger
+        from research_analytics_suite.operation_manager.OperationControl import OperationControl
+
+        self._workspace = Workspace()
+        self._logger = CustomLogger()
+        self._operation_control = OperationControl()
+        self._pause_event = asyncio.Event()
+        self._pause_event.set()
+
+    async def _recreate_task(self, task_state):
+        """Recreate the task from the saved state."""
+        self._func = task_state['func']
+        self._status = task_state['status']
+        self._progress = task_state['progress']
+        self.result_output = task_state['result_output']
+        self._task = asyncio.create_task(self.execute_func())

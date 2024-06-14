@@ -39,7 +39,7 @@ class OperationManager:
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
-    async def add_operation(self, operation_type, *args, **kwargs) -> ABCOperation:
+    async def add_operation(self, operation_type: type(ABCOperation), *args, **kwargs) -> ABCOperation:
         """
         Creates a new Operation and adds it to the queue.
 
