@@ -359,41 +359,92 @@ class ABCOperation(ABC):
         """Retrieve the result of the operation, if applicable."""
         return self.result_output
 
-    async def pause(self):
+    async def pause(self, child_operations=False):
         """
-        Pause the operation and all child operations.
+        Pause the operation and all child operations, if applicable.
         """
-        self._status = "paused"
-        await self._pause_child_operations()
+        if self._status == "running":
+            try:
+                self.is_ready = False
 
-    async def resume(self):
-        """
-        Resume the operation and all child operations.
-        """
-        self._status = "running"
-        await self._resume_child_operations()
+                if child_operations and self._child_operations is not None:
+                    await self._pause_child_operations()
 
-    async def stop(self):
-        """
-        Stop the operation and all child operations.
-        """
-        self._status = "stopped"
-        await self._stop_child_operations()
+                await self._pause_event.clear()
+                self._status = "paused"
+            except Exception as e:
+                self._handle_error(e)
+                return
+            finally:
+                self.add_log_entry(f"[PAUSE] {self.name}")
+        else:
+            self.add_log_entry(f"[PAUSE] {self.name} - Already paused")
 
-    async def reset(self):
+    async def resume(self, child_operations=False):
         """
-        Reset the operation and all child operations.
+        Resume the operation and all child operations, if applicable.
         """
-        self._status = "idle"
-        self._progress = 0
-        await self._reset_child_operations()
+        if self._status == "paused":
+            try:
+                self.is_ready = True
 
-    async def restart(self):
+                if child_operations and self._child_operations is not None:
+                    await self._resume_child_operations()
+                await self._pause_event.set()
+                self._status = "running"
+            except Exception as e:
+                self._handle_error(e)
+                return
+            self.add_log_entry(f"[RESUME] {self.name}")
+        else:
+            self.add_log_entry(f"[RESUME] {self.name} - Already running")
+
+    async def stop(self, child_operations=False):
         """
-        Restart the operation and all child operations.
+        Stop the operation and all child operations, if applicable.
         """
-        await self.reset()
-        await self.start()
+        if self._status == "running":
+            try:
+                self.is_ready = False
+
+                if child_operations and self._child_operations is not None:
+                    await self._stop_child_operations()
+                self._task.cancel()
+                self._status = "stopped"
+            except Exception as e:
+                self._handle_error(e)
+                return
+            self.add_log_entry(f"[STOP] {self.name}")
+        else:
+            self.add_log_entry(f"[STOP] {self.name} - Already stopped")
+
+    async def reset(self, child_operations=False):
+        """
+        Reset the operation and all child operations, if applicable.
+        """
+        self.is_ready = False
+
+        if (self._status == "running"
+                or self._status == "paused"
+                or self._status == "completed"
+                or self._status == "error"):
+            if child_operations and self._child_operations is not None:
+                await self._reset_child_operations()
+            await self.stop()
+            await self.start()
+            self._progress = 0
+            self.add_log_entry(f"[RESET] {self.name}")
+        else:
+            self.add_log_entry(f"[RESET] {self.name} - Already reset")
+
+    async def restart(self, child_operations=False):
+        """
+        Restart the operation and all child operations, if applicable.
+        """
+        self.is_ready = False
+        await self.reset(child_operations)
+
+        self.is_ready = True
         await self.execute()
 
     def is_running(self) -> bool:
@@ -464,6 +515,7 @@ class ABCOperation(ABC):
         self._child_operations.remove(operation)
         if operation.name in self._dependencies:
             del self._dependencies[operation.name]
+        self.add_log_entry(f"[CHILD] (removed) {operation.name}")
 
     def attach_gui_module(self, gui_module):
         """
@@ -538,7 +590,7 @@ class ABCOperation(ABC):
         """
         Pause all child operations.
         """
-        tasks = [op.pause() for op in self._child_operations]
+        tasks = [op.pause(True) for op in self._child_operations]
         await asyncio.gather(*tasks)
 
     async def _resume_child_operations(self):
@@ -649,5 +701,4 @@ class ABCOperation(ABC):
                 'dependencies': op_data._dependencies
             }
 
-            # operation._func = op_data.func  # Restore the function after loading
             return type(ABCOperation), args, kwargs

@@ -17,10 +17,10 @@ Status: Prototype
 import dask
 import dask.distributed
 
-from research_analytics_suite.operation_manager.operations.Operation import Operation
+from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 
 
-class DaskOperation(Operation):
+class DaskOperation(ABCOperation):
     """
     A class used to represent a Dask Operation in the Research Analytics Suite.
 

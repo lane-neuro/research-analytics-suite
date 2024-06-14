@@ -1,10 +1,10 @@
 from sklearn.model_selection import train_test_split
 
 from research_analytics_suite.machine_learning import Model
-from research_analytics_suite.operation_manager.operations.Operation import Operation
+from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 
 
-class MLTrainingOperation(Operation):
+class MLTrainingOperation(ABCOperation):
     def __init__(self, model: Model, data, target, test_size=0.2, random_state=42):
         super().__init__(func=None, name="MLTrainingOperation")
         self.model = model

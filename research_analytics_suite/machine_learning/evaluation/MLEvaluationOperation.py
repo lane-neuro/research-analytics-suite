@@ -1,8 +1,8 @@
 from research_analytics_suite.machine_learning import Evaluator
-from research_analytics_suite.operation_manager.operations.Operation import Operation
+from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 
 
-class MLEvaluationOperation(Operation):
+class MLEvaluationOperation(ABCOperation):
     def __init__(self, model, test_data, test_target):
         super().__init__(func=None, name="MLEvaluationOperation")
         self.model = model
