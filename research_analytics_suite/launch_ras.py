@@ -9,6 +9,7 @@ Author: Lane
 
 import argparse
 import asyncio
+import os.path
 
 from research_analytics_suite.data_engine.Config import Config
 from research_analytics_suite.data_engine.Workspace import Workspace
@@ -21,61 +22,111 @@ async def launch_ras():
     """
     Launches the Research Analytics Suite.
 
-    This function checks the command line arguments to determine whether to create a new project or open an existing
+    This function checks the command line arguments to determine whether to create a new workspace or open an existing
     one. It then initializes the asyncio event loop and starts the application.
 
     Raises:
         AssertionError: If no active project is open.
     """
     # Parse command line arguments, if any
-    args = launch_args().parse_args()
-    launch_tasks = []
+    _args = launch_args().parse_args()
+    _launch_tasks = []
 
     # Initialize the Config and Logger
-    config = Config()
-    await config.initialize()
+    _config = Config()
+    await _config.initialize()
 
-    logger = CustomLogger()
-    await logger.initialize()
+    _logger = CustomLogger()
+    await _logger.initialize()
 
-    operation_control = OperationControl()
-    await operation_control.initialize()
+    _operation_control = OperationControl()
+    await _operation_control.initialize()
 
     # Initialize new Workspace and Config
     _workspace = Workspace()
     await _workspace.initialize()
 
-    # Checks args for -o '--open_project' flag.
-    # If it exists, open the project from the file
-    if args.open_project is None:
-        logger.info('New Project Parameters Detected - Creating New Project')
-        data_engine = _workspace.create_project(args.directory, args.user_name, args.subject_name,
-                                                args.camera_framerate, args.file_list)
-    else:
-        logger.info('Project File Detected - Loading Project at: ' + args.open_project)
-        data_engine = await _workspace.load_workspace(args.open_project)
-
-    launch_tasks.append(operation_control.exec_loop())
-    gui_launcher = None
-
-    if args.gui is not None and args.gui.lower() == 'true':
+    # Checks args for -o '--open_workspace' flag.
+    # If it exists, open the workspace from the file
+    if _args.open_workspace is None and _args.config is None:
+        _logger.info('New Workspace Parameters Detected - Creating New Workspace')
         try:
-            gui_launcher = GuiLauncher(data_engine=data_engine)
-        except Exception as e:
-            logger.error(e)
-        finally:
-            launch_tasks.append(gui_launcher.setup_main_window())
+            if _args.directory is None:
+                _args.directory = os.path.expanduser(f"~/Research-Analytics-Suite/workspaces/")
+            os.makedirs(_args.directory, exist_ok=True)
 
-    logger.info("Launching RAS")
+            if _args.name is None:
+                _args.name = "default_workspace"
+                workspace_path = os.path.join(_args.directory, _args.name)
+                try:
+                    os.makedirs(workspace_path, exist_ok=False)
+                except FileExistsError:
+                    _logger.info(f"Workspace with name '{_args.name}' already exists in directory "
+                                 f"'{_args.directory}'... Finding next available workspace name...")
+                    i = 1
+                    while True:
+                        _args.name = f"default_workspace_{i}"
+                        workspace_path = os.path.join(_args.directory, _args.name)
+                        try:
+                            os.makedirs(workspace_path, exist_ok=False)
+                            break
+                        except FileExistsError:
+                            i += 1
+
+            else:
+                workspace_path = os.path.join(_args.directory, _args.name)
+                try:
+                    os.makedirs(workspace_path, exist_ok=False)
+                except FileExistsError:
+                    _logger.info(f"Workspace with name '{_args.name}' already exists in directory "
+                                 f"'{_args.directory}'... Finding next available workspace name...")
+                    i = 1
+                    while True:
+                        _args.name = f"{_args.name}_{i}"
+                        workspace_path = os.path.join(_args.directory, _args.name)
+                        try:
+                            os.makedirs(workspace_path, exist_ok=False)
+                            break
+                        except FileExistsError:
+                            i += 1
+
+            _logger.info('Creating New Workspace at: ' + os.path.join(_args.directory, _args.name))
+            _workspace = await _workspace.create_workspace(_args.directory, _args.name)
+        except Exception as e:
+            _logger.error(e)
+    else:
+        if _args.open_workspace is not None and _args.config is None:
+            _args.config = os.path.join(_args.open_workspace, 'config.json')
+        elif _args.open_workspace is None and _args.config is not None:
+            _args.open_workspace = os.path.dirname(_args.config)
+
+        if not os.path.exists(_args.open_workspace):
+            _logger.error(Exception(f"Workspace folder '{_args.open_workspace}' does not exist."))
+            return
+        _logger.info('Opening Existing Workspace at: ' + _args.open_workspace)
+        _workspace = await _workspace.load_workspace(_args.open_workspace)
+
+    _launch_tasks.append(_operation_control.exec_loop())
+    _gui_launcher = None
+
+    if _args.gui is not None and _args.gui.lower() == 'true':
+        try:
+            _gui_launcher = GuiLauncher()
+        except Exception as e:
+            _logger.error(e)
+        finally:
+            _launch_tasks.append(_gui_launcher.setup_main_window())
+
+    _logger.info("Launching RAS")
 
     try:
-        await asyncio.gather(*launch_tasks)
+        await asyncio.gather(*_launch_tasks)
     except Exception as e:
-        logger.error(e)
+        _logger.error(e)
     finally:
-        logger.info("Cleaning up...")
+        _logger.info("Cleaning up...")
         await _workspace.save_current_workspace()
-        logger.info("Exiting Research Analytics Suite...")
+        _logger.info("Exiting Research Analytics Suite...")
         asyncio.get_event_loop().close()
 
 
@@ -83,20 +134,28 @@ def launch_args():
     """
     Parses command line arguments for launching the Research Analytics Suite.
 
-    The arguments include options for opening an existing project, creating a new project, and specifying various
-    project parameters.
+    The arguments include options for opening an existing workspace, creating a new workspace, and specifying various
+    workspace parameters.
 
     Returns:
         argparse.ArgumentParser: The argument parser with the parsed command line arguments.
     """
-    parser = argparse.ArgumentParser()
+    _parser = argparse.ArgumentParser()
 
-    parser.add_argument('-g', '--gui', help='Launches the Research Analytics Suite GUI')
-    parser.add_argument('-o', '--open_project', help='Opens an existing project from the specified file')
-    parser.add_argument('-u', '--user_name', help='Name of user/experimenter')
-    parser.add_argument('-d', '--directory', help='Directory where project files will be located')
-    parser.add_argument('-s', '--subject_name', help='Name of the experimental subject (e.g., mouse, human, etc.)')
-    parser.add_argument('-f', '--file_list', help='List of files containing experimental data')
-    parser.add_argument('-c', '--camera_framerate', help='Camera Framerate')
+    # GUI argument
+    _parser.add_argument('-g', '--gui',
+                         help='Launches the Research Analytics Suite GUI')
 
-    return parser
+    # Open workspace arguments
+    _parser.add_argument('-o', '--open_workspace',
+                         help='Opens an existing workspace from the specified folder/directory')
+    _parser.add_argument('-c', '--config',
+                         help='Path to the configuration file for the workspace')
+
+    # New workspace arguments
+    _parser.add_argument('-d', '--directory',
+                         help='Directory where workspace files will be located')
+    _parser.add_argument('-n', '--name',
+                         help='Name of the new workspace')
+
+    return _parser

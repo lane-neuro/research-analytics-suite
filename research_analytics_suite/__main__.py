@@ -35,26 +35,22 @@ def main():
         asyncio.run(launch_ras())
 
     except KeyboardInterrupt:
-        print('Exiting Research Analytics Suite...')
+        print('Exiting Research Analytics Suite..')
 
     except Exception as e:
-        print(f"An error occurred: {e}")
-        print("Exiting Research Analytics Suite...")
+        print(f"Fatal error occurred: {e}")
 
     finally:
-        print("Cleaning up...")
+        print("Cleaning up..")
         asyncio.get_event_loop().close()
         sys.exit(0)
 
 
 if __name__ == '__main__':
     sys.argv = ['__main__.py',
-                '-o', "C:\\Users\\lane\\Documents\\RAS Workspaces\\default_workspace\\config.json",
                 '-g', 'True',
-                '-u', 'dev_test',
-                '-d', '..\\..\\RAS-test-output\\',
-                '-s', 'Mouse',
-                '-c', '60',
-                '-f', '..\\sample_datasets\\2024-Tariq-et-al_olfaction\\9-2-2021-4-07 PM-Mohammad-ETHSensor-CB5-28_'
-                      'reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv']
+                '-n', "dev-test",
+                # '-d', 'C:\\Users\\lane\\Research-Analytics-Suite\\workspaces',
+                # '-n', 'lane_dev'
+                ]
     main()

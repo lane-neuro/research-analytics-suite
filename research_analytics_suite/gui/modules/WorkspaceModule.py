@@ -78,7 +78,7 @@ class WorkspaceModule:
                 dpg.add_button(label="Load Workspace", callback=self.load_workspace)
                 dpg.add_separator()
                 dpg.add_text("Workspace Name:")
-                dpg.add_input_text(tag="workspace_name_input", default_value=self._config.WORKSPACE_NAME)
+                dpg.add_input_text(tag="workspace_name_input", default_value=self._config.WORKSPACE_NAME, enabled=False)
                 dpg.add_separator()
 
                 dpg.add_text("Save and Restore")

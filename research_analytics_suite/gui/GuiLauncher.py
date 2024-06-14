@@ -19,12 +19,8 @@ import os
 
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
-
-from research_analytics_suite.data_engine.DataEngineOptimized import DataEngineOptimized
 from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.gui.ConsoleDialog import ConsoleDialog
-from research_analytics_suite.gui.DataEngineDialog import DataEngineDialog
-from research_analytics_suite.gui.DataImportWizard import DataImportWizard
 from research_analytics_suite.gui.OperationManagerDialog import OperationManagerDialog
 from research_analytics_suite.gui.SettingsDialog import SettingsDialog
 from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
@@ -37,18 +33,14 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class GuiLauncher:
     """Class to launch the GUI for the Research Analytics Suite."""
 
-    def __init__(self, data_engine: DataEngineOptimized):
+    def __init__(self):
         """
         Initializes the GUI launcher with necessary components.
-
-        Args:
-            data_engine (DataEngineOptimized): The data engine for handling data operation.
         """
         self.timeline = None
         self.dpg_async = DearPyGuiAsync()
         self._logger = CustomLogger()
         self.operation_control = OperationControl()
-        self.data_engine = data_engine
         self.workspace = Workspace()
         self.visualization_dialog = None
         self.data_engine_dialog = None
@@ -87,7 +79,7 @@ class GuiLauncher:
                      # "visualize_data_pane",
                      # "manage_projects_pane",
                      # "reports_pane",
-                     "settings_pane",
+                     # "settings_pane",
                      "console_log_output_pane"]:
             dpg.configure_item(pane, show=False)
 
@@ -211,26 +203,12 @@ class GuiLauncher:
 
     async def setup_operation_pane(self) -> None:
         """Sets up the operations pane asynchronously."""
-        with dpg.group(parent="operation_pane", horizontal=True):
-            dpg.add_text("Operation Manager", parent="operation_pane")
-            self.create_operation_module.draw_button(label="Create New Operation", width=200, parent="operation_pane")
+        with dpg.group(parent="operation_pane", horizontal=True, tag="operation_group"):
+            dpg.add_text("Operation Manager", parent="operation_group")
+            self.create_operation_module.draw_button(label="Create New Operation", width=200, parent="operation_group")
 
-        self.operation_window = OperationManagerDialog()
-        await self.operation_window.initialize_dialog()
-
-    async def setup_data_engine_pane(self) -> None:
-        """Sets up the data engine pane asynchronously."""
-        with dpg.group(parent="import_data_pane"):
-            dpg.add_text("Data Engine")
-            self.data_engine_dialog = DataEngineDialog(self.data_engine)
-            await self.data_engine_dialog.initialize()
-
-    async def setup_data_import_wizard_pane(self) -> None:
-        """Sets up the data import wizard pane asynchronously."""
-        with dpg.group(parent="data_import_pane"):
-            dpg.add_text("Data Import Wizard")
-            self.data_import_wizard = DataImportWizard(self.data_engine)
-            await self.data_import_wizard.initialize()
+            self.operation_window = OperationManagerDialog()
+            await self.operation_window.initialize_dialog()
 
     async def setup_timeline_pane(self) -> None:
         """Sets up the timeline pane asynchronously."""

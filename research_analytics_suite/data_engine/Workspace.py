@@ -10,6 +10,7 @@ import asyncio
 import os
 import json
 import pickle
+from typing import LiteralString
 
 import aiofiles
 from collections import defaultdict
@@ -60,6 +61,11 @@ class Workspace:
             self._initialized = False
 
     async def initialize(self):
+        """
+        Initializes the workspace.
+
+        This method is called automatically when the workspace is first accessed.
+        """
         if not self._initialized:
             async with Workspace._lock:
                 if not self._initialized:
@@ -123,26 +129,33 @@ class Workspace:
         """
         return self._data_engines.get(name, None)
 
-    def create_project(self, project_directory, user_name, data_name, framerate, data_path):
+    async def create_workspace(self, workspace_directory, workspace_name):
         """
-        Creates a new project with the specified parameters.
+        Creates a new workspace with the specified parameters.
 
         Args:
-            project_directory (str): The directory where project files will be located.
-            user_name (str): The name of the user/experimenter.
-            data_name (str): The name of the data.
-            framerate (int): The framerate of the data.
-            data_path (str): The path to the data files.
+            workspace_directory (str): The directory where Workspace files will be located.
+            workspace_name (str): The name of the Workspace.
 
         Returns:
-            DataEngineOptimized: The initialized data engine for the new project.
+            Workspace: The newly created workspace
         """
+        self._config.BASE_DIR = workspace_directory
+        self._config.WORKSPACE_NAME = workspace_name
         data_engine = DataEngineOptimized()
         self.add_data_engine(data_engine=data_engine)
-        self._logger.info(f"Project created at {project_directory}")
-        return data_engine
+        self._logger.info(f"Workspace created at {workspace_directory}")
+        new_workspace = await self.save_current_workspace()
+        new_workspace = os.path.join(f"{new_workspace}", 'config.json')
+        return await self.load_workspace(new_workspace)
 
-    async def save_current_workspace(self):
+    async def save_current_workspace(self) -> LiteralString | str | bytes:
+        """
+        Saves the current workspace to the directory specified in the configuration.
+
+        Returns:
+            The path to the saved workspace directory.
+        """
         try:
             os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME),
                         exist_ok=True)
@@ -169,12 +182,25 @@ class Workspace:
             await self.save_user_variables(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
                                                         'user_variables.db'))
             self._logger.info(f"Workspace folder saved in directory:\t{self._config.BASE_DIR}")
+            return os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME)
 
         except Exception as e:
             self._logger.error(Exception(f"Failed to save current workspace: {e}"), self)
 
     async def load_workspace(self, workspace_path) -> 'Workspace':
+        """
+        Loads a workspace from the specified directory.
+
+        Args:
+            workspace_path: The path to the workspace directory.
+
+        Returns:
+            Workspace: The loaded workspace.
+        """
         try:
+            if not os.path.exists(workspace_path):
+                if os.path.exists(os.path.join(workspace_path, 'config.json')):
+                    workspace_path = os.path.join(workspace_path, 'config.json')
             self._config = await self._config.reload_from_file(workspace_path)
 
             workspace_path = os.path.dirname(workspace_path)
