@@ -8,8 +8,10 @@ Author: Lane
 """
 
 import asyncio
+import json
 import os
 
+import aiofiles
 import psutil
 
 
@@ -31,6 +33,7 @@ class Config:
             self.WORKSPACE_DIR = None
             self.BACKUP_DIR = None
             self.ENGINE_DIR = None
+            self.DISTRIBUTED = None
             self.MEMORY_LIMIT = None
             self.LOG_LEVEL = None
             self.LOG_FILE = None
@@ -72,16 +75,15 @@ class Config:
 
     def reset_to_defaults(self):
         # Workspace settings
-        self.WORKSPACE_NAME = "default_workspace"
-        self.BASE_DIR = os.path.abspath(os.path.join(os.path.expanduser('~'), 'Documents', 'RAS Workspaces',
-                                                     self.WORKSPACE_NAME))
+        self.WORKSPACE_NAME = 'default_workspace'
+        self.BASE_DIR = os.path.abspath(os.path.join(os.path.expanduser('~'), 'Documents', 'RAS Workspaces'))
 
         # Paths
-        self.DATA_DIR = os.path.join(self.BASE_DIR, 'data')
-        self.LOG_DIR = os.path.join(self.BASE_DIR, 'logs')
-        self.WORKSPACE_DIR = os.path.join(self.BASE_DIR, 'workspace')
-        self.BACKUP_DIR = os.path.join(self.BASE_DIR, 'backup')
-        self.ENGINE_DIR = os.path.join(self.BASE_DIR, 'engines')
+        self.DATA_DIR = 'data'
+        self.LOG_DIR = 'logs'
+        self.WORKSPACE_DIR = 'workspace'
+        self.BACKUP_DIR = 'backup'
+        self.ENGINE_DIR = 'engine'
 
         # Memory settings
         self.MEMORY_LIMIT = psutil.virtual_memory().total * 0.5  # 50% of available memory
@@ -93,6 +95,7 @@ class Config:
         self.LOG_RETENTION = '4 weeks'  # Retain logs for 4 weeks
 
         # Data engine settings
+        self.DISTRIBUTED = True
         self.CACHE_SIZE = 2e9  # 2GB cache size by default
         self.NUM_THREADS = 4  # Number of threads for processing
 
@@ -145,3 +148,12 @@ class Config:
     async def reload(self, new_config):
         for key, value in new_config.items():
             await self.update_setting(key, value)
+
+    async def reload_from_file(self, file_path):
+        async with aiofiles.open(file_path, 'r') as f:
+            await self.reload(json.loads(await f.read()))
+            return self
+
+    async def save_to_file(self, file_path):
+        async with aiofiles.open(file_path, 'w') as f:
+            await f.write(json.dumps(self.__dict__, indent=4))

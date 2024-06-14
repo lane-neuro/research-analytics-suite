@@ -8,14 +8,16 @@ Author: Lane
 """
 import json
 import os
+import pickle
 import uuid
 
+import aiofiles
 import dask.dataframe as dd
-import joblib
 import pandas as pd
 from torch.utils.data import DataLoader
 
 from research_analytics_suite.analytics.AnalyticsCore import AnalyticsCore
+from research_analytics_suite.data_engine.Config import Config
 from research_analytics_suite.data_engine.DaskData import DaskData
 from research_analytics_suite.data_engine.DataCache import DataCache
 from research_analytics_suite.data_engine.DataTypeDetector import DataTypeDetector
@@ -51,6 +53,7 @@ class UnifiedDataEngine:
         self.data_name = f"{data_name}_{uuid.uuid4()}" if data_name else f"data_{uuid.uuid4()}"
         self.backend = backend
         self._logger = CustomLogger()
+        self._config = Config()
         self.dask_client = dask_client  # Pointer to primary Dask client
         self.analytics = AnalyticsCore()  # Initialize AnalyticsCore Engine
         self.dask_data = DaskData(data)
@@ -111,44 +114,52 @@ class UnifiedDataEngine:
 
         self._logger.info("Data saved")
 
-    def save_engine(self, instance_path):
-        engine_path = os.path.join(instance_path, 'engines', self.engine_id)
+    async def save_engine(self, instance_path):
+        engine_path = os.path.join(instance_path, self._config.ENGINE_DIR, self.engine_id)
         os.makedirs(engine_path, exist_ok=True)
         data_path = os.path.join(instance_path, 'data')
         os.makedirs(data_path, exist_ok=True)
-        data_path = os.path.join(data_path, f"{self.data_name}.joblib")
+        data_file_path = os.path.join(data_path, f"{self.data_name}.joblib")
 
-        with open(data_path, 'wb') as data_file:
-            joblib.dump(self.data, data_file)
+        self._logger.info(f"Saving instance to {engine_path}")
 
+        # Save data
+        async with aiofiles.open(data_file_path, 'wb') as data_file:
+            await data_file.write(pickle.dumps(self.data))
+
+        # Save metadata
         metadata = {
             'data_name': self.data_name,
             'backend': self.backend,
             'engine_id': self.engine_id,
-
         }
-        with open(os.path.join(engine_path, 'metadata.json'), 'w') as metadata_file:
-            json.dump(metadata, metadata_file)
+        async with aiofiles.open(os.path.join(f"{engine_path}", "metadata.json"), 'wb') as metadata_file:
+            await metadata_file.write(pickle.dumps(metadata))
 
         # Save a pickleable state of the engine
         engine_state = self.__getstate__()
-        with open(os.path.join(engine_path, 'engine_state.joblib'), 'wb') as state_file:
-            joblib.dump(engine_state, state_file)
+        async with aiofiles.open(os.path.join(f"{engine_path}", 'engine_state.joblib'), 'wb') as state_file:
+            await state_file.write(pickle.dumps(engine_state))
 
         self._logger.info(f"Instance saved to {instance_path}")
 
     @staticmethod
-    def load_engine(instance_path, engine_id):
-        engine_path = os.path.join(instance_path, 'engines', engine_id)
-        with open(os.path.join(engine_path, 'metadata.json'), 'r') as metadata_file:
-            metadata = json.load(metadata_file)
+    async def load_engine(instance_path, engine_id):
+        engine_path = os.path.join(instance_path, 'engine', engine_id)
+
+        # Load metadata
+        async with aiofiles.open(os.path.join(f"{engine_path}", 'metadata.json'), 'rb') as metadata_file:
+            metadata = pickle.loads(await metadata_file.read())
 
         data_path = os.path.join(instance_path, 'data', f"{metadata['data_name']}.joblib")
-        with open(data_path, 'rb') as data_file:
-            data = joblib.load(data_file)
 
-        with open(os.path.join(engine_path, 'engine_state.joblib'), 'rb') as state_file:
-            engine_state = joblib.load(state_file)
+        # Load data
+        async with aiofiles.open(data_path, 'rb') as data_file:
+            data = pickle.loads(await data_file.read())
+
+        # Load engine state
+        async with aiofiles.open(os.path.join(f"{engine_path}", 'engine_state.joblib'), 'rb') as state_file:
+            engine_state = pickle.loads(await state_file.read())
 
         engine = UnifiedDataEngine()
         engine.__setstate__(engine_state)
@@ -228,8 +239,7 @@ class UnifiedDataEngine:
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self._logger = None
-        self.dask_client = None
+        self._logger = CustomLogger()
         self.live_input_source = None
 
     def cache_data(self, key, data):

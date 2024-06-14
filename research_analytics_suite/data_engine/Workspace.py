@@ -68,7 +68,8 @@ class Workspace:
                     self._data_cache = DataCache()
 
                     if self._db_path is None:
-                        self._db_path = os.path.join(self._config.BASE_DIR, 'user_variables.db')
+                        self._db_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
+                                                     'user_variables.db')
                         self._logger.info(f"Using default database path: {self._db_path}")
                     if self._storage_type == 'sqlite':
                         self._storage = SQLiteStorage(db_path=self._db_path)
@@ -136,49 +137,54 @@ class Workspace:
         Returns:
             DataEngineOptimized: The initialized data engine for the new project.
         """
-        data_engine = DataEngineOptimized(workspace=self)
+        data_engine = DataEngineOptimized()
         self.add_data_engine(data_engine=data_engine)
         self._logger.info(f"Project created at {project_directory}")
         return data_engine
 
     async def save_current_workspace(self):
         try:
-            os.makedirs(self._config.BASE_DIR, exist_ok=True)
-            os.makedirs(self._config.DATA_DIR, exist_ok=True)
-            os.makedirs(self._config.LOG_DIR, exist_ok=True)
-            os.makedirs(self._config.WORKSPACE_DIR, exist_ok=True)
-            os.makedirs(self._config.BACKUP_DIR, exist_ok=True)
-            os.makedirs(self._config.ENGINE_DIR, exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME),
+                        exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.DATA_DIR),
+                        exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.LOG_DIR),
+                        exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.WORKSPACE_DIR),
+                        exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.BACKUP_DIR),
+                        exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR),
+                        exist_ok=True)
 
             for engine_id, data_engine in self._data_engines.items():
-                engine_path = os.path.join(self._config.ENGINE_DIR, f'{engine_id}')
+                engine_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR,
+                                           engine_id)
                 os.makedirs(engine_path, exist_ok=True)
-                data_engine.save_engine(self._config.BASE_DIR)
+                await data_engine.save_engine(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME))
 
-            config_path = os.path.join(self._config.BASE_DIR, 'config.json')
-            async with aiofiles.open(config_path, 'w') as config_file:
-                await config_file.write(self._get_config_settings())
+            config_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'config.json')
+            await self._config.save_to_file(config_path)
 
-            await self.save_user_variables(os.path.join(self._config.BASE_DIR, 'user_variables.db'))
-            self._logger.info(f"Workspace saved at {self._config.BASE_DIR}")
+            await self.save_user_variables(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
+                                                        'user_variables.db'))
+            self._logger.info(f"Workspace folder saved in directory:\t{self._config.BASE_DIR}")
 
         except Exception as e:
             self._logger.error(Exception(f"Failed to save current workspace: {e}"), self)
 
     async def load_workspace(self, workspace_path) -> 'Workspace':
         try:
-            async with aiofiles.open(os.path.join(workspace_path), 'r') as config_file:
-                config = json.loads(await config_file.read())
+            self._config = await self._config.reload_from_file(workspace_path)
 
             workspace_path = os.path.dirname(workspace_path)
-            self.__dict__.clear()
-            workspace = Workspace(config.get('distributed', False))
+            workspace = Workspace(self._config.DISTRIBUTED)
 
-            for engine_id in os.listdir(os.path.join(workspace_path, 'engines')):
-                data_engine = UnifiedDataEngine.load_engine(workspace_path, engine_id)
+            for engine_id in os.listdir(os.path.join(workspace_path, f"{self._config.ENGINE_DIR}")):
+                data_engine = await UnifiedDataEngine.load_engine(workspace_path, engine_id)
                 workspace.add_data_engine(data_engine)
 
-            workspace._logger.info("Workspace loaded successfully")
+            await self.restore_user_variables(os.path.join(workspace_path, 'user_variables.db'))
             return workspace
         except Exception as e:
             self._logger.error(Exception(f"Failed to load workspace: {e}"), self)
@@ -265,16 +271,11 @@ class Workspace:
     async def save_user_variables(self, file_path):
         try:
             # Ensure the directory for the save file exists
-            save_directory = os.path.dirname(file_path)
-            os.makedirs(save_directory, exist_ok=True)
-
-            # Check if the save file exists, if not create it
-            if not os.path.exists(file_path):
-                async with aiofiles.open(file_path, 'w') as temp_file:
-                    await temp_file.write('')
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            user_vars = await self.user_variables.list_variables()
 
             async with aiofiles.open(file_path, 'wb') as dst:
-                await dst.write(pickle.dumps(await self.user_variables.list_variables()))
+                await dst.write(pickle.dumps(user_vars))
 
             self._logger.info(f"User variables saved to {file_path}")
 
@@ -286,13 +287,16 @@ class Workspace:
         Restores the user variables database from the specified save file.
 
         Args:
-            file_path (str): The path of the save file to restore from.
+            file_path: The path to the save file.
         """
         try:
             async with aiofiles.open(file_path, 'rb') as src:
                 variables = pickle.loads(await src.read())
                 for name, value in variables.items():
-                    await self.user_variables.add_variable(name, value)
+                    if 'memory_id' in value:
+                        await self.user_variables.add_variable(name, value['value'], memory_id=value['memory_id'])
+                    else:
+                        await self.user_variables.add_variable(name, value)
             self._logger.info(f"User variables restored from {file_path}")
         except Exception as e:
             self._logger.error(Exception(f"Failed to restore user variables: {e}"), self)

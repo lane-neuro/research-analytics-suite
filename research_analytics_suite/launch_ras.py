@@ -36,6 +36,7 @@ async def launch_ras():
     await config.initialize()
 
     logger = CustomLogger()
+    await logger.initialize()
 
     operation_control = OperationControl()
     await operation_control.initialize()

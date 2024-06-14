@@ -6,6 +6,8 @@ Research Analytics Suite.
 
 Author: Lane
 """
+import os
+
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.data_engine.Config import Config
@@ -22,8 +24,13 @@ class SettingsDialog:
         self._logger = CustomLogger()
         self._config = Config()
 
-    def show(self):
+    async def show(self):
         """Shows the settings dialog."""
+        if dpg.does_item_exist("settings_dialog"):
+            dpg.delete_item("settings_dialog")
+            self._config = await self._config.reload_from_file(os.path.join(self._config.BASE_DIR,
+                                                               self._config.WORKSPACE_NAME))
+
         with dpg.window(label="Settings", modal=True, tag="settings_dialog", width=500):
             dpg.add_text("Configuration Settings", color=(255, 255, 0))
 
@@ -52,6 +59,7 @@ class SettingsDialog:
             dpg.add_separator()
 
             # Data engine settings
+            dpg.add_checkbox(label="Distributed", default_value=self._config.DISTRIBUTED, tag="distributed")
             dpg.add_input_int(label="Cache Size", default_value=self._config.CACHE_SIZE, tag="cache_size")
             dpg.add_input_int(label="Number of Threads", default_value=self._config.NUM_THREADS, tag="num_threads")
 
@@ -137,6 +145,7 @@ class SettingsDialog:
         self._config.LOG_ROTATION = dpg.get_value("log_rotation")
         self._config.LOG_RETENTION = dpg.get_value("log_retention")
 
+        self._config.DISTRIBUTED = dpg.get_value("distributed")
         self._config.CACHE_SIZE = dpg.get_value("cache_size")
         self._config.NUM_THREADS = dpg.get_value("num_threads")
 

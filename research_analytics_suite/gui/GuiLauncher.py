@@ -61,15 +61,15 @@ class GuiLauncher:
         self.operation_window = None
         self.workspace_dialog = None
 
-    def setup_navigation_menu(self) -> None:
+    async def setup_navigation_menu(self) -> None:
         """Sets up the navigation menu on the left pane."""
         with dpg.group(parent="left_pane"):
             dpg.add_button(label="Operation Manager", callback=lambda: self.switch_pane("operation"))
-            dpg.add_button(label="Analyze Data", callback=lambda: self.switch_pane("analyze_data"))
-            dpg.add_button(label="Visualize Data", callback=lambda: self.switch_pane("visualize_data"))
-            dpg.add_button(label="Manage Projects", callback=lambda: self.switch_pane("manage_projects"))
-            dpg.add_button(label="Reports", callback=lambda: self.switch_pane("reports"))
-            dpg.add_button(label="Settings", callback=lambda: self.switch_pane("settings"))
+            # dpg.add_button(label="Analyze Data", callback=lambda: self.switch_pane("analyze_data"))
+            # dpg.add_button(label="Visualize Data", callback=lambda: self.switch_pane("visualize_data"))
+            # dpg.add_button(label="Manage Projects", callback=lambda: self.switch_pane("manage_projects"))
+            # dpg.add_button(label="Reports", callback=lambda: self.switch_pane("reports"))
+            # dpg.add_button(label="Settings", callback=lambda: self.switch_pane("settings"))
             dpg.add_button(label="Configuration", callback=self.settings_dialog.show)
             dpg.add_button(label="Console/Log", callback=lambda: self.switch_pane("console_log_output"))
             dpg.add_button(label="Exit", callback=dpg.stop_dearpygui)
@@ -82,8 +82,13 @@ class GuiLauncher:
             pane_name (str): The name of the pane to switch to.
         """
         # Hide all panes first
-        for pane in ["operation_pane", "analyze_data_pane", "visualize_data_pane",
-                     "manage_projects_pane", "reports_pane", "settings_pane", "console_log_output_pane"]:
+        for pane in ["operation_pane",
+                     # "analyze_data_pane",
+                     # "visualize_data_pane",
+                     # "manage_projects_pane",
+                     # "reports_pane",
+                     "settings_pane",
+                     "console_log_output_pane"]:
             dpg.configure_item(pane, show=False)
 
         # Show the selected pane
@@ -144,7 +149,7 @@ class GuiLauncher:
                         width=dpg.get_viewport_width(), height=dpg.get_viewport_height()):
             with dpg.group(horizontal=True, tag="main_pane", height=dpg.get_viewport_height() - 370):
                 with dpg.child_window(tag="left_pane", width=200):
-                    self.setup_navigation_menu()
+                    await self.setup_navigation_menu()
 
                 with dpg.child_window(tag="right_pane"):
                     await self.setup_panes()
@@ -168,20 +173,20 @@ class GuiLauncher:
         with dpg.child_window(tag="operation_pane", parent="right_pane", show=True):
             await self.setup_operation_pane()
 
-        with dpg.child_window(tag="analyze_data_pane", parent="right_pane", show=False):
-            await self.setup_data_analysis_pane()
-
-        with dpg.child_window(tag="visualize_data_pane", parent="right_pane", show=False):
-            await self.setup_visualization_pane()
-
-        with dpg.child_window(tag="manage_projects_pane", parent="right_pane", show=False):
-            dpg.add_text("Manage Projects Pane")
-
-        with dpg.child_window(tag="reports_pane", parent="right_pane", show=False):
-            dpg.add_text("Reports Pane")
-
-        with dpg.child_window(tag="settings_pane", parent="right_pane", show=False):
-            dpg.add_text("Settings Pane")
+        # with dpg.child_window(tag="analyze_data_pane", parent="right_pane", show=False):
+        #     await self.setup_data_analysis_pane()
+        #
+        # with dpg.child_window(tag="visualize_data_pane", parent="right_pane", show=False):
+        #     await self.setup_visualization_pane()
+        #
+        # with dpg.child_window(tag="manage_projects_pane", parent="right_pane", show=False):
+        #     dpg.add_text("Manage Projects Pane")
+        #
+        # with dpg.child_window(tag="reports_pane", parent="right_pane", show=False):
+        #     dpg.add_text("Reports Pane")
+        #
+        # with dpg.child_window(tag="settings_pane", parent="right_pane", show=False):
+        #     dpg.add_text("Settings Pane")
 
         with dpg.child_window(tag="console_log_output_pane", parent="right_pane", show=False):
             await self.setup_console_log_viewer_pane()

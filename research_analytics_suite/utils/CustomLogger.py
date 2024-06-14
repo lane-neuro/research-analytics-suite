@@ -37,24 +37,31 @@ class CustomLogger:
         """
         Initializes the CustomLogger with a specified log level.
         """
-        if not hasattr(self, '_logger'):
-            self._logger = logging.getLogger('RAS')
-            self._logger.setLevel(logging.INFO)
-            self.log_message_queue = asyncio.Queue()
+        if not hasattr(self, '_initialized'):
+            self._logger = None
+            self.log_message_queue = None
+            self._initialized = False
 
-            self.setup_logger()
-            self.info(f"[{self._logger.name}] CustomLogger initialized")
-
-    def setup_logger(self) -> None:
+    async def initialize(self) -> None:
         """
         Sets up the logger with a timestamp formatter and a stream handler.
         """
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter('[(%(asctime)s) %(name)s - %(levelname)s]: %(message)s',
-                                      datefmt='%Y-%m-%d %H:%M:%S')
-        handler.setFormatter(formatter)
-        self._logger.addHandler(handler)
-        self._logger.addFilter(self._log_message)
+        if not self._initialized:
+            async with CustomLogger._lock:
+                if not self._initialized:
+                    self._logger = logging.getLogger('RAS')
+                    self._logger.setLevel(logging.INFO)
+                    self.log_message_queue = asyncio.Queue()
+                    handler = logging.StreamHandler()
+                    formatter = logging.Formatter('[(%(asctime)s) %(name)s - %(levelname)s]: %(message)s',
+                                                  datefmt='%Y-%m-%d %H:%M:%S')
+
+                    handler.setFormatter(formatter)
+                    self._logger.addHandler(handler)
+                    self._logger.addFilter(self._log_message)
+
+                    self.info(f"[{self._logger.name}] CustomLogger initialized")
+                    self._initialized = True
 
     def _log_message(self, record: logging.LogRecord) -> bool:
         """

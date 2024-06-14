@@ -78,7 +78,7 @@ class WorkspaceModule:
                 dpg.add_button(label="Load Workspace", callback=self.load_workspace)
                 dpg.add_separator()
                 dpg.add_text("Workspace Name:")
-                dpg.add_input_text(tag="workspace_name_input", default_value="default_name")
+                dpg.add_input_text(tag="workspace_name_input", default_value=self._config.WORKSPACE_NAME)
                 dpg.add_separator()
 
                 dpg.add_text("Save and Restore")
@@ -86,9 +86,9 @@ class WorkspaceModule:
                 dpg.add_button(label="Save User Variables", callback=self.save_user_variables)
                 dpg.add_button(label="Restore User Variables", callback=self.restore_user_variables)
                 dpg.add_separator()
-                dpg.add_text("File Path:")
+                dpg.add_text("Filename:")
                 dpg.add_input_text(tag="save_path_input",
-                                   default_value=os.path.join(self._config.BASE_DIR, 'user_variables.db'), width=-1)
+                                   default_value=os.path.join('user_variables.db'), width=-1)
 
     async def update_user_variables_list(self) -> None:
         """Updates the user variables list in the GUI."""
@@ -162,7 +162,8 @@ class WorkspaceModule:
     async def save_user_variables(self) -> None:
         """Backups the user variables."""
         try:
-            save_path = dpg.get_value("save_path_input")
+            save_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
+                                     dpg.get_value("save_path_input"))
             await self._workspace.save_user_variables(save_path)
             self._logger.debug(f"User variables saved to {save_path}")
         except Exception as e:
@@ -171,9 +172,10 @@ class WorkspaceModule:
     async def restore_user_variables(self) -> None:
         """Restores the user variables."""
         try:
-            save_path = dpg.get_value("save_path_input")
-            await self._workspace.restore_user_variables(save_path)
-            self._logger.debug(f"User variables restored from {save_path}")
+            restore_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
+                                        dpg.get_value("save_path_input"))
+            await self._workspace.restore_user_variables(restore_path)
+            self._logger.debug(f"User variables restored from {restore_path}")
         except Exception as e:
             self._logger.error(Exception(f"Failed to restore user variables: {e}", self))
 

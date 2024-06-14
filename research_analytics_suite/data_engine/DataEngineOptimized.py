@@ -25,22 +25,24 @@ class DataEngineOptimized(UnifiedDataEngine):
         memory_limit (float): Memory limit for caching, in bytes.
         workspace (Workspace): Workspace instance for managing saving and loading workspaces.
     """
-    def __init__(self, workspace, data=None):
+    def __init__(self, data=None):
         """
         Initializes the DataEngineOptimized instance.
 
         Args:
             data: The initial data for the data engine.
-            workspace (Workspace): Workspace instance for managing saving and loading workspaces.
         """
         super().__init__(data=data)
         self._logger = CustomLogger()
+
+        from research_analytics_suite.data_engine.Workspace import Workspace
+        self.workspace = Workspace()
+
         self._config = Config()
 
         self.cache = DataCache(self._config.CACHE_SIZE)
         self.cache.register()
         self.memory_limit = self._config.MEMORY_LIMIT
-        self.workspace = workspace
 
         self.live_data_handler = LiveDataHandler(data_engine=self)
 
