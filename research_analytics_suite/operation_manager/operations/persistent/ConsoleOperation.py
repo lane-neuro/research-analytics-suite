@@ -35,8 +35,13 @@ class ConsoleOperation(ABCOperation):
         """
         self._prompt = kwargs.pop("prompt", "Enter a command: ")
         self._user_input_manager = kwargs.pop("user_input_manager")
+        kwargs["name"] = "sys_ConsoleOperation"
 
-        super().__init__(*args, **kwargs, name="sys_ConsoleOperation")
+        super().__init__(*args, **kwargs)
+
+    async def initialize_operation(self) -> None:
+        """Initializes the operation."""
+        await super().initialize_operation()
         self.is_ready = True
 
     async def execute(self) -> None:

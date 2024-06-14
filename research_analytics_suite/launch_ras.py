@@ -55,8 +55,6 @@ async def launch_ras():
         try:
             # Set default directory if not specified
             # TODO: Ensure to accomodate all operating systems (e.g. ~ for Unix, %UserProfile% for Windows)
-            if _args.directory is None:
-                _args.directory = os.path.expanduser(f"~/Research-Analytics-Suite/workspaces/")
 
             # Create the directory if it doesn't exist
             try:
@@ -80,7 +78,7 @@ async def launch_ras():
                     # Find the next available workspace name
                     i = 1
                     while True:
-                        _args.name = f"default_workspace_{i}"
+                        _args.name = f"{_args.name}_{i}"
                         workspace_path = os.path.join(_args.directory, _args.name)
                         try:
                             os.makedirs(workspace_path, exist_ok=False)
@@ -119,12 +117,18 @@ async def launch_ras():
             _args.config = os.path.join(f"{_args.open_workspace}", 'config.json')
         elif _args.open_workspace is None and _args.config is not None:
             _args.open_workspace = os.path.dirname(_args.config)
+            if _args.open_workspace is None or _args.open_workspace == "":
+                _args.open_workspace = os.path.expanduser(f"~/Research-Analytics-Suite/workspaces/")
 
-        if not os.path.exists(_args.open_workspace):
+        if not os.path.exists(f"{_args.directory}/{_args.open_workspace}"):
             _logger.error(Exception(f"Workspace folder '{_args.open_workspace}' does not exist."))
             return
-        _logger.info('Opening Existing Workspace at: ' + f"{_args.open_workspace}")
-        _workspace = await _workspace.load_workspace(_args.open_workspace)
+        _logger.info('Opening Existing Workspace at: ' + f"{_args.directory}/{_args.open_workspace}")
+
+        try:
+            _workspace = await _workspace.load_workspace(f"{_args.directory}/{_args.open_workspace}")
+        except Exception as e:
+            _logger.error(e)
 
     # Initialize the OperationControl and GUI Launcher
     _launch_tasks.append(_operation_control.exec_loop())
@@ -167,7 +171,7 @@ def launch_args():
 
     # GUI argument
     _parser.add_argument('-g', '--gui',
-                         help='Launches the Research Analytics Suite GUI')
+                         help='Launches the Research Analytics Suite GUI', default='True')
 
     # Open workspace arguments
     _parser.add_argument('-o', '--open_workspace',
@@ -177,7 +181,8 @@ def launch_args():
 
     # New workspace arguments
     _parser.add_argument('-d', '--directory',
-                         help='Directory where workspace files will be located')
+                         help='Directory where workspace files will be located',
+                         default=os.path.expanduser(f"~/Research-Analytics-Suite/workspaces/"))
     _parser.add_argument('-n', '--name',
                          help='Name of the new workspace')
 

@@ -48,7 +48,6 @@ def main():
 
 if __name__ == '__main__':
     sys.argv = ['__main__.py',
-                '-g', 'True',
-                '-n', "lane_dev",
+                '-o', "lane_dev",
                 ]
     main()

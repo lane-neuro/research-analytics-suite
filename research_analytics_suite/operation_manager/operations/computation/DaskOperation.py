@@ -61,11 +61,11 @@ class DaskOperation(Operation):
             raise ValueError("client must be an instance of dask.distributed.Client")
         self._client = value
 
-    def init_operation(self):
+    async def initialize_operation(self):
         """
         Initialize any resources or setup required for the Dask operation before it starts.
         """
-        super().init_operation()
+        await super().initialize_operation()
         if self._client is None:
             self._client = dask.distributed.Client()
 

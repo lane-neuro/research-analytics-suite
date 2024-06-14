@@ -77,7 +77,7 @@ class Config:
     def reset_to_defaults(self):
         # Workspace settings
         self.WORKSPACE_NAME = 'default_workspace'
-        self.BASE_DIR = os.path.abspath(os.path.join(os.path.expanduser('~'), 'Documents', 'RAS Workspaces'))
+        self.BASE_DIR = os.path.abspath(os.path.join(os.path.expanduser('~'), 'Research-Analytics-Suite'))
 
         # Paths
         self.DATA_DIR = 'data'
@@ -147,9 +147,10 @@ class Config:
         else:
             raise AttributeError(f"Config has no attribute '{key}'")
 
-    async def reload(self, new_config):
+    async def reload(self, new_config) -> 'Config':
         for key, value in new_config.items():
             await self.update_setting(key, value)
+        return self
 
     async def reload_from_file(self, file_path):
         async with aiofiles.open(file_path, 'r') as f:

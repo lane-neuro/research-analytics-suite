@@ -40,8 +40,8 @@ class ResourceMonitorOperation(ABCOperation):
         """
         self.cpu_threshold = kwargs.pop("cpu_threshold", 90)
         self.memory_threshold = kwargs.pop("memory_threshold", 95)
-
-        super().__init__(*args, **kwargs, name="sys_ResourceMonitorOperation", func=self.execute)
+        kwargs["name"] = "sys_ResourceMonitorOperation"
+        kwargs["func"] = self.execute
 
         self.cpu_usage = 0
         self.total_memory_usage = 0
@@ -50,6 +50,11 @@ class ResourceMonitorOperation(ABCOperation):
         self.process = psutil.Process(os.getpid())
         self.profiler = cProfile.Profile()
         self.profiler.enable()
+
+        super().__init__(*args, **kwargs)
+
+    async def initialize_operation(self) -> None:
+        await super().initialize_operation()
         self.is_ready = True
 
     async def execute(self) -> None:

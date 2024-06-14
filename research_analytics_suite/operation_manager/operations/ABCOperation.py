@@ -1,16 +1,18 @@
 # abc_operation.py
 
 import asyncio
+import os.path
 import pickle
 import types
 import uuid
 from abc import ABC
 from concurrent.futures import ProcessPoolExecutor
-from copy import deepcopy
+from copy import copy
 from typing import Tuple, List, Dict
 
 import aiofiles
 
+from research_analytics_suite.data_engine.Config import Config
 from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -19,38 +21,42 @@ class ABCOperation(ABC):
     """
     An abstract base class that defines a common interface for all operations.
     """
+    _lock = asyncio.Lock()
 
     def __init__(self, *args, **kwargs):
         """
         Initialize the operation instance.
         """
-        self._workspace = Workspace()
-        self._logger = CustomLogger()
+        if not hasattr(self, '_initialized'):
+            self.temp_args = args
+            self.temp_kwargs = kwargs
 
-        from research_analytics_suite.operation_manager.OperationControl import OperationControl
-        self._operation_control = OperationControl()
+            self._workspace = None
+            self._logger = None
+            self._config = None
+            self._operation_control = None
+            self._pause_event = None
+            self._gui_module = None
 
-        self.operation_logs = []
+            self.operation_logs = None
 
-        self._name = kwargs.get('name', "Operation")
-        self._unique_id = f"{uuid.uuid4().hex[:8]}"
-        self._func = kwargs.get('func')
-        self._persistent = kwargs.get('persistent', False)
-        self._is_cpu_bound = kwargs.get('is_cpu_bound', False)
-        self._status = "idle"
-        self._task = None
-        self._progress = 0
-        self._pause_event = asyncio.Event()
-        self._pause_event.set()
-        self._is_ready = False
+            self._name = None
+            self._unique_id = f"{uuid.uuid4().hex[:8]}"
+            self._func = None
+            self._persistent = None
+            self._is_cpu_bound = None
+            self._status = None
+            self._task = None
+            self._progress = None
+            self._is_ready = None
 
-        self._parent_operation = kwargs.get('parent_operation', None)
-        self._child_operations: List['ABCOperation'] = []
-        self._concurrent = kwargs.get('concurrent', False)
-        self._gui_module = None
-        self.result_output = dict()
+            self._parent_operation = None
+            self._child_operations: List['ABCOperation'] = []
+            self._concurrent = None
+            self.result_output = dict()
 
-        self._dependencies: Dict[str, List[str]] = {}
+            self._dependencies: Dict[str, List[str]] = {}
+            self._initialized = False
 
     @property
     def unique_id(self) -> str:
@@ -177,10 +183,6 @@ class ABCOperation(ABC):
         """Sets the GUI module attached to the operation."""
         self._gui_module = value
 
-    def init_operation(self):
-        """Initialize any resources or setup required for the operation before it starts."""
-        pass
-
     @property
     def is_ready(self):
         """Check if the operation is ready to be executed."""
@@ -199,7 +201,7 @@ class ABCOperation(ABC):
 
         self._is_ready = True
         for child in self._child_operations:
-            if not child.is_complete() and not child._concurrent:
+            if not child.is_complete() and not child.concurrent:
                 self._is_ready = False
 
     async def _process_func(self):
@@ -209,25 +211,78 @@ class ABCOperation(ABC):
         try:
             if isinstance(self._func, str):  # If self._func is a string of code
                 code = self._func
-                self._func = lambda: exec(code, {}, self.result_output)
+                self._func = self._execute_code_func(code)
                 self.add_log_entry(f"[CODE] {code}")
             elif callable(self._func):  # If self._func is a callable function
                 if isinstance(self._func, types.MethodType):  # If self._func is a bound method
                     self._func = self._func
                 else:
                     t_func = self._func
-                    self._func = lambda: t_func()
+                    self._func = self._execute_callable_func(t_func)
             else:
                 self._handle_error(Exception("Invalid function type"))
         except Exception as e:
             self._handle_error(e)
+
+    def _execute_code_func(self, code):
+        def func():
+            exec(code, {}, self.result_output)
+
+        return func
+
+    def _execute_callable_func(self, t_func):
+        def func():
+            t_func()
+
+        return func
+
+    async def initialize_operation(self):
+        """Initialize any resources or setup required for the operation before it starts."""
+        if hasattr(self, '_initialized') and not self._initialized:
+            async with ABCOperation._lock:
+                if not self._initialized:
+                    self._workspace = Workspace()
+                    self._config = Config()
+                    self._logger = CustomLogger()
+
+                    from research_analytics_suite.operation_manager.OperationControl import OperationControl
+                    self._operation_control = OperationControl()
+
+                    self._pause_event = asyncio.Event()
+                    self._pause_event.set()
+
+                    self._gui_module = None
+
+                    self.operation_logs = self.temp_kwargs.get('operation_logs', [])
+
+                    self._name = self.temp_kwargs.get('name', "Operation")
+                    self._func = self.temp_kwargs.get('func')
+                    self._persistent = self.temp_kwargs.get('persistent', False)
+                    self._is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', False)
+                    self._status = "idle"
+                    self._task = None
+                    self._progress = 0
+                    self._is_ready = False
+
+                    self._parent_operation = self.temp_kwargs.get('parent_operation', None)
+                    self._child_operations: List['ABCOperation'] = self.temp_kwargs.get('child_operations', [])
+                    self._concurrent = self.temp_kwargs.get('concurrent', False)
+                    self.result_output = self.temp_kwargs.get('result_output', dict())
+
+                    self._dependencies: Dict[str, List[str]] = self.temp_kwargs.get('dependencies', {})
+
+                    self.add_log_entry(f"[INIT] {self._name}")
+                    self._initialized = True
+
+                    # Clean up temporary attributes
+                    delattr(self, 'temp_args')
+                    delattr(self, 'temp_kwargs')
 
     async def start(self):
         """
         Start the operation and all child operations.
         """
         try:
-            await self._process_func()
             await self._start_child_operations()
             self._status = "started"
         except Exception as e:
@@ -238,6 +293,7 @@ class ABCOperation(ABC):
         Execute the operation and all child operations.
         """
         try:
+            await self._process_func()
             await self.execute_child_operations()
             await self._run_operations([self])
             if not self._persistent:
@@ -523,63 +579,75 @@ class ABCOperation(ABC):
                     processed.add(op.name)
         return execution_order
 
-    async def save_to_disk(self, file_path: str):
+    async def save_operation_in_workspace(self, file_name: str):
         """Save the ABCOperation object to disk."""
 
-        # Exclude non-serializable attributes and save task state
+        if file_name is None:
+            file_name = self._name
+
+        # Exclude non-serializable attributes
         stripped_state = self._pack_non_serializable_attributes()
-        self._task_state = self._save_task_state()
+        dir_path = (f"{self._config.BASE_DIR}/{self._config.WORKSPACE_NAME}/"
+                    f"{self._config.WORKSPACE_OPERATIONS_DIR}")
+        file_ext = f".pkl"
+
+        os.makedirs(dir_path, exist_ok=True)
+
+        if os.path.exists(f"{dir_path}/{file_name}{file_ext}"):
+            # Find the next available workspace name
+            i = 1
+            while True:
+                file_name = f"{self.name}-{i}"
+                if not os.path.exists(f"{dir_path}/{file_name}{file_ext}"):
+                    break
+                i += 1
+
+        file_path = f"{dir_path}/{file_name}{file_ext}"
 
         async with aiofiles.open(file_path, 'wb') as file:
-            await file.write(pickle.dumps(self))
+            await file.write(pickle.dumps(stripped_state))
 
     def _pack_non_serializable_attributes(self):
         """Exclude non-serializable attributes before saving."""
-        _self_copy = deepcopy(self)
+        _self_copy = copy(self)
         _self_copy._operation_control = None
         _self_copy._logger = None
         _self_copy._workspace = None
         _self_copy._pause_event = None
+        _self_copy._gui_module = None
+        _self_copy._config = None
+        _self_copy._lock = None
+        _self_copy._task = None
+        # _self_copy._func = None  # Set to None or dummy function
+        _self_copy.__delattr__('_initialized')
         return _self_copy
 
-    def _save_task_state(self):
-        """Save the state needed to recreate the task."""
-        if self._task:
-            return {
-                'func': self._func,
-                'status': self._status,
-                'progress': self._progress,
-                'result_output': self.result_output
-            }
-        return None
-
-    async def load_from_disk(file_path: str) -> 'ABCOperation':
+    @staticmethod
+    async def load_from_disk(file_path: str):
         """Load an ABCOperation object from disk."""
         async with aiofiles.open(file_path, 'rb') as file:
             data = await file.read()
-            operation = pickle.loads(data)
-            # Re-initialize excluded attributes
-            operation._reinitialize_non_serializable_attributes()
-            if operation._task_state:
-                await operation._recreate_task(operation._task_state)
-            return operation
+            op_data = pickle.loads(data)
 
-    def _reinitialize_non_serializable_attributes(self):
-        """Reinitialize attributes that were excluded during saving."""
-        from research_analytics_suite.data_engine.Workspace import Workspace
-        from research_analytics_suite.utils.CustomLogger import CustomLogger
-        from research_analytics_suite.operation_manager.OperationControl import OperationControl
+            args = {}
 
-        self._workspace = Workspace()
-        self._logger = CustomLogger()
-        self._operation_control = OperationControl()
-        self._pause_event = asyncio.Event()
-        self._pause_event.set()
+            # Create a kwargs dictionary with all attributes from op_data
+            kwargs = {
+                'operation_logs': op_data.operation_logs,
+                'name': op_data._name,
+                'unique_id': op_data._unique_id,
+                'func': op_data._func,
+                'persistent': op_data._persistent,
+                'is_cpu_bound': op_data._is_cpu_bound,
+                'status': op_data._status,
+                'progress': op_data._progress,
+                'is_ready': op_data._is_ready,
+                'parent_operation': op_data._parent_operation,
+                'child_operations': op_data._child_operations,
+                'concurrent': op_data._concurrent,
+                'result_output': op_data.result_output,
+                'dependencies': op_data._dependencies
+            }
 
-    async def _recreate_task(self, task_state):
-        """Recreate the task from the saved state."""
-        self._func = task_state['func']
-        self._status = task_state['status']
-        self._progress = task_state['progress']
-        self.result_output = task_state['result_output']
-        self._task = asyncio.create_task(self.execute_func())
+            # operation._func = op_data.func  # Restore the function after loading
+            return type(ABCOperation), args, kwargs

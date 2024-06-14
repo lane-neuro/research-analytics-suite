@@ -205,6 +205,8 @@ class Workspace:
             if not os.path.exists(workspace_path):
                 if os.path.exists(os.path.join(workspace_path, 'config.json')):
                     workspace_path = os.path.join(workspace_path, 'config.json')
+            else:
+                workspace_path = os.path.join(workspace_path, 'config.json')
             self._config = await self._config.reload_from_file(workspace_path)
 
             workspace_path = os.path.dirname(workspace_path)

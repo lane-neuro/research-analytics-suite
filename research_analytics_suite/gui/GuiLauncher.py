@@ -47,8 +47,6 @@ class GuiLauncher:
         self.data_import_wizard = None
         self.real_time_data_visualization = None
         self.settings_dialog = SettingsDialog()
-        self.create_operation_module = CreateOperationModule(height=400, width=800,
-                                                             parent_operation=None)
         self.console = None
         self.operation_window = None
         self.workspace_dialog = None
@@ -204,9 +202,6 @@ class GuiLauncher:
     async def setup_operation_pane(self) -> None:
         """Sets up the operations pane asynchronously."""
         with dpg.group(parent="operation_pane", horizontal=True, tag="operation_group"):
-            dpg.add_text("Operation Manager", parent="operation_group")
-            self.create_operation_module.draw_button(label="Create New Operation", width=200, parent="operation_group")
-
             self.operation_window = OperationManagerDialog()
             await self.operation_window.initialize_dialog()
 

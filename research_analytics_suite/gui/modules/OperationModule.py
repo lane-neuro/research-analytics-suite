@@ -228,6 +228,9 @@ class OperationModule:
                                         label="Results", num_items=3, items=["Results unavailable."])
                         dpg.add_separator()
                         dpg.add_button(label="View Result", callback=self.view_result, width=-1)
+                        dpg.add_separator()
+                        dpg.add_button(label="Save Operation", callback=self._operation.save_operation_in_workspace,
+                                       width=-1)
 
     def dict_to_listbox_items(self, dictionary) -> list[str]:
         """Converts a dictionary to a list of strings for use in a listbox."""

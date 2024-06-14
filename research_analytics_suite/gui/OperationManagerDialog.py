@@ -15,10 +15,12 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
-import uuid
 from typing import Optional, Any
 
 import dearpygui.dearpygui as dpg
+
+from research_analytics_suite.data_engine.Config import Config
+from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
 from research_analytics_suite.gui.modules.OperationModule import OperationModule
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
@@ -42,6 +44,9 @@ class OperationManagerDialog:
         """
         self.window = dpg.add_group(label="Operation Manager", parent="operation_pane", tag="operation_gallery",
                                     horizontal=False)
+        self.create_operation_module = CreateOperationModule(height=400, width=800,
+                                                             parent_operation=None)
+        self._config = Config()
         self.operation_control = OperationControl()
         self._logger = CustomLogger()
         self.operation_items = {}  # Store operation GUI items
@@ -65,6 +70,10 @@ class OperationManagerDialog:
     async def initialize_dialog(self) -> None:
         """Initializes the operation manager dialog by adding the update operation."""
         self.update_operation = await self.add_update_operation()
+        dpg.add_text("Operation Manager", parent="operation_group")
+        self.create_operation_module.draw_button(label="Create New Operation", width=200, parent="operation_group")
+        dpg.add_button(label="Load Operation from File", width=200, parent="operation_group",
+                       callback=self.load_operation)
         dpg.set_viewport_resize_callback(self.on_resize)
 
     async def add_update_operation(self) -> Optional[Any]:
@@ -117,6 +126,46 @@ class OperationManagerDialog:
                                             parent=self.current_row_group, tag=tag)
         self._logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
         self.operation_items[operation].draw(parent=tag)
+
+    def load_operation(self, sender: str, data: dict) -> None:
+        """Loads operations from a file."""
+        if dpg.does_item_exist("selected_file"):
+            dpg.delete_item("selected_file")
+
+        with dpg.file_dialog(show=True,
+                             default_path=f"{self._config.BASE_DIR}/{self._config.WORKSPACE_NAME}/"
+                                          f"{self._config.WORKSPACE_OPERATIONS_DIR}",
+                             callback=self.load_operation_callback, tag="selected_file",
+                             width=500, height=500, modal=True):
+            dpg.add_file_extension(".pkl", color=(255, 255, 255, 255))
+
+    def load_operation_callback(self, sender: str, data: dict) -> None:
+        """
+        Callback function for loading operations from a file.
+
+        Args:
+            sender (str): The sender of the event.
+            data (dict): The data associated with the event.
+        """
+        asyncio.run(self._load_operation(data))
+
+    async def _load_operation(self, data: dict) -> None:
+        """
+        Loads the operation from the selected file asynchronously.
+
+        Args:
+            data (dict): The data associated with the event.
+        """
+        _file_path = data["file_path_name"]
+        if not _file_path:
+            self._logger.error(Exception("No file selected."), self)
+            return
+
+        self._logger.info(f"Loading operation from file: {_file_path}")
+
+        _operation, _args, _kargs = await ABCOperation.load_from_disk(_file_path)
+        await self.operation_control.operation_manager.add_operation(operation_type=ABCOperation, *(_args or ()),
+                                                                     **(_kargs or {}))
 
     def on_resize(self, sender: str, data: dict) -> None:
         """

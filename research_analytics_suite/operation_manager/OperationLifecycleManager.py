@@ -51,13 +51,13 @@ class OperationLifecycleManager:
                 while current_node is not None:
                     operation = current_node.operation
                     if operation.status == "idle":
-                        operation.init_operation()
+                        await operation.initialize_operation()
                         await operation.start()
                     current_node = current_node.next_node
             else:
                 operation = operation_chain.operation
                 if operation.status == "idle":
-                    operation.init_operation()
+                    await operation.initialize_operation()
                     await operation.start()
 
     async def stop_all_operations(self):
