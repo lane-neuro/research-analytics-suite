@@ -14,7 +14,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import aioconsole
-
+import sys
 from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
 
 
@@ -51,7 +51,14 @@ class ConsoleOperation(ABCOperation):
 
         while self.concurrent and self.persistent:  # Loop until a specific user input is received
             try:
-                user_input = await aioconsole.ainput(self._prompt)  # Read user input
+                if 'ipykernel' in sys.modules:
+                    # Jupyter Notebook environment
+                    print(self._prompt)
+                    user_input = input()  # Use standard input in Jupyter Notebook
+                else:
+                    # Standard terminal environment
+                    user_input = await aioconsole.ainput(self._prompt)  # Read user input asynchronously
+
                 user_input = user_input.strip()  # strip newline
 
                 if user_input == "":  # Check for empty input
@@ -64,6 +71,9 @@ class ConsoleOperation(ABCOperation):
                     break
 
                 await self._user_input_manager.process_user_input(user_input)
+            except EOFError:
+                self._handle_error("EOFError: No input provided")
+                break
             except UnicodeDecodeError as e:  # Catch specific exception
                 self._handle_error(e)
             except Exception as e:  # Catch all other exceptions
