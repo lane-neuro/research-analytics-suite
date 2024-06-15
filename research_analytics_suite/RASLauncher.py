@@ -6,8 +6,6 @@ for parsing command line arguments and launching the application.
 
 Author: Lane
 """
-
-import argparse
 import asyncio
 import os.path
 
@@ -16,9 +14,10 @@ from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.gui.GuiLauncher import GuiLauncher
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
 from research_analytics_suite.utils.CustomLogger import CustomLogger
+from research_analytics_suite.utils.launch_args import get_launch_args
 
 
-async def launch_ras():
+async def RASLauncher():
     """
     Launches the Research Analytics Suite.
 
@@ -29,22 +28,27 @@ async def launch_ras():
         AssertionError: If no active project is open.
     """
     # Parse command line arguments, if any
-    _args = launch_args().parse_args()
+    _args = get_launch_args().parse_args()
     _launch_tasks = []
+    _gui_launcher = None
 
-    # Initialize the Config, Logger, and OperationControl
+    # Initialize Configuration class
     _config = Config()
     await _config.initialize()
 
+    # Initialize Logging class
     _logger = CustomLogger()
     await _logger.initialize()
 
+    # Initialize OperationControl class
     _operation_control = OperationControl()
     await _operation_control.initialize()
 
-    # Initialize Workspace
+    # Initialize Workspace class
     _workspace = Workspace()
     await _workspace.initialize()
+
+    _launch_tasks.append(_operation_control.exec_loop())
 
     # Checks args for -o '--open_workspace' flag and -c '--config' flag
     # If -o flag is present, but -c flag is not, set the config path to the open_workspace path
@@ -66,11 +70,11 @@ async def launch_ras():
             # Set default name if not specified
             if _args.name is None:
                 _args.name = "default_workspace"
-                workspace_path = os.path.join(_args.directory, _args.name)
+                _workspace_path = os.path.join(_args.directory, _args.name)
 
                 # Check if the workspace already exists
                 try:
-                    os.makedirs(workspace_path, exist_ok=False)
+                    os.makedirs(_workspace_path, exist_ok=False)
                 except FileExistsError:
                     _logger.info(f"Workspace with name '{_args.name}' already exists in directory "
                                  f"'{_args.directory}'... Finding next available workspace name...")
@@ -79,18 +83,18 @@ async def launch_ras():
                     i = 1
                     while True:
                         _args.name = f"{_args.name}_{i}"
-                        workspace_path = os.path.join(_args.directory, _args.name)
+                        _workspace_path = os.path.join(_args.directory, _args.name)
                         try:
-                            os.makedirs(workspace_path, exist_ok=False)
+                            os.makedirs(_workspace_path, exist_ok=False)
                             break
                         except FileExistsError:
                             i += 1
 
             # Create the new workspace based on the directory and name
             else:
-                workspace_path = os.path.join(_args.directory, _args.name)
+                _workspace_path = os.path.join(_args.directory, _args.name)
                 try:
-                    os.makedirs(workspace_path, exist_ok=False)
+                    os.makedirs(_workspace_path, exist_ok=False)
                 except FileExistsError:
                     _logger.info(f"Workspace with name '{_args.name}' already exists in directory "
                                  f"'{_args.directory}'... Finding next available workspace name...")
@@ -98,9 +102,9 @@ async def launch_ras():
                     _name_base = _args.name
                     while True:
                         _name_attempt = f"{_name_base}_{i}"
-                        workspace_path = os.path.join(_args.directory, _name_attempt)
+                        _workspace_path = os.path.join(_args.directory, _name_attempt)
                         try:
-                            os.makedirs(workspace_path, exist_ok=False)
+                            os.makedirs(_workspace_path, exist_ok=False)
                             _args.name = _name_attempt
                             break
                         except FileExistsError:
@@ -130,10 +134,6 @@ async def launch_ras():
         except Exception as e:
             _logger.error(e)
 
-    # Initialize the OperationControl and GUI Launcher
-    _launch_tasks.append(_operation_control.exec_loop())
-    _gui_launcher = None
-
     # Launch the GUI if specified
     if _args.gui is not None and _args.gui.lower() == 'true':
         try:
@@ -155,35 +155,3 @@ async def launch_ras():
         await _workspace.save_current_workspace()
         _logger.info("Exiting Research Analytics Suite...")
         asyncio.get_event_loop().close()
-
-
-def launch_args():
-    """
-    Parses command line arguments for launching the Research Analytics Suite.
-
-    The arguments include options for opening an existing workspace, creating a new workspace, and specifying various
-    workspace parameters.
-
-    Returns:
-        argparse.ArgumentParser: The argument parser with the parsed command line arguments.
-    """
-    _parser = argparse.ArgumentParser()
-
-    # GUI argument
-    _parser.add_argument('-g', '--gui',
-                         help='Launches the Research Analytics Suite GUI', default='True')
-
-    # Open workspace arguments
-    _parser.add_argument('-o', '--open_workspace',
-                         help='Opens an existing workspace from the specified folder/directory')
-    _parser.add_argument('-c', '--config',
-                         help='Path to the configuration file for the workspace')
-
-    # New workspace arguments
-    _parser.add_argument('-d', '--directory',
-                         help='Directory where workspace files will be located',
-                         default=os.path.expanduser(f"~/Research-Analytics-Suite/workspaces/"))
-    _parser.add_argument('-n', '--name',
-                         help='Name of the new workspace')
-
-    return _parser

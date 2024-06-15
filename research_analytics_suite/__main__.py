@@ -17,7 +17,7 @@ import sys
 
 import nest_asyncio
 
-from research_analytics_suite.launch_ras import launch_ras
+from research_analytics_suite.RASLauncher import RASLauncher
 
 
 def main():
@@ -32,7 +32,7 @@ def main():
         nest_asyncio.apply()
 
         # Run the Research Analytics Suite
-        asyncio.run(launch_ras())
+        asyncio.run(RASLauncher())
 
     except KeyboardInterrupt:
         print('Exiting Research Analytics Suite..')
