@@ -1,9 +1,9 @@
 """
-ProjectManagerDialog Module.
+ProjectManagerDialog
 
-This module defines the ProjectManagerDialog class, which is responsible for managing the dialog for creating, loading, 
-and saving projects within the research analytics suite. It initializes the project manager dialog, handles 
-project creation, loading, and saving operations, and provides the necessary GUI elements.
+This module defines the ProjectManagerDialog class, which is responsible for managing the Project Management tools and
+their GUI representation within the research analytics suite. It handles the initialization and updates the
+GUI accordingly.
 
 Author: Lane
 Copyright: Lane
@@ -14,100 +14,59 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-import asyncio
 
 import dearpygui.dearpygui as dpg
-
-from research_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
-from research_analytics_suite.operation_manager.OperationControl import OperationControl
+from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class ProjectManagerDialog:
-    """A class to manage the dialog for creating, loading, and saving projects."""
+    """A class to manage Project Management tools and their GUI representation."""
 
-    def __init__(self, data_engine: UnifiedDataEngine):
+    def __init__(self, width: int, height: int):
         """
-        Initializes the ProjectManagerDialog with the given data engine and operations control.
-
-        Args:
-            data_engine (DataEngine): Instance to manage project data.
-        """
-        self.window = dpg.add_window(label="Project Manager")
-        dpg.add_button(label="Create Project", callback=self.create_project_wrapper, parent=self.window)
-        dpg.add_button(label="Load Project", callback=self.load_project_wrapper, parent=self.window)
-        dpg.add_button(label="Save Project", callback=self.save_project_wrapper, parent=self.window)
-        self.data_engine = data_engine
-        self.operation_control = OperationControl()
-
-    async def create_project(self, sender: str, data: dict) -> None:
-        """
-        Creates a new project.
+        Initializes the ManageProjectDialog with the given width and height.
 
         Args:
-            sender (str): The sender of the create project event.
-            data (dict): Additional application data.
+            width (int): The width of the dialog.
+            height (int): The height of the dialog.
         """
-        print("Creating a new project...")
-        await asyncio.sleep(3)
+        self.width = width
+        self.height = height
+        self._logger = CustomLogger()
 
-    async def load_project(self, sender: str, data: dict) -> None:
-        """
-        Loads an existing project.
+    def draw(self, parent):
+        """Draws the GUI elements for the Project Management section."""
+        with dpg.group(parent=parent):
+            dpg.add_text("Project Management Tools", parent=parent)
 
-        Args:
-            sender (str): The sender of the load project event.
-            data (dict): Additional application data.
-        """
-        file_path = dpg.open_file_dialog(directory='.', extensions='.json')
-        if file_path:
-            # self.data_engine = load_project(file_path[0])
-            print(f"Loaded project from {file_path[0]}")
+            with dpg.group(horizontal=True):
+                dpg.add_button(label="Task Management", callback=self.show_task_management)
+                dpg.add_button(label="Team Collaboration", callback=self.show_team_collaboration)
+                dpg.add_button(label="Progress Tracking", callback=self.show_progress_tracking)
+                dpg.add_button(label="Risk Management", callback=self.show_risk_management)
+                dpg.add_button(label="Budget Tracking", callback=self.show_budget_tracking)
+                dpg.add_button(label="Documentation", callback=self.show_documentation)
 
-    async def save_project(self, sender: str, data: dict) -> None:
-        """
-        Saves the current project.
+    def show_task_management(self, sender, app_data, user_data):
+        """Displays the Task Management section."""
+        self._logger.info("Task Management clicked")
 
-        Args:
-            sender (str): The sender of the save project event.
-            data (dict): Additional application data.
-        """
-        if self.data_engine:
-            file_path = dpg.save_file_dialog(directory='.', extensions='.json')
-            if file_path:
-                # save_project(self.data_engine, file_path[0])
-                print(f"Saved project to {file_path[0]}")
-        else:
-            print("No project to save")
+    def show_team_collaboration(self, sender, app_data, user_data):
+        """Displays the Team Collaboration section."""
+        self._logger.info("Team Collaboration clicked")
 
-    def create_project_wrapper(self, sender: str, data: dict) -> None:
-        """
-        Wrapper to create a project operations.
+    def show_progress_tracking(self, sender, app_data, user_data):
+        """Displays the Progress Tracking section."""
+        self._logger.info("Progress Tracking clicked")
 
-        Args:
-            sender (str): The sender of the create project event.
-            data (dict): Additional application data.
-        """
-        # CreateProjectOperation(self.data_engine)
-        pass
+    def show_risk_management(self, sender, app_data, user_data):
+        """Displays the Risk Management section."""
+        self._logger.info("Risk Management clicked")
 
-    def load_project_wrapper(self, sender: str, data: dict) -> None:
-        """
-        Wrapper to load a project operations.
+    def show_budget_tracking(self, sender, app_data, user_data):
+        """Displays the Budget Tracking section."""
+        self._logger.info("Budget Tracking clicked")
 
-        Args:
-            sender (str): The sender of the load project event.
-            data (dict): Additional application data.
-        """
-        # LoadProjectOperation(self.data_engine)
-        pass
-
-    def save_project_wrapper(self, sender: str, data: dict) -> None:
-        """
-        Wrapper to save a project operations.
-
-        Args:
-            sender (str): The sender of the save project event.
-            data (dict): Additional application data.
-        """
-        # SaveProjectOperation(self.data_engine)
-        pass
+    def show_documentation(self, sender, app_data, user_data):
+        """Displays the Documentation section."""
+        self._logger.info("Documentation clicked")

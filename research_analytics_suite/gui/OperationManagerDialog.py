@@ -42,8 +42,8 @@ class OperationManagerDialog:
         Args:
             container_width (int): Initial width of the container.
         """
-        self.window = dpg.add_group(label="Operation Manager", parent="operation_pane", tag="operation_gallery",
-                                    horizontal=False)
+        self.window = dpg.add_group(parent="right_pane", tag="operation_gallery",
+                                    horizontal=True)
         self.create_operation_module = CreateOperationModule(height=400, width=800,
                                                              parent_operation=None)
         self._config = Config()
@@ -70,9 +70,9 @@ class OperationManagerDialog:
     async def initialize_dialog(self) -> None:
         """Initializes the operation manager dialog by adding the update operation."""
         self.update_operation = await self.add_update_operation()
-        dpg.add_text("Operation Manager", parent="operation_group")
-        self.create_operation_module.draw_button(label="Create New Operation", width=200, parent="operation_group")
-        dpg.add_button(label="Load Operation from File", width=200, parent="operation_group",
+        dpg.add_text("Operation Manager", parent="right_pane")
+        self.create_operation_module.draw_button(label="Create New Operation", width=200, parent="right_pane")
+        dpg.add_button(label="Load Operation from File", width=200, parent="right_pane",
                        callback=self.load_operation)
         dpg.set_viewport_resize_callback(self.on_resize)
 
