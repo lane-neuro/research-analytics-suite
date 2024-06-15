@@ -2,7 +2,7 @@
 OperationExecutor Module.
 
 This module defines the OperationExecutor class, which is responsible for executing operations within the
-research analytics suite. It handles the execution of ready operations in the queue and manages their status
+research analytics suite. It handles the execution of ready operations in the sequencer and manages their status
 and logging.
 
 Author: Lane
@@ -27,22 +27,22 @@ class OperationExecutor:
     """
     A class to execute operations within the research analytics suite.
 
-    This class manages the execution of ready operations in the queue, ensuring that they are run and their statuses
+    This class manages the execution of ready operations in the sequencer, ensuring that they are run and their statuses
     are updated accordingly.
     """
 
-    def __init__(self, queue, task_creator):
+    def __init__(self, sequencer, task_creator):
         """
         Initializes the OperationExecutor with the necessary components.
 
         Args:
-            queue: Queue holding operations to be executed.
+            sequencer: Sequencer holding operations to be executed.
             task_creator: Task creator for generating asyncio tasks.
         """
         from research_analytics_suite.operation_manager.OperationControl import OperationControl
         self.op_control = OperationControl()
 
-        self.queue = queue
+        self.sequencer = sequencer
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
@@ -65,21 +65,21 @@ class OperationExecutor:
 
     async def execute_ready_operations(self) -> None:
         """
-        Executes ready operations in the queue.
+        Executes ready operations in the sequencer.
 
-        This method iterates over the operations in the queue, checks their readiness, and executes them asynchronously.
+        This method iterates over the operations in the sequencer, checks their readiness, and executes them asynchronously.
         It waits for all operations to complete before returning.
 
         Raises:
             Exception: If an exception occurs during the execution of an operation, it is caught and handled by the
             ErrorHandler instance.
         """
-        self._logger.debug("OperationControl: Queue Size: " + str(self.queue.size()))
+        self._logger.debug("OperationControl: Sequencer Size: " + str(self.sequencer.size()))
 
-        # Create a copy of the queue for iteration
-        queue_copy = set(self.queue.queue)
+        # Create a copy of the sequencer for iteration
+        sequencer_copy = set(self.sequencer.sequencer)
 
-        for operation_chain in queue_copy:
+        for operation_chain in sequencer_copy:
             chain_operations = set()
             if isinstance(operation_chain, OperationChain):
                 for node in operation_chain:

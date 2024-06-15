@@ -31,7 +31,7 @@ class WorkspaceModule:
         self._operation_control = OperationControl()
         self.width = width
         self._user_vars_width = int(self.width * 0.6)
-        self._management_width = int(self.width * 0.31)
+        self._management_width = int(self.width * 0.20)
         self.height = height
         self.update_operation = None
         self.unique_id = str(uuid.uuid4())
@@ -63,13 +63,6 @@ class WorkspaceModule:
     async def setup_workspace_pane(self) -> None:
         """Sets up the workspace pane asynchronously."""
         with dpg.group(tag="workspace_pane_group", horizontal=True, parent="workspace_group"):
-            with dpg.child_window(label="User Variables",
-                                  tag="user_variables_pane",
-                                  width=self._user_vars_width,
-                                  border=True, parent="workspace_pane_group"):
-                dpg.add_button(label="Add User Variable", callback=self.open_add_var_dialog)
-                dpg.add_group(tag=self.user_var_list_id)  # Create the group for user variables list
-
             with dpg.child_window(tag="workspace_management_pane", width=self._management_width, border=True,
                                   parent="workspace_pane_group"):
                 dpg.add_text("Workspace Details")
@@ -89,6 +82,13 @@ class WorkspaceModule:
                 dpg.add_text("Filename:")
                 dpg.add_input_text(tag="save_path_input",
                                    default_value=os.path.join('user_variables.db'), width=-1)
+
+            with dpg.child_window(label="User Variables",
+                                  tag="user_variables_pane",
+                                  width=self._user_vars_width,
+                                  border=True, parent="workspace_pane_group"):
+                dpg.add_button(label="Add User Variable", callback=self.open_add_var_dialog)
+                dpg.add_group(tag=self.user_var_list_id)  # Create the group for user variables list
 
     async def update_user_variables_list(self) -> None:
         """Updates the user variables list in the GUI."""

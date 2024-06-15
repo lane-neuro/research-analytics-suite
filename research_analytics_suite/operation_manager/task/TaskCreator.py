@@ -23,15 +23,15 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class TaskCreator:
     """Handles the creation and scheduling of tasks."""
 
-    def __init__(self, queue):
+    def __init__(self, sequencer):
         """
         Initializes the TaskCreator with the given logger.
 
         Args:
-            queue: The queue to which tasks are added.
+            sequencer: The sequencer to which tasks are added.
         """
         self.task_counter = TaskCounter()
-        self.queue = queue
+        self.sequencer = sequencer
         self._logger = CustomLogger()
 
         self.tasks = set()
@@ -48,7 +48,7 @@ class TaskCreator:
         """
         return (any(isinstance(task, operation_type) and task.status in ["running", "started"] for task in self.tasks)
                 or any(isinstance(operation_chain.head.operation, operation_type) for operation_chain in
-                       self.queue.queue))
+                       self.sequencer.sequencer))
 
     def create_task(self, coro, name):
         """

@@ -2,7 +2,7 @@
 OperationControl Module
 
 This module defines the OperationControl class, which is responsible for managing and executing operations in the
-queue. It integrates various components like the operations queue, manager, operation_executor, and checker to manage the
+sequencer. It integrates various components like the operations sequencer, manager, operation_executor, and checker to manage the
 lifecycle of operations.
 
 Author: Lane
@@ -21,7 +21,7 @@ from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.operation_manager.OperationExecutor import OperationExecutor
 from research_analytics_suite.operation_manager.OperationLifecycleManager import OperationLifecycleManager
 from research_analytics_suite.operation_manager.OperationManager import OperationManager
-from research_analytics_suite.operation_manager.OperationQueue import OperationQueue
+from research_analytics_suite.operation_manager.OperationSequencer import OperationSequencer
 from research_analytics_suite.operation_manager.OperationStatusChecker import OperationStatusChecker
 from research_analytics_suite.operation_manager.PersistentOperationChecker import PersistentOperationChecker
 from research_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
@@ -50,7 +50,7 @@ class OperationControl:
             self.workspace = None
             self.console_operation_in_progress = False
 
-            self.queue = None
+            self.sequencer = None
             self.task_creator = None
             self.task_monitor = None
 
@@ -79,18 +79,18 @@ class OperationControl:
                     self.main_loop = asyncio.get_event_loop()
                     self.console_operation_in_progress = False
 
-                    self.queue = OperationQueue()
-                    self.task_creator = TaskCreator(queue=self.queue)
-                    self.task_monitor = TaskMonitor(task_creator=self.task_creator, queue=self.queue)
+                    self.sequencer = OperationSequencer()
+                    self.task_creator = TaskCreator(sequencer=self.sequencer)
+                    self.task_monitor = TaskMonitor(task_creator=self.task_creator, sequencer=self.sequencer)
 
-                    self.operation_manager = OperationManager(queue=self.queue, task_creator=self.task_creator)
-                    self.operation_executor = OperationExecutor(queue=self.queue, task_creator=self.task_creator)
-                    self.operation_status_checker = OperationStatusChecker(queue=self.queue)
+                    self.operation_manager = OperationManager(sequencer=self.sequencer, task_creator=self.task_creator)
+                    self.operation_executor = OperationExecutor(sequencer=self.sequencer, task_creator=self.task_creator)
+                    self.operation_status_checker = OperationStatusChecker(sequencer=self.sequencer)
                     self.user_input_manager = UserInputManager()
                     self.persistent_operation_checker = PersistentOperationChecker(operation_manager=self.operation_manager,
-                                                                                   queue=self.queue,
+                                                                                   sequencer=self.sequencer,
                                                                                    task_creator=self.task_creator)
-                    self.lifecycle_manager = OperationLifecycleManager(queue=self.queue,
+                    self.lifecycle_manager = OperationLifecycleManager(sequencer=self.sequencer,
                                                                        operation_manager=self.operation_manager,
                                                                        executor=self.operation_executor,
                                                                        task_monitor=self.task_monitor,

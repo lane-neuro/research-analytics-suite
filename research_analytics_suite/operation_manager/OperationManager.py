@@ -21,27 +21,27 @@ class OperationManager:
     """
     A class to manage operations within the research analytics suite.
 
-    This class provides methods to add operations to the queue, and to resume, pause, and stop operations.
+    This class provides methods to add operations to the sequencer, and to resume, pause, and stop operations.
     """
 
-    def __init__(self, queue, task_creator):
+    def __init__(self, sequencer, task_creator):
         """
         Initializes the OperationManager with the necessary components.
 
         Args:
-            queue: Queue holding operations to be managed.
+            sequencer: Sequencer holding operations to be managed.
             task_creator: Task creator for generating asyncio tasks.
         """
         from research_analytics_suite.operation_manager.OperationControl import OperationControl
         self.op_control = OperationControl()
 
-        self.queue = queue
+        self.sequencer = sequencer
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
     async def add_operation(self, operation_type, *args, **kwargs) -> ABCOperation:
         """
-        Creates a new Operation and adds it to the queue.
+        Creates a new Operation and adds it to the sequencer.
 
         Args:
             operation_type: The type of operation to be created.
@@ -54,8 +54,8 @@ class OperationManager:
         try:
             operation = operation_type(*args, **kwargs)
             await operation.initialize_operation()
-            await self.queue.add_operation_to_queue(operation)
-            operation.add_log_entry(f"[QUEUE] {operation.name}")
+            await self.sequencer.add_operation_to_sequencer(operation)
+            operation.add_log_entry(f"[SEQ] {operation.name}")
 
             if operation.parent_operation is not None:
                 await operation.parent_operation.add_child_operation(operation)
@@ -66,7 +66,7 @@ class OperationManager:
 
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> ABCOperation:
         """
-        Adds an operation to the queue if it does not already exist.
+        Adds an operation to the sequencer if it does not already exist.
 
         Args:
             operation_type: The type of operation to be created.

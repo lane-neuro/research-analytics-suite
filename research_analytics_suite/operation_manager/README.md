@@ -78,11 +78,11 @@ The 'operation_manager' package orchestrates and manages data processing operati
 The `operation_manager` module within the Research Analytics Suite (RAS) is designed to manage and orchestrate various data processing operations. The primary components and responsibilities of the module include:
 
 - **OperationManager**: Manages the creation, queuing, and control of operations. It provides methods to add, resume, pause, and stop operations.
-- **OperationExecutor**: Handles the execution of operations in the queue and manages their status and logging.
-- **OperationQueue**: Manages a queue of operations, providing methods to add, remove, move, and retrieve operations, ensuring efficient management and execution.
+- **OperationExecutor**: Handles the execution of operations in the sequencer and manages their status and logging.
+- **OperationSequencer**: Manages a sequencer of operations, providing methods to add, remove, move, and retrieve operations, ensuring efficient management and execution.
 - **OperationChain**: Manages a chain of operations, allowing adding, removing, counting, and iterating over operations.
 - **OperationNode**: Represents a node in an operation chain, containing an operation and a reference to the next node.
-- **OperationStatusChecker**: Checks the status of operations, providing methods to get the status of specific or all operations in the queue.
+- **OperationStatusChecker**: Checks the status of operations, providing methods to get the status of specific or all operations in the sequencer.
 - **PersistentOperationChecker**: Manages and checks persistent operations, ensuring that necessary operations like `ConsoleOperation` and `ResourceMonitorOperation` are running.
 - **OperationLifecycleManager**: Manages the overall lifecycle of operations, handling starting, stopping, pausing, and resuming operations.
 

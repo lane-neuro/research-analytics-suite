@@ -20,7 +20,7 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class TimelineModule:
     """A class to manage a multi-layered timeline interface for reordering OperationModule instances."""
 
-    def __init__(self, operation_queue, width: int, height: int):
+    def __init__(self, operation_sequencer, width: int, height: int):
         self.window = dpg.add_group(label="Timeline", parent="bottom_pane_group", tag="timeline_manager",
                                     horizontal=False)
         self._logger = CustomLogger()
@@ -28,7 +28,7 @@ class TimelineModule:
         self.update_operation = None
         self.width = width
         self.height = height
-        self.operation_queue = operation_queue
+        self.operation_sequencer = operation_sequencer
         self.unique_id = str(uuid4())
         self.dragging_operation = None
         self.operation_elements = {}
@@ -52,10 +52,10 @@ class TimelineModule:
             dpg.add_child_window(tag=self.unique_id, border=True, width=self.width,
                                  parent="timeline_manager")
 
-        dpg.add_button(label="Print Queue", callback=self.operation_queue.print_queue, parent=self.unique_id)
+        dpg.add_button(label="Print Sequencer", callback=self.operation_sequencer.print_sequencer, parent=self.unique_id)
 
         while True:
-            for layer_index, operation_chain in enumerate(self.operation_queue.queue):
+            for layer_index, operation_chain in enumerate(self.operation_sequencer.sequencer):
                 for idx, node in enumerate(operation_chain):
                     if not node.operation.name.startswith("gui_") and not node.operation.name.startswith("sys_"):
                         self.update_operation_element(node.operation, layer_index, idx)
@@ -79,15 +79,15 @@ class TimelineModule:
     def reorder_operations(self, layer_index: int, operation: ABCOperation, new_index: int) -> None:
         if self.dragging_operation:
             dragged_operation, _ = self.dragging_operation
-            operation_chain = self.operation_queue.queue[layer_index]
+            operation_chain = self.operation_sequencer.sequencer[layer_index]
             if operation_chain.contains(dragged_operation):
-                self.operation_queue.move_operation(dragged_operation, new_index)
+                self.operation_sequencer.move_operation(dragged_operation, new_index)
             self.dragging_operation = None
             # Update UI after reordering
             self.update_all_elements()
 
     def update_all_elements(self) -> None:
-        for layer_index, operation_chain in enumerate(self.operation_queue.queue):
+        for layer_index, operation_chain in enumerate(self.operation_sequencer.sequencer):
             for idx, node in enumerate(operation_chain):
                 if not node.operation.name.startswith("gui_") and not node.operation.name.startswith("sys_"):
                     self.update_operation_element(node.operation, layer_index, idx)

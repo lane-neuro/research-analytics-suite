@@ -18,7 +18,7 @@ import asyncio
 
 from research_analytics_suite.operation_manager.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.OperationExecutor import OperationExecutor
-from research_analytics_suite.operation_manager.OperationQueue import OperationQueue
+from research_analytics_suite.operation_manager.OperationSequencer import OperationSequencer
 from research_analytics_suite.operation_manager.task.TaskMonitor import TaskMonitor
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -26,17 +26,17 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class OperationLifecycleManager:
     """Manages the lifecycle of operations."""
 
-    def __init__(self, queue: OperationQueue, operation_manager, executor: OperationExecutor,
+    def __init__(self, sequencer: OperationSequencer, operation_manager, executor: OperationExecutor,
                  persistent_op_checker, task_monitor: TaskMonitor):
         """
         Initializes the OperationLifecycleManager with the given parameters.
 
         Args:
-            queue: The operations queue.
+            sequencer: The operations sequencer.
             operation_manager: The operations manager.
             executor: The operations operation_executor.
         """
-        self.queue = queue
+        self.sequencer = sequencer
         self.operation_manager = operation_manager
         self.operation_executor = executor
         self.persistent_operation_checker = persistent_op_checker
@@ -44,8 +44,8 @@ class OperationLifecycleManager:
         self._logger = CustomLogger()
 
     async def start_all_operations(self):
-        """Starts all operations in the queue."""
-        for operation_chain in self.queue.queue:
+        """Starts all operations in the sequencer."""
+        for operation_chain in self.sequencer.sequencer:
             if isinstance(operation_chain, OperationChain):
                 current_node = operation_chain.head
                 while current_node is not None:
@@ -61,8 +61,8 @@ class OperationLifecycleManager:
                     await operation.start()
 
     async def stop_all_operations(self):
-        """Stops all operations in the queue."""
-        for operation_node in self.queue.queue:
+        """Stops all operations in the sequencer."""
+        for operation_node in self.sequencer.sequencer:
             if isinstance(operation_node, OperationChain):
                 current_node = operation_node.head
                 while current_node is not None:
@@ -72,15 +72,15 @@ class OperationLifecycleManager:
                 await self.operation_manager.stop_operation(operation_node)
 
     async def resume_all_operations(self):
-        """Resumes all paused operations in the queue."""
-        for operation_list in self.queue.queue:
-            operation = self.queue.get_head_operation_from_chain(operation_list)
+        """Resumes all paused operations in the sequencer."""
+        for operation_list in self.sequencer.sequencer:
+            operation = self.sequencer.get_head_operation_from_chain(operation_list)
             await self.operation_manager.resume_operation(operation)
 
     async def pause_all_operations(self):
-        """Pauses all operations in the queue."""
-        for operation_list in self.queue.queue:
-            operation = self.queue.get_head_operation_from_chain(operation_list)
+        """Pauses all operations in the sequencer."""
+        for operation_list in self.sequencer.sequencer:
+            operation = self.sequencer.get_head_operation_from_chain(operation_list)
             await self.operation_manager.pause_operation(operation)
 
     async def exec_loop(self):

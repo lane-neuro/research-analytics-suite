@@ -96,8 +96,8 @@ class OperationManagerDialog:
     async def display_operations(self) -> None:
         """Continuously checks for new operations and displays them in the GUI."""
         while True:
-            queue_copy = set(self.operation_control.queue.queue)
-            for operation_chain in queue_copy:
+            sequencer_copy = set(self.operation_control.sequencer.sequencer)
+            for operation_chain in sequencer_copy:
                 for node in operation_chain:
                     if (node.operation not in self.operation_items
                             and node.operation.name != "gui_OperationUpdateTask"

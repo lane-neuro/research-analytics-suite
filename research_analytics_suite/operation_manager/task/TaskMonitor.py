@@ -21,16 +21,16 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class TaskMonitor:
     """Monitors and manages tasks."""
 
-    def __init__(self, task_creator, queue):
+    def __init__(self, task_creator, sequencer):
         """
         Initializes the TaskMonitor with the given parameters.
 
         Args:
             task_creator: The task creator.
-            queue: The operations queue.
+            sequencer: The operations sequencer.
         """
         self.task_creator = task_creator
-        self.queue = queue
+        self.sequencer = sequencer
         self._logger = CustomLogger()
 
         from research_analytics_suite.operation_manager.OperationControl import OperationControl
@@ -42,7 +42,7 @@ class TaskMonitor:
         for task in self.task_creator.tasks.copy():
             self._logger.debug(f"handle_tasks: [CHECK] {task.get_name()}")
             if task.done():
-                operation = self.queue.find_operation_by_task(task)
+                operation = self.sequencer.find_operation_by_task(task)
                 try:
                     self._logger.debug(f"handle_tasks: [OP] {task.get_name()}")
                     if operation is not None:
@@ -60,7 +60,7 @@ class TaskMonitor:
                     if operation:
                         self.task_creator.tasks.remove(task)
                         if not operation.persistent:
-                            self.queue.remove_operation_from_queue(operation)
+                            self.sequencer.remove_operation_from_sequencer(operation)
 
                         if isinstance(operation, ConsoleOperation):
-                            self.queue.op_.console_operation_in_progress = False
+                            self.sequencer.op_.console_operation_in_progress = False

@@ -3,7 +3,7 @@ OperationStatusChecker Module.
 
 This module defines the OperationStatusChecker class, which is responsible for checking the status of operations within
 the research analytics suite. It provides methods to get the status of a specific operation and to get the status
-of all operations in the queue.
+of all operations in the sequencer.
 
 Author: Lane
 Copyright: Lane
@@ -24,17 +24,17 @@ class OperationStatusChecker:
     A class to check the status of operations.
 
     This class provides methods to get the status of a specific operation and to get the status of all operations in
-    the queue.
+    the sequencer.
     """
 
-    def __init__(self, queue):
+    def __init__(self, sequencer):
         """
         Initializes the OperationStatusChecker with the necessary components.
 
         Args:
-            queue: Queue holding operations to be checked.
+            sequencer: Sequencer holding operations to be checked.
         """
-        self.queue = queue
+        self.sequencer = sequencer
 
     def get_operation_status(self, operation: ABCOperation) -> str:
         """
@@ -50,13 +50,13 @@ class OperationStatusChecker:
 
     def get_all_operations_status(self) -> dict:
         """
-        Returns the status of all operations in the queue.
+        Returns the status of all operations in the sequencer.
 
         Returns:
             dict: A dictionary mapping operation instances to their status.
         """
         status_dict = {}
-        for operation_chain in self.queue.queue:
+        for operation_chain in self.sequencer.sequencer:
             if isinstance(operation_chain, OperationChain):
                 current_node = operation_chain.head
                 while current_node is not None:

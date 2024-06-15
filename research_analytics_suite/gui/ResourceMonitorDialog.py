@@ -61,7 +61,7 @@ class ResourceMonitorDialog:
     async def initialize(self) -> None:
         """Initializes the resource monitor by adding the update operation."""
         while self.resource_monitor_operation is None:
-            self.resource_monitor_operation = self.operation_control.queue.get_operation_by_type(
+            self.resource_monitor_operation = self.operation_control.sequencer.get_operation_by_type(
                 ResourceMonitorOperation)
             await asyncio.sleep(0.1)  # Sleep for a short time to prevent busy waiting
 

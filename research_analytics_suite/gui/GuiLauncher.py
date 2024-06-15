@@ -23,7 +23,6 @@ from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.gui.ConsoleDialog import ConsoleDialog
 from research_analytics_suite.gui.OperationManagerDialog import OperationManagerDialog
 from research_analytics_suite.gui.SettingsDialog import SettingsDialog
-from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
 from research_analytics_suite.gui.modules.TimelineModule import TimelineModule
 from research_analytics_suite.gui.modules.WorkspaceModule import WorkspaceModule
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
@@ -54,14 +53,14 @@ class GuiLauncher:
     async def setup_navigation_menu(self) -> None:
         """Sets up the navigation menu on the left pane."""
         with dpg.group(parent="left_pane"):
-            dpg.add_button(label="Operation Manager", callback=lambda: self.switch_pane("operation"))
-            # dpg.add_button(label="Analyze Data", callback=lambda: self.switch_pane("analyze_data"))
-            # dpg.add_button(label="Visualize Data", callback=lambda: self.switch_pane("visualize_data"))
-            # dpg.add_button(label="Manage Projects", callback=lambda: self.switch_pane("manage_projects"))
-            # dpg.add_button(label="Reports", callback=lambda: self.switch_pane("reports"))
-            # dpg.add_button(label="Settings", callback=lambda: self.switch_pane("settings"))
+            dpg.add_button(label="Planning", callback=lambda: self.switch_pane("planning"))
+            dpg.add_button(label="Data Collection", callback=lambda: self.switch_pane("data_collection"))
+            dpg.add_button(label="Data Analysis", callback=lambda: self.switch_pane("analyze_data"))
+            dpg.add_button(label="Data Visualization", callback=lambda: self.switch_pane("visualize_data"))
+            dpg.add_button(label="Project Management", callback=lambda: self.switch_pane("manage_projects"))
+            dpg.add_button(label="Reports", callback=lambda: self.switch_pane("reports"))
             dpg.add_button(label="Configuration", callback=self.settings_dialog.show)
-            dpg.add_button(label="Console/Log", callback=lambda: self.switch_pane("console_log_output"))
+            dpg.add_button(label="Logs", callback=lambda: self.switch_pane("console_log_output"))
             dpg.add_button(label="Exit", callback=dpg.stop_dearpygui)
 
     def switch_pane(self, pane_name: str) -> None:
@@ -72,12 +71,13 @@ class GuiLauncher:
             pane_name (str): The name of the pane to switch to.
         """
         # Hide all panes first
-        for pane in ["operation_pane",
-                     # "analyze_data_pane",
-                     # "visualize_data_pane",
-                     # "manage_projects_pane",
-                     # "reports_pane",
-                     # "settings_pane",
+        for pane in ["planning_pane",
+                     "data_collection_pane",
+                     "analyze_data_pane",
+                     "visualize_data_pane",
+                     "manage_projects_pane",
+                     "reports_pane",
+                     "settings_pane",
                      "console_log_output_pane"]:
             dpg.configure_item(pane, show=False)
 
@@ -127,7 +127,9 @@ class GuiLauncher:
     async def setup_main_window(self) -> None:
         """Sets up the main window of the GUI and runs the event loop."""
         dpg.create_context()
-        dpg.create_viewport(title='Research Analytics Suite', width=1920, height=1080)
+        dpg.create_viewport(title='Research Analytics Suite', width=1920, height=1080,
+                            large_icon="images/logo_small_light_transparent.ico",
+                            small_icon="images/logo_dialog_icon_light_transparent.ico")
         dpg.setup_dearpygui()
         await self.apply_theme()  # Apply theme after setup
         # dpg.show_metrics()
@@ -141,12 +143,11 @@ class GuiLauncher:
                 with dpg.child_window(tag="left_pane", width=200):
                     await self.setup_navigation_menu()
 
-                with dpg.child_window(tag="right_pane"):
+                with dpg.child_window(tag="middle_pane"):
                     await self.setup_panes()
 
             with dpg.child_window(tag="bottom_pane", parent="main_window"):
                 with dpg.group(horizontal=True, tag="bottom_pane_group"):
-                    await self.setup_timeline_pane()
                     await self.setup_workspace_pane()
 
         dpg.set_primary_window("main_window", True)
@@ -160,25 +161,28 @@ class GuiLauncher:
 
     async def setup_panes(self) -> None:
         """Sets up all the panes asynchronously."""
-        with dpg.child_window(tag="operation_pane", parent="right_pane", show=True):
-            await self.setup_operation_pane()
+        with dpg.child_window(tag="planning_pane", parent="middle_pane", show=True):
+            await self.setup_planning_pane()
 
-        # with dpg.child_window(tag="analyze_data_pane", parent="right_pane", show=False):
-        #     await self.setup_data_analysis_pane()
-        #
-        # with dpg.child_window(tag="visualize_data_pane", parent="right_pane", show=False):
-        #     await self.setup_visualization_pane()
-        #
-        # with dpg.child_window(tag="manage_projects_pane", parent="right_pane", show=False):
-        #     dpg.add_text("Manage Projects Pane")
-        #
-        # with dpg.child_window(tag="reports_pane", parent="right_pane", show=False):
-        #     dpg.add_text("Reports Pane")
-        #
-        # with dpg.child_window(tag="settings_pane", parent="right_pane", show=False):
-        #     dpg.add_text("Settings Pane")
+        with dpg.child_window(tag="data_collection_pane", parent="middle_pane", show=False):
+            await self.setup_data_collection_pane()
 
-        with dpg.child_window(tag="console_log_output_pane", parent="right_pane", show=False):
+        with dpg.child_window(tag="analyze_data_pane", parent="middle_pane", show=False):
+            await self.setup_data_analysis_pane()
+
+        with dpg.child_window(tag="visualize_data_pane", parent="middle_pane", show=False):
+            await self.setup_visualization_pane()
+
+        with dpg.child_window(tag="manage_projects_pane", parent="middle_pane", show=False):
+            dpg.add_text("Manage Projects Pane")
+
+        with dpg.child_window(tag="reports_pane", parent="middle_pane", show=False):
+            dpg.add_text("Reports Pane")
+
+        with dpg.child_window(tag="settings_pane", parent="middle_pane", show=False):
+            dpg.add_text("Settings Pane")
+
+        with dpg.child_window(tag="console_log_output_pane", parent="middle_pane", show=False):
             await self.setup_console_log_viewer_pane()
 
     async def setup_data_analysis_pane(self) -> None:
@@ -205,17 +209,23 @@ class GuiLauncher:
             self.operation_window = OperationManagerDialog()
             await self.operation_window.initialize_dialog()
 
-    async def setup_timeline_pane(self) -> None:
-        """Sets up the timeline pane asynchronously."""
-        with dpg.group(parent="bottom_pane_group", tag="timeline_group", horizontal=True):
-            self.timeline = TimelineModule(width=int(dpg.get_viewport_width() * 0.5),
-                                           height=300,
-                                           operation_queue=self.operation_control.queue)
-            await self.timeline.initialize_dialog()
-
     async def setup_workspace_pane(self) -> None:
         """Sets up the workspace pane asynchronously."""
         with dpg.group(parent="bottom_pane_group", horizontal=True, tag="workspace_group"):
             self.workspace_dialog = WorkspaceModule(height=300,
                                                     width=int(dpg.get_viewport_width() * 0.5))
             await self.workspace_dialog.initialize()
+
+    async def setup_planning_pane(self) -> None:
+        """Sets up the planning pane asynchronously."""
+        with dpg.group(parent="planning_pane"):
+            dpg.add_text("Planning Tools")
+            self.timeline = TimelineModule(width=int(dpg.get_viewport_width() * 0.5),
+                                           height=300,
+                                           operation_sequencer=self.operation_control.sequencer)
+            await self.timeline.initialize_dialog()
+
+    async def setup_data_collection_pane(self) -> None:
+        """Sets up the data collection pane asynchronously."""
+        with dpg.group(parent="data_collection_pane"):
+            dpg.add_text("Data Collection Tools")

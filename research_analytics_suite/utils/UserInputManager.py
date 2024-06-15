@@ -3,7 +3,7 @@ UserInputManager Module.
 
 This module defines the UserInputManager class, which processes user input from the console within the research
 analytics suite. It handles various commands such as stopping, pausing, and resuming operations, as well as displaying
-system resources, tasks, and queue status.
+system resources, tasks, and sequencer status.
 
 Author: Lane
 Copyright: Lane
@@ -28,7 +28,7 @@ class UserInputManager:
     A class to process user input from the console.
 
     This class processes user input and executes corresponding commands, such as stopping, pausing, resuming operations,
-    and displaying system resources, tasks, and queue status.
+    and displaying system resources, tasks, and sequencer status.
     """
 
     def __init__(self):
@@ -94,26 +94,26 @@ class UserInputManager:
             return "UserInputManager.process_user_input: Resuming all operations..."
 
         elif user_input == "resources":
-            for operation_list in self._operation_control.queue.queue:
-                operation_node = self._operation_control.queue.get_head_operation_from_chain(operation_list)
+            for operation_list in self._operation_control.sequencer.sequencer:
+                operation_node = self._operation_control.sequencer.get_head_operation_from_chain(operation_list)
                 if isinstance(operation_node, ResourceMonitorOperation):
                     self._logger.info(operation_node.output_memory_usage())
             return "UserInputManager.process_user_input: Displaying system resources."
 
         elif user_input == "tasks":
             for task in self._operation_control.task_creator.tasks:
-                operation = self._operation_control.queue.find_operation_by_task(task)
+                operation = self._operation_control.sequencer.find_operation_by_task(task)
                 if operation:
                     self._logger.info(f"UserInputManager.process_user_input: Task: {task.get_name()} - "
                                       f"{operation.status}")
             return "UserInputManager.process_user_input: Displaying all tasks..."
 
-        elif user_input == "queue":
-            for queue_chain in self._operation_control.queue.queue:
-                operation = queue_chain.head.operation
+        elif user_input == "sequencer":
+            for sequencer_chain in self._operation_control.sequencer.sequencer:
+                operation = sequencer_chain.head.operation
                 self._logger.info(f"UserInputManager.process_user_input: Operation: {operation.task.get_name()} - "
                                   f"{operation.status}")
-            return "UserInputManager.process_user_input: Displaying all operations in the queue..."
+            return "UserInputManager.process_user_input: Displaying all operations in the sequencer..."
 
         elif user_input == "vars":
 

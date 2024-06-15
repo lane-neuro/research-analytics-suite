@@ -1,8 +1,8 @@
 """
-OperationQueue Module.
+OperationSequencer Module.
 
-This module defines the OperationQueue class, which manages a queue of operations within the research analytics
-suite. It provides methods to add, remove, move, and retrieve operations in the queue, ensuring efficient management
+This module defines the OperationSequencer class, which manages a sequencer of operations within the research analytics
+suite. It provides methods to add, remove, move, and retrieve operations in the sequencer, ensuring efficient management
 and execution of operations.
 
 Author: Lane
@@ -24,34 +24,34 @@ from research_analytics_suite.operation_manager.operations.ABCOperation import A
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
-class OperationQueue:
+class OperationSequencer:
     """
-    A class to manage a queue of operations.
+    A class to manage a sequencer of operations.
 
-    This class provides methods to add, remove, move, & retrieve operations in the queue, ensuring efficient management
+    This class provides methods to add, remove, move, & retrieve operations in the sequencer, ensuring efficient management
     and execution of operations.
     """
 
     def __init__(self):
         """
-        Initializes the OperationQueue with a logger and error handler.
+        Initializes the OperationSequencer with a logger and error handler.
         """
-        self.queue = deque()
+        self.sequencer = deque()
         self._logger = CustomLogger()
 
-    async def add_operation_to_queue(self, operation: ABCOperation):
+    async def add_operation_to_sequencer(self, operation: ABCOperation):
         """
-        Adds an operation to the queue.
+        Adds an operation to the sequencer.
 
         Args:
-            operation (Operation): The operation to add to the queue.
+            operation (Operation): The operation to add to the sequencer.
         """
         if operation.parent_operation is None:
             if not isinstance(operation, OperationChain):
                 operation_chain = OperationChain(operation)
             else:
                 operation_chain = operation
-            self.queue.append(operation_chain)
+            self.sequencer.append(operation_chain)
         else:
             parent_chain = self.get_chain_by_operation(operation.parent_operation)
             if parent_chain:
@@ -86,7 +86,7 @@ class OperationQueue:
         if isinstance(operation_chain, OperationChain):
             operation_chain.remove_operation(operation)
             if operation_chain.is_empty():
-                self.queue.remove(operation_chain)
+                self.sequencer.remove(operation_chain)
 
     def move_operation(self, operation: ABCOperation, new_index: int) -> None:
         """
@@ -101,21 +101,21 @@ class OperationQueue:
             operation_chain.remove_operation(operation)
             self.insert_operation_in_chain(new_index, operation_chain, operation)
 
-    def remove_operation_from_queue(self, operation: ABCOperation) -> None:
+    def remove_operation_from_sequencer(self, operation: ABCOperation) -> None:
         """
-        Removes an operation from the queue.
+        Removes an operation from the sequencer.
 
         Args:
             operation (Operation): The operation to remove.
         """
-        for chain in self.queue:
+        for chain in self.sequencer:
             if chain.head.operation == operation:
-                self.queue.remove(chain)
+                self.sequencer.remove(chain)
                 return
             elif chain.contains(operation):
                 chain.remove_operation(operation)
                 if chain.is_empty():
-                    self.queue.remove(chain)
+                    self.sequencer.remove(chain)
                 return
 
     def get_head_operation_from_chain(self, operation_chain: OperationChain) -> Optional[ABCOperation]:
@@ -142,7 +142,7 @@ class OperationQueue:
         Returns:
             Optional[OperationChain]: The operation chain that contains the operation, or None if not found.
         """
-        for chain in self.queue:
+        for chain in self.sequencer:
             if chain.contains(operation):
                 return chain
         return None
@@ -174,7 +174,7 @@ class OperationQueue:
         Returns:
             Optional[ABCOperation]: The found operation, or None if not found.
         """
-        for chain in self.queue:
+        for chain in self.sequencer:
             for node in chain:
                 if isinstance(type(node.operation), operation_type):
                     return node.operation
@@ -191,7 +191,7 @@ class OperationQueue:
         Returns:
             Optional[ABCOperation]: The found operation, or None if not found.
         """
-        for chain in self.queue:
+        for chain in self.sequencer:
             for node in chain:
                 if node.operation.task == task:
                     return node.operation
@@ -200,67 +200,67 @@ class OperationQueue:
 
     def is_empty(self) -> bool:
         """
-        Checks if the queue is empty.
+        Checks if the sequencer is empty.
 
         Returns:
-            bool: True if the queue is empty, False otherwise.
+            bool: True if the sequencer is empty, False otherwise.
         """
-        return len(self.queue) == 0
+        return len(self.sequencer) == 0
 
     def size(self) -> int:
         """
-        Gets the size of the queue.
+        Gets the size of the sequencer.
 
         Returns:
-            int: The size of the queue.
+            int: The size of the sequencer.
         """
-        return len(self.queue)
+        return len(self.sequencer)
 
     def clear(self) -> None:
-        """Clears the queue."""
-        self.queue.clear()
+        """Clears the sequencer."""
+        self.sequencer.clear()
 
     def contains(self, operation: ABCOperation) -> bool:
         """
-        Checks if the queue contains a specific operation.
+        Checks if the sequencer contains a specific operation.
 
         Args:
             operation (Operation): The operation to check for.
 
         Returns:
-            bool: True if the queue contains the operation, False otherwise.
+            bool: True if the sequencer contains the operation, False otherwise.
         """
-        return any(chain.contains(operation) for chain in self.queue)
+        return any(chain.contains(operation) for chain in self.sequencer)
 
     async def has_waiting_operations(self) -> bool:
         """
-        Checks if the queue has any waiting operations.
+        Checks if the sequencer has any waiting operations.
 
         Returns:
-            bool: True if the queue has waiting operations, False otherwise.
+            bool: True if the sequencer has waiting operations, False otherwise.
         """
-        return any(self.get_head_operation_from_chain(chain).status == "waiting" for chain in self.queue)
+        return any(self.get_head_operation_from_chain(chain).status == "waiting" for chain in self.sequencer)
 
     async def dequeue(self) -> Optional[OperationChain]:
         """
-        Dequeues the first operation chain from the queue.
+        Dequeues the first operation chain from the sequencer.
 
         Returns:
-            Optional[OperationChain]: The dequeued operation chain, or None if the queue is empty.
+            Optional[OperationChain]: The dequeued operation chain, or None if the sequencer is empty.
         """
         if self.is_empty():
             return None
-        return self.queue.popleft()
+        return self.sequencer.popleft()
 
     def to_dict(self) -> List[Dict]:
         """
-        Converts the queue to a list of dictionaries.
+        Converts the sequencer to a list of dictionaries.
 
         Returns:
-            List[Dict]: The queue represented as a list of dictionaries.
+            List[Dict]: The sequencer represented as a list of dictionaries.
         """
-        queue_dict = []
-        for chain in self.queue:
+        sequencer_dict = []
+        for chain in self.sequencer:
             chain_dict = {
                 "operations": []
             }
@@ -273,42 +273,42 @@ class OperationQueue:
                     "operation_status": current_node.operation.status,
                 })
                 current_node = current_node.next_node
-            queue_dict.append(chain_dict)
-        return queue_dict
+            sequencer_dict.append(chain_dict)
+        return sequencer_dict
 
     def to_json(self) -> str:
         """
-        Converts the queue to a JSON string.
+        Converts the sequencer to a JSON string.
 
         Returns:
-            str: The queue represented as a JSON string.
+            str: The sequencer represented as a JSON string.
         """
         return json.dumps(self.to_dict(), indent=4)
 
     def __str__(self) -> str:
         """
-        Converts the queue to a string.
+        Converts the sequencer to a string.
 
         Returns:
-            str: The queue represented as a string.
+            str: The sequencer represented as a string.
         """
-        _queue_dict = self.to_dict()
-        _queue_text = ""
-        if not _queue_dict:
-            _queue_text = "Queue is empty."
+        _sequencer_dict = self.to_dict()
+        _sequencer_text = ""
+        if not _sequencer_dict:
+            _sequencer_text = "Sequencer is empty."
         else:
-            for _chain in _queue_dict:
+            for _chain in _sequencer_dict:
                 _head_text = (f"\nHead: {_chain['operations'][0]['operation_name']} "
                               f"({_chain['operations'][0]['operation_status']})")
                 _children_text = "\n\t->\t".join(
                     [f"{operation['operation_name']} "
                      f"({operation['operation_status']})" for operation in _chain['operations'][1:]])
                 _chain_text = f"{_head_text}\n\t->\t{_children_text}"
-                _queue_text += f"{_chain_text}\n"
-        return _queue_text
+                _sequencer_text += f"{_chain_text}\n"
+        return _sequencer_text
 
-    def print_queue(self) -> None:
+    def print_sequencer(self) -> None:
         """
-        Prints the queue in a readable format.
+        Prints the sequencer in a readable format.
         """
         print(self)
