@@ -4,12 +4,12 @@ import dearpygui.dearpygui as dpg
 from typing import Any
 
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class CreateOperationModule:
-    """A class to create custom instances of ABCOperation with user-defined parameters."""
+    """A class to create custom instances of BaseOperation with user-defined parameters."""
 
     def __init__(self, width: int, height: int, parent_operation=None):
         self._logger = CustomLogger()
@@ -55,7 +55,7 @@ class CreateOperationModule:
             concurrent = dpg.get_value(self._new_op_concurrent)
 
             await self.operation_control.operation_manager.add_operation(
-                operation_type=ABCOperation, name=name, func=func, persistent=persistent,
+                operation_type=BaseOperation, name=name, func=func, persistent=persistent,
                 is_cpu_bound=is_cpu_bound, concurrent=concurrent, parent_operation=self._parent_operation
             )
             dpg.hide_item(f"new_{self.create_operation_dialog_id}")

@@ -20,7 +20,7 @@ from typing import Optional, List, Dict
 
 from research_analytics_suite.operation_manager.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.OperationNode import OperationNode
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -39,7 +39,7 @@ class OperationSequencer:
         self.sequencer = deque()
         self._logger = CustomLogger()
 
-    async def add_operation_to_sequencer(self, operation: ABCOperation):
+    async def add_operation_to_sequencer(self, operation: BaseOperation):
         """
         Adds an operation to the sequencer.
 
@@ -57,7 +57,7 @@ class OperationSequencer:
             if parent_chain:
                 parent_chain.add_operation_to_chain(operation)
 
-    def insert_operation_in_chain(self, index: int, operation_chain: OperationChain, operation: ABCOperation) -> None:
+    def insert_operation_in_chain(self, index: int, operation_chain: OperationChain, operation: BaseOperation) -> None:
         """
         Inserts an operation in a chain at a specific index.
 
@@ -75,7 +75,7 @@ class OperationSequencer:
                 new_node = OperationNode(operation, current_node.next_node)
                 current_node.next_node = new_node
 
-    def remove_operation_from_chain(self, operation_chain: OperationChain, operation: ABCOperation) -> None:
+    def remove_operation_from_chain(self, operation_chain: OperationChain, operation: BaseOperation) -> None:
         """
         Removes an operation from a chain.
 
@@ -88,7 +88,7 @@ class OperationSequencer:
             if operation_chain.is_empty():
                 self.sequencer.remove(operation_chain)
 
-    def move_operation(self, operation: ABCOperation, new_index: int) -> None:
+    def move_operation(self, operation: BaseOperation, new_index: int) -> None:
         """
         Moves an operation to a new index in its chain.
 
@@ -101,7 +101,7 @@ class OperationSequencer:
             operation_chain.remove_operation(operation)
             self.insert_operation_in_chain(new_index, operation_chain, operation)
 
-    def remove_operation_from_sequencer(self, operation: ABCOperation) -> None:
+    def remove_operation_from_sequencer(self, operation: BaseOperation) -> None:
         """
         Removes an operation from the sequencer.
 
@@ -118,7 +118,7 @@ class OperationSequencer:
                     self.sequencer.remove(chain)
                 return
 
-    def get_head_operation_from_chain(self, operation_chain: OperationChain) -> Optional[ABCOperation]:
+    def get_head_operation_from_chain(self, operation_chain: OperationChain) -> Optional[BaseOperation]:
         """
         Gets the head operation from a chain.
 
@@ -126,13 +126,13 @@ class OperationSequencer:
             operation_chain (OperationChain): The operation chain to get the head operation from.
 
         Returns:
-            Optional[ABCOperation]: The head operation, or None if the chain is empty.
+            Optional[BaseOperation]: The head operation, or None if the chain is empty.
         """
         if isinstance(operation_chain, OperationChain) and not operation_chain.is_empty():
             return operation_chain.head.operation
         return None
 
-    def get_chain_by_operation(self, operation: ABCOperation) -> Optional[OperationChain]:
+    def get_chain_by_operation(self, operation: BaseOperation) -> Optional[OperationChain]:
         """
         Gets the operation chain that contains a specific operation.
 
@@ -147,7 +147,7 @@ class OperationSequencer:
                 return chain
         return None
 
-    def get_operation_in_chain(self, operation_chain: OperationChain, operation: ABCOperation) -> Optional[ABCOperation]:
+    def get_operation_in_chain(self, operation_chain: OperationChain, operation: BaseOperation) -> Optional[BaseOperation]:
         """
         Gets a specific operation in a chain.
 
@@ -156,7 +156,7 @@ class OperationSequencer:
             operation (Operation): The operation to find.
 
         Returns:
-            Optional[ABCOperation]: The found operation, or None if not found.
+            Optional[BaseOperation]: The found operation, or None if not found.
         """
         if isinstance(operation_chain, OperationChain):
             for node in operation_chain:
@@ -164,7 +164,7 @@ class OperationSequencer:
                     return node.operation
         return None
 
-    def get_operation_by_type(self, operation_type: type) -> Optional[ABCOperation]:
+    def get_operation_by_type(self, operation_type: type) -> Optional[BaseOperation]:
         """
         Gets an operation of a specific type.
 
@@ -172,7 +172,7 @@ class OperationSequencer:
             operation_type (type): The type of operation to find.
 
         Returns:
-            Optional[ABCOperation]: The found operation, or None if not found.
+            Optional[BaseOperation]: The found operation, or None if not found.
         """
         for chain in self.sequencer:
             for node in chain:
@@ -181,7 +181,7 @@ class OperationSequencer:
         self._logger.error(Exception(f"No operation found of type {operation_type.__name__}"), self)
         return None
 
-    def find_operation_by_task(self, task) -> Optional[ABCOperation]:
+    def find_operation_by_task(self, task) -> Optional[BaseOperation]:
         """
         Finds an operation by its associated task.
 
@@ -189,7 +189,7 @@ class OperationSequencer:
             task: The task associated with the operation to find.
 
         Returns:
-            Optional[ABCOperation]: The found operation, or None if not found.
+            Optional[BaseOperation]: The found operation, or None if not found.
         """
         for chain in self.sequencer:
             for node in chain:
@@ -220,7 +220,7 @@ class OperationSequencer:
         """Clears the sequencer."""
         self.sequencer.clear()
 
-    def contains(self, operation: ABCOperation) -> bool:
+    def contains(self, operation: BaseOperation) -> bool:
         """
         Checks if the sequencer contains a specific operation.
 

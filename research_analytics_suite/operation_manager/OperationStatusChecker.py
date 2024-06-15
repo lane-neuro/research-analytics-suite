@@ -16,7 +16,7 @@ Status: Prototype
 """
 
 from research_analytics_suite.operation_manager.OperationChain import OperationChain
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 
 
 class OperationStatusChecker:
@@ -36,12 +36,12 @@ class OperationStatusChecker:
         """
         self.sequencer = sequencer
 
-    def get_operation_status(self, operation: ABCOperation) -> str:
+    def get_operation_status(self, operation: BaseOperation) -> str:
         """
         Returns the status of a specific operation.
 
         Args:
-            operation (ABCOperation): The operation to get the status of.
+            operation (BaseOperation): The operation to get the status of.
 
         Returns:
             str: The status of the operation.

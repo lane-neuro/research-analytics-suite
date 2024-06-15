@@ -13,7 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 
 
 class OperationNode:
@@ -23,7 +23,7 @@ class OperationNode:
     Each node contains an operation and a reference to the next node in the chain.
     """
 
-    def __init__(self, operation: ABCOperation, next_node: 'OperationNode' = None):
+    def __init__(self, operation: BaseOperation, next_node: 'OperationNode' = None):
         """
         Initializes the OperationNode with an operation and an optional reference to the next node.
 

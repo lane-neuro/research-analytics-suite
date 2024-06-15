@@ -16,7 +16,7 @@ Status: Prototype
 """
 import dask.distributed
 
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 from research_analytics_suite.operation_manager.operations.computation.DaskOperation import DaskOperation
 from research_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
     ResourceMonitorOperation
@@ -121,6 +121,6 @@ class UserInputManager:
 
         else:
             self._logger.info(f"UserInputManager.process_user_input: Executing custom operation with func: {user_input}")
-            await self._operation_control.operation_manager.add_operation(operation_type=ABCOperation,
+            await self._operation_control.operation_manager.add_operation(operation_type=BaseOperation,
                                                                           func=user_input, name="ConsoleCommand")
             return f"UserInputManager.process_user_input: Added custom operation with func: {user_input}"

@@ -23,7 +23,7 @@ from research_analytics_suite.data_engine.Config import Config
 from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
 from research_analytics_suite.gui.modules.OperationModule import OperationModule
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -85,7 +85,7 @@ class OperationManagerDialog:
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=ABCOperation, name="gui_OperationManagerUpdateTask",
+                operation_type=BaseOperation, name="gui_OperationManagerUpdateTask",
                 func=self.display_operations, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation
@@ -110,7 +110,7 @@ class OperationManagerDialog:
                         self.add_operation_tile(node.operation)
             await asyncio.sleep(self.SLEEP_DURATION)
 
-    def add_operation_tile(self, operation: ABCOperation) -> None:
+    def add_operation_tile(self, operation: BaseOperation) -> None:
         """
         Adds a new operations tile to the GUI.
 
@@ -163,8 +163,8 @@ class OperationManagerDialog:
 
         self._logger.info(f"Loading operation from file: {_file_path}")
 
-        _operation, _args, _kargs = await ABCOperation.load_from_disk(_file_path)
-        await self.operation_control.operation_manager.add_operation(operation_type=ABCOperation, *(_args or ()),
+        _operation, _args, _kargs = await BaseOperation.load_from_disk(_file_path)
+        await self.operation_control.operation_manager.add_operation(operation_type=BaseOperation, *(_args or ()),
                                                                      **(_kargs or {}))
 
     def on_resize(self, sender: str, data: dict) -> None:

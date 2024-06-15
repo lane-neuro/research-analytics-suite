@@ -24,10 +24,10 @@ from typing import List
 
 import psutil
 
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 
 
-class ResourceMonitorOperation(ABCOperation):
+class ResourceMonitorOperation(BaseOperation):
 
     def __init__(self, *args, **kwargs):
         """

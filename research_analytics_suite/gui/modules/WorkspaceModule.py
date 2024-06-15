@@ -10,7 +10,7 @@ import dearpygui.dearpygui as dpg
 from research_analytics_suite.data_engine.Config import Config
 from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -48,7 +48,7 @@ class WorkspaceModule:
     async def add_update_operation(self) -> Optional[Any]:
         try:
             operation = await self._operation_control.operation_manager.add_operation(
-                operation_type=ABCOperation, name="gui_WorkspaceUpdateTask",
+                operation_type=BaseOperation, name="gui_WorkspaceUpdateTask",
                 func=self.update_user_variables_list, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation

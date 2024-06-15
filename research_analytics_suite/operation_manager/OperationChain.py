@@ -15,7 +15,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 from research_analytics_suite.operation_manager.OperationNode import OperationNode
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 
 
 class OperationChain:
@@ -26,7 +26,7 @@ class OperationChain:
     and iterate over the chain of operations.
     """
 
-    def __init__(self, operation: ABCOperation = None):
+    def __init__(self, operation: BaseOperation = None):
         """
         Initializes the OperationChain with an optional initial operation.
 
@@ -34,10 +34,10 @@ class OperationChain:
             operation (Operation, optional): An initial operation to add to the chain. Defaults to None.
         """
         self.head = None
-        if isinstance(operation, ABCOperation):
+        if isinstance(operation, BaseOperation):
             self.add_operation_to_chain(operation)
 
-    def add_operation_to_chain(self, operation: ABCOperation) -> None:
+    def add_operation_to_chain(self, operation: BaseOperation) -> None:
         """
         Adds an operation to the end of the chain.
 
@@ -52,7 +52,7 @@ class OperationChain:
                 current_node = current_node.next_node
             current_node.next_node = OperationNode(operation)
 
-    def remove_operation(self, operation: ABCOperation) -> None:
+    def remove_operation(self, operation: BaseOperation) -> None:
         """
         Removes an operation from the chain.
 
@@ -92,7 +92,7 @@ class OperationChain:
             current_node = current_node.next_node
         return count
 
-    def contains(self, operation: ABCOperation) -> bool:
+    def contains(self, operation: BaseOperation) -> bool:
         """
         Checks if the chain contains a specific operation.
 

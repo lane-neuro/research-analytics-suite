@@ -13,7 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 from research_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -46,7 +46,7 @@ class TaskMonitor:
                 try:
                     self._logger.debug(f"handle_tasks: [OP] {task.get_name()}")
                     if operation is not None:
-                        if isinstance(operation, ABCOperation):
+                        if isinstance(operation, BaseOperation):
                             output = operation.get_result()
                             operation.add_log_entry(f"handle_tasks: [OUTPUT] {output}")
 

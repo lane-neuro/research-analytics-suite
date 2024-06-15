@@ -13,7 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -39,7 +39,7 @@ class OperationManager:
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
-    async def add_operation(self, operation_type, *args, **kwargs) -> ABCOperation:
+    async def add_operation(self, operation_type, *args, **kwargs) -> BaseOperation:
         """
         Creates a new Operation and adds it to the sequencer.
 
@@ -64,7 +64,7 @@ class OperationManager:
         except Exception as e:
             self._logger.error(e, operation_type)
 
-    async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> ABCOperation:
+    async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> BaseOperation:
         """
         Adds an operation to the sequencer if it does not already exist.
 
@@ -76,31 +76,31 @@ class OperationManager:
         if not self.task_creator.task_exists(operation_type):
             return await self.add_operation(operation_type=operation_type, *args, **kwargs)
 
-    async def resume_operation(self, operation: ABCOperation) -> None:
+    async def resume_operation(self, operation: BaseOperation) -> None:
         """
         Resumes a specific operation.
 
         Args:
-            operation (ABCOperation): The operation to resume.
+            operation (BaseOperation): The operation to resume.
         """
         if operation.status == "paused":
             await operation.resume()
 
-    async def pause_operation(self, operation: ABCOperation) -> None:
+    async def pause_operation(self, operation: BaseOperation) -> None:
         """
         Pauses a specific operation.
 
         Args:
-            operation (ABCOperation): The operation to pause.
+            operation (BaseOperation): The operation to pause.
         """
         if operation.status == "running":
             await operation.pause()
 
-    async def stop_operation(self, operation: ABCOperation) -> None:
+    async def stop_operation(self, operation: BaseOperation) -> None:
         """
         Stops a specific operation.
 
         Args:
-            operation (ABCOperation): The operation to stop.
+            operation (BaseOperation): The operation to stop.
         """
         await operation.stop()

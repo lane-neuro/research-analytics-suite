@@ -17,7 +17,7 @@ from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
-class ABCOperation(ABC):
+class BaseOperation(ABC):
     """
     An abstract base class that defines a common interface for all operations.
     """
@@ -51,7 +51,7 @@ class ABCOperation(ABC):
             self._is_ready = None
 
             self._parent_operation = None
-            self._child_operations: List['ABCOperation'] = []
+            self._child_operations: List['BaseOperation'] = []
             self._concurrent = None
             self.result_output = dict()
 
@@ -145,7 +145,7 @@ class ABCOperation(ABC):
         self._progress = value
 
     @property
-    def child_operations(self) -> List['ABCOperation']:
+    def child_operations(self) -> List['BaseOperation']:
         """Gets the list of child operations."""
         return self._child_operations
 
@@ -157,7 +157,7 @@ class ABCOperation(ABC):
     @parent_operation.setter
     def parent_operation(self, value):
         """Sets the parent operation."""
-        if value is not None and not isinstance(value, ABCOperation):
+        if value is not None and not isinstance(value, BaseOperation):
             self._handle_error("\'parent_operation\' must be an instance of Operation")
         self._parent_operation = value
 
@@ -239,7 +239,7 @@ class ABCOperation(ABC):
     async def initialize_operation(self):
         """Initialize any resources or setup required for the operation before it starts."""
         if hasattr(self, '_initialized') and not self._initialized:
-            async with ABCOperation._lock:
+            async with BaseOperation._lock:
                 if not self._initialized:
                     self._workspace = Workspace()
                     self._config = Config()
@@ -265,7 +265,7 @@ class ABCOperation(ABC):
                     self._is_ready = False
 
                     self._parent_operation = self.temp_kwargs.get('parent_operation', None)
-                    self._child_operations: List['ABCOperation'] = self.temp_kwargs.get('child_operations', [])
+                    self._child_operations: List['BaseOperation'] = self.temp_kwargs.get('child_operations', [])
                     self._concurrent = self.temp_kwargs.get('concurrent', False)
                     self.result_output = self.temp_kwargs.get('result_output', dict())
 
@@ -481,17 +481,17 @@ class ABCOperation(ABC):
                 self._progress += 1
             await asyncio.sleep(1)
 
-    async def add_child_operation(self, operation: 'ABCOperation', dependencies: List[str] = None):
+    async def add_child_operation(self, operation: 'BaseOperation', dependencies: List[str] = None):
         """
         Add a child operation to the current operation.
 
         Args:
-            operation (ABCOperation): The child operation to be added.
+            operation (BaseOperation): The child operation to be added.
             dependencies (List[str], optional): List of operation names that the child operation depends on.
                                                 Defaults to None.
         """
-        if not isinstance(operation, ABCOperation):
-            self._handle_error("operation must be an instance of ABCOperation")
+        if not isinstance(operation, BaseOperation):
+            self._handle_error("operation must be an instance of BaseOperation")
             return
 
         self._child_operations.append(operation)
@@ -501,15 +501,15 @@ class ABCOperation(ABC):
 
         self.add_log_entry(f"[CHILD] (added) {operation.name}")
 
-    def remove_child_operation(self, operation: 'ABCOperation'):
+    def remove_child_operation(self, operation: 'BaseOperation'):
         """
         Remove a child operation from the current operation.
 
         Args:
-            operation (ABCOperation): The child operation to be removed.
+            operation (BaseOperation): The child operation to be removed.
         """
-        if not isinstance(operation, ABCOperation):
-            self._handle_error("operation must be an instance of ABCOperation")
+        if not isinstance(operation, BaseOperation):
+            self._handle_error("operation must be an instance of BaseOperation")
             return
 
         self._child_operations.remove(operation)
@@ -614,12 +614,12 @@ class ABCOperation(ABC):
         tasks = [op.reset() for op in self._child_operations]
         await asyncio.gather(*tasks)
 
-    def _determine_execution_order(self) -> List['ABCOperation']:
+    def _determine_execution_order(self) -> List['BaseOperation']:
         """
         Determine the execution order of child operations based on dependencies.
 
         Returns:
-            List[ABCOperation]: The execution order of child operations.
+            List[BaseOperation]: The execution order of child operations.
         """
         self.add_log_entry(f"Determining execution order")
         execution_order = []
@@ -632,7 +632,7 @@ class ABCOperation(ABC):
         return execution_order
 
     async def save_operation_in_workspace(self, file_name: str):
-        """Save the ABCOperation object to disk."""
+        """Save the BaseOperation object to disk."""
 
         if file_name is None:
             file_name = self._name
@@ -676,7 +676,7 @@ class ABCOperation(ABC):
 
     @staticmethod
     async def load_from_disk(file_path: str):
-        """Load an ABCOperation object from disk."""
+        """Load an BaseOperation object from disk."""
         async with aiofiles.open(file_path, 'rb') as file:
             data = await file.read()
             op_data = pickle.loads(data)
@@ -701,4 +701,4 @@ class ABCOperation(ABC):
                 'dependencies': op_data._dependencies
             }
 
-            return type(ABCOperation), args, kwargs
+            return type(BaseOperation), args, kwargs

@@ -20,7 +20,7 @@ from typing import Optional, Any
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 from research_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import (
     ResourceMonitorOperation)
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -76,7 +76,7 @@ class ResourceMonitorDialog:
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=ABCOperation, name="gui_ResourceUpdateTask",
+                operation_type=BaseOperation, name="gui_ResourceUpdateTask",
                 func=self.update_resource_usage, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation

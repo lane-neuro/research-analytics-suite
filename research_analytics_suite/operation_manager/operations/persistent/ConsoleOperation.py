@@ -15,10 +15,10 @@ Status: Prototype
 """
 import aioconsole
 import sys
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 
 
-class ConsoleOperation(ABCOperation):
+class ConsoleOperation(BaseOperation):
     """
     A class used to represent a Console Operation in the Research Analytics Suite.
 

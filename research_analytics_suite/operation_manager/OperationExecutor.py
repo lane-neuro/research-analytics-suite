@@ -18,7 +18,7 @@ Status: Prototype
 import asyncio
 
 from research_analytics_suite.operation_manager.OperationChain import OperationChain
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 from research_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -46,12 +46,12 @@ class OperationExecutor:
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
-    async def execute_operation(self, operation: ABCOperation) -> asyncio.Task:
+    async def execute_operation(self, operation: BaseOperation) -> asyncio.Task:
         """
         Executes a single operation.
 
         Args:
-            operation (ABCOperation): The operation to execute.
+            operation (BaseOperation): The operation to execute.
 
         Returns:
             asyncio.Task: The asyncio task for the operation execution.

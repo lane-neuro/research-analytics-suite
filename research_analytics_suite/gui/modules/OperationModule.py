@@ -24,19 +24,19 @@ import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class OperationModule:
     """A class to manage operations and their GUI representation."""
 
-    def __init__(self, operation: ABCOperation, width: int, height: int):
+    def __init__(self, operation: BaseOperation, width: int, height: int):
         """
         Initializes the OperationModule with the given operation, control, and logger.
 
         Args:
-            operation (ABCOperation): An instance of ABCOperation.
+            operation (BaseOperation): An instance of ABCOperation.
             width (int): The width of the module.
             height (int): The height of the module.
         """
@@ -58,7 +58,7 @@ class OperationModule:
         self.left_panel_id = f"left_panel_{self.unique_id}"
 
     @property
-    def operation(self) -> ABCOperation:
+    def operation(self) -> BaseOperation:
         """Returns the operation."""
         return self._operation
 
@@ -74,7 +74,7 @@ class OperationModule:
         except Exception as e:
             self._logger.error(e, self)
 
-    async def add_update_operation(self) -> ABCOperation:
+    async def add_update_operation(self) -> BaseOperation:
         """
         Adds an update operation to the operations manager.
 
@@ -83,7 +83,7 @@ class OperationModule:
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=ABCOperation, name="gui_OperationUpdateTask",
+                operation_type=BaseOperation, name="gui_OperationUpdateTask",
                 func=self.update_gui, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation
@@ -284,10 +284,10 @@ class OperationModule:
         result = self._operation.get_result()
         self._operation.add_log_entry(f"Result viewed: {result}")
 
-    async def add_child_operation(self, child_operation: ABCOperation) -> None:
+    async def add_child_operation(self, child_operation: BaseOperation) -> None:
         """Adds a child operation to the current operation."""
         await self._operation.add_child_operation(child_operation)
 
-    def remove_child_operation(self, child_operation: ABCOperation) -> None:
+    def remove_child_operation(self, child_operation: BaseOperation) -> None:
         """Removes a child operation from the current operation."""
         self._operation.remove_child_operation(child_operation)

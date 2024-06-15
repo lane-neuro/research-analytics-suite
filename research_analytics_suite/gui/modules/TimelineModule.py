@@ -13,7 +13,7 @@ import dearpygui.dearpygui as dpg
 from uuid import uuid4
 
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -39,7 +39,7 @@ class TimelineModule:
     async def add_update_operation(self) -> Optional[Any]:
         try:
             operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=ABCOperation, name="gui_TimelineUpdateTask",
+                operation_type=BaseOperation, name="gui_TimelineUpdateTask",
                 func=self.draw_timeline, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation
@@ -61,7 +61,7 @@ class TimelineModule:
                         self.update_operation_element(node.operation, layer_index, idx)
             await asyncio.sleep(0.1)
 
-    def update_operation_element(self, operation: ABCOperation, layer_index: int, idx: int) -> None:
+    def update_operation_element(self, operation: BaseOperation, layer_index: int, idx: int) -> None:
         operation_id = f"operation_{operation.name}_{idx}_{layer_index}"
 
         if operation_id in self.operation_elements:
@@ -73,10 +73,10 @@ class TimelineModule:
                 dpg.add_button(label="Drop Here", callback=lambda: self.reorder_operations(layer_index, operation, idx))
                 self.operation_elements[operation_id] = {'text': text_tag}
 
-    def set_dragging_operation(self, operation: ABCOperation, operation_id: str) -> None:
+    def set_dragging_operation(self, operation: BaseOperation, operation_id: str) -> None:
         self.dragging_operation = (operation, operation_id)
 
-    def reorder_operations(self, layer_index: int, operation: ABCOperation, new_index: int) -> None:
+    def reorder_operations(self, layer_index: int, operation: BaseOperation, new_index: int) -> None:
         if self.dragging_operation:
             dragged_operation, _ = self.dragging_operation
             operation_chain = self.operation_sequencer.sequencer[layer_index]

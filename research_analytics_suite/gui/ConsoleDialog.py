@@ -20,7 +20,7 @@ from typing import Optional, Any
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.operation_manager.OperationControl import OperationControl
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 from research_analytics_suite.utils.UserInputManager import UserInputManager
 
@@ -64,7 +64,7 @@ class ConsoleDialog:
         """
         try:
             operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=ABCOperation, name="gui_ConsoleUpdateTask", func=self.update_logger_output,
+                operation_type=BaseOperation, name="gui_ConsoleUpdateTask", func=self.update_logger_output,
                 persistent=True, concurrent=True)
             operation.is_ready = True
             return operation

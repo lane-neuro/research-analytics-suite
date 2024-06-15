@@ -17,10 +17,10 @@ Status: Prototype
 import dask
 import dask.distributed
 
-from research_analytics_suite.operation_manager.operations.ABCOperation import ABCOperation
+from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
 
 
-class DaskOperation(ABCOperation):
+class DaskOperation(BaseOperation):
     """
     A class used to represent a Dask Operation in the Research Analytics Suite.
 
@@ -42,7 +42,7 @@ class DaskOperation(ABCOperation):
             persistent (bool, optional): Whether the operation should run indefinitely. Defaults to False.
             is_cpu_bound (bool, optional): Whether the operation is CPU-bound. Defaults to False.
             concurrent (bool, optional): Whether child operations should run concurrently. Defaults to False.
-            parent_operation (ABCOperation, optional): The parent operation. Defaults to None.
+            parent_operation (BaseOperation, optional): The parent operation. Defaults to None.
             local_vars (dict, optional): Local variables for the function execution. Defaults to None.
             client (dask.distributed.Client, optional): The Dask client for managing the computation.
         """
