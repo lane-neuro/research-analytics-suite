@@ -163,7 +163,6 @@ class GuiLauncher:
                     await self.setup_panes()
 
                 with dpg.child_window(tag="right_pane", width=int(dpg.get_viewport_width() * 0.37)):
-                    dpg.add_text("Operation Control")
                     self.operation_window = OperationManagerDialog(container_width=dpg.get_item_width("right_pane"))
                     await self.operation_window.initialize_dialog()
 

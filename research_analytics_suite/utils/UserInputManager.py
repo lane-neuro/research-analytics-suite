@@ -74,7 +74,7 @@ class UserInputManager:
             self._logger.error(Exception("UserInputManager.process_user_input: Machine Learning not implemented."))
             return "UserInputManager.process_user_input: Machine Learning not implemented."
 
-            # ml_operation = MachineLearning(operation_control=self.operation_control
+            # ml_operation = MachineLearning(_operation_control=self._operation_control
             # ) result = await ml_operation.extract_data(
             # file_path="../../../sample_datasets/2024-Tariq-et-al_olfaction/8-30-2021-2-08
             # PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv") print(

@@ -670,6 +670,9 @@ class BaseOperation(ABC):
         _self_copy._config = None
         _self_copy._lock = None
         _self_copy._task = None
+        _self_copy._progress = 0
+        _self_copy._status = "idle"
+        _self_copy._is_ready = False
         # _self_copy._func = None  # Set to None or dummy function
         _self_copy.__delattr__('_initialized')
         return _self_copy

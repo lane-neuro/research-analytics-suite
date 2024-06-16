@@ -27,7 +27,7 @@ class MachineLearning(BaseOperation):
         """Initialize DataLoader operation."""
         try:
             '''
-            self.data_loader_operation = await self.operation_control.operation_manager.add_operation(
+            self.data_loader_operation = await self._operation_control.operation_manager.add_operation(
                 operation_type=DataLoader, name="ML_dataLoader",
                 transformed_data=self.transformed_data, data_destination=data_destination)'''
             print("MachineLearningOperation.load_data: Loading data...")
@@ -37,7 +37,7 @@ class MachineLearning(BaseOperation):
 
     async def extract_data(self, file_path):
         """Extract data from the given file path."""
-        # self.data_extractor_operation = await self.operation_control.operation_manager.add_operation(
+        # self.data_extractor_operation = await self._operation_control.operation_manager.add_operation(
         #    operation_type=DataExtractor, data_source=file_path, data_format='csv')
         return await self.data_extractor_operation.execute()
 

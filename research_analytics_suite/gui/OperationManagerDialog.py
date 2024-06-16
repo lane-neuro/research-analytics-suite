@@ -31,8 +31,8 @@ class OperationManagerDialog:
     """A class to manage the dialog for displaying and controlling operations."""
 
     SLEEP_DURATION = 0.05
-    TILE_WIDTH = 530  # Fixed width for each operation tile
-    TILE_HEIGHT = 470  # Fixed height for each operation tile
+    TILE_WIDTH = 430  # Fixed width for each operation tile
+    TILE_HEIGHT = 370  # Fixed height for each operation tile
     TILE_PADDING = 20  # Padding between tiles
 
     def __init__(self, container_width: int = 1700):
@@ -42,8 +42,7 @@ class OperationManagerDialog:
         Args:
             container_width (int): Initial width of the container.
         """
-        self.window = dpg.add_group(parent="right_pane", tag="operation_gallery",
-                                    horizontal=True)
+        self.window = None
         self.create_operation_module = CreateOperationModule(height=400, width=800,
                                                              parent_operation=None)
         self._config = Config()
@@ -74,6 +73,8 @@ class OperationManagerDialog:
         self.create_operation_module.draw_button(label="Create New Operation", width=200, parent="right_pane")
         dpg.add_button(label="Load Operation from File", width=200, parent="right_pane",
                        callback=self.load_operation)
+        self.window = dpg.add_group(parent="right_pane", tag="operation_gallery",
+                                    horizontal=False)
         dpg.set_viewport_resize_callback(self.on_resize)
 
     async def add_update_operation(self) -> Optional[Any]:
@@ -107,10 +108,10 @@ class OperationManagerDialog:
                                                                                width=self.TILE_WIDTH,
                                                                                height=self.TILE_HEIGHT)
                         await self.operation_items[node.operation].initialize()
-                        self.add_operation_tile(node.operation)
+                        await self.add_operation_tile(node.operation)
             await asyncio.sleep(self.SLEEP_DURATION)
 
-    def add_operation_tile(self, operation: BaseOperation) -> None:
+    async def add_operation_tile(self, operation: BaseOperation) -> None:
         """
         Adds a new operations tile to the GUI.
 
@@ -125,7 +126,7 @@ class OperationManagerDialog:
         child_window = dpg.add_child_window(width=self.TILE_WIDTH, height=self.TILE_HEIGHT,
                                             parent=self.current_row_group, tag=tag)
         self._logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
-        self.operation_items[operation].draw(parent=tag)
+        await self.operation_items[operation].draw(parent=tag)
 
     def load_operation(self, sender: str, data: dict) -> None:
         """Loads operations from a file."""
@@ -167,7 +168,7 @@ class OperationManagerDialog:
         await self.operation_control.operation_manager.add_operation(operation_type=BaseOperation, *(_args or ()),
                                                                      **(_kargs or {}))
 
-    def on_resize(self, sender: str, data: dict) -> None:
+    async def on_resize(self, sender: str, data: dict) -> None:
         """
         Handles the resize event and adjusts the number of tiles per row.
 
@@ -176,14 +177,14 @@ class OperationManagerDialog:
             data (dict): The data associated with the event.
         """
         new_width = dpg.get_viewport_client_width() - 220
-        new_tiles_per_row = self.calculate_tiles_per_row(new_width)
+        new_tiles_per_row = 1  # self.calculate_tiles_per_row(new_width)
         if new_tiles_per_row != self.tiles_per_row:
             self.tiles_per_row = new_tiles_per_row
-            self.refresh_display()
+            await self.refresh_display()
 
-    def refresh_display(self) -> None:
+    async def refresh_display(self) -> None:
         """Refreshes the display to adjust the tiles per row."""
         dpg.delete_item(self.window, children_only=True)
         self.current_row_group = None
         for operation_module in self.operation_items.values():
-            self.add_operation_tile(operation_module.operation)
+            await self.add_operation_tile(operation_module.operation)

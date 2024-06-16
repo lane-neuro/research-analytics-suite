@@ -38,7 +38,6 @@ class PersistentOperationChecker:
         Initializes the PersistentOperationChecker with the necessary components.
 
         Parameters:
-        - operation_control: The control interface for operations.
         - operation_manager (OperationManager): The manager responsible for operations.
         - sequencer (OperationSequencer): The sequencer that holds operations to be executed.
         - task_creator (TaskCreator): The task creator that handles task generation.
