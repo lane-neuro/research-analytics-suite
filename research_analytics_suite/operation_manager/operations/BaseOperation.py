@@ -1,3 +1,17 @@
+"""
+BaseOperation Module
+
+This module defines the BaseOperation class, an abstract base class for all operations in the research analytics suite.
+
+Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
+"""
 import asyncio
 import json
 import os.path

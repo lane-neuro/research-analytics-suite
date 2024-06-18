@@ -175,4 +175,6 @@ class Config:
 
     async def save_to_file(self, file_path):
         async with aiofiles.open(file_path, 'w') as f:
-            await f.write(json.dumps(self.__dict__, indent=4))
+            _copy = self.__dict__.copy()
+            del _copy['_initialized']
+            await f.write(json.dumps(_copy, indent=4))

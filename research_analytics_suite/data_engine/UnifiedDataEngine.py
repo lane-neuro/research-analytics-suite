@@ -64,6 +64,26 @@ class UnifiedDataEngine:
         self.live_input_source = None  # Initialize live input source
         self.engine_id = f"{uuid.uuid4()}"
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state['_logger'] = None
+        state['_config'] = None
+        state['data_cache'] = None
+        state['dask_client'] = None
+        state['live_input_source'] = None
+        state['_cache'] = None
+        state['analytics'] = None
+        state['torch_data'] = None
+        state['dask_data'] = None
+        state['_workspace'] = None
+        state['live_data_handler'] = None
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._logger = CustomLogger()
+        self.live_input_source = None
+
     def runtime_id(self) -> str:
         """
         Returns the runtime ID of the UnifiedDataEngine instance.
@@ -243,24 +263,6 @@ class UnifiedDataEngine:
         data.pop('dask_client', None)
         data.pop('live_input_source', None)
         return data
-
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        state['_logger'] = None
-        state['dask_client'] = None
-        state['live_input_source'] = None
-        state['cache'] = None
-        state['analytics'] = None
-        state['torch_data'] = None
-        state['dask_data'] = None
-        state['workspace'] = None
-        state['live_data_handler'] = None
-        return state
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        self._logger = CustomLogger()
-        self.live_input_source = None
 
     def cache_data(self, key, data):
         """

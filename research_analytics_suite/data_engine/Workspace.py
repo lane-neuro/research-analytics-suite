@@ -173,9 +173,9 @@ class Workspace:
             os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR),
                         exist_ok=True)
 
-            for engine_id, data_engine in self._data_engines.items():
+            for runtime_id, data_engine in self._data_engines.items():
                 engine_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR,
-                                           engine_id)
+                                           data_engine.engine_id)
                 os.makedirs(engine_path, exist_ok=True)
                 await data_engine.save_engine(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME))
 

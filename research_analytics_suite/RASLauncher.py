@@ -119,14 +119,14 @@ async def RASLauncher():
     else:
         if _args.open_workspace is not None and _args.config is None:
             _args.config = os.path.join(os.path.expanduser(
-                f"~\\Research-Analytics-Suite\\workspaces\\"),
+                f"~\\Research-Analytics-Suite\\workspaces"),
                 f"{_args.open_workspace}",
                 'config.json')
 
         elif _args.open_workspace is None and _args.config is not None:
             _args.open_workspace = os.path.dirname(_args.config)
             if _args.open_workspace is None or _args.open_workspace == "":
-                _args.open_workspace = os.path.expanduser(f"~\\Research-Analytics-Suite\\workspaces\\")
+                _args.open_workspace = os.path.expanduser(f"~\\Research-Analytics-Suite\\workspaces")
 
         if not os.path.exists(f"{_args.directory}\\{_args.open_workspace}"):
             _logger.error(Exception(f"Workspace folder '{_args.open_workspace}' does not exist."))
