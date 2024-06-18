@@ -6,7 +6,6 @@ to provide a unified interface for handling data.
 
 Author: Lane
 """
-import json
 import os
 import pickle
 import uuid
@@ -40,6 +39,8 @@ class UnifiedDataEngine:
         data_cache: DataCache instance for caching data.
         live_input_source: Live data input source instance.
     """
+    _GENERATED_ID = None
+
     def __init__(self, backend='dask', dask_client=None, data=None, data_name=None):
         """
         Initializes the UnifiedDataEngine instance.
@@ -49,8 +50,9 @@ class UnifiedDataEngine:
             dask_client: Dask client instance. Default is None.
             data: The data point. Default is None.
         """
+        self._GENERATED_ID = uuid.uuid4()
         self.data = data
-        self.data_name = f"{data_name}_{uuid.uuid4()}" if data_name else f"data_{uuid.uuid4()}"
+        self.data_name = f"{data_name}" if data_name else f"data_{uuid.uuid4()[:4]}"
         self.backend = backend
         self._logger = CustomLogger()
         self._config = Config()
@@ -61,6 +63,24 @@ class UnifiedDataEngine:
         self.data_cache = DataCache()  # Initialize DataCache
         self.live_input_source = None  # Initialize live input source
         self.engine_id = f"{uuid.uuid4()}"
+
+    def runtime_id(self) -> str:
+        """
+        Returns the runtime ID of the UnifiedDataEngine instance.
+
+        Returns:
+            str: The runtime ID.
+        """
+        return f"{self._GENERATED_ID}"
+
+    def short_id(self) -> str:
+        """
+        Returns the short ID of the UnifiedDataEngine instance.
+
+        Returns:
+            str: The short ID.
+        """
+        return f"{self.data_name}_{self.engine_id[:4]}"
 
     def load_data(self, file_path):
         """

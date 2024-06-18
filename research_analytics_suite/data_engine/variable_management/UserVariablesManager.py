@@ -44,41 +44,46 @@ class UserVariablesManager:
         except Exception as e:
             self._logger.error(Exception(f"Error adding variable '{name}': {e}"), self)
 
-    async def get_variable(self, name) -> Mapping[str, Any]:
+    async def get_variable(self, name, memory_id=None) -> Mapping[str, Any]:
         """
         Retrieves the value of a variable by name from the storage.
 
         Args:
             name (str): The name of the variable.
+            memory_id (str, optional): The ID of the memory to which the variable belongs.
 
         Returns:
             The value of the variable.
         """
         try:
-            return await self.storage.get_variable_value(name)
+            return await self.storage.get_variable_value(name=name, memory_id=memory_id)
         except Exception as e:
             self._logger.error(Exception(f"Error retrieving variable '{name}': {e}"), self)
 
-    async def remove_variable(self, name):
+    async def remove_variable(self, name, memory_id=None):
         """
         Removes a variable by name from the storage.
 
         Args:
             name (str): The name of the variable to remove.
+            memory_id (str, optional): The ID of the memory to which the variable belongs.
         """
         try:
-            await self.storage.remove_variable(name)
+            await self.storage.remove_variable(name=name, memory_id=memory_id)
         except Exception as e:
             self._logger.error(Exception(f"Error removing variable '{name}': {e}"), self)
 
-    async def list_variables(self) -> dict:
+    async def list_variables(self, memory_id=None) -> dict:
         """
-        Lists all variables from the storage.
+        Lists all variables in the storage, optionally filtered by memory ID.
+
+        Args:
+            memory_id (str, optional): The ID of the memory to which the variables belong.
 
         Returns:
-            dict: A dictionary of all variables.
+            dict: A dictionary of variables.
         """
         try:
-            return await self.storage.list_variables()
+            return await self.storage.list_variables(memory_id=memory_id)
         except Exception as e:
             self._logger.error(Exception(f"Error listing variables: {e}"), self)

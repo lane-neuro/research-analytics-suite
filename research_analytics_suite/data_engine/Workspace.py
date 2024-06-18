@@ -96,8 +96,8 @@ class Workspace:
         Args:
             data_engine (DataEngineOptimized): The data engine to add.
         """
-        self._data_engines[data_engine.engine_id] = data_engine
-        self._logger.info(f"Data engine '{data_engine.engine_id}' added to workspace")
+        self._data_engines[data_engine.runtime_id()] = data_engine
+        self._logger.info(f"Data engine '{self._data_engines[data_engine.runtime_id()].short_id()}' added to workspace")
 
     def remove_data_engine(self, name):
         """
@@ -279,34 +279,78 @@ class Workspace:
 
     # Methods to interact with UserVariables
     async def add_user_variable(self, name, value=None, memory_id=None) -> dict:
+        """
+        Adds a new user variable to the workspace, optionally filtered by memory ID.
+
+        Args:
+            name (str): The name of the variable.
+            value: The value of the variable.
+            memory_id (str, optional): The ID of the memory to which the variable belongs.
+
+        Returns:
+            dict: The added variable.
+        """
         try:
             return await self.user_variables.add_variable(name=name, value=value, memory_id=memory_id)
         except Exception as e:
             self._logger.error(Exception(f"Failed to add user variable '{name}': {e}"), self)
 
-    async def get_user_variable(self, name):
+    async def get_user_variable(self, name, memory_id=None) -> dict:
+        """
+        Retrieves the value of a user variable by name from the workspace, optionally filtered by memory ID.
+
+        Args:
+            name (str): The name of the variable.
+            memory_id (str, optional): The ID of the memory to which the variable belongs.
+
+        Returns:
+            dict: The value of the variable.
+        """
         try:
-            return await self.user_variables.get_variable(name)
+            return await self.user_variables.get_variable(name=name, memory_id=memory_id)
         except Exception as e:
             self._logger.error(Exception(f"Failed to get user variable '{name}': {e}"), self)
 
-    async def remove_user_variable(self, name):
+    async def remove_user_variable(self, name, memory_id=None):
+        """
+        Removes a user variable by name from the workspace, optionally filtered by memory ID.
+
+        Args:
+            name (str): The name of the variable to remove.
+            memory_id (str, optional): The ID of the memory to which the variable belongs.
+        """
         try:
-            await self.user_variables.remove_variable(name)
+            await self.user_variables.remove_variable(name=name, memory_id=memory_id)
         except Exception as e:
             self._logger.error(Exception(f"Failed to remove user variable '{name}': {e}"), self)
 
-    async def list_user_variables(self) -> dict:
+    async def list_user_variables(self, memory_id=None) -> dict:
+        """
+        Lists all user variables in the workspace, optionally filtered by memory ID.
+
+        Args:
+            memory_id (str, optional): The ID of the memory to which the variables belong.
+
+        Returns:
+            dict: A dictionary of all user variables, optionally filtered by memory ID.
+        """
         try:
-            return await self.user_variables.list_variables()
+            return await self.user_variables.list_variables(memory_id=memory_id)
         except Exception as e:
             self._logger.error(Exception(f"Failed to list user variables: {e}"), self)
 
-    async def save_user_variables(self, file_path):
+    async def save_user_variables(self, file_path, memory_id=None):
+        """
+        Saves the user variables database to the specified file, optionally filtered by memory ID.
+
+        Args:
+            file_path: The path to the save file.
+            memory_id (str, optional): The ID of the memory to which the variables belong.
+        """
         try:
             # Ensure the directory for the save file exists
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            user_vars = await self.user_variables.list_variables()
+            user_vars = await self.user_variables.list_variables(memory_id=memory_id)
 
             async with aiofiles.open(file_path, 'wb') as dst:
                 await dst.write(pickle.dumps(user_vars))

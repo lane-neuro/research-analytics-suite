@@ -15,6 +15,8 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class SQLiteStorage(BaseStorage):
     """
     SQLite storage implementation for user variables.
+
+    memory_id is not used in this implementation.
     """
 
     def __init__(self, *args, **kwargs):
@@ -38,7 +40,7 @@ class SQLiteStorage(BaseStorage):
         except Exception as e:
             self._logger.error(Exception(f"Error setting up SQLite database: {e}"), self)
 
-    async def add_variable(self, name, value):
+    async def add_variable(self, name, value, memory_id=None):
         """
         Adds a new variable to the SQLite database.
 
@@ -53,7 +55,7 @@ class SQLiteStorage(BaseStorage):
         except Exception as e:
             self._logger.error(Exception(f"Error adding variable '{name}': {e}"), self)
 
-    async def get_variable_value(self, name):
+    async def get_variable_value(self, name, memory_id=None):
         """
         Retrieves the value of a variable by name from the SQLite database.
 
@@ -71,7 +73,7 @@ class SQLiteStorage(BaseStorage):
         except Exception as e:
             self._logger.error(Exception(f"Error retrieving variable '{name}': {e}"), self)
 
-    async def remove_variable(self, name):
+    async def remove_variable(self, name, memory_id=None):
         """
         Removes a variable by name from the SQLite database.
 
@@ -85,7 +87,7 @@ class SQLiteStorage(BaseStorage):
         except Exception as e:
             self._logger.error(Exception(f"Error removing variable '{name}': {e}"), self)
 
-    async def list_variables(self):
+    async def list_variables(self, memory_id=None):
         """
         Lists all variables from the SQLite database.
 

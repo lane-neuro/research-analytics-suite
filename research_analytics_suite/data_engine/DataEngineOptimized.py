@@ -19,11 +19,6 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 class DataEngineOptimized(UnifiedDataEngine):
     """
     A class to handle larger datasets efficiently using distributed computing and advanced caching mechanisms.
-
-    Attributes:
-        cache (DataCache): Data cache for storing intermediate results.
-        memory_limit (float): Memory limit for caching, in bytes.
-        workspace (Workspace): Workspace instance for managing saving and loading workspaces.
     """
     def __init__(self, data=None):
         """
@@ -36,13 +31,13 @@ class DataEngineOptimized(UnifiedDataEngine):
         self._logger = CustomLogger()
 
         from research_analytics_suite.data_engine.Workspace import Workspace
-        self.workspace = Workspace()
+        self._workspace = Workspace()
 
         self._config = Config()
 
-        self.cache = DataCache(self._config.CACHE_SIZE)
-        self.cache.register()
-        self.memory_limit = self._config.MEMORY_LIMIT
+        self._cache = DataCache(self._config.CACHE_SIZE)
+        self._cache.register()
+        self._memory_limit = self._config.MEMORY_LIMIT
 
         self.live_data_handler = LiveDataHandler(data_engine=self)
 
@@ -55,7 +50,7 @@ class DataEngineOptimized(UnifiedDataEngine):
         """
         self._logger.info(f"Performing operation: {operation_name}")
         result = self.data.map_partitions(self._apply_operation, operation_name)
-        self.cache.set(operation_name, result)
+        self._cache.set(operation_name, result)
         self._logger.info("Operation performed and result cached")
         return result
 
@@ -84,7 +79,7 @@ class DataEngineOptimized(UnifiedDataEngine):
         """
         self._logger.info("Updating live data")
         self.data = self.data.append(new_data)
-        self.cache.set('live_data', self.data)
+        self._cache.set('live_data', self.data)
         self._logger.info("Live data updated and cached")
 
     def monitor_memory_usage(self):
@@ -92,7 +87,7 @@ class DataEngineOptimized(UnifiedDataEngine):
         Monitors the memory usage and clears the cache if the memory limit is exceeded.
         """
         memory_used = psutil.virtual_memory().used
-        if memory_used > self.memory_limit:
+        if memory_used > self._memory_limit:
             self._logger.warning("Memory limit exceeded, clearing cache")
-            self.cache.clear()
+            self._cache.clear()
             self._logger.info("Cache cleared to free up memory")
