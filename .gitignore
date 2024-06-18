@@ -212,3 +212,4 @@ sample_datasets/2024-Tariq-et-al_olfaction/9-2-2021-3-11 PM-Mohammad-ETHSensor-C
 sample_datasets/2024-Tariq-et-al_olfaction/9-2-2021-4-07 PM-Mohammad-ETHSensor-CB5-28_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv
 list_directory.py
 directory_structure.txt
+.DS_Store
