@@ -63,8 +63,8 @@ class ConsoleDialog:
             The created update operations or None if an error occurred.
         """
         try:
-            operation = await self.operation_control.operation_manager.add_operation(
-                operation_type=BaseOperation, name="gui_ConsoleUpdateTask", func=self.update_logger_output,
+            operation = await self.operation_control.operation_manager.add_operation_with_parameters(
+                operation_type=BaseOperation, name="gui_ConsoleUpdateTask", action=self.update_logger_output,
                 persistent=True, concurrent=True)
             operation.is_ready = True
             return operation

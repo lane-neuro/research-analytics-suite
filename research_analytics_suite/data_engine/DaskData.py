@@ -37,15 +37,15 @@ class DaskData(BaseData):
         super().__init__(data)
         self.dask_dataframe = self.set_dataframe(data)
 
-    def apply(self, func):
+    def apply(self, action):
         """
         Applies a function to the Dask DataFrame.
 
         Args:
-            func (function): The function to apply to the Dask DataFrame.
+            action (function): The function to apply to the Dask DataFrame.
         """
         if self.dask_dataframe is not None:
-            self.dask_dataframe = self.dask_dataframe.map_partitions(func)
+            self.dask_dataframe = self.dask_dataframe.map_partitions(action)
         return self
 
     def set_dataframe(self, data) -> dd.DataFrame:

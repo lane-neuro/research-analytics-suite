@@ -40,7 +40,7 @@ class OperationModule:
         Initializes the OperationModule with the given operation, control, and logger.
 
         Args:
-            operation (BaseOperation): An instance of ABCOperation.
+            operation (BaseOperation): An instance of BaseOperation.
             width (int): The width of the module.
             height (int): The height of the module.
         """
@@ -87,9 +87,9 @@ class OperationModule:
             The created update operation or None if an error occurred.
         """
         try:
-            operation = await self._operation_control.operation_manager.add_operation(
+            operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_OperationUpdateTask",
-                func=self.update_gui, persistent=True, concurrent=True)
+                action=self.update_gui, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation
         except Exception as e:
@@ -150,15 +150,18 @@ class OperationModule:
                        height=max(int(self._height * 0.3), 120)):
             with dpg.child_window(border=False, width=int(self._width * 0.5), parent=self._parent_id,
                                   tag=f"description_{self._unique_id}"):
-                left_aligned_input_field(label="UniqueID", tag=f"unique_id_{self._unique_id}",
+                left_aligned_input_field(label="Unique ID", tag=f"unique_id_{self._unique_id}",
                                          parent=f"description_{self._unique_id}",
                                          value=self._operation.unique_id, readonly=True)
+                left_aligned_input_field(label="Runtime ID", tag=f"runtime_id_{self._unique_id}",
+                                         parent=f"description_{self._unique_id}",
+                                         value=self._operation.runtime_id, readonly=True)
                 dpg.add_separator()
                 left_aligned_input_field(label="Name", value=self._operation.name, tag=f"name_{self._unique_id}",
                                          parent=f"description_{self._unique_id}")
 
-                left_aligned_input_field(label="Function", value=f"{self._operation.func}", multiline=True,
-                                         tag=f"function_{self._unique_id}", parent=f"description_{self._unique_id}",
+                left_aligned_input_field(label="Action", value=f"{self._operation.action}", multiline=True,
+                                         tag=f"action_{self._unique_id}", parent=f"description_{self._unique_id}",
                                          readonly=False)
 
         with dpg.child_window(border=False, width=-1, parent=self._parent_id, tag=f"parameters_{self._unique_id}"):
@@ -194,19 +197,14 @@ class OperationModule:
                         left_aligned_button(label="Open Parent Operation", tag=f"open_parent_{self._unique_id}",
                                             parent=f"container_{self._unique_id}", callback=self._open_parent_operation,
                                             enabled=True, text=self._operation.parent_operation.name)
-                    else:
-                        left_aligned_button(label="", tag=f"add_parent_{self._unique_id}",
-                                            parent=f"container_{self._unique_id}",
-                                            callback=await self.add_child_operation(self._operation.parent_operation),
-                                            enabled=True, text="Add Parent Operation")
-                    dpg.add_separator()
+                        dpg.add_separator()
 
                     dpg.add_text("Child Operations")
                     with dpg.group(tag=self._child_ops_parent, parent=f"container_{self._unique_id}"):
-                        if self._operation.child_operations:
-                            for child_op in self._operation.child_operations:
+                        if self._operation.child_operations.values() is not None:
+                            for child_op in self._operation.child_operations.values():
                                 with dpg.group(parent=self._child_ops_parent,
-                                               tag=f"{child_op.unique_id}_{self._unique_id}"):
+                                               tag=f"{child_op.runtime_id}_{self._unique_id}"):
                                     dpg.add_input_text(label="Child Operation Name", default_value=child_op.name,
                                                        readonly=True)
                                     dpg.add_input_text(label="Status", default_value=child_op.status, readonly=True)
@@ -238,11 +236,11 @@ class OperationModule:
                                    overlay="%.1f%%" % self._operation.progress[0])
 
             if dpg.does_item_exist(self._child_ops_parent):
-                child_operations = self._operation.child_operations
+                current_child_operations = len(self._operation.child_operations)
                 children = dpg.get_item_children(self._child_ops_parent, slot=1)
-                if len(children) != len(child_operations):
+                if len(children) != current_child_operations:
                     dpg.delete_item(self._child_ops_parent, children_only=True)
-                    for child_op in child_operations:
+                    for child_op in self._operation.child_operations.values():
                         dpg.add_input_text(label="Child Operation Name", default_value=child_op.name, readonly=True,
                                            parent=self._child_ops_parent)
                         dpg.add_input_text(label="Status", default_value=child_op.status, readonly=True,
@@ -278,7 +276,7 @@ class OperationModule:
         """Removes a child operation from the current operation."""
         self._operation.remove_child_operation(child_operation)
 
-    def _open_parent_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+    async def _open_parent_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Opens the parent operation in the GUI."""
 
         def on_ok_button(sender, app_data, user_data):
@@ -290,7 +288,7 @@ class OperationModule:
             popup_id = dpg.generate_uuid()
 
             with dpg.window(label="Parent Operation", modal=True, tag=popup_id, width=self._width, height=self._height):
-                parent_operation_gui.draw(popup_id)
+                await parent_operation_gui.draw(popup_id)
                 dpg.add_button(label="Close", callback=on_ok_button)
 
             dpg.show_item(popup_id)

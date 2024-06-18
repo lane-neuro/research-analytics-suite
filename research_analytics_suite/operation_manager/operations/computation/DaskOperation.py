@@ -27,7 +27,7 @@ class DaskOperation(BaseOperation):
     This class provides methods for setting the Dask computation to be processed and executing the operations.
 
     Attributes:
-        _func (callable): A Dask computation function to be executed.
+        _action (callable): A Dask computation function to be executed.
         local_vars (dict): Local variables to be used in the function execution.
         client (dask.distributed.Client): The Dask client for managing the computation.
     """
@@ -37,7 +37,7 @@ class DaskOperation(BaseOperation):
         Initialize the Dask operation instance.
 
         Args:
-            func (callable, optional): The Dask computation to be executed by the operation.
+            action (callable, optional): The Dask computation to be executed by the operation.
             name (str, optional): The name of the operation. Defaults to "DaskOperation".
             persistent (bool, optional): Whether the operation should run indefinitely. Defaults to False.
             is_cpu_bound (bool, optional): Whether the operation is CPU-bound. Defaults to False.
@@ -69,7 +69,7 @@ class DaskOperation(BaseOperation):
         if self._client is None:
             self._client = dask.distributed.Client()
 
-    async def execute_func(self):
+    async def execute_action(self):
         """
         Execute the Dask computation associated with the operation.
 
@@ -79,7 +79,7 @@ class DaskOperation(BaseOperation):
         temp_vars = self._local_vars.copy()
         try:
             # Execute the Dask computation
-            future = self.client.submit(self._func)
+            future = self.client.submit(self._action)
             self._result_output = future.result()
         except Exception as e:
             self.status = "error"

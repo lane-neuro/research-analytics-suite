@@ -165,8 +165,7 @@ class Workspace:
                         exist_ok=True)
             os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.WORKSPACE_DIR),
                         exist_ok=True)
-            os.makedirs(
-                os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
                              self._config.WORKSPACE_OPERATIONS_DIR),
                         exist_ok=True)
             os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.BACKUP_DIR),
@@ -205,11 +204,14 @@ class Workspace:
             if not os.path.exists(workspace_path):
                 if os.path.exists(os.path.join(workspace_path, 'config.json')):
                     workspace_path = os.path.join(workspace_path, 'config.json')
-            else:
-                workspace_path = os.path.join(workspace_path, 'config.json')
+                else:
+                    raise FileNotFoundError(f"Workspace directory not found: {workspace_path}")
+
             self._config = await self._config.reload_from_file(workspace_path)
 
-            workspace_path = os.path.dirname(workspace_path)
+            if workspace_path.endswith('config.json'):
+                workspace_path = os.path.dirname(workspace_path)
+
             workspace = Workspace(self._config.DISTRIBUTED)
 
             for engine_id in os.listdir(os.path.join(workspace_path, f"{self._config.ENGINE_DIR}")):

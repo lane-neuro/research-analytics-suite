@@ -177,17 +177,17 @@ class UnifiedDataEngine:
             raise ValueError("Backend must be either 'dask' or 'torch'")
         self.backend = backend
 
-    def apply(self, func):
+    def apply(self, action):
         """
         Applies a function to the data.
 
         Args:
-            func (function): The function to apply to the data.
+            action (function): The function to apply to the data.
         """
         if self.backend == 'dask':
-            self.dask_data.apply(func)
+            self.dask_data.apply(action)
         elif self.backend == 'torch':
-            self.torch_data = TorchData(func(self.torch_data.get_data()))
+            self.torch_data = TorchData(action(self.torch_data.get_data()))
 
     def compute(self):
         """

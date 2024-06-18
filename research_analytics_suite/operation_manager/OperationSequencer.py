@@ -46,16 +46,23 @@ class OperationSequencer:
         Args:
             operation (Operation): The operation to add to the sequencer.
         """
+        self._logger.info(f"Adding operation to sequencer: {operation.name} with ID: {operation.unique_id}")
+        print(f"Adding operation to sequencer: {operation.name} with ID: {operation.unique_id}")
+
         if operation.parent_operation is None:
             if not isinstance(operation, OperationChain):
                 operation_chain = OperationChain(operation)
             else:
                 operation_chain = operation
             self.sequencer.append(operation_chain)
+            self._logger.info(f"Operation {operation.name} added as a new chain.")
+            print(f"Operation {operation.name} added as a new chain.")
         else:
             parent_chain = self.get_chain_by_operation(operation.parent_operation)
             if parent_chain:
                 parent_chain.add_operation_to_chain(operation)
+                self._logger.info(f"Operation {operation.name} added to parent chain of {operation.parent_operation.name}.")
+                print(f"Operation {operation.name} added to parent chain of {operation.parent_operation.name}.")
 
     def insert_operation_in_chain(self, index: int, operation_chain: OperationChain, operation: BaseOperation) -> None:
         """

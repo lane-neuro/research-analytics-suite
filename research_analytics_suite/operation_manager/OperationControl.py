@@ -32,7 +32,7 @@ from research_analytics_suite.utils.UserInputManager import UserInputManager
 
 class OperationControl:
     """A class for handling the lifecycle of Operation instances."""
-    SLEEP_TIME = 0.15
+    SLEEP_TIME = 0.20
     _instance = None
     _lock = asyncio.Lock()
 
@@ -97,13 +97,16 @@ class OperationControl:
                                                                        persistent_op_checker=self.persistent_operation_checker)
                     self._initialized = True
                     self._logger.info("OperationControl.initialize: OperationControl initialized.")
+                    print("OperationControl initialized")
 
     async def start(self):
         """Starts the operations handler."""
+        print("Starting OperationControl main loop...")
         self.main_loop.run_forever()
 
     async def exec_loop(self):
         """Executes the main loop of the operations manager."""
+        print("Entering OperationControl exec_loop...")
         while True:
             await self.lifecycle_manager.exec_loop()
             await asyncio.sleep(self.SLEEP_TIME)

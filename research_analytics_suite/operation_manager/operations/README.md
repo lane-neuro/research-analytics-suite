@@ -67,12 +67,12 @@ The `operation_manager/operations` subpackage handles the definition and managem
 
 The `operations` subpackage within the `operation_manager` module defines and manages various operations in the Research Analytics Suite (RAS). The key components of this subpackage include:
 
-- **ABCOperation**: An abstract base class that provides a common interface for all operations. It defines methods like `execute`, `start`, `pause`, `stop`, `resume`, and others which must be implemented by any subclass.
-- **Operation**: A concrete implementation of the `ABCOperation` class, responsible for managing tasks, tracking progress, and handling exceptions during execution.
+- **BaseOperation**: An abstract base class that provides a common interface for all operations. It defines methods like `execute`, `start`, `pause`, `stop`, `resume`, and others which must be implemented by any subclass.
+- **Operation**: A concrete implementation of the `BaseOperation` class, responsible for managing tasks, tracking progress, and handling exceptions during execution.
 - **CustomOperation**: A subclass of `Operation` that handles custom operations requiring function processing. It allows setting the function to be processed and managing its execution.
 
-### ABCOperation
-The `ABCOperation` class provides a common interface for all operations in the RAS, requiring child classes to implement essential methods for operation management, such as `execute`, `start`, `pause`, `stop`, `resume`, etc.
+### BaseOperation
+The `BaseOperation` class provides a common interface for all operations in the RAS, requiring child classes to implement essential methods for operation management, such as `execute`, `start`, `pause`, `stop`, `resume`, etc.
 
 ### Operation
 The `Operation` class represents a task that can be managed through various states like started, stopped, paused, resumed, and reset. It tracks the progress of the task and handles any exceptions that occur during execution.

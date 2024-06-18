@@ -65,10 +65,10 @@ class UserInputManager:
                                  "-arenaOct3shuffle1_200000_filtered.csv")
                 return df.compute()
 
-            await self._operation_control.operation_manager.add_operation(operation_type=DaskOperation,
-                                                                          func=load_data,
-                                                                          name="LoadData",
-                                                                          client=dask.distributed.Client())
+            await self._operation_control.operation_manager.add_operation_with_parameters(operation_type=DaskOperation,
+                                                                                          action=load_data,
+                                                                                          name="LoadData",
+                                                                                          client=dask.distributed.Client())
 
         elif user_input == "machine_learning":
             self._logger.error(Exception("UserInputManager.process_user_input: Machine Learning not implemented."))
@@ -120,7 +120,7 @@ class UserInputManager:
             return "UserInputManager.process_user_input: Displaying local vars..."
 
         else:
-            self._logger.info(f"UserInputManager.process_user_input: Executing custom operation with func: {user_input}")
-            await self._operation_control.operation_manager.add_operation(operation_type=BaseOperation,
-                                                                          func=user_input, name="ConsoleCommand")
-            return f"UserInputManager.process_user_input: Added custom operation with func: {user_input}"
+            self._logger.info(f"UserInputManager.process_user_input: Executing custom operation with action: {user_input}")
+            await self._operation_control.operation_manager.add_operation_with_parameters(operation_type=BaseOperation,
+                                                                                          action=user_input, name="ConsoleCommand")
+            return f"UserInputManager.process_user_input: Added custom operation with action: {user_input}"

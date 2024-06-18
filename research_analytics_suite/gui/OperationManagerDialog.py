@@ -16,7 +16,6 @@ Status: Prototype
 """
 import asyncio
 from typing import Optional, Any
-
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.data_engine.Config import Config
@@ -48,7 +47,7 @@ class OperationManagerDialog:
         self._config = Config()
         self.operation_control = OperationControl()
         self._logger = CustomLogger()
-        self.operation_items = {}  # Store operation GUI items
+        self.operation_items = dict[BaseOperation.runtime_id, OperationModule]()
         self.update_operation = None
         self.container_width = container_width
         self.tiles_per_row = self.calculate_tiles_per_row(container_width)
@@ -85,10 +84,12 @@ class OperationManagerDialog:
             Operation: The created update operations or None if an error occurred.
         """
         try:
-            operation = await self.operation_control.operation_manager.add_operation(
+            self._logger.debug("Adding update operation...")
+            operation = await self.operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_OperationManagerUpdateTask",
-                func=self.display_operations, persistent=True, concurrent=True)
+                action=self.display_operations, persistent=True, concurrent=True)
             operation.is_ready = True
+            self._logger.debug(f"Update operation added: {operation}")
             return operation
         except Exception as e:
             self._logger.error(e, self)
@@ -98,35 +99,56 @@ class OperationManagerDialog:
         """Continuously checks for new operations and displays them in the GUI."""
         while True:
             sequencer_copy = set(self.operation_control.sequencer.sequencer)
+            self._logger.debug(f"Current operations in sequencer: {len(sequencer_copy)} chains")
+
             for operation_chain in sequencer_copy:
                 for node in operation_chain:
-                    if (node.operation not in self.operation_items
-                            and node.operation.name != "gui_OperationUpdateTask"
+                    self._logger.debug(f"Checking operation: {node.operation.name} with runtime_id: {node.operation.runtime_id}")
+
+                    # Debugging conditions
+                    if node.operation.runtime_id in self.operation_items.keys():
+                        self._logger.debug(f"Operation {node.operation.name} with runtime_id: {node.operation.runtime_id} is already in operation_items.")
+                    if node.operation.name == "gui_OperationManagerUpdateTask":
+                        self._logger.debug(f"Operation {node.operation.name} with runtime_id: {node.operation.runtime_id} is gui_OperationManagerUpdateTask.")
+                    if node.operation.name.startswith("gui_") or node.operation.name.startswith("sys_"):
+                        self._logger.debug(f"Operation {node.operation.name} with runtime_id: {node.operation.runtime_id} starts with gui_ or sys_.")
+
+                    # Condition to add operations
+                    if (node.operation.runtime_id not in self.operation_items.keys()
+                            and node.operation.name != "gui_OperationManagerUpdateTask"
                             and not node.operation.name.startswith("gui_")
                             and not node.operation.name.startswith("sys_")):
-                        self.operation_items[node.operation] = OperationModule(operation=node.operation,
-                                                                               width=self.TILE_WIDTH,
-                                                                               height=self.TILE_HEIGHT)
-                        await self.operation_items[node.operation].initialize()
+                        self._logger.info(f"Adding operation to display: {node.operation.name} with runtime_id: {node.operation.runtime_id}")
+                        self._logger.debug(f"Adding operation to display: {node.operation.name} with runtime_id: {node.operation.runtime_id}")
+                        self.operation_items[node.operation.runtime_id] = OperationModule(operation=node.operation,
+                                                                                          width=self.TILE_WIDTH,
+                                                                                          height=self.TILE_HEIGHT)
+                        await self.operation_items[node.operation.runtime_id].initialize()
                         await self.add_operation_tile(node.operation)
             await asyncio.sleep(self.SLEEP_DURATION)
+            self._logger.debug("Display operations loop sleeping...")
 
-    async def add_operation_tile(self, operation: BaseOperation) -> None:
+    async def add_operation_tile(self, operation: 'BaseOperation') -> None:
         """
         Adds a new operations tile to the GUI.
 
         Args:
-            operation (CustomOperation): The operations to add as a tile.
+            operation (BaseOperation): The operations to add as a tile.
         """
         if (self.current_row_group is None
                 or len(dpg.get_item_children(self.current_row_group)[1]) >= self.tiles_per_row):
             self.current_row_group = dpg.add_group(horizontal=True, parent=self.window)
             self._logger.debug(f"Created new row group: {self.current_row_group}")
-        tag = f"{operation.unique_id}_tile"
+            self._logger.debug(f"Created new row group: {self.current_row_group}")
+
+        tag = f"{operation.runtime_id}_tile"
+        self._logger.debug(f"Creating child window for operation: {operation.name} with tag: {tag}")
+        self._logger.debug(f"Creating child window for operation: {operation.name} with tag: {tag}")
         child_window = dpg.add_child_window(width=self.TILE_WIDTH, height=self.TILE_HEIGHT,
                                             parent=self.current_row_group, tag=tag)
         self._logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
-        await self.operation_items[operation].draw(parent=tag)
+        self._logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
+        await self.operation_items[operation.runtime_id].draw(parent=tag)
 
     def load_operation(self, sender: str, data: dict) -> None:
         """Loads operations from a file."""
@@ -138,7 +160,7 @@ class OperationManagerDialog:
                                           f"{self._config.WORKSPACE_OPERATIONS_DIR}",
                              callback=self.load_operation_callback, tag="selected_file",
                              width=500, height=500, modal=True):
-            dpg.add_file_extension(".pkl", color=(255, 255, 255, 255))
+            dpg.add_file_extension(".json", color=(255, 255, 255, 255))
 
     def load_operation_callback(self, sender: str, data: dict) -> None:
         """
@@ -163,10 +185,27 @@ class OperationManagerDialog:
             return
 
         self._logger.info(f"Loading operation from file: {_file_path}")
+        self._logger.debug(f"Loading operation from file: {_file_path}")
 
-        _operation, _args, _kargs = await BaseOperation.load_from_disk(_file_path)
-        await self.operation_control.operation_manager.add_operation(operation_type=BaseOperation, *(_args or ()),
-                                                                     **(_kargs or {}))
+        loaded_operations = dict[BaseOperation.runtime_id, 'BaseOperation']()
+        try:
+            await BaseOperation.load_operation_group(_file_path, loaded_operations)
+            self._logger.debug(f"Loaded operations: {loaded_operations}")
+        except Exception as e:
+            self._logger.error(e, self)
+            self._logger.debug(f"Error loading operations from file: {e}")
+            return
+
+        # Uncomment and adjust if needed
+        # try:
+        #     for operation in loaded_operations.values():
+        #         await self.operation_control.operation_manager.add_initialized_operation(operation)
+        # except Exception as e:
+        #     self._logger.error(e, self)
+        #     return
+
+        await self.refresh_display()
+        self._logger.debug("Display refreshed after loading operations.")
 
     async def on_resize(self, sender: str, data: dict) -> None:
         """
@@ -176,15 +215,17 @@ class OperationManagerDialog:
             sender (str): The sender of the event.
             data (dict): The data associated with the event.
         """
-        new_width = dpg.get_viewport_client_width() - 220
-        new_tiles_per_row = 1  # self.calculate_tiles_per_row(new_width)
+        new_width = 1 # dpg.get_viewport_client_width() - 220
+        new_tiles_per_row = self.calculate_tiles_per_row(new_width)
         if new_tiles_per_row != self.tiles_per_row:
             self.tiles_per_row = new_tiles_per_row
             await self.refresh_display()
 
     async def refresh_display(self) -> None:
         """Refreshes the display to adjust the tiles per row."""
+        self._logger.debug("Refreshing display...")
         dpg.delete_item(self.window, children_only=True)
         self.current_row_group = None
         for operation_module in self.operation_items.values():
             await self.add_operation_tile(operation_module.operation)
+        self._logger.debug("Display refreshed.")

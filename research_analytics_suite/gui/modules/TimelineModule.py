@@ -38,9 +38,9 @@ class TimelineModule:
 
     async def add_update_operation(self) -> Optional[Any]:
         try:
-            operation = await self.operation_control.operation_manager.add_operation(
+            operation = await self.operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_TimelineUpdateTask",
-                func=self.draw_timeline, persistent=True, concurrent=True)
+                action=self.draw_timeline, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation
         except Exception as e:

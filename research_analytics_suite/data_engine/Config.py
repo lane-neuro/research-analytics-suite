@@ -153,6 +153,22 @@ class Config:
         return self
 
     async def reload_from_file(self, file_path):
+        """
+        Reloads the configuration settings from a JSON file.
+
+        Args:
+            file_path: The path to the configuration file.
+
+        Returns:
+            Config: The updated configuration settings.
+        """
+        # Check if the file is a configuration file
+        if not file_path.endswith('.json'):
+            file_path = os.path.join(file_path, 'config.json')
+
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Configuration file not found at")
+
         async with aiofiles.open(file_path, 'r') as f:
             await self.reload(json.loads(await f.read()))
             return self

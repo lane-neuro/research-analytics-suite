@@ -118,19 +118,23 @@ async def RASLauncher():
     # If -o '--open_workspace' flag is present, open the existing workspace
     else:
         if _args.open_workspace is not None and _args.config is None:
-            _args.config = os.path.join(f"{_args.open_workspace}", 'config.json')
+            _args.config = os.path.join(os.path.expanduser(
+                f"~\\Research-Analytics-Suite\\workspaces\\"),
+                f"{_args.open_workspace}",
+                'config.json')
+
         elif _args.open_workspace is None and _args.config is not None:
             _args.open_workspace = os.path.dirname(_args.config)
             if _args.open_workspace is None or _args.open_workspace == "":
-                _args.open_workspace = os.path.expanduser(f"~/Research-Analytics-Suite/workspaces/")
+                _args.open_workspace = os.path.expanduser(f"~\\Research-Analytics-Suite\\workspaces\\")
 
-        if not os.path.exists(f"{_args.directory}/{_args.open_workspace}"):
+        if not os.path.exists(f"{_args.directory}\\{_args.open_workspace}"):
             _logger.error(Exception(f"Workspace folder '{_args.open_workspace}' does not exist."))
             return
-        _logger.info('Opening Existing Workspace at: ' + f"{_args.directory}/{_args.open_workspace}")
+        _logger.info('Opening Existing Workspace at:\t' + f"{_args.directory}\\{_args.open_workspace}")
 
         try:
-            _workspace = await _workspace.load_workspace(f"{_args.directory}/{_args.open_workspace}")
+            _workspace = await _workspace.load_workspace(f"{_args.directory}\\{_args.open_workspace}")
         except Exception as e:
             _logger.error(e)
 

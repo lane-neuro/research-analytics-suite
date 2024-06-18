@@ -39,9 +39,26 @@ class OperationManager:
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
-    async def add_operation(self, operation_type, *args, **kwargs) -> BaseOperation:
+    async def add_initialized_operation(self, operation: 'BaseOperation') -> None:
         """
-        Creates a new Operation and adds it to the sequencer.
+        Adds an initialized operation to the sequencer.
+
+        Args:
+            operation (BaseOperation): The initialized operation to add.
+        """
+        if operation is None:
+            self._logger.error(Exception("Attempted to add a None operation to the sequencer."), self)
+            return
+        self._logger.info(f"Adding initialized operation to sequencer: {operation.name} with ID: {operation.unique_id}")
+        print(f"Adding initialized operation to sequencer: {operation.name} with ID: {operation.unique_id}")
+        await self.sequencer.add_operation_to_sequencer(operation)
+        self._logger.info(f"Operation {operation.name} added to sequencer.")
+        print(f"Operation {operation.name} added to sequencer.")
+        operation.add_log_entry(f"[SEQ] {operation.name}")
+
+    async def add_operation_with_parameters(self, operation_type, *args, **kwargs) -> BaseOperation:
+        """
+        Creates a new Operation object with the specified parameters and adds it to the sequencer.
 
         Args:
             operation_type: The type of operation to be created.
@@ -52,17 +69,20 @@ class OperationManager:
             Operation: The created operation.
         """
         try:
+            self._logger.info(f"Creating operation of type: {operation_type.__name__}")
             operation = operation_type(*args, **kwargs)
             await operation.initialize_operation()
-            await self.sequencer.add_operation_to_sequencer(operation)
-            operation.add_log_entry(f"[SEQ] {operation.name}")
+            self._logger.info(f"Initialized operation: {operation.name} with ID: {operation.unique_id}")
 
             if operation.parent_operation is not None:
                 await operation.parent_operation.add_child_operation(operation)
+                self._logger.info(f"Added operation {operation.name} as child of {operation.parent_operation.name}")
 
+            await self.add_initialized_operation(operation)
             return operation
         except Exception as e:
             self._logger.error(e, operation_type)
+            print(f"Error creating operation of type {operation_type.__name__}: {e}")
 
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> BaseOperation:
         """
@@ -74,7 +94,7 @@ class OperationManager:
             **kwargs: Arbitrary keyword arguments.
         """
         if not self.task_creator.task_exists(operation_type):
-            return await self.add_operation(operation_type=operation_type, *args, **kwargs)
+            return await self.add_operation_with_parameters(operation_type=operation_type, *args, **kwargs)
 
     async def resume_operation(self, operation: BaseOperation) -> None:
         """

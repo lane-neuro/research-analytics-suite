@@ -60,7 +60,7 @@ class PersistentOperationChecker:
         if not self._operation_control.console_operation_in_progress:
             await self.op_manager.add_operation_if_not_exists(operation_type=ConsoleOperation,
                                                               user_input_manager=self._operation_control.user_input_manager,
-                                                              func=self._operation_control.user_input_manager.process_user_input,
+                                                              action=self._operation_control.user_input_manager.process_user_input,
                                                               prompt="", concurrent=True,
                                                               persistent=True)
             self._operation_control.console_operation_in_progress = True

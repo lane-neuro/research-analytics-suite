@@ -47,9 +47,9 @@ class WorkspaceModule:
 
     async def add_update_operation(self) -> Optional[Any]:
         try:
-            operation = await self._operation_control.operation_manager.add_operation(
+            operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_WorkspaceUpdateTask",
-                func=self.update_user_variables_list, persistent=True, concurrent=True)
+                action=self.update_user_variables_list, persistent=True, concurrent=True)
             operation.is_ready = True
             return operation
         except Exception as e:

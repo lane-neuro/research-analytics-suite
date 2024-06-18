@@ -1,5 +1,5 @@
 """
-Analytical Engine to process research _func from RAS-DataEngine.
+Analytical Engine to process research _action from RAS-DataEngine.
 
 This module defines the AnalyticsCore class which is designed to apply a series of transformations
 to a given datapoint. It includes methods for initializing the transformation list, adding a transformation,

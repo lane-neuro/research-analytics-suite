@@ -6,7 +6,7 @@ from research_analytics_suite.operation_manager.operations.BaseOperation import 
 
 class MLTrainingOperation(BaseOperation):
     def __init__(self, model: Model, data, target, test_size=0.2, random_state=42):
-        super().__init__(func=None, name="MLTrainingOperation")
+        super().__init__(action=None, name="MLTrainingOperation")
         self.model = model
         self.data = data
         self.target = target

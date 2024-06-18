@@ -4,7 +4,7 @@ from research_analytics_suite.operation_manager.operations.BaseOperation import 
 
 class MLEvaluationOperation(BaseOperation):
     def __init__(self, model, test_data, test_target):
-        super().__init__(func=None, name="MLEvaluationOperation")
+        super().__init__(action=None, name="MLEvaluationOperation")
         self.model = model
         self.test_data = test_data
         self.test_target = test_target

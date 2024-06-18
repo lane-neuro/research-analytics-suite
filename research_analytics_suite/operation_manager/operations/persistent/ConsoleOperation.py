@@ -1,8 +1,8 @@
 """
 A module that defines the ConsoleOperation class, which is a subclass of the CustomOperation class.
 
-The ConsoleOperation class is designed to handle user-input _func from the console. It provides methods for
-displaying a prompt for user input and processing the input _func.
+The ConsoleOperation class is designed to handle user-input _action from the console. It provides methods for
+displaying a prompt for user input and processing the input _action.
 
 Author: Lane
 Copyright: Lane
@@ -27,11 +27,11 @@ class ConsoleOperation(BaseOperation):
 
     def __init__(self, *args, **kwargs):
         """
-        Initializes the ConsoleOperation with a prompt for user input and the _func to be processed.
+        Initializes the ConsoleOperation with a prompt for user input and the _action to be processed.
 
         Args:
             prompt (str): A string that is displayed as a prompt for user input.
-            data (str): A formatted string to print out the _func that the operations will process.
+            data (str): A formatted string to print out the _action that the operations will process.
         """
         self._prompt = kwargs.pop("prompt", "Enter a command: ")
         self._user_input_manager = kwargs.pop("user_input_manager")

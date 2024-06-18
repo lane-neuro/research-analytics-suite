@@ -20,7 +20,7 @@ class CreateOperationModule:
         self.create_operation_dialog_id = f"{uuid.uuid4()}"
 
         self._new_op_name = f"new_op_name_{self.create_operation_dialog_id}"
-        self._new_op_func = f"new_op_func_{self.create_operation_dialog_id}"
+        self._new_op_action = f"new_op_action_{self.create_operation_dialog_id}"
         self._new_op_persistent = f"new_op_persistent_{self.create_operation_dialog_id}"
         self._new_op_cpu_bound = f"new_op_cpu_bound_{self.create_operation_dialog_id}"
         self._new_op_concurrent = f"new_op_concurrent_{self.create_operation_dialog_id}"
@@ -38,7 +38,7 @@ class CreateOperationModule:
         with dpg.window(label="Create New Operation", modal=True, tag=f"new_{self.create_operation_dialog_id}",
                         width=self.width, height=self.height):
             dpg.add_input_text(label="Operation Name", tag=self._new_op_name)
-            dpg.add_input_text(label="Function Code", tag=self._new_op_func, multiline=True)
+            dpg.add_input_text(label="Action", tag=self._new_op_action, multiline=True)
             dpg.add_checkbox(label="Persistent", tag=self._new_op_persistent)
             dpg.add_checkbox(label="CPU Bound", tag=self._new_op_cpu_bound)
             dpg.add_checkbox(label="Concurrent", tag=self._new_op_concurrent)
@@ -49,13 +49,13 @@ class CreateOperationModule:
         """Creates a new operation from the dialog inputs."""
         try:
             name = dpg.get_value(self._new_op_name)
-            func = dpg.get_value(self._new_op_func)
+            action = dpg.get_value(self._new_op_action)
             persistent = dpg.get_value(self._new_op_persistent)
             is_cpu_bound = dpg.get_value(self._new_op_cpu_bound)
             concurrent = dpg.get_value(self._new_op_concurrent)
 
-            await self.operation_control.operation_manager.add_operation(
-                operation_type=BaseOperation, name=name, func=func, persistent=persistent,
+            await self.operation_control.operation_manager.add_operation_with_parameters(
+                operation_type=BaseOperation, name=name, action=action, persistent=persistent,
                 is_cpu_bound=is_cpu_bound, concurrent=concurrent, parent_operation=self._parent_operation
             )
             dpg.hide_item(f"new_{self.create_operation_dialog_id}")
