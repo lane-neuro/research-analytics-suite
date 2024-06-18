@@ -28,8 +28,8 @@ class OperationSequencer:
     """
     A class to manage a sequencer of operations.
 
-    This class provides methods to add, remove, move, & retrieve operations in the sequencer, ensuring efficient management
-    and execution of operations.
+    This class provides methods to add, remove, move, & retrieve operations in the sequencer, ensuring efficient
+    management and execution of operations.
     """
 
     def __init__(self):
