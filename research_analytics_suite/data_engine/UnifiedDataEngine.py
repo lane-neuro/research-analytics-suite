@@ -52,7 +52,7 @@ class UnifiedDataEngine:
         """
         self._GENERATED_ID = uuid.uuid4()
         self.data = data
-        self.data_name = f"{data_name}" if data_name else f"data_{uuid.uuid4()[:4]}"
+        self.data_name = f"{data_name}" if data_name else f"data_{uuid.uuid4().hex[:4]}"
         self.backend = backend
         self._logger = CustomLogger()
         self._config = Config()
