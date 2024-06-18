@@ -30,7 +30,6 @@ class MachineLearning(BaseOperation):
             self.data_loader_operation = await self._operation_control.operation_manager.add_operation(
                 operation_type=DataLoader, name="ML_dataLoader",
                 transformed_data=self.transformed_data, data_destination=data_destination)'''
-            print("MachineLearningOperation.load_data: Loading data...")
             return self.data_loader_operation
         except Exception as e:
             self._logger.error(e, self.name)
@@ -62,7 +61,6 @@ class MachineLearning(BaseOperation):
 
     async def execute(self):
         """Execute the machine learning operations in sequence."""
-        print("MachineLearningOperation.execute: Executing machine learning operations...")
         await super().execute()
 
     async def evaluate_model(self, test_data, test_target):

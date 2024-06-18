@@ -73,23 +73,19 @@ class BaseOperation(ABC):
     async def from_dict(data: dict, file_dir, parent_operation: 'BaseOperation' = None,
                         ) -> 'BaseOperation':
         """Create a BaseOperation instance from a dictionary."""
-
-        print(data)
         data_metadata = data.copy()
 
         # Search for the operation file if data does not contain an action
         # An operation filename consists of the operation name, unique ID[:4], and version, if applicable
         if 'action' not in data_metadata.keys():
             operation_file = f"{data_metadata.get('name')}_{data_metadata.get('unique_id')[:4]}"
-            if 'version' in data_metadata and data_metadata.get('version') is not 0:
+            if 'version' in data_metadata and data_metadata.get('version') != 0:
                 operation_file += f"-{data_metadata.get('version')}"
             operation_file += ".json"
             operation_file = os.path.join(file_dir, operation_file)
-            print(f"Operation file: {operation_file}")
 
             # Check if the operation file exists
             if os.path.exists(operation_file):
-                print(f"Operation file found: {operation_file}")
                 # Use the operation file to populate the data dictionary
                 try:
                     async with aiofiles.open(operation_file, mode='r') as f:
@@ -105,7 +101,6 @@ class BaseOperation(ABC):
                         data_metadata['concurrent'] = op_file_data.get('concurrent')
                 except Exception as e:
                     raise e
-                print(f"Operation data from file: {data_metadata}")
 
             else:
                 raise FileNotFoundError(f"Operation file not found for operation: {operation_file}")
@@ -129,7 +124,6 @@ class BaseOperation(ABC):
         operation = BaseOperation()
         operation.temp_kwargs = data_metadata
         await operation.initialize_operation()
-        print(f"BaseOperation instance {operation.name} created from dict: {data_metadata}")
 
         return operation
 
@@ -138,7 +132,6 @@ class BaseOperation(ABC):
         if hasattr(self, '_initialized') and not self._initialized:
             async with self._lock:
                 if not self._initialized:
-                    print(f"Initializing operation: {self.temp_kwargs.get('name')}")
                     self._workspace = Workspace()
                     self._logger = CustomLogger()
                     self._config = Config()
@@ -175,32 +168,25 @@ class BaseOperation(ABC):
 
                     if self._child_operations is not None:
                         for u_id, child in enumerate(self._child_operations):
-                            print(f"Initializing child operation: {child}")
 
                             # Convert dictionary to BaseOperation instance
                             if isinstance(child, dict):
-                                print(f"Converting dictionary to BaseOperation instance: {child}")
-                                await self.add_child_operation(await BaseOperation.from_dict(data=child,
-                                                                                             file_dir=_file_dir,
-                                                                                             parent_operation=self))
+                                await self.link_child_operation(await BaseOperation.from_dict(data=child,
+                                                                                              file_dir=_file_dir,
+                                                                                              parent_operation=self))
 
                             # Set the parent operation of the child operation
                             if self._child_operations[u_id].parent_operation is None:
                                 self._child_operations[u_id].parent_operation = self
-                            print(f"Child operation {child['name']} initialized with parent {self._name}")
 
                     self.operation_logs = self.temp_kwargs.get('operation_logs', [])
                     self.add_log_entry(f"[INIT] {self._name}")
                     self._initialized = True
-
-                    print(f"Operation initialized: {self._name}")
                     await self._operation_control.operation_manager.add_initialized_operation(self)
-                    print(f"Operation {self._name} added to operation manager")
 
                     # Clean up temporary attributes
                     delattr(self, 'temp_args')
                     delattr(self, 'temp_kwargs')
-                    print(f"Initialization complete for operation: {self._name}")
 
     @property
     def initialized(self) -> bool:
@@ -248,6 +234,16 @@ class BaseOperation(ABC):
     def action(self, value):
         """Sets the action to be executed by the operation."""
         self._action = value
+
+    def action_serializable(self) -> str:
+        """Gets the serializable action to be executed by the operation."""
+        if isinstance(self._action, types.MethodType) or isinstance(self._action, types.FunctionType):
+            action = f"{self._action.__code__}"
+        elif isinstance(self._action, str):
+            action = self._action
+        else:
+            action = None
+        return action
 
     @property
     def persistent(self) -> bool:
@@ -640,6 +636,41 @@ class BaseOperation(ABC):
 
         self.add_log_entry(f"[CHILD] (added) {operation.name}")
 
+    async def link_child_operation(self, child_operation: 'BaseOperation',
+                                   dependencies: dict[unique_id, 'BaseOperation'] = None) -> bool:
+        """
+        Link a child operation to the current operation.
+
+        Args:
+            child_operation (BaseOperation): The child operation to be linked.
+            dependencies (dict[unique_id, BaseOperation]): The dependencies of the child operation.
+
+        Returns:
+            bool: True if the operation was successfully linked, False otherwise.
+        """
+        if not isinstance(child_operation, BaseOperation):
+            self._handle_error("operation must be an instance of BaseOperation")
+            return False
+
+        if not isinstance(dependencies, dict):
+            dependencies = dict[BaseOperation.unique_id, 'BaseOperation']()
+
+        if child_operation.runtime_id not in self._child_operations.keys():
+            if self._child_operations is None:
+                self._child_operations = dict[BaseOperation.runtime_id, 'BaseOperation']()
+            self._child_operations[child_operation.runtime_id] = child_operation
+        else:
+            self.add_log_entry(f"[CHILD] (runtime_id already exists) {child_operation.name} - doing nothing")
+            return True
+
+        if self._dependencies is not None:
+            if child_operation.unique_id not in self._dependencies and dependencies.get(child_operation.unique_id):
+                self._dependencies[child_operation.unique_id] = dependencies.get(child_operation.unique_id)
+
+        child_operation.parent_operation = self
+        self.add_log_entry(f"[CHILD] (linked) {child_operation.name}")
+        return True
+
     def remove_child_operation(self, operation: 'BaseOperation'):
         """
         Remove a child operation from the current operation.
@@ -790,7 +821,7 @@ class BaseOperation(ABC):
             'unique_id': self._unique_id,
             'version': self._version,
             'name': self._name,
-            'action': self._action,
+            'action': self.action_serializable(),
             'persistent': self._persistent,
             'concurrent': self._concurrent,
             'is_cpu_bound': self._is_cpu_bound,
@@ -846,7 +877,6 @@ class BaseOperation(ABC):
             try:
                 data = await file.read()
                 state = json.loads(data)
-                print(f"Loaded state from disk: {state}")
             except json.JSONDecodeError as e:
                 raise json.JSONDecodeError(f"Failed to decode JSON from file: {file_path}", data, e.pos) from e
             except Exception as e:
@@ -858,7 +888,6 @@ class BaseOperation(ABC):
 
             # Create a BaseOperation instance from the state
             operation = await BaseOperation.from_dict(data=state, file_dir=os.path.dirname(file_path))
-            print(f"BaseOperation instance created from disk: {operation}")
 
             if operation.runtime_id not in operation_group.keys():
                 operation_group[operation.runtime_id] = operation
@@ -875,10 +904,8 @@ class BaseOperation(ABC):
             if not os.path.exists(path):
                 raise FileNotFoundError(f"File not found: {path}")
 
-            print(f"Loading operation from: {path}")
             operation = await BaseOperation.load_from_disk(path, group)
             processed_operations.add(operation.runtime_id)
-            print(f"Loaded operation: {operation.runtime_id}")
 
             parent = operation._parent_operation
             if isinstance(parent, dict):
@@ -909,6 +936,7 @@ class BaseOperation(ABC):
                                 if os.path.exists(child_file_path):
                                     child_operation = await load_and_process_operation(child_file_path, group)
                                     await operation.add_child_operation(child_operation)
+                                    await operation.link_child_operation(child_operation)
                                     group[child_operation.runtime_id] = child_operation
                                 else:
                                     raise FileNotFoundError(f"Child operation file not found: {child_file_path}")
@@ -921,7 +949,6 @@ class BaseOperation(ABC):
 
         root_operation = await load_and_process_operation(file_path, operation_group)
         operation_group[root_operation.runtime_id] = root_operation
-        print(f"Root operation loaded: {root_operation.runtime_id}")
 
         return operation_group
 

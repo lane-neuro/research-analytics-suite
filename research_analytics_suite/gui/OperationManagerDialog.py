@@ -30,8 +30,8 @@ class OperationManagerDialog:
     """A class to manage the dialog for displaying and controlling operations."""
 
     SLEEP_DURATION = 0.05
-    TILE_WIDTH = 430  # Fixed width for each operation tile
-    TILE_HEIGHT = 370  # Fixed height for each operation tile
+    TILE_WIDTH = 450  # Fixed width for each operation tile
+    TILE_HEIGHT = 450  # Fixed height for each operation tile
     TILE_PADDING = 20  # Padding between tiles
 
     def __init__(self, container_width: int = 1700):
@@ -215,7 +215,7 @@ class OperationManagerDialog:
             sender (str): The sender of the event.
             data (dict): The data associated with the event.
         """
-        new_width = 1 # dpg.get_viewport_client_width() - 220
+        new_width = 1  # dpg.get_viewport_width()
         new_tiles_per_row = self.calculate_tiles_per_row(new_width)
         if new_tiles_per_row != self.tiles_per_row:
             self.tiles_per_row = new_tiles_per_row

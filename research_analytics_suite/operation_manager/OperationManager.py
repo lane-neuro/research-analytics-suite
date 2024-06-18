@@ -50,10 +50,8 @@ class OperationManager:
             self._logger.error(Exception("Attempted to add a None operation to the sequencer."), self)
             return
         self._logger.info(f"Adding initialized operation to sequencer: {operation.name} with ID: {operation.unique_id}")
-        print(f"Adding initialized operation to sequencer: {operation.name} with ID: {operation.unique_id}")
         await self.sequencer.add_operation_to_sequencer(operation)
         self._logger.info(f"Operation {operation.name} added to sequencer.")
-        print(f"Operation {operation.name} added to sequencer.")
         operation.add_log_entry(f"[SEQ] {operation.name}")
 
     async def add_operation_with_parameters(self, operation_type, *args, **kwargs) -> BaseOperation:
@@ -82,7 +80,6 @@ class OperationManager:
             return operation
         except Exception as e:
             self._logger.error(e, operation_type)
-            print(f"Error creating operation of type {operation_type.__name__}: {e}")
 
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> BaseOperation:
         """

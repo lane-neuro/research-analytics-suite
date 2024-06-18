@@ -72,7 +72,6 @@ class CustomLogger:
         """
         message = record.getMessage()
         self.log_message_queue.put_nowait(message)
-        # print(message)
         return True  # Allow the log record to be logged
 
     def info(self, message) -> None:

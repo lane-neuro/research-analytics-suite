@@ -1,7 +1,8 @@
 """
 PlanningDialog
 
-This module defines the PlanningDialog class, which is responsible for managing the Planning tools and their GUI representation within the research analytics suite. It handles the initialization and updates the GUI accordingly.
+This module defines the PlanningDialog class, which is responsible for managing the Planning tools and their GUI
+representation within the research analytics suite. It handles the initialization and updates the GUI accordingly.
 
 Author: Lane
 Copyright: Lane
@@ -15,6 +16,7 @@ Status: Prototype
 
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.utils.CustomLogger import CustomLogger
+
 
 class PlanningDialog:
     """A class to manage Planning tools and their GUI representation."""
@@ -41,8 +43,6 @@ class PlanningDialog:
                 dpg.add_button(label="Objectives", callback=self.show_objectives)
                 dpg.add_button(label="Timeline", callback=self.show_timeline)
                 dpg.add_button(label="Resources", callback=self.show_resources)
-                dpg.add_button(label="Stakeholders", callback=self.show_stakeholders)
-                dpg.add_button(label="Milestones", callback=self.show_milestones)
 
     def show_project_overview(self, sender, app_data, user_data):
         """Displays the Project Overview section."""
@@ -59,11 +59,3 @@ class PlanningDialog:
     def show_resources(self, sender, app_data, user_data):
         """Displays the Resources section."""
         self._logger.info("Resources clicked")
-
-    def show_stakeholders(self, sender, app_data, user_data):
-        """Displays the Stakeholders section."""
-        self._logger.info("Stakeholders clicked")
-
-    def show_milestones(self, sender, app_data, user_data):
-        """Displays the Milestones section."""
-        self._logger.info("Milestones clicked")
