@@ -6,6 +6,7 @@ to provide a unified interface for handling data.
 
 Author: Lane
 """
+import json
 import os
 import pickle
 import uuid
@@ -58,6 +59,10 @@ class UnifiedDataEngine:
         self._config = Config()
         self.dask_client = dask_client  # Pointer to primary Dask client
         self.analytics = AnalyticsCore()  # Initialize AnalyticsCore Engine
+
+        from research_analytics_suite.data_engine.Workspace import Workspace
+        self._workspace = Workspace()
+
         self.dask_data = DaskData(data)
         self.torch_data = TorchData(data)
         self.data_cache = DataCache()  # Initialize DataCache
@@ -66,6 +71,7 @@ class UnifiedDataEngine:
 
     def __getstate__(self):
         state = self.__dict__.copy()
+        state['_GENERATED_ID'] = None
         state['_logger'] = None
         state['_config'] = None
         state['data_cache'] = None
@@ -81,8 +87,19 @@ class UnifiedDataEngine:
 
     def __setstate__(self, state):
         self.__dict__.update(state)
+        self._GENERATED_ID = uuid.uuid4()
         self._logger = CustomLogger()
+        self._config = Config()
+        self.data_cache = DataCache()
+
+        from research_analytics_suite.data_engine.Workspace import Workspace
+        self._workspace = Workspace()
+
         self.live_input_source = None
+        self.analytics = AnalyticsCore()
+        self.torch_data = TorchData(self.data)
+        self.dask_data = DaskData(self.data)
+
 
     def runtime_id(self) -> str:
         """
@@ -164,8 +181,8 @@ class UnifiedDataEngine:
         self._logger.info(f"Saving instance to {engine_path}")
 
         # Save data
-        async with aiofiles.open(data_file_path, 'wb') as data_file:
-            await data_file.write(pickle.dumps(self.data))
+        async with aiofiles.open(data_file_path, 'w') as data_file:
+            await data_file.write(json.dumps(self.data))
 
         # Save metadata
         metadata = {
@@ -173,13 +190,13 @@ class UnifiedDataEngine:
             'backend': self.backend,
             'engine_id': self.engine_id,
         }
-        async with aiofiles.open(os.path.join(f"{engine_path}", "metadata.json"), 'wb') as metadata_file:
-            await metadata_file.write(pickle.dumps(metadata))
+        async with aiofiles.open(os.path.join(f"{engine_path}", "metadata.json"), 'w') as metadata_file:
+            await metadata_file.write(json.dumps(metadata))
 
         # Save a pickleable state of the engine
         engine_state = self.__getstate__()
-        async with aiofiles.open(os.path.join(f"{engine_path}", 'engine_state.joblib'), 'wb') as state_file:
-            await state_file.write(pickle.dumps(engine_state))
+        async with aiofiles.open(os.path.join(f"{engine_path}", 'engine_state.joblib'), 'w') as state_file:
+            await state_file.write(json.dumps(engine_state))
 
         self._logger.info(f"Instance saved to {instance_path}")
 
@@ -188,18 +205,18 @@ class UnifiedDataEngine:
         engine_path = os.path.join(instance_path, 'engine', engine_id)
 
         # Load metadata
-        async with aiofiles.open(os.path.join(f"{engine_path}", 'metadata.json'), 'rb') as metadata_file:
-            metadata = pickle.loads(await metadata_file.read())
+        async with aiofiles.open(os.path.join(f"{engine_path}", 'metadata.json'), 'r') as metadata_file:
+            metadata = json.loads(await metadata_file.read())
 
         data_path = os.path.join(instance_path, 'data', f"{metadata['data_name']}.joblib")
 
         # Load data
-        async with aiofiles.open(data_path, 'rb') as data_file:
-            data = pickle.loads(await data_file.read())
+        async with aiofiles.open(data_path, 'r') as data_file:
+            data = json.loads(await data_file.read())
 
         # Load engine state
-        async with aiofiles.open(os.path.join(f"{engine_path}", 'engine_state.joblib'), 'rb') as state_file:
-            engine_state = pickle.loads(await state_file.read())
+        async with aiofiles.open(os.path.join(f"{engine_path}", 'engine_state.joblib'), 'r') as state_file:
+            engine_state = json.loads(await state_file.read())
 
         engine = UnifiedDataEngine()
         engine.__setstate__(engine_state)

@@ -69,7 +69,7 @@ class Workspace:
         if not self._initialized:
             async with Workspace._lock:
                 if not self._initialized:
-                    self._data_engines = {}
+                    self._data_engines = dict()
                     self._dependencies = defaultdict(list)
                     self._data_cache = DataCache()
 
@@ -179,11 +179,10 @@ class Workspace:
                 os.makedirs(engine_path, exist_ok=True)
                 await data_engine.save_engine(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME))
 
-            config_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'config.json')
-            await self._config.save_to_file(config_path)
-
             await self.save_user_variables(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
                                                         'user_variables.db'))
+            config_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'config.json')
+            await self._config.save_to_file(config_path)
             self._logger.info(f"Workspace folder saved in directory:\t{self._config.BASE_DIR}")
             return os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME)
 
