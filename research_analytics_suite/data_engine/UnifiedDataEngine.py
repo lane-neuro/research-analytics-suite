@@ -8,7 +8,6 @@ Author: Lane
 """
 import json
 import os
-import pickle
 import uuid
 
 import aiofiles

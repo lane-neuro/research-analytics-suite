@@ -1,7 +1,7 @@
 """
 BaseOperation Module
 
-This module defines the BaseOperation class, an abstract base class for all operations in the research analytics suite.
+An Abstract Base Class that defines a common interface for all operations.
 
 Author: Lane
 Copyright: Lane
@@ -20,7 +20,6 @@ import uuid
 from abc import ABC
 from concurrent.futures import ProcessPoolExecutor
 from typing import Tuple, List, Any
-
 import aiofiles
 
 from research_analytics_suite.data_engine.Config import Config
@@ -30,14 +29,66 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 class BaseOperation(ABC):
     """
-    An abstract base class that defines a common interface for all operations.
+    An Abstract Base Class that defines a common interface for all operations. The BaseOperation class provides a set
+    of properties and methods that all operations must implement. Operations are the building blocks of the Research
+    Analytics Suite (RAS) and are used to perform tasks on data. They can be executed independently or chained
+    together to form complex workflows.  It also includes functionality for managing child operations, dependencies,
+    and logging. The BaseOperation class is designed to be subclassed by concrete Operation classes that implement
+    specific functionality.
+
+    Lifecycle of an Operation:
+        1. Initialization       [methods: __init__, initialize_operation]
+            - The operation is created with a unique ID and a name.
+            - The action to be performed is defined.
+            - The operation is linked to a workspace, logger, configuration, and operation control instance.
+            - The operation is linked to a parent operation and any child operations.
+        2. Execution            [methods: start, execute]
+            - The operation is started, and any child operations are started.
+            - The action is prepared for execution and any dependencies are resolved.
+            - The action is executed.
+        3. Completion           [methods: get_result]
+            - The operation is marked as complete.
+            - The result of the operation is stored within a user variable in the active workspace.
+            - The operation logs are updated with the result.
+
+    Brief Attribute Overview:
+            (refer to property methods and docstrings for more details)
+        _lock (asyncio.Lock): A lock to ensure thread safety, primarily for initializing operations.
+        _GENERATED_ID (uuid.UUID): A unique ID generated for the operation.
+        _initialized (bool): Whether the operation has been initialized.
+        _workspace (Workspace): The workspace instance.
+        _logger (CustomLogger): The logger instance.
+        _config (Config): The configuration instance.
+        _operation_control (OperationControl): The operation control instance.
+        _gui_module (Any): The GUI module attached to the operation.
+        _name (str): The name of the operation.
+        _unique_id (str): The unique ID of the operation.
+        _version (int): The version of the operation.
+        _action (callable): The action to be executed by the operation.
+        _persistent (bool): Whether the operation should run indefinitely.
+        _is_cpu_bound (bool): Whether the operation is CPU-bound.
+        _concurrent (bool): Whether child operations should run concurrently.
+        result_variable_id (str): Reference to the user variable storing the result.
+        _status (str): The status of the operation.
+        _task (asyncio.Task): The task associated with the operation.
+        _progress (int): The progress of the operation.
+        _is_ready (bool): Whether the operation is ready to be executed.
+        _dependencies (dict[str, BaseOperation]): The dependencies of the operation.
+        _parent_operation (BaseOperation): The parent operation.
+        _child_operations (dict[str, BaseOperation]): The child operations.
+        operation_logs (List[str]): The logs of the operation.
     """
     _lock = asyncio.Lock()
     _GENERATED_ID = None
 
     def __init__(self, *args, **kwargs):
         """
-        Initialize the operation instance.
+        Initialize the operation instance. Refer to the initialize_operation method for setup and the properties for
+        details on the operation attributes.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
         """
         if not hasattr(self, '_initialized'):
             self.temp_args = args
