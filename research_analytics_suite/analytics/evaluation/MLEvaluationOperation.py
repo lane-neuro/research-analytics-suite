@@ -1,4 +1,3 @@
-from research_analytics_suite.machine_learning import Evaluator
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
@@ -18,6 +17,7 @@ class MLEvaluationOperation(BaseOperation):
         """Evaluate the machine learning model."""
         try:
             self.status = "running"
+            from research_analytics_suite.analytics.evaluation import Evaluator
             metrics = await Evaluator.evaluate(self.model, self.test_data, self.test_target)
             self.status = "completed"
             self.add_log_entry("Evaluation completed successfully")

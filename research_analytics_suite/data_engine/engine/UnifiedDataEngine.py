@@ -15,7 +15,7 @@ import dask.dataframe as dd
 import pandas as pd
 from torch.utils.data import DataLoader
 
-from research_analytics_suite.analytics.AnalyticsCore import AnalyticsCore
+from research_analytics_suite.analytics.core.AnalyticsCore import AnalyticsCore
 from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.data_engine.core.DaskData import DaskData
 from research_analytics_suite.data_engine.utils.DataCache import DataCache

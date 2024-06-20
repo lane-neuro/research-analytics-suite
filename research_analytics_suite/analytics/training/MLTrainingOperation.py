@@ -1,6 +1,6 @@
 from sklearn.model_selection import train_test_split
 
-from research_analytics_suite.machine_learning import Model
+from research_analytics_suite.analytics import Model
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 

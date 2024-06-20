@@ -1,21 +1,30 @@
 import os
 
-from research_analytics_suite.machine_learning import Model, Preprocessor, MLTrainingOperation, \
-    MLEvaluationOperation, Predictor
-from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
-from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
+from research_analytics_suite.utils import CustomLogger
 
 
-class MachineLearning(BaseOperation):
+# from research_analytics_suite.operation_manager import BaseOperation
+
+
+class MachineLearning:
     def __init__(self, data=None, model_type="logistic_regression",
                  name="MachineLearningOperation"):
-        super().__init__(name=name, func=self.evaluate_model)
+        # super().__init__(name=name, func=self.evaluate_model)
+        self._logger = CustomLogger()
         self.name = name
         self.data = data
+
+        from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
         self.operation_control = OperationControl()
+
         self.target = None
+
+        from research_analytics_suite.analytics import Model
         self.model = Model(model_type=model_type)
+
+        from research_analytics_suite.analytics import Preprocessor
         self.preprocessor = Preprocessor()
+
         self.preprocessed_data = None
         self.data_loader_operation = None
         self.data_extractor_operation = None
@@ -50,6 +59,8 @@ class MachineLearning(BaseOperation):
         """Split the data into training and validation sets."""
         self.target = data[target_column]
         self.data = data.drop(columns=[target_column])
+
+        from research_analytics_suite.analytics import MLTrainingOperation
         self.train_operation = MLTrainingOperation(
             model=self.model,
             data=self.data,
@@ -57,19 +68,19 @@ class MachineLearning(BaseOperation):
             test_size=test_size,
             random_state=random_state
         )
-        self.add_child_operation(self.train_operation)
 
-    async def execute(self):
-        """Execute the machine learning operations in sequence."""
-        await super().execute()
+        # self.add_child_operation(self.train_operation)
 
     async def evaluate_model(self, test_data, test_target):
         """Initialize and evaluate the machine learning model."""
+
+        from research_analytics_suite.analytics import MLEvaluationOperation
         self.eval_operation = MLEvaluationOperation(
             model=self.model,
             test_data=test_data,
             test_target=test_target
         )
+
         return await self._evaluate_model()
 
     async def _evaluate_model(self):
@@ -79,6 +90,8 @@ class MachineLearning(BaseOperation):
 
     def predict(self, data):
         """Make predictions using the trained model."""
+
+        from research_analytics_suite.analytics import Predictor
         return Predictor.predict(self.model, data)
 
     def get_model(self):
