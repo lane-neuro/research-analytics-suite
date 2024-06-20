@@ -47,7 +47,7 @@ class TaskMonitor:
                     self._logger.debug(f"handle_tasks: [OP] {task.get_name()}")
                     if operation is not None:
                         if isinstance(operation, BaseOperation):
-                            output = operation.get_result()
+                            output, _memory_id = await operation.get_result()
                             operation.add_log_entry(f"handle_tasks: [OUTPUT] {output}")
 
                         self._logger.info(f"handle_tasks: [DONE] {task.get_name()}")

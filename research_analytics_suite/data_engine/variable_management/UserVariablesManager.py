@@ -8,7 +8,7 @@ Author: Lane
 """
 
 import asyncio
-from typing import Mapping, Any
+from typing import Mapping, Any, Tuple
 
 from research_analytics_suite.data_engine.variable_management.storage.BaseStorage import BaseStorage
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -30,7 +30,7 @@ class UserVariablesManager:
         self._logger = CustomLogger()
         asyncio.run(self.storage.setup())
 
-    async def add_variable(self, name, value, memory_id=None) -> dict:
+    async def add_variable_to_manager(self, name, value, memory_id=None) -> Tuple[str, dict]:
         """
         Adds a new variable to the storage.
 
@@ -38,13 +38,19 @@ class UserVariablesManager:
             name (str): The name of the variable.
             value: The value of the variable.
             memory_id (str, optional): The ID of the memory to which the variable belongs.
+
+        Returns:
+            str: The memory_id location of the stored variable in the user_variables database.
+            dict[name, value]:
+                name (str): The name of the variable. (aka: the key)
+                value: The value of the stored variable in the associated memory_id location.
         """
         try:
-            return await self.storage.add_variable(name, value, memory_id=memory_id)
+            return await self.storage.add_variable(name=name, value=value, memory_id=memory_id)
         except Exception as e:
             self._logger.error(Exception(f"Error adding variable '{name}': {e}"), self)
 
-    async def get_variable(self, name, memory_id=None) -> Mapping[str, Any]:
+    async def get_variable(self, name, memory_id=None) -> Tuple[str, dict]:
         """
         Retrieves the value of a variable by name from the storage.
 
@@ -53,7 +59,10 @@ class UserVariablesManager:
             memory_id (str, optional): The ID of the memory to which the variable belongs.
 
         Returns:
-            The value of the variable.
+            str: The memory_id location of the stored variable in the user_variables database.
+            dict[name, value]:
+                name (str): The name of the variable. (aka: the key)
+                value: The value of the stored variable in the associated memory_id location.
         """
         try:
             return await self.storage.get_variable_value(name=name, memory_id=memory_id)

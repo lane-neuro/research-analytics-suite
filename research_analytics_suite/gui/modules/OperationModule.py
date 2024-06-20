@@ -263,10 +263,10 @@ class OperationModule:
 
             await asyncio.sleep(0.05)
 
-    def view_result(self, sender: Any, app_data: Any, user_data: Any) -> None:
+    async def view_result(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Handles the event when the user clicks the 'View Result' button."""
-        result = self._operation.get_result()
-        self._operation.add_log_entry(f"Result viewed: {result}")
+        _result, _memory_id = await self._operation.get_result()
+        self._operation.add_log_entry(f"Result viewed: {_result}")
 
     async def add_child_operation(self, child_operation: BaseOperation) -> None:
         """Adds a child operation to the current operation."""

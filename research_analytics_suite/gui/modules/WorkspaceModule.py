@@ -37,7 +37,7 @@ class WorkspaceModule:
         self.unique_id = str(uuid.uuid4())
         self.user_var_list_id = f"user_var_list_{self.unique_id}"
         self.add_var_dialog_id = None
-        self.user_vars = {}  # Store user variables
+        self._local_user_vars = {}  # Store user variables
 
     async def initialize(self) -> None:
         """Initializes resources and sets up the GUI."""
@@ -97,51 +97,77 @@ class WorkspaceModule:
                 new_user_vars = await self._workspace.list_user_variables()
                 new_user_vars_dict = {}
 
+                # Ensure new_user_vars is a dictionary of dictionaries
                 if isinstance(new_user_vars, dict):
-                    for var in new_user_vars:
-                        if isinstance(var, dict) and 'name' in var:
-                            name = var['name']
-                            value = await self._workspace.get_user_variable(name)
-                            new_user_vars_dict[name] = value
-                        elif isinstance(var, str):
-                            name = var
-                            value = await self._workspace.get_user_variable(name)
-                            new_user_vars_dict[name] = value
+                    for _memory_id, variables in new_user_vars.items():
+                        if isinstance(variables, dict):
+                            for name, value in variables.items():
+                                if _memory_id not in new_user_vars_dict:
+                                    new_user_vars_dict[_memory_id] = {}
+                                new_user_vars_dict[_memory_id][name] = value
                         else:
-                            self._logger.error(Exception(f"Unexpected variable structure: {var}", self))
+                            raise ValueError("Expected variables to be a dictionary")
                 else:
-                    self._logger.error(Exception("Expected list of user variables, got something else", self))
+                    raise ValueError("Expected list of user variables to be a dictionary")
 
-                # Remove old variables
-                for name, value in self.user_vars.items():
-                    if name not in new_user_vars_dict:
-                        await self.remove_user_variable_from_gui(name)
-
-                # Update existing variables and add new ones
-                for name, value in new_user_vars_dict.items():
-                    if name in self.user_vars:
-                        if self.user_vars[name] != value:
-                            dpg.set_value(f"user_var_value_{name}", value)
+                # Remove existing variables that are not in the new list
+                for _m_id in list(self._local_user_vars.keys()):
+                    # Remove memory slot if it is not in the new list
+                    if _m_id not in new_user_vars_dict:
+                        # Remove all variables from the memory slot
+                        await self.remove_user_variable_from_gui(memory_id=_m_id)
                     else:
-                        await self.add_user_variable_to_gui(name, value)
+                        # Remove variables from the memory slot that are not in the new list
+                        for _var_name in list(self._local_user_vars[_m_id].keys()):
+                            if _var_name not in new_user_vars_dict[_m_id]:
+                                await self.remove_user_variable_from_gui(memory_id=_m_id, var_name=_var_name)
+                            else:
+                                # Update the value of the variable if it has changed
+                                if self._local_user_vars[_m_id][_var_name] != new_user_vars_dict[_m_id][_var_name]:
+                                    dpg.set_value(f"user_value_{_m_id}_{_var_name}",
+                                                  new_user_vars_dict[_m_id][_var_name])
 
-                self.user_vars = new_user_vars_dict
+                # Add and update variables that are in the new list
+                for _m_id, variables in new_user_vars_dict.items():
+                    if _m_id not in self._local_user_vars.keys():
+                        self._local_user_vars[_m_id] = dict()
+                    for _var_name, _var_value in variables.items():
+                        if _var_name not in self._local_user_vars[_m_id]:
+                            await self.add_user_variable_to_gui(memory_id=_m_id, name=_var_name, value=_var_value)
+                        else:
+                            if self._local_user_vars[_m_id][_var_name] != _var_value:
+                                dpg.set_value(f"user_value_{_m_id}_{_var_name}", _var_value)
+
+                # Update the local user variables
+                self._local_user_vars = new_user_vars_dict
+
             except Exception as e:
                 self._logger.error(Exception(f"Error updating user variables: {e}", self))
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
 
-    async def add_user_variable_to_gui(self, name, value) -> None:
+    async def add_user_variable_to_gui(self, memory_id, name, value) -> None:
         """Adds a user variable to the GUI."""
-        with dpg.group(parent=self.user_var_list_id, tag=f"user_var_group_{name}", horizontal=True):
-            dpg.add_text(f"Name: {name}, Value: ", parent=f"user_var_group_{name}")
-            dpg.add_text(value, tag=f"user_var_value_{name}", parent=f"user_var_group_{name}")
+        with dpg.group(parent=self.user_var_list_id,
+                       tag=f"user_group_{memory_id}_{name}",
+                       horizontal=True,
+                       width=-1):
+            dpg.add_text(default_value=f"Name: {name}, Value: ", parent=f"user_group_{memory_id}_{name}")
+            dpg.add_text(default_value=value, tag=f"user_value_{memory_id}_{name}", parent=f"user_group_{memory_id}_{name}")
             dpg.add_button(label=f"Remove",
                            callback=lambda: asyncio.create_task(self.remove_user_variable(name)),
-                           parent=f"user_var_group_{name}")
+                           parent=f"user_group_{memory_id}_{name}")
 
-    async def remove_user_variable_from_gui(self, name) -> None:
-        """Removes a user variable from the GUI."""
-        dpg.delete_item(f"user_var_group_{name}")
+    async def remove_user_variable_from_gui(self, memory_id, var_name=None) -> None:
+        """
+        Removes a user variable from the GUI.
+
+        Args:
+            memory_id (str): The memory ID of the variable.
+            var_name (str, optional): The name of the variable.
+
+        """
+
+        dpg.delete_item(f"user_var_group_{memory_id}")
 
     async def add_user_variable(self, name, value) -> None:
         """Adds a user variable."""

@@ -99,7 +99,7 @@ class UnifiedDataEngine:
         self.torch_data = TorchData(self.data)
         self.dask_data = DaskData(self.data)
 
-
+    @property
     def runtime_id(self) -> str:
         """
         Returns the runtime ID of the UnifiedDataEngine instance.
@@ -107,8 +107,9 @@ class UnifiedDataEngine:
         Returns:
             str: The runtime ID.
         """
-        return f"{self._GENERATED_ID}"
+        return f"e-{self.engine_id[:4]}_{self._GENERATED_ID}"
 
+    @property
     def short_id(self) -> str:
         """
         Returns the short ID of the UnifiedDataEngine instance.

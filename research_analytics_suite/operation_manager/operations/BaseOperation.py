@@ -164,6 +164,7 @@ class BaseOperation(ABC):
                         data_metadata['persistent'] = op_file_data.get('persistent')
                         data_metadata['is_cpu_bound'] = op_file_data.get('is_cpu_bound')
                         data_metadata['concurrent'] = op_file_data.get('concurrent')
+                        data_metadata['result_variable_id'] = op_file_data.get('result_variable_id')
                 except Exception as e:
                     raise e
 
@@ -195,7 +196,7 @@ class BaseOperation(ABC):
     async def initialize_operation(self):
         """Initialize any resources or setup required for the operation before it starts."""
         if hasattr(self, '_initialized') and not self._initialized:
-            async with self._lock:
+            async with BaseOperation._lock:
                 if not self._initialized:
                     self._workspace = Workspace()
                     self._logger = CustomLogger()
@@ -216,7 +217,7 @@ class BaseOperation(ABC):
                     self._persistent = self.temp_kwargs.get('persistent', False)
                     self._is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', False)
                     self._concurrent = self.temp_kwargs.get('concurrent', False)
-                    self.result_variable_id = self.temp_kwargs.get('result_variable_id', None)
+                    self.result_variable_id = self.temp_kwargs.get('result_variable_id', f'result_{self.runtime_id}')
 
                     self._status = "idle"
                     self._task = None
@@ -454,13 +455,18 @@ class BaseOperation(ABC):
 
     def _execute_code_action(self, code) -> callable:
         def action():
-            exec(code, {}, self.result_variable_id)
+            _output = dict()
+            exec(code, {}, _output)
+            return _output
 
         return action
 
     def _execute_callable_action(self, t_action) -> callable:
-        def action():
-            t_action()
+        def action() -> Any:
+            _output = t_action()
+            if _output is not None:
+                return _output
+            return
 
         return action
 
@@ -513,39 +519,57 @@ class BaseOperation(ABC):
                 with ProcessPoolExecutor() as executor:
                     self._status = "running"
                     self.add_log_entry(f"[RUN] {self.name}: CPU-bound Operation")
-                    await asyncio.get_event_loop().run_in_executor(executor, self._action)
-                    self.result_variable_id = await self._workspace.add_user_variable(name=f"[RESULT] {self._name}",
-                                                                                      value=self.result_variable_id,
-                                                                                      memory_id=f'result_{self.runtime_id}')
-                    self.add_log_entry(f"[RESULT] {self.result_variable_id}")
+                    _exec_output = await asyncio.get_event_loop().run_in_executor(executor, self._action)
+                    if _exec_output is not None:
+                        self.result_variable_id, _result = await self._workspace.add_user_variable(
+                            name=f"result_{self._name}",
+                            value=_exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output,
+                            memory_id=f'{self.runtime_id}')
+                        self.add_log_entry(f"[RESULT] {self.result_variable_id} {_result}")
             else:
                 if self._action is not None:
                     if callable(self._action):
                         self._status = "running"
                         if asyncio.iscoroutinefunction(self._action):
                             self.add_log_entry(f"[RUN - ASYNC] {self._name}")
-                            await self._action()
-                            self.result_variable_id = await self._workspace.add_user_variable(name=f"[RESULT] {self._name}",
-                                                                                              value=self.result_variable_id,
-                                                                                              memory_id=
-                                                                                              f'result_{self.runtime_id}')
-                            self.add_log_entry(f"[RESULT] {self.result_variable_id}")
+                            _exec_output = await self._action()
+                            if _exec_output is not None:
+                                self.result_variable_id, _result = await self._workspace.add_user_variable(
+                                    name=f"result_{self._name}",
+                                    value=_exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output,
+                                    memory_id=f'{self.runtime_id}')
+                                self.add_log_entry(f"[RESULT] {self.result_variable_id} {_result}")
+
                         else:
                             self.add_log_entry(f"[RUN] {self._name}")
-                            self._action()
-                            self.result_variable_id = await self._workspace.add_user_variable(name=f"[RESULT] {self._name}",
-                                                                                             value=self.result_variable_id,
-                                                                                             memory_id=
-                                                                                             f'result_{self.runtime_id}')
-                            self.add_log_entry(f"[RESULT] {self.result_variable_id}")
+                            _exec_output = self._action()
+                            if _exec_output is not None:
+                                self.result_variable_id, _result = await self._workspace.add_user_variable(
+                                    name=f"result_{self._name}",
+                                    value=_exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output,
+                                    memory_id=f'{self.runtime_id}')
+                                self.add_log_entry(f"[RESULT] {self.result_variable_id} {_result}")
                 else:
                     self._handle_error(Exception("No action provided for operation"))
         except Exception as e:
             self._handle_error(e)
 
-    def get_result(self):
-        """Retrieve the result of the operation, if applicable."""
-        return self.result_variable_id
+    async def get_result(self) -> Tuple[dict, str]:
+        """
+        Retrieve the results of the operation from the workspace.
+
+        Returns:
+            dict[name, value]:
+                name (str): The name of the variable. (aka: the key)
+                value: The value of the stored variable in the associated memory_id location.
+            str: The memory_id location of the stored variable.
+        """
+        try:
+            _memory_id, _value = await self._workspace.get_user_variable_value(name=f"result_{self._name}",
+                                                                               memory_id=f'{self.runtime_id}')
+            return _value, _memory_id
+        except Exception as e:
+            self._logger.error(Exception(f"Error retrieving result for operation '{self.name}': {e}"), self)
 
     async def pause(self, child_operations=False):
         """
