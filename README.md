@@ -57,40 +57,15 @@
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-<li><a href="#project-structure">Project Structure</a>
+    <li><a href="#project-structure">Project Structure</a>
       <ul>
         <li><a href="#operation-manager">Operation Manager</a>
-          <ul>
-            <li><a href="research_analytics_suite/operation_manager/task">Task</a></li>
-            <li><a href="research_analytics_suite/operation_manager/operations">Operations</a>
-              <ul>
-                <li><a href="research_analytics_suite/operation_manager/operations/computation">Computation</a></li>
-                <li><a href="research_analytics_suite/operation_manager/operations/persistent">Persistent</a></li>
-                <li><a href="research_analytics_suite/operation_manager/operations/project">Project</a></li>
-              </ul>
-            </li>
-          </ul>
         </li>
         <li><a href="#gui">GUI</a>
-          <ul>
-            <li><a href="research_analytics_suite/gui/modules">Modules</a></li>
-          </ul>
         </li>
         <li><a href="#data-engine">Data Engine</a>
-          <ul>
-            <li><a href="research_analytics_suite/data_engine/data_processing">Data Processing</a></li>
-            <li><a href="research_analytics_suite/data_engine/data_structures">Data Structures</a></li>
-            <li><a href="research_analytics_suite/data_engine/project">Project</a></li>
-          </ul>
         </li>
         <li><a href="#analytics">Analytics</a>
-          <ul>
-            <li><a href="research_analytics_suite/analytics/preloaded">Preloaded</a>
-              <ul>
-                <li><a href="research_analytics_suite/analytics/preloaded/transformations">Transformations</a></li>
-              </ul>
-            </li>
-          </ul>
         </li>
       </ul>
     </li>
@@ -148,32 +123,57 @@ Once you have cloned the repo (see [Installation](#installation)), you will need
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-  
 <!-- PROJECT STRUCTURE -->
 ## Project Structure
 
 ### Operation Manager
 The `operation_manager` package orchestrates and manages data processing operations within RAS.
-- **[Task](research_analytics_suite/operation_manager/task)**
-- **[Operations](research_analytics_suite/operation_manager/operations)**
-  - **[Computation](research_analytics_suite/operation_manager/operations/computation)**
-  - **[Persistent](research_analytics_suite/operation_manager/operations/persistent)**
-  - **[Project](research_analytics_suite/operation_manager/operations/project)**
+- **chains**: Handles sequences of operations.
+- **control**: Manages control mechanisms.
+- **execution**: Handles operation execution.
+- **lifecycle**: Manages the lifecycle of operations.
+- **management**: Includes operation management functionalities.
+- **nodes**: Manages operation nodes.
+- **operations**:
+  - **computation**: Includes computational operations.
+  - **core**: Contains core operations.
+  - **persistent**: Includes persistent operations.
+  - **task**: Manages task-related operations.
 
 ### GUI
 The `gui` package provides graphical user interfaces for interacting with RAS.
-- **[Modules](research_analytics_suite/gui/modules)**
+- **launcher**: GUI launcher scripts.
+- **dialogs**: Contains dialog components, divided into subcategories:
+  - **data_handling**: Dialogs related to data handling.
+  - **visualization**: Dialogs for data visualization.
+  - **settings**: Settings-related dialogs.
+  - **management**: Management-related dialogs.
+- **modules**: Different GUI modules.
+- **utils**: Utility scripts for GUI components.
 
 ### Data Engine
 The `data_engine` package handles the primary functionality for data processing and management within a project.
-- **[Data Processing](research_analytics_suite/data_engine/data_processing)**
-- **[Data Structures](research_analytics_suite/data_engine/data_structures)**
-- **[Project](research_analytics_suite/data_engine/project)**
+- **core**: Core data processing modules.
+- **integration**: Integration with external data sources.
+- **engine**: Data engine implementations.
+- **utils**: Utility scripts for data handling.
+- **variable_storage**: Manages variable storage.
+  - **storage**: Different storage backends for variables.
+- **data_streams**: Handles live data input streams.
 
 ### Analytics
 The `analytics` package handles the application and visualization of data transformations within a project.
-- **[Preloaded](research_analytics_suite/analytics/preloaded)**
-  - **[Transformations](research_analytics_suite/analytics/preloaded/transformations)**
+- **core**: Core analytical processing and transformations.
+- **visualization**: Display and visualization of analytical transformations.
+- **preloaded**: Preloaded transformations and configurations.
+  - **transformations**: Preloaded transformation modules.
+- **custom_user**: Custom user-defined transformations and configurations.
+- **models**: Machine learning and statistical models.
+- **evaluation**: Metrics and evaluation scripts for model performance.
+- **prediction**: Modules for making predictions using trained models.
+- **preprocessing**: Data preprocessing modules.
+- **training**: Modules for training machine learning models.
+- **utils**: Utility functions and common metrics.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -182,8 +182,6 @@ The `analytics` package handles the application and visualization of data transf
 > <i>To be implemented at a later date.</i>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- CONTRIBUTING -->
 ## Contributing
@@ -201,16 +199,12 @@ Don't forget to give the project a star! Thanks again!
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
 <!-- LICENSE -->
 ## License
 
 Distributed under the BSD 3-Clause License. See `LICENSE` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- CONTACT -->
 ## Contact
