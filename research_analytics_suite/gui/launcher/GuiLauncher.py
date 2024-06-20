@@ -20,21 +20,21 @@ import os
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
 from research_analytics_suite.data_engine.Workspace import Workspace
-from research_analytics_suite.gui.ConsoleDialog import ConsoleDialog
-from research_analytics_suite.gui.OperationManagerDialog import OperationManagerDialog
-from research_analytics_suite.gui.SettingsDialog import SettingsDialog
+from research_analytics_suite.gui.dialogs.management.ConsoleDialog import ConsoleDialog
+from research_analytics_suite.gui.dialogs.management.OperationManagerDialog import OperationManagerDialog
+from research_analytics_suite.gui.dialogs.settings.SettingsDialog import SettingsDialog
 from research_analytics_suite.gui.modules.TimelineModule import TimelineModule
 from research_analytics_suite.gui.modules.WorkspaceModule import WorkspaceModule
 from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 # Importing the new dialog modules
-from research_analytics_suite.gui.PlanningDialog import PlanningDialog
-from research_analytics_suite.gui.DataCollectionDialog import DataCollectionDialog
-from research_analytics_suite.gui.AnalyzeDataDialog import AnalyzeDataDialog
-from research_analytics_suite.gui.VisualizeDataDialog import VisualizeDataDialog
-from research_analytics_suite.gui.ProjectManagerDialog import ProjectManagerDialog
-from research_analytics_suite.gui.ReportsDialog import ReportsDialog
+from research_analytics_suite.gui.dialogs.management.PlanningDialog import PlanningDialog
+from research_analytics_suite.gui.dialogs.data_handling.DataCollectionDialog import DataCollectionDialog
+from research_analytics_suite.gui.dialogs.data_handling.AnalyzeDataDialog import AnalyzeDataDialog
+from research_analytics_suite.gui.dialogs.visualization.VisualizeDataDialog import VisualizeDataDialog
+from research_analytics_suite.gui.dialogs.management.ProjectManagerDialog import ProjectManagerDialog
+from research_analytics_suite.gui.dialogs.management.ReportsDialog import ReportsDialog
 
 
 class GuiLauncher:
