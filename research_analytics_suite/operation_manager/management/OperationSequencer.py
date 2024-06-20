@@ -18,9 +18,9 @@ import json
 from collections import deque
 from typing import Optional, List, Dict
 
-from research_analytics_suite.operation_manager.OperationChain import OperationChain
-from research_analytics_suite.operation_manager.OperationNode import OperationNode
-from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
+from research_analytics_suite.operation_manager.nodes.OperationNode import OperationNode
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

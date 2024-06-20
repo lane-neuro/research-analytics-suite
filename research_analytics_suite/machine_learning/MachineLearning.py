@@ -2,8 +2,8 @@ import os
 
 from research_analytics_suite.machine_learning import Model, Preprocessor, MLTrainingOperation, \
     MLEvaluationOperation, Predictor
-from research_analytics_suite.operation_manager.OperationControl import OperationControl
-from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
 class MachineLearning(BaseOperation):

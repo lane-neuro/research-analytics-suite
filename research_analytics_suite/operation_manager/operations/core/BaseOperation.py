@@ -23,7 +23,6 @@ from typing import Tuple, List, Any
 import aiofiles
 
 from research_analytics_suite.data_engine.Config import Config
-from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -198,11 +197,14 @@ class BaseOperation(ABC):
         if hasattr(self, '_initialized') and not self._initialized:
             async with BaseOperation._lock:
                 if not self._initialized:
+
+                    from research_analytics_suite.data_engine.Workspace import Workspace
                     self._workspace = Workspace()
+
                     self._logger = CustomLogger()
                     self._config = Config()
 
-                    from research_analytics_suite.operation_manager.OperationControl import OperationControl
+                    from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
                     self._operation_control = OperationControl()
 
                     self._pause_event = asyncio.Event()
@@ -214,7 +216,7 @@ class BaseOperation(ABC):
                     self._unique_id = self.temp_kwargs.get('unique_id', f"{uuid.uuid4()}")
                     self._version = self.temp_kwargs.get('version', 0)
                     self._action = self.temp_kwargs.get('action')
-                    self._persistent = self.temp_kwargs.get('persistent', False)
+                    self._persistent = self.temp_kwargs.get('../persistent', False)
                     self._is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', False)
                     self._concurrent = self.temp_kwargs.get('concurrent', False)
                     self.result_variable_id = self.temp_kwargs.get('result_variable_id', f'result_{self.runtime_id}')
@@ -432,7 +434,7 @@ class BaseOperation(ABC):
 
         self._is_ready = True
         for child in self._child_operations.values():
-            if not child.is_complete() and not child.concurrent:
+            if not child.is_complete and not child.concurrent:
                 self._is_ready = False
 
     async def _prepare_action_for_exec(self):
@@ -659,24 +661,28 @@ class BaseOperation(ABC):
         self.is_ready = True
         await self.execute()
 
+    @property
     def is_running(self) -> bool:
         """
         Check if the operation is currently running.
         """
         return self._status == "running"
 
+    @property
     def is_complete(self) -> bool:
         """
         Check if the operation is complete.
         """
         return self._status == "completed"
 
+    @property
     def is_paused(self) -> bool:
         """
         Check if the operation is currently paused.
         """
         return self._status == "paused"
 
+    @property
     def is_stopped(self) -> bool:
         """
         Check if the operation is currently stopped.
@@ -687,7 +693,7 @@ class BaseOperation(ABC):
         """
         Update the progress of the operation.
         """
-        while not self.is_complete():
+        while not self.is_complete:
             if self._status == "running":
                 await self._pause_event.wait()
                 self._progress += 1

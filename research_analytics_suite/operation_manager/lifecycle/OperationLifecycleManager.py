@@ -16,9 +16,9 @@ Status: Prototype
 
 import asyncio
 
-from research_analytics_suite.operation_manager.OperationChain import OperationChain
-from research_analytics_suite.operation_manager.OperationExecutor import OperationExecutor
-from research_analytics_suite.operation_manager.OperationSequencer import OperationSequencer
+from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
+from research_analytics_suite.operation_manager.execution.OperationExecutor import OperationExecutor
+from research_analytics_suite.operation_manager.management.OperationSequencer import OperationSequencer
 from research_analytics_suite.operation_manager.task.TaskMonitor import TaskMonitor
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 

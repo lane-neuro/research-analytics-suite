@@ -24,7 +24,7 @@ from typing import List
 
 import psutil
 
-from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
 class ResourceMonitorOperation(BaseOperation):

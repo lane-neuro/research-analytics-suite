@@ -15,8 +15,8 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from research_analytics_suite.operation_manager.OperationChain import OperationChain
-from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
 class OperationStatusChecker:

@@ -13,7 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -32,7 +32,7 @@ class OperationManager:
             sequencer: Sequencer holding operations to be managed.
             task_creator: Task creator for generating asyncio tasks.
         """
-        from research_analytics_suite.operation_manager.OperationControl import OperationControl
+        from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
         self.op_control = OperationControl()
 
         self.sequencer = sequencer

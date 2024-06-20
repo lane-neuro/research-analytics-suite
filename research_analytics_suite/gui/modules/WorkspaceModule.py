@@ -9,8 +9,8 @@ import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.data_engine.Config import Config
 from research_analytics_suite.data_engine.Workspace import Workspace
-from research_analytics_suite.operation_manager.OperationControl import OperationControl
-from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

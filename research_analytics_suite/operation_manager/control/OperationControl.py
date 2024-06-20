@@ -17,17 +17,15 @@ Status: Prototype
 
 import asyncio
 
-from research_analytics_suite.data_engine.Workspace import Workspace
-from research_analytics_suite.operation_manager.OperationExecutor import OperationExecutor
-from research_analytics_suite.operation_manager.OperationLifecycleManager import OperationLifecycleManager
-from research_analytics_suite.operation_manager.OperationManager import OperationManager
-from research_analytics_suite.operation_manager.OperationSequencer import OperationSequencer
-from research_analytics_suite.operation_manager.OperationStatusChecker import OperationStatusChecker
-from research_analytics_suite.operation_manager.PersistentOperationChecker import PersistentOperationChecker
+from research_analytics_suite.operation_manager.execution.OperationExecutor import OperationExecutor
+from research_analytics_suite.operation_manager.lifecycle.OperationLifecycleManager import OperationLifecycleManager
+from research_analytics_suite.operation_manager.management.OperationManager import OperationManager
+from research_analytics_suite.operation_manager.management.OperationSequencer import OperationSequencer
+from research_analytics_suite.operation_manager.management.OperationStatusChecker import OperationStatusChecker
+from research_analytics_suite.operation_manager.management.PersistentOperationChecker import PersistentOperationChecker
 from research_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
 from research_analytics_suite.operation_manager.task.TaskMonitor import TaskMonitor
 from research_analytics_suite.utils.CustomLogger import CustomLogger
-from research_analytics_suite.utils.UserInputManager import UserInputManager
 
 
 class OperationControl:
@@ -75,7 +73,10 @@ class OperationControl:
             async with OperationControl._lock:
                 if not self._initialized:
                     self._logger.info("OperationControl.initialize: Initializing OperationControl.")
+
+                    from research_analytics_suite.data_engine.Workspace import Workspace
                     self.workspace = Workspace()
+
                     self.main_loop = asyncio.get_event_loop()
                     self.console_operation_in_progress = False
 
@@ -86,6 +87,8 @@ class OperationControl:
                     self.operation_manager = OperationManager(sequencer=self.sequencer, task_creator=self.task_creator)
                     self.operation_executor = OperationExecutor(sequencer=self.sequencer, task_creator=self.task_creator)
                     self.operation_status_checker = OperationStatusChecker(sequencer=self.sequencer)
+
+                    from research_analytics_suite.utils.UserInputManager import UserInputManager
                     self.user_input_manager = UserInputManager()
                     self.persistent_operation_checker = PersistentOperationChecker(operation_manager=self.operation_manager,
                                                                                    sequencer=self.sequencer,

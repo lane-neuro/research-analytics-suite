@@ -15,7 +15,7 @@ Status: Prototype
 """
 import aioconsole
 import sys
-from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
 class ConsoleOperation(BaseOperation):

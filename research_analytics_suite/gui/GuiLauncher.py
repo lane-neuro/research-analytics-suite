@@ -25,7 +25,7 @@ from research_analytics_suite.gui.OperationManagerDialog import OperationManager
 from research_analytics_suite.gui.SettingsDialog import SettingsDialog
 from research_analytics_suite.gui.modules.TimelineModule import TimelineModule
 from research_analytics_suite.gui.modules.WorkspaceModule import WorkspaceModule
-from research_analytics_suite.operation_manager.OperationControl import OperationControl
+from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 # Importing the new dialog modules

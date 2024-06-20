@@ -16,7 +16,7 @@ Status: Prototype
 """
 import dask.distributed
 
-from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.operation_manager.operations.computation.DaskOperation import DaskOperation
 from research_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
     ResourceMonitorOperation
@@ -35,7 +35,7 @@ class UserInputManager:
         """
         Initializes the UserInputManager with the necessary components.
         """
-        from research_analytics_suite.operation_manager.OperationControl import OperationControl
+        from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
         self._operation_control = OperationControl()
 
         self._logger = CustomLogger()

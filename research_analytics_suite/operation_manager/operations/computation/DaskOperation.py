@@ -17,7 +17,7 @@ Status: Prototype
 import dask
 import dask.distributed
 
-from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
 class DaskOperation(BaseOperation):

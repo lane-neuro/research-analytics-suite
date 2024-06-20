@@ -14,8 +14,8 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.operation_manager.OperationManager import OperationManager
-from research_analytics_suite.operation_manager.OperationSequencer import OperationSequencer
+from research_analytics_suite.operation_manager.management.OperationManager import OperationManager
+from research_analytics_suite.operation_manager.management.OperationSequencer import OperationSequencer
 from research_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
 from research_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
     ResourceMonitorOperation
@@ -42,7 +42,7 @@ class PersistentOperationChecker:
         - sequencer (OperationSequencer): The sequencer that holds operations to be executed.
         - task_creator (TaskCreator): The task creator that handles task generation.
         """
-        from research_analytics_suite.operation_manager.OperationControl import OperationControl
+        from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
         self._operation_control = OperationControl()
 
         self.op_manager = operation_manager

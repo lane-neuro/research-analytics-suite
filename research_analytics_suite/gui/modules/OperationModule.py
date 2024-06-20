@@ -26,8 +26,8 @@ from research_analytics_suite.gui.modules.CreateOperationModule import CreateOpe
 from research_analytics_suite.gui.utils.left_aligned_button import left_aligned_button
 from research_analytics_suite.gui.utils.left_aligned_checkbox import left_aligned_checkbox
 from research_analytics_suite.gui.utils.left_aligned_input_field import left_aligned_input_field
-from research_analytics_suite.operation_manager.OperationControl import OperationControl
-from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

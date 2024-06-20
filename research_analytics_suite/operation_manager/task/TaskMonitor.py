@@ -13,7 +13,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -33,7 +33,7 @@ class TaskMonitor:
         self.sequencer = sequencer
         self._logger = CustomLogger()
 
-        from research_analytics_suite.operation_manager.OperationControl import OperationControl
+        from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
         self.op_control = OperationControl()
 
     async def handle_tasks(self):
@@ -46,11 +46,10 @@ class TaskMonitor:
                 try:
                     self._logger.debug(f"handle_tasks: [OP] {task.get_name()}")
                     if operation is not None:
-                        if isinstance(operation, BaseOperation):
+                        if isinstance(operation, BaseOperation) and operation.is_complete:
                             output, _memory_id = await operation.get_result()
                             operation.add_log_entry(f"handle_tasks: [OUTPUT] {output}")
-
-                        self._logger.info(f"handle_tasks: [DONE] {task.get_name()}")
+                            self._logger.info(f"handle_tasks: [DONE] {task.get_name()}")
                     else:
                         self._logger.error(Exception(
                             f"handle_tasks: [ERROR] No operations found for task {task.get_name()}"), self)
@@ -63,4 +62,4 @@ class TaskMonitor:
                             self.sequencer.remove_operation_from_sequencer(operation)
 
                         if isinstance(operation, ConsoleOperation):
-                            self.sequencer.op_.console_operation_in_progress = False
+                            self.op_control.console_operation_in_progress = False

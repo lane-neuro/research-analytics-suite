@@ -17,8 +17,8 @@ Status: Prototype
 
 import asyncio
 
-from research_analytics_suite.operation_manager.OperationChain import OperationChain
-from research_analytics_suite.operation_manager.operations.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -39,7 +39,7 @@ class OperationExecutor:
             sequencer: Sequencer holding operations to be executed.
             task_creator: Task creator for generating asyncio tasks.
         """
-        from research_analytics_suite.operation_manager.OperationControl import OperationControl
+        from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
         self.op_control = OperationControl()
 
         self.sequencer = sequencer
