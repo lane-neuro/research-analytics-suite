@@ -9,7 +9,7 @@ Author: Lane
 import asyncio
 import os.path
 
-from research_analytics_suite.data_engine.Config import Config
+from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.gui.launcher.GuiLauncher import GuiLauncher
 from research_analytics_suite.operation_manager.control.OperationControl import OperationControl

@@ -9,7 +9,7 @@ Author: Lane
 """
 import dearpygui.dearpygui as dpg
 
-from research_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
+from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

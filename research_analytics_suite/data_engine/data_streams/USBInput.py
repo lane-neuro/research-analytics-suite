@@ -14,7 +14,7 @@ Status: Prototype
 """
 import serial
 
-from research_analytics_suite.data_engine.live_input.BaseInput import BaseInput
+from research_analytics_suite.data_engine.data_streams.BaseInput import BaseInput
 
 
 class USBInput(BaseInput):

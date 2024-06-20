@@ -7,7 +7,7 @@ from typing import Optional, Any
 
 import dearpygui.dearpygui as dpg
 
-from research_analytics_suite.data_engine.Config import Config
+from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
@@ -151,10 +151,13 @@ class WorkspaceModule:
                        tag=f"user_group_{memory_id}_{name}",
                        horizontal=True,
                        width=-1):
-            dpg.add_text(default_value=f"Name: {name}, Value: ", parent=f"user_group_{memory_id}_{name}")
-            dpg.add_text(default_value=value, tag=f"user_value_{memory_id}_{name}", parent=f"user_group_{memory_id}_{name}")
+            dpg.add_text(default_value=f"Name: {name}, Value: ",
+                         parent=f"user_group_{memory_id}_{name}")
+            dpg.add_text(default_value=value,
+                         tag=f"user_value_{memory_id}_{name}",
+                         parent=f"user_group_{memory_id}_{name}")
             dpg.add_button(label=f"Remove",
-                           callback=lambda: asyncio.create_task(self.remove_user_variable(name)),
+                           callback=lambda: asyncio.create_task(self.remove_user_variable(name, memory_id)),
                            parent=f"user_group_{memory_id}_{name}")
 
     async def remove_user_variable_from_gui(self, memory_id, var_name=None) -> None:
@@ -166,8 +169,14 @@ class WorkspaceModule:
             var_name (str, optional): The name of the variable.
 
         """
-
-        dpg.delete_item(f"user_var_group_{memory_id}")
+        # if var_name is None, remove all variables from the memory slot in local_user_vars
+        if var_name is None:
+            for _var_name in list(self._local_user_vars[memory_id].keys()):
+                dpg.delete_item(f"user_group_{memory_id}_{_var_name}")
+            self._local_user_vars.pop(memory_id)
+        else:
+            dpg.delete_item(f"user_group_{memory_id}_{var_name}")
+            self._local_user_vars[memory_id].pop(var_name)
 
     async def add_user_variable(self, name, value) -> None:
         """Adds a user variable."""
@@ -176,11 +185,11 @@ class WorkspaceModule:
         except Exception as e:
             self._logger.error(Exception(f"Failed to add user variable '{name}': {e}", self))
 
-    async def remove_user_variable(self, name) -> None:
+    async def remove_user_variable(self, name, memory_id) -> None:
         """Removes a user variable."""
         try:
             self._logger.debug(f"Removing user variable '{name}'")
-            await self._workspace.remove_user_variable(name)
+            await self._workspace.remove_user_variable(name, memory_id)
 
         except Exception as e:
             self._logger.error(Exception(f"Failed to remove user variable '{name}': {e}", self))

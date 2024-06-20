@@ -8,7 +8,7 @@ Author: Lane
 """
 
 from .BaseInput import BaseInput
-from ...utils.CustomLogger import CustomLogger
+from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class LiveDataHandler:

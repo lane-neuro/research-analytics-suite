@@ -16,7 +16,7 @@ Status: Prototype
 import dask.dataframe as dd
 import pandas as pd
 
-from research_analytics_suite.data_engine.BaseData import BaseData
+from research_analytics_suite.data_engine.core.BaseData import BaseData
 
 
 class DaskData(BaseData):

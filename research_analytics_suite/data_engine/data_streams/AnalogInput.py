@@ -12,7 +12,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.data_engine.live_input import BaseInput
+from research_analytics_suite.data_engine.data_streams import BaseInput
 
 
 class AnalogInput(BaseInput):

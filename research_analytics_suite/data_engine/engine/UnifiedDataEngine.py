@@ -16,12 +16,12 @@ import pandas as pd
 from torch.utils.data import DataLoader
 
 from research_analytics_suite.analytics.AnalyticsCore import AnalyticsCore
-from research_analytics_suite.data_engine.Config import Config
-from research_analytics_suite.data_engine.DaskData import DaskData
-from research_analytics_suite.data_engine.DataCache import DataCache
-from research_analytics_suite.data_engine.DataTypeDetector import DataTypeDetector
-from research_analytics_suite.data_engine.TorchData import TorchData
-from research_analytics_suite.data_engine.live_input.BaseInput import BaseInput
+from research_analytics_suite.data_engine.utils.Config import Config
+from research_analytics_suite.data_engine.core.DaskData import DaskData
+from research_analytics_suite.data_engine.utils.DataCache import DataCache
+from research_analytics_suite.data_engine.utils.DataTypeDetector import DataTypeDetector
+from research_analytics_suite.data_engine.core.TorchData import TorchData
+from research_analytics_suite.data_engine.data_streams.BaseInput import BaseInput
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

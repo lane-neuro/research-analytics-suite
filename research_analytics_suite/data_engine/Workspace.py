@@ -9,17 +9,16 @@ Author: Lane
 import asyncio
 import os
 import json
-import pickle
 from typing import LiteralString, Tuple
 
 import aiofiles
 from collections import defaultdict
-from research_analytics_suite.data_engine.Config import Config
-from research_analytics_suite.data_engine.DataCache import DataCache
-from research_analytics_suite.data_engine.DataEngineOptimized import DataEngineOptimized
-from research_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
+from research_analytics_suite.data_engine.utils.Config import Config
+from research_analytics_suite.data_engine.utils.DataCache import DataCache
+from research_analytics_suite.data_engine.engine.DataEngineOptimized import DataEngineOptimized
+from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
 from research_analytics_suite.utils.CustomLogger import CustomLogger
-from research_analytics_suite.data_engine.variable_management import UserVariablesManager, SQLiteStorage, MemoryStorage
+from research_analytics_suite.data_engine.variable_storage import UserVariablesManager, SQLiteStorage, MemoryStorage
 
 
 class Workspace:

@@ -9,10 +9,10 @@ Author: Lane
 """
 import psutil
 
-from research_analytics_suite.data_engine.Config import Config
-from research_analytics_suite.data_engine.DataCache import DataCache
-from research_analytics_suite.data_engine.UnifiedDataEngine import UnifiedDataEngine
-from research_analytics_suite.data_engine.live_input.LiveDataHandler import LiveDataHandler
+from research_analytics_suite.data_engine.utils.Config import Config
+from research_analytics_suite.data_engine.utils.DataCache import DataCache
+from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
+from research_analytics_suite.data_engine.data_streams.LiveDataHandler import LiveDataHandler
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

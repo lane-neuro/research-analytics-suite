@@ -17,7 +17,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-from research_analytics_suite.data_engine.BaseData import BaseData
+from research_analytics_suite.data_engine.core.BaseData import BaseData
 
 
 class TorchData(BaseData, Dataset):

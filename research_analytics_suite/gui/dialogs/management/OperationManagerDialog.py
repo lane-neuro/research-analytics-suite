@@ -18,7 +18,7 @@ import asyncio
 from typing import Optional, Any
 import dearpygui.dearpygui as dpg
 
-from research_analytics_suite.data_engine.Config import Config
+from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
 from research_analytics_suite.gui.modules.OperationModule import OperationModule
 from research_analytics_suite.operation_manager.control.OperationControl import OperationControl

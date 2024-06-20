@@ -22,7 +22,7 @@ from concurrent.futures import ProcessPoolExecutor
 from typing import Tuple, List, Any
 import aiofiles
 
-from research_analytics_suite.data_engine.Config import Config
+from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

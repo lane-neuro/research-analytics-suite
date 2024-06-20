@@ -9,7 +9,7 @@ import uuid
 from abc import ABC, abstractmethod
 from typing import Tuple
 
-from research_analytics_suite.data_engine.Config import Config
+from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

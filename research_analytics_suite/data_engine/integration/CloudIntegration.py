@@ -10,16 +10,13 @@ Author: Lane
 import boto3
 
 
-class S3Integration:
+class CloudIntegration:
     """
     A class for integrating with AWS S3.
-
-    Attributes:
-        s3_client (boto3.client): The S3 client instance.
     """
     def __init__(self, aws_access_key, aws_secret_key, region_name):
         """
-        Initializes the S3Integration instance.
+        Initializes the CloudIntegration instance.
 
         Args:
             aws_access_key (str): The AWS access key.

@@ -8,7 +8,7 @@ Author: Lane
 """
 import dearpygui.dearpygui as dpg
 
-from research_analytics_suite.data_engine.DataEngineOptimized import DataEngineOptimized
+from research_analytics_suite.data_engine.engine.DataEngineOptimized import DataEngineOptimized
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
