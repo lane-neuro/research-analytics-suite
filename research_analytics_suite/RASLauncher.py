@@ -32,22 +32,23 @@ async def RASLauncher():
     _launch_tasks = []
     _gui_launcher = None
 
-    # Initialize Configuration class
+    # Initialize Configuration singleton class
     _config = Config()
     await _config.initialize()
 
-    # Initialize Logging class
+    # Initialize Logging singleton class
     _logger = CustomLogger()
     await _logger.initialize()
 
-    # Initialize OperationControl class
+    # Initialize OperationControl singleton class
     _operation_control = OperationControl()
     await _operation_control.initialize()
 
-    # Initialize Workspace class
+    # Initialize Workspace singleton class
     _workspace = Workspace()
     await _workspace.initialize()
 
+    # Add the operation control loop to the launch tasks
     _launch_tasks.append(_operation_control.exec_loop())
 
     # Checks args for -o '--open_workspace' flag and -c '--config' flag

@@ -23,9 +23,6 @@ from research_analytics_suite.RASLauncher import RASLauncher
 def main():
     """
     Initiates the Research Analytics Suite.
-
-    This function prints the version of the suite, imports the launch_ras module,
-    and calls it to start the suite.
     """
     try:
         # Apply nest_asyncio to allow asyncio to run in Jupyter notebooks
