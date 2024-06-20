@@ -109,7 +109,7 @@ class GuiLauncher:
         dpg.bind_theme(global_theme)
 
         font_paths = []
-        font_directory = "gui/fonts"
+        font_directory = "gui/assets/fonts"
 
         if os.path.exists(font_directory) and os.path.isdir(font_directory):
             for root, _, files in os.walk(font_directory):
@@ -144,8 +144,8 @@ class GuiLauncher:
         """Sets up the main window of the GUI and runs the event loop."""
         dpg.create_context()
         dpg.create_viewport(title='Research Analytics Suite', width=1920, height=1080,
-                            large_icon="images/logo_small_light_transparent.ico",
-                            small_icon="images/logo_dialog_icon_light_transparent.ico")
+                            large_icon="gui/assets/images/logo_small_light_transparent.ico",
+                            small_icon="gui/assets/images/logo_dialog_icon_light_transparent.ico")
         dpg.setup_dearpygui()
         await self.apply_theme()  # Apply theme after setup
         # dpg.show_metrics()

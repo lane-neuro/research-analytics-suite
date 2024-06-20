@@ -21,7 +21,7 @@
   </p>
 
   <a href="https://github.com/lane-neuro/research-analytics-suite">
-    <img src="research_analytics_suite/images/centered_banner_white_black_text_1800x700.png" alt="Research Analytics Suite Banner" style="max-width: 75%; height: auto;">
+    <img src="research_analytics_suite/gui/assets/images/centered_banner_white_black_text_1800x700.png" alt="Research Analytics Suite Banner" style="max-width: 75%; height: auto;">
   </a>
   <p>Author: <a href="#contact">Lane</a></p>
 </div>

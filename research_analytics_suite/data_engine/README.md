@@ -31,7 +31,7 @@
 
   <!-- PROJECT LOGO -->
   <a href="https://github.com/lane-neuro/research-analytics-suite">
-    <img src="../images/centered_banner_white_black_text_1800x700.png" alt="RAS" style="max-width: 75%; height: auto;">
+    <img src="../gui/assets/images/centered_banner_white_black_text_1800x700.png" alt="RAS" style="max-width: 75%; height: auto;">
   </a>
   <p>Author: <a href="#contact">Lane</a></p>
 </div>
