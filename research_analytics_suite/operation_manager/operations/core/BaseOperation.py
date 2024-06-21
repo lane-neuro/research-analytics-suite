@@ -19,7 +19,7 @@ import types
 import uuid
 from abc import ABC
 from concurrent.futures import ProcessPoolExecutor
-from typing import Tuple, List, Any
+from typing import Tuple, List
 import aiofiles
 
 from research_analytics_suite.data_engine.utils.Config import Config
@@ -27,6 +27,9 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 from .control import start_operation, pause_operation, resume_operation, stop_operation
 from .execution import execute_operation, run_operations
 from .progress import update_progress
+from .child_operations import (add_child_operation, link_child_operation, remove_child_operation,
+                               start_child_operations, pause_child_operations, resume_child_operations,
+                               stop_child_operations, reset_child_operations)
 
 
 class BaseOperation(ABC):
@@ -294,6 +297,66 @@ class BaseOperation(ABC):
         Update the progress of the operation.
         """
         await update_progress(self)
+
+    async def add_child_operation(self, operation, dependencies: dict = None):
+        """
+        Add a child operation to the current operation.
+
+        Args:
+            operation: The child operation to be added.
+            dependencies (dict, optional): List of operation names that the child operation depends on.
+                                            Defaults to None.
+        """
+        await add_child_operation(self, operation, dependencies)
+
+    async def link_child_operation(self, child_operation, dependencies: dict = None):
+        """
+        Link a child operation to the current operation.
+
+        Args:
+            child_operation: The child operation to be linked.
+            dependencies (dict, optional): The dependencies of the child operation. Defaults to None.
+        """
+        await link_child_operation(self, child_operation, dependencies)
+
+    def remove_child_operation(self, operation):
+        """
+        Remove a child operation from the current operation.
+
+        Args:
+            operation: The child operation to be removed.
+        """
+        remove_child_operation(self, operation)
+
+    async def _start_child_operations(self):
+        """
+        Start all child operations.
+        """
+        await start_child_operations(self)
+
+    async def _pause_child_operations(self):
+        """
+        Pause all child operations.
+        """
+        await pause_child_operations(self)
+
+    async def _resume_child_operations(self):
+        """
+        Resume all child operations.
+        """
+        await resume_child_operations(self)
+
+    async def _stop_child_operations(self):
+        """
+        Stop all child operations.
+        """
+        await stop_child_operations(self)
+
+    async def _reset_child_operations(self):
+        """
+        Reset all child operations.
+        """
+        await reset_child_operations(self)
 
     @property
     def initialized(self) -> bool:
@@ -594,90 +657,6 @@ class BaseOperation(ABC):
         """
         return self._status == "stopped"
 
-    async def add_child_operation(self, operation, dependencies: dict[Any, 'BaseOperation'] = None):
-        """Add a child operation to the current operation.
-
-        Args:
-            operation: The child operation to be added.
-            dependencies (dict, optional): List of operation names that the child operation depends on.
-                                                Defaults to None.
-        """
-        if isinstance(operation, dict):
-            # Convert dictionary to BaseOperation instance
-            self._logger.info(f"Converting dictionary to BaseOperation instance")
-            _file_dir = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
-                                     self._config.WORKSPACE_OPERATIONS_DIR)
-            operation = await BaseOperation.from_dict(data=operation, parent_operation=self, file_dir=_file_dir)
-
-        if not isinstance(operation, BaseOperation):
-            self.handle_error("operation must be an instance of BaseOperation")
-            return
-
-        if dependencies is not None:
-            self._dependencies[operation.unique_id] = dependencies.get(operation.unique_id)
-
-        if not isinstance(operation.parent_operation, BaseOperation):
-            operation.parent_operation = self
-
-        if self._child_operations is None:
-            self._child_operations = dict[BaseOperation.runtime_id, 'BaseOperation']()
-        if operation.runtime_id not in self._child_operations.keys():
-            self._child_operations[operation.runtime_id] = operation
-
-        self.add_log_entry(f"[CHILD] (added) {operation.name}")
-
-    async def link_child_operation(self, child_operation: 'BaseOperation',
-                                   dependencies: dict[unique_id, 'BaseOperation'] = None) -> bool:
-        """
-        Link a child operation to the current operation.
-
-        Args:
-            child_operation (BaseOperation): The child operation to be linked.
-            dependencies (dict[unique_id, BaseOperation]): The dependencies of the child operation.
-
-        Returns:
-            bool: True if the operation was successfully linked, False otherwise.
-        """
-        if not isinstance(child_operation, BaseOperation):
-            self.handle_error("operation must be an instance of BaseOperation")
-            return False
-
-        if not isinstance(dependencies, dict):
-            dependencies = dict[BaseOperation.unique_id, 'BaseOperation']()
-
-        if child_operation.runtime_id not in self._child_operations.keys():
-            if self._child_operations is None:
-                self._child_operations = dict[BaseOperation.runtime_id, 'BaseOperation']()
-            self._child_operations[child_operation.runtime_id] = child_operation
-        else:
-            self.add_log_entry(f"[CHILD] (runtime_id already exists) {child_operation.name} - doing nothing")
-            return True
-
-        if self._dependencies is not None:
-            if child_operation.unique_id not in self._dependencies and dependencies.get(child_operation.unique_id):
-                self._dependencies[child_operation.unique_id] = dependencies.get(child_operation.unique_id)
-
-        child_operation.parent_operation = self
-        self.add_log_entry(f"[CHILD] (linked) {child_operation.name}")
-        return True
-
-    def remove_child_operation(self, operation: 'BaseOperation'):
-        """
-        Remove a child operation from the current operation.
-
-        Args:
-            operation (BaseOperation): The child operation to be removed.
-        """
-        if not isinstance(operation, BaseOperation):
-            self.handle_error("operation must be an instance of BaseOperation")
-            return
-
-        operation.parent_operation = None
-        del self._child_operations[operation.runtime_id]
-        if operation.unique_id in self._dependencies.keys():
-            del self._dependencies[operation.unique_id]
-        self.add_log_entry(f"[CHILD] (removed) {operation.name}")
-
     def attach_gui_module(self, gui_module):
         """
         Attach a GUI module to the operation.
@@ -722,20 +701,6 @@ class BaseOperation(ABC):
         self._status = "idle"
         self._task = None
 
-    async def _start_child_operations(self):
-        """
-        Start all child operations.
-        """
-        tasks = [op.start() for op in self._child_operations.values()]
-        try:
-            if self._concurrent:
-                await asyncio.gather(*tasks)
-            else:
-                for task in tasks:
-                    await task
-        except Exception as e:
-            self.handle_error(e)
-
     async def execute_child_operations(self):
         """
         Execute all child operations.
@@ -746,34 +711,6 @@ class BaseOperation(ABC):
         else:
             execution_order = self._determine_execution_order()
             await run_operations(self, execution_order)
-
-    async def _pause_child_operations(self):
-        """
-        Pause all child operations.
-        """
-        tasks = [op.pause(True) for op in self._child_operations.values()]
-        await asyncio.gather(*tasks)
-
-    async def _resume_child_operations(self):
-        """
-        Resume all child operations.
-        """
-        tasks = [op.resume() for op in self._child_operations.values()]
-        await asyncio.gather(*tasks)
-
-    async def _stop_child_operations(self):
-        """
-        Stop all child operations.
-        """
-        tasks = [op.stop() for op in self._child_operations.values()]
-        await asyncio.gather(*tasks)
-
-    async def _reset_child_operations(self):
-        """
-        Reset all child operations.
-        """
-        tasks = [op.reset() for op in self._child_operations.values()]
-        await asyncio.gather(*tasks)
 
     def _determine_execution_order(self) -> List['BaseOperation']:
         """
