@@ -478,21 +478,21 @@ class BaseOperation(ABC):
         """Gets the action to be executed by the operation."""
         return self._action
 
-    @action.setter
-    def action(self, value):
-        """Sets the action to be executed by the operation."""
-        self._action = value
-
     @property
     def action_serialized(self) -> str:
         """Gets the serializable action to be executed by the operation."""
         if isinstance(self._action, types.MethodType) or isinstance(self._action, types.FunctionType):
-            action = f"{self._action}"
+            action = f"{self._action.__code__}"
         elif isinstance(self._action, str):
             action = self._action
         else:
             action = None
         return action
+
+    @action.setter
+    def action(self, value):
+        """Sets the action to be executed by the operation."""
+        self._action = value
 
     @property
     def persistent(self) -> bool:
