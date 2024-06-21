@@ -24,12 +24,14 @@ import aiofiles
 
 from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
-from .control import start_operation, pause_operation, resume_operation, stop_operation
+from .control import (start_operation, pause_operation,
+                      resume_operation, stop_operation)
 from .execution import execute_operation, run_operations
 from .progress import update_progress
 from .child_operations import (add_child_operation, link_child_operation, remove_child_operation,
                                start_child_operations, pause_child_operations, resume_child_operations,
                                stop_child_operations, reset_child_operations)
+from .workspace import (save_operation_in_workspace, get_result, load_from_disk, load_operation_group)
 
 
 class BaseOperation(ABC):
@@ -358,6 +360,82 @@ class BaseOperation(ABC):
         """
         await reset_child_operations(self)
 
+    async def save_operation_in_workspace(self, overwrite: bool = False):
+        """
+        Save the BaseOperation object to disk.
+
+        Args:
+            overwrite (bool, optional): Whether to overwrite the existing operation file. Defaults to False.
+        """
+        await save_operation_in_workspace(self, overwrite)
+
+    async def get_result(self):
+        """
+        Retrieve the results of the operation from the workspace.
+
+        Returns:
+            dict[name, value]: The name of the variable and its value.
+            str: The memory_id location of the stored variable.
+        """
+        return await get_result(self)
+
+    @staticmethod
+    async def load_from_disk(file_path: str, operation_group: dict[str, 'BaseOperation']) -> 'BaseOperation':
+        """
+        Load a BaseOperation object from disk.
+
+        Args:
+            file_path (str): The path to the file to load.
+            operation_group (dict[str, BaseOperation]): The group of operations to which the loaded operation belongs.
+
+        Returns:
+            BaseOperation: The loaded operation.
+        """
+        return await load_from_disk(file_path, operation_group)
+
+    @staticmethod
+    async def load_operation_group(file_path: str,
+                                   operation_group: dict = None,
+                                   iterate_child_operations: bool = True) -> dict:
+        """
+        Load a group of operations from disk.
+
+        Args:
+            file_path (str): The path to the file to load.
+            operation_group (dict, optional): The group of operations to which the loaded operations belong.
+                                               Defaults to None.
+            iterate_child_operations (bool, optional): Whether to iterate through child operations. Defaults to True.
+
+        Returns:
+            dict: The loaded operation group.
+        """
+        return await load_operation_group(file_path, operation_group, iterate_child_operations)
+
+    @property
+    def workspace(self):
+        """Gets the workspace instance."""
+        return self._workspace
+
+    @property
+    def logger(self):
+        """Gets the logger instance."""
+        return self._logger
+
+    @property
+    def config(self):
+        """Gets the configuration instance."""
+        return self._config
+
+    @property
+    def operation_control(self):
+        """Gets the operation control instance."""
+        return self._operation_control
+
+    @property
+    def pause_event(self):
+        """Gets the pause event."""
+        return self._pause_event
+
     @property
     def initialized(self) -> bool:
         """Gets whether the operation has been initialized."""
@@ -405,10 +483,11 @@ class BaseOperation(ABC):
         """Sets the action to be executed by the operation."""
         self._action = value
 
-    def action_serializable(self) -> str:
+    @property
+    def action_serialized(self) -> str:
         """Gets the serializable action to be executed by the operation."""
         if isinstance(self._action, types.MethodType) or isinstance(self._action, types.FunctionType):
-            action = f"{self._action.__code__}"
+            action = f"{self._action}"
         elif isinstance(self._action, str):
             action = self._action
         else:
@@ -583,23 +662,6 @@ class BaseOperation(ABC):
         except Exception as e:
             self.handle_error(e)
 
-    async def get_result(self) -> Tuple[dict, str]:
-        """
-        Retrieve the results of the operation from the workspace.
-
-        Returns:
-            dict[name, value]:
-                name (str): The name of the variable. (aka: the key)
-                value: The value of the stored variable in the associated memory_id location.
-            str: The memory_id location of the stored variable.
-        """
-        try:
-            _memory_id, _value = await self._workspace.get_user_variable_value(name=f"result_{self._name}",
-                                                                               memory_id=f'{self.runtime_id}')
-            return _value, _memory_id
-        except Exception as e:
-            self._logger.error(Exception(f"Error retrieving result for operation '{self.name}': {e}"), self)
-
     async def reset(self, child_operations=False):
         """
         Reset the operation and all child operations, if applicable.
@@ -728,163 +790,3 @@ class BaseOperation(ABC):
                     execution_order.append(op)
                     processed.add(op.name)
         return execution_order
-
-    def pack_as_local_reference(self) -> dict:
-        """Provide a reference to the unique_id, name, and version of the operation."""
-        return {
-            'unique_id': self._unique_id,
-            'version': self._version,
-            'name': self._name,
-        }
-
-    def _pack_for_save(self) -> dict:
-        """Provide a dictionary representation of the operation."""
-
-        _child_operations = None
-        if self._child_operations is not None:
-            _child_operations = [child.pack_as_local_reference() for child in self._child_operations.values()]
-
-        return {
-            'unique_id': self._unique_id,
-            'version': self._version,
-            'name': self._name,
-            'action': self.action_serializable(),
-            'persistent': self._persistent,
-            'concurrent': self._concurrent,
-            'is_cpu_bound': self._is_cpu_bound,
-            'dependencies': self._dependencies if self._dependencies else None,
-            'parent_operation': self._parent_operation.pack_as_local_reference() if self._parent_operation else None,
-            'child_operations': _child_operations if _child_operations else None,
-            'result_variable_id': self.result_variable_id,
-        }
-
-    async def save_operation_in_workspace(self, overwrite: bool = False):
-        """
-        Save the BaseOperation object to disk.
-
-        Args:
-            overwrite (bool, optional): Whether to overwrite the existing operation file. Defaults to False.
-        """
-
-        file_ext = f".json"
-        stripped_state = self._pack_for_save()
-
-        dir_path = (f"{self._config.BASE_DIR}/{self._config.WORKSPACE_NAME}/"
-                    f"{self._config.WORKSPACE_OPERATIONS_DIR}")
-        os.makedirs(dir_path, exist_ok=True)
-
-        # Generate a unique name for the operation file
-        name = f"{self._name}_{self.short_id}"
-        if self._version > 0:
-            name = f"{name}_{self.short_id}-{self._version}"
-
-        if self._version == 0 and os.path.exists(f"{dir_path}/{name}{file_ext}"):
-            if not overwrite:
-                # Find the next available operation version
-                self._version = 1
-                while True:
-                    name = f"{self._name}_{self.short_id}-{self._version}"
-                    if not os.path.exists(f"{dir_path}/{name}{file_ext}"):
-                        break
-                    self._version += 1
-
-        file_path = f"{dir_path}/{name}{file_ext}"
-
-        # Save the operation
-        async with aiofiles.open(file_path, 'w') as file:
-            await file.write(json.dumps(stripped_state))
-
-    @staticmethod
-    async def load_from_disk(file_path: str,
-                             operation_group: dict[str, 'BaseOperation']) -> 'BaseOperation':
-        """Load a BaseOperation object from disk."""
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File not found: {file_path}")
-
-        async with aiofiles.open(file_path, 'r') as file:
-            try:
-                data = await file.read()
-                state = json.loads(data)
-            except json.JSONDecodeError as e:
-                raise json.JSONDecodeError(f"Failed to decode JSON from file: {file_path}", data, e.pos) from e
-            except Exception as e:
-                raise e
-
-            # Ensure the loaded state is a dictionary
-            if not isinstance(state, dict):
-                raise TypeError("Loaded data must be a dictionary")
-
-            # Create a BaseOperation instance from the state
-            operation = await BaseOperation.from_dict(data=state, file_dir=os.path.dirname(file_path))
-
-            if operation.runtime_id not in operation_group.keys():
-                operation_group[operation.runtime_id] = operation
-            return operation
-
-    @staticmethod
-    async def load_operation_group(file_path: str, operation_group: dict[runtime_id, 'BaseOperation'],
-                                   iterate_child_operations: bool = True) -> dict[runtime_id, 'BaseOperation']:
-        """Load a group of operations from disk."""
-
-        processed_operations = set()  # Track processed operations to avoid duplicates
-
-        async def load_and_process_operation(path, group):
-            if not os.path.exists(path):
-                raise FileNotFoundError(f"File not found: {path}")
-
-            operation = await BaseOperation.load_from_disk(path, group)
-            processed_operations.add(operation.runtime_id)
-
-            parent = operation._parent_operation
-            if isinstance(parent, dict):
-                parent_id = parent['unique_id']
-                if parent_id not in group.values().unique_id:
-                    parent_file_path = BaseOperation._construct_file_path(file_dir, parent)
-                    if os.path.exists(parent_file_path):
-                        parent_operation = await load_and_process_operation(parent_file_path, group)
-                        operation._parent_operation = parent_operation
-                        group[parent_operation.runtime_id] = parent_operation
-                    else:
-                        raise FileNotFoundError(f"Parent operation file not found: {parent_file_path}")
-                else:
-                    # Find the instance of the parent operation in the group
-                    for op in group.values():
-                        if op.unique_id == parent_id:
-                            operation._parent_operation = op
-                            break
-
-            if operation._child_operations and iterate_child_operations:
-                if isinstance(operation._child_operations, list):
-                    children = operation._child_operations
-                    for child in children:
-                        if isinstance(child, dict):
-                            child_id = child['unique_id']
-                            if child_id not in group.values().unique_id:
-                                child_file_path = BaseOperation._construct_file_path(file_dir, child)
-                                if os.path.exists(child_file_path):
-                                    child_operation = await load_and_process_operation(child_file_path, group)
-                                    await operation.add_child_operation(child_operation)
-                                    await operation.link_child_operation(child_operation)
-                                    group[child_operation.runtime_id] = child_operation
-                                else:
-                                    raise FileNotFoundError(f"Child operation file not found: {child_file_path}")
-
-            return operation
-
-        file_dir = os.path.dirname(file_path)
-        if not os.path.exists(file_dir):
-            raise FileNotFoundError(f"Directory not found: {file_dir}")
-
-        root_operation = await load_and_process_operation(file_path, operation_group)
-        operation_group[root_operation.runtime_id] = root_operation
-
-        return operation_group
-
-    @staticmethod
-    def _construct_file_path(base_dir, operation_ref):
-        """Helper method to construct file path for an operation reference."""
-        name = operation_ref['name']
-        short_id = operation_ref['unique_id'][:4]
-        version = operation_ref['version']
-        file_name = f"{name}_{short_id}.json" if version == 0 else f"{name}_{short_id}-{version}.json"
-        return os.path.join(base_dir, file_name)
