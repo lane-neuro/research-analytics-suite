@@ -16,6 +16,9 @@ import asyncio
 
 
 async def resume_operation(operation, child_operations=False):
+    """
+    Resume the operation and all child operations, if applicable.
+    """
     if operation.status == "paused":
         try:
             operation.is_ready = True
@@ -33,5 +36,8 @@ async def resume_operation(operation, child_operations=False):
 
 
 async def _resume_child_operations(operation):
+    """
+    Resume all child operations.
+    """
     tasks = [op.resume() for op in operation.child_operations.values()]
     await asyncio.gather(*tasks)

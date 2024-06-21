@@ -16,6 +16,9 @@ import asyncio
 
 
 async def stop_operation(operation, child_operations=False):
+    """
+    Stop the operation and all child operations, if applicable.
+    """
     if operation.status == "running":
         try:
             operation.is_ready = False
@@ -33,5 +36,8 @@ async def stop_operation(operation, child_operations=False):
 
 
 async def _stop_child_operations(operation):
+    """
+    Stop all child operations.
+    """
     tasks = [op.stop() for op in operation.child_operations.values()]
     await asyncio.gather(*tasks)

@@ -258,15 +258,27 @@ class BaseOperation(ABC):
                     delattr(self, 'temp_kwargs')
 
     async def start(self):
+        """
+        Start the operation and all child operations.
+        """
         await start_operation(self)
 
     async def pause(self, child_operations=False):
+        """
+        Pause the operation and all child operations, if applicable.
+        """
         await pause_operation(self, child_operations)
 
     async def resume(self, child_operations=False):
+        """
+        Resume the operation and all child operations, if applicable.
+        """
         await resume_operation(self, child_operations)
 
     async def stop(self, child_operations=False):
+        """
+        Stop the operation and all child operations, if applicable.
+        """
         await stop_operation(self, child_operations)
 
     @property

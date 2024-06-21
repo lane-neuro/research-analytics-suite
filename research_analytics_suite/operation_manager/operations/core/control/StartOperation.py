@@ -16,6 +16,9 @@ import asyncio
 
 
 async def start_operation(operation):
+    """
+    Start the operation and all child operations.
+    """
     try:
         if operation.child_operations is not None:
             await _start_child_operations(operation)
@@ -25,6 +28,9 @@ async def start_operation(operation):
 
 
 async def _start_child_operations(operation):
+    """
+    Start all child operations.
+    """
     tasks = [op.start() for op in operation.child_operations.values()]
     if operation.concurrent:
         await asyncio.gather(*tasks)
