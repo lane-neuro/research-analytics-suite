@@ -24,6 +24,7 @@ import aiofiles
 
 from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
+from .control import start_operation, pause_operation, resume_operation, stop_operation
 
 
 class BaseOperation(ABC):
@@ -256,6 +257,18 @@ class BaseOperation(ABC):
                     delattr(self, 'temp_args')
                     delattr(self, 'temp_kwargs')
 
+    async def start(self):
+        await start_operation(self)
+
+    async def pause(self, child_operations=False):
+        await pause_operation(self, child_operations)
+
+    async def resume(self, child_operations=False):
+        await resume_operation(self, child_operations)
+
+    async def stop(self, child_operations=False):
+        await stop_operation(self, child_operations)
+
     @property
     def initialized(self) -> bool:
         """Gets whether the operation has been initialized."""
@@ -472,17 +485,6 @@ class BaseOperation(ABC):
 
         return action
 
-    async def start(self):
-        """
-        Start the operation and all child operations.
-        """
-        try:
-            if self._child_operations is not None:
-                await self._start_child_operations()
-            self._status = "started"
-        except Exception as e:
-            self._handle_error(e)
-
     async def execute(self):
         """
         Execute the operation and all child operations.
@@ -572,65 +574,6 @@ class BaseOperation(ABC):
             return _value, _memory_id
         except Exception as e:
             self._logger.error(Exception(f"Error retrieving result for operation '{self.name}': {e}"), self)
-
-    async def pause(self, child_operations=False):
-        """
-        Pause the operation and all child operations, if applicable.
-        """
-        if self._status == "running":
-            try:
-                self.is_ready = False
-
-                if child_operations and self._child_operations is not None:
-                    await self._pause_child_operations()
-
-                await self._pause_event.clear()
-                self._status = "paused"
-            except Exception as e:
-                self._handle_error(e)
-                return
-            finally:
-                self.add_log_entry(f"[PAUSE] {self.name}")
-        else:
-            self.add_log_entry(f"[PAUSE] {self.name} - Already paused")
-
-    async def resume(self, child_operations=False):
-        """
-        Resume the operation and all child operations, if applicable.
-        """
-        if self._status == "paused":
-            try:
-                self.is_ready = True
-
-                if child_operations and self._child_operations is not None:
-                    await self._resume_child_operations()
-                await self._pause_event.set()
-                self._status = "running"
-            except Exception as e:
-                self._handle_error(e)
-                return
-            self.add_log_entry(f"[RESUME] {self.name}")
-        else:
-            self.add_log_entry(f"[RESUME] {self.name} - Already running")
-
-    async def stop(self, child_operations=False):
-        """
-        Stop the operation and all child operations, if applicable.
-        """
-        if self._status == "running":
-            try:
-                self.is_ready = False
-
-                if child_operations and self._child_operations is not None:
-                    await self._stop_child_operations()
-                self._task.cancel()
-                self._status = "stopped"
-            except Exception as e:
-                self._handle_error(e)
-                return
-            self.add_log_entry(f"[STOP] {self.name}")
-        else:
-            self.add_log_entry(f"[STOP] {self.name} - Already stopped")
 
     async def reset(self, child_operations=False):
         """
