@@ -103,17 +103,33 @@ To get a local copy up and running, follow these simple example steps.
 
 ### Prerequisites
 Once you have cloned the repo (see [Installation](#installation)), you will need to install the required packages. This can be done in one of two ways:
-* If you are using [Anaconda](https://www.anaconda.com/) as a virtual environment, you can use the supplied `environment.yml` file to create a new environment with all the required packages. To do this, run the following command in the terminal:
+* If you are using [Anaconda](https://www.anaconda.com/) as a virtual environment, you can use the supplied `environment.yml` file to create a new environment with all the required packages. 
+    <br />
+    <br />
+    
+   To do this, run the following command in the terminal:
+   ```sh
+   conda env create -f environment.yml
+   ```  
+
+  Then, activate the environment:
   ```sh
-  conda env create -f environment.yml
   conda activate research-analytics-suite
+  ```
+  Finally, run the project:
+  ```sh
   python __main__.py
   ```
+<br />
+
 * <i>Alternatively</i>, you can install the required packages globally <i>(typically not recommended)</i> using the following command:
     ```sh
     pip install -r requirements.txt
+    ```
+    Then, run the project:
+    ```sh
     python __main__.py
-  ```
+    ```
 <br />
 
 ### Installation
