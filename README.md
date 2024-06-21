@@ -139,7 +139,7 @@ Once you have cloned the repo (see [Installation](#installation)), you will need
      ```sh
      python --version
      ```
-   * An executable package of RAS will be available once the project is ready for prototyping and deployment.
+   * <i>An executable package of RAS will be available once the project is ready for prototyping and deployment.</i>
 2. Clone the repo
    ```sh
    git clone https://github.com/lane-neuro/research-analytics-suite.git
