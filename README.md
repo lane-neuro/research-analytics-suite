@@ -21,7 +21,7 @@
   </p>
 
   <a href="https://github.com/lane-neuro/research-analytics-suite">
-    <img src="research_analytics_suite/gui/assets/images/centered_banner_white_black_text_1800x700.png" alt="Research Analytics Suite Banner" style="max-width: 75%; height: auto;">
+    <img src="research_analytics_suite/gui/assets/images/centered_banner_white_black_text_1200x467.png" alt="Research Analytics Suite Banner" style="max-width: 75%; height: auto;">
   </a>
   <p>Author: <a href="#contact">Lane</a></p>
 </div>
@@ -105,21 +105,34 @@ To get a local copy up and running, follow these simple example steps.
 Once you have cloned the repo (see [Installation](#installation)), you will need to install the required packages. This can be done in one of two ways:
 * If you are using [Anaconda](https://www.anaconda.com/) as a virtual environment, you can use the supplied `environment.yml` file to create a new environment with all the required packages. To do this, run the following command in the terminal:
   ```sh
-  conda env create --file environment.yml
-  conda activate ras
+  conda env create -f environment.yml
+  conda activate research-analytics-suite
+  python __main__.py
   ```
 * <i>Alternatively</i>, you can install the required packages globally <i>(typically not recommended)</i> using the following command:
     ```sh
     pip install -r requirements.txt
+    python __main__.py
   ```
 <br />
 
 ### Installation
-1. Clone the repo
+1. Ensure you have Python 3.8 or later installed.
+   * If not, you can download it [here](https://www.python.org/downloads/) or use [Anaconda](https://www.anaconda.com/).
+   * You can check your Python version by running:
+     ```sh
+     python --version
+     ```
+   * An executable package of RAS will be available once the project is ready for prototyping and deployment.
+2. Clone the repo
    ```sh
    git clone https://github.com/lane-neuro/research-analytics-suite.git
    ```
-2. Refer to <a href="#prerequisites">Prerequisites</a> and install the required packages.
+3. Navigate to the project directory
+   ```sh
+   cd research-analytics-suite
+   ```
+4. Refer to <a href="#prerequisites">Prerequisites</a> and install the required packages.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
