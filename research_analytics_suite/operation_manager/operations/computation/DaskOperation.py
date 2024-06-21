@@ -83,7 +83,7 @@ class DaskOperation(BaseOperation):
             self._result_output = future.result()
         except Exception as e:
             self.status = "error"
-            self._handle_error(e)
+            self.handle_error(e)
         finally:
             self._local_vars = temp_vars
 

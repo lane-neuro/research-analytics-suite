@@ -25,6 +25,8 @@ import aiofiles
 from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 from .control import start_operation, pause_operation, resume_operation, stop_operation
+from .execution import execute_operation, run_operations
+from .progress import update_progress
 
 
 class BaseOperation(ABC):
@@ -281,6 +283,18 @@ class BaseOperation(ABC):
         """
         await stop_operation(self, child_operations)
 
+    async def execute(self):
+        """
+        Execute the operation and all child operations.
+        """
+        await execute_operation(self)
+
+    async def update_progress(self):
+        """
+        Update the progress of the operation.
+        """
+        await update_progress(self)
+
     @property
     def initialized(self) -> bool:
         """Gets whether the operation has been initialized."""
@@ -315,7 +329,7 @@ class BaseOperation(ABC):
     def name(self, value: str):
         """Sets the name of the operation."""
         if not isinstance(value, str):
-            self._handle_error("\'name\' property must be a string")
+            self.handle_error("\'name\' property must be a string")
         self._name = value
 
     @property
@@ -347,7 +361,7 @@ class BaseOperation(ABC):
     def persistent(self, value: bool):
         """Sets whether the operation should run indefinitely."""
         if not isinstance(value, bool):
-            self._handle_error("\'persistent\' property must be a boolean")
+            self.handle_error("\'persistent\' property must be a boolean")
         self._persistent = value
 
     @property
@@ -359,7 +373,7 @@ class BaseOperation(ABC):
     def is_cpu_bound(self, value: bool):
         """Sets whether the operation is CPU-bound."""
         if not isinstance(value, bool):
-            self._handle_error("\'is_cpu_bound\' property must be a boolean")
+            self.handle_error("\'is_cpu_bound\' property must be a boolean")
         self._is_cpu_bound = value
 
     @property
@@ -372,7 +386,7 @@ class BaseOperation(ABC):
         """Sets the status of the operation."""
         valid_statuses = ["idle", "started", "waiting", "running", "paused", "stopped", "completed", "error"]
         if value not in valid_statuses:
-            self._handle_error(f"Invalid status: {value}")
+            self.handle_error(f"Invalid status: {value}")
         self._status = value
 
     @property
@@ -394,7 +408,7 @@ class BaseOperation(ABC):
     def progress(self, value: int):
         """Sets the progress of the operation."""
         if not isinstance(value, int):
-            self._handle_error("\'progress\' property must be an integer")
+            self.handle_error("\'progress\' property must be an integer")
         self._progress = value
 
     @property
@@ -416,7 +430,7 @@ class BaseOperation(ABC):
     def parent_operation(self, value):
         """Sets the parent operation."""
         if value is not None and not isinstance(value, BaseOperation):
-            self._handle_error("\'parent_operation\' must be an instance of Operation")
+            self.handle_error("\'parent_operation\' must be an instance of Operation")
         self._parent_operation = value
 
     @property
@@ -428,7 +442,7 @@ class BaseOperation(ABC):
     def concurrent(self, value: bool):
         """Sets whether child operations should run concurrently."""
         if not isinstance(value, bool):
-            self._handle_error("\'concurrent\' property must be a boolean")
+            self.handle_error("\'concurrent\' property must be a boolean")
         self._concurrent = value
 
     @property
@@ -452,7 +466,7 @@ class BaseOperation(ABC):
         Check if the operation is ready to be executed.
         """
         if not isinstance(value, bool):
-            self._handle_error("\'is_ready\' property must be a boolean")
+            self.handle_error("\'is_ready\' property must be a boolean")
         if not value:
             self._is_ready = False
             return
@@ -461,70 +475,6 @@ class BaseOperation(ABC):
         for child in self._child_operations.values():
             if not child.is_complete and not child.concurrent:
                 self._is_ready = False
-
-    async def _prepare_action_for_exec(self):
-        """
-        Prepare the action for execution.
-        """
-        try:
-            if isinstance(self._action, str):
-                code = self._action
-                self._action = self._execute_code_action(code)
-                self.add_log_entry(f"[CODE] {code}")
-            elif callable(self._action):
-                if isinstance(self._action, types.MethodType):
-                    self._action = self._action
-                else:
-                    t_action = self._action
-                    self._action = self._execute_callable_action(t_action)
-        except Exception as e:
-            self._handle_error(e)
-
-    def _execute_code_action(self, code) -> callable:
-        def action():
-            _output = dict()
-            exec(code, {}, _output)
-            return _output
-
-        return action
-
-    def _execute_callable_action(self, t_action) -> callable:
-        def action() -> Any:
-            _output = t_action()
-            if _output is not None:
-                return _output
-            return
-
-        return action
-
-    async def execute(self):
-        """
-        Execute the operation and all child operations.
-        """
-        try:
-            if self._child_operations is not None:
-                await self.execute_child_operations()
-            await self._prepare_action_for_exec()
-            await self._run_operations([self])
-            if not self._persistent:
-                self._status = "completed"
-                self.add_log_entry(f"[COMPLETE]")
-        except Exception as e:
-            self._handle_error(e)
-
-    async def _run_operations(self, operations):
-        tasks = []
-        for op in operations:
-            if op.status != "completed":
-                if op.action is not None:
-                    tasks.append(op.execute_action())
-
-        if self._concurrent and tasks and len(tasks) > 0:
-            await asyncio.gather(*tasks)
-        elif not self._concurrent and tasks and len(tasks) > 0:
-            for task in tasks:
-                await task
-                self.add_log_entry(f"[RESULT] {self.result_variable_id}")
 
     async def execute_action(self):
         """
@@ -566,9 +516,9 @@ class BaseOperation(ABC):
                                     memory_id=f'{self.runtime_id}')
                                 self.add_log_entry(f"[RESULT] {self.result_variable_id} {_result}")
                 else:
-                    self._handle_error(Exception("No action provided for operation"))
+                    self.handle_error(Exception("No action provided for operation"))
         except Exception as e:
-            self._handle_error(e)
+            self.handle_error(e)
 
     async def get_result(self) -> Tuple[dict, str]:
         """
@@ -644,16 +594,6 @@ class BaseOperation(ABC):
         """
         return self._status == "stopped"
 
-    async def update_progress(self):
-        """
-        Update the progress of the operation.
-        """
-        while not self.is_complete:
-            if self._status == "running":
-                await self._pause_event.wait()
-                self._progress += 1
-            await asyncio.sleep(1)
-
     async def add_child_operation(self, operation, dependencies: dict[Any, 'BaseOperation'] = None):
         """Add a child operation to the current operation.
 
@@ -670,7 +610,7 @@ class BaseOperation(ABC):
             operation = await BaseOperation.from_dict(data=operation, parent_operation=self, file_dir=_file_dir)
 
         if not isinstance(operation, BaseOperation):
-            self._handle_error("operation must be an instance of BaseOperation")
+            self.handle_error("operation must be an instance of BaseOperation")
             return
 
         if dependencies is not None:
@@ -699,7 +639,7 @@ class BaseOperation(ABC):
             bool: True if the operation was successfully linked, False otherwise.
         """
         if not isinstance(child_operation, BaseOperation):
-            self._handle_error("operation must be an instance of BaseOperation")
+            self.handle_error("operation must be an instance of BaseOperation")
             return False
 
         if not isinstance(dependencies, dict):
@@ -729,7 +669,7 @@ class BaseOperation(ABC):
             operation (BaseOperation): The child operation to be removed.
         """
         if not isinstance(operation, BaseOperation):
-            self._handle_error("operation must be an instance of BaseOperation")
+            self.handle_error("operation must be an instance of BaseOperation")
             return
 
         operation.parent_operation = None
@@ -749,7 +689,7 @@ class BaseOperation(ABC):
             self._gui_module = gui_module
             self.add_log_entry(f"[GUI] Hooked module")
         except Exception as e:
-            self._handle_error(e)
+            self.handle_error(e)
 
     def add_log_entry(self, message):
         """
@@ -764,7 +704,7 @@ class BaseOperation(ABC):
             self.operation_logs.insert(0, message)
             self._logger.info(f"[{self._name}] {message}")
 
-    def _handle_error(self, e):
+    def handle_error(self, e):
         """
         Handle an error that occurred during the operation.
 
@@ -794,7 +734,7 @@ class BaseOperation(ABC):
                 for task in tasks:
                     await task
         except Exception as e:
-            self._handle_error(e)
+            self.handle_error(e)
 
     async def execute_child_operations(self):
         """
@@ -802,10 +742,10 @@ class BaseOperation(ABC):
         """
         if not self._dependencies:
             if self._child_operations is not None:
-                await self._run_operations(self._child_operations.values())
+                await run_operations(self, self._child_operations.values())
         else:
             execution_order = self._determine_execution_order()
-            await self._run_operations(execution_order)
+            await run_operations(self, execution_order)
 
     async def _pause_child_operations(self):
         """

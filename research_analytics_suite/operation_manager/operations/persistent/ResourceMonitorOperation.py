@@ -70,11 +70,11 @@ class ResourceMonitorOperation(BaseOperation):
             self.total_memory_usage = psutil.virtual_memory().percent
             self.process_memory_usage = self.process.memory_info().rss / (1024 ** 3)  # Corrected to output in GB
             if (self.cpu_usage / psutil.cpu_count()) > self.cpu_threshold:
-                self._handle_error(Exception(f"CPU usage has exceeded {self.cpu_threshold}%: "
+                self.handle_error(Exception(f"CPU usage has exceeded {self.cpu_threshold}%: "
                                              f"current usage is {self.cpu_usage}%"))
 
             if self.total_memory_usage > self.memory_threshold:
-                self._handle_error(Exception(f"Memory usage has exceeded {self.memory_threshold}%: "
+                self.handle_error(Exception(f"Memory usage has exceeded {self.memory_threshold}%: "
                                              f"current usage is {self.total_memory_usage}%"))
 
             await asyncio.sleep(.01)

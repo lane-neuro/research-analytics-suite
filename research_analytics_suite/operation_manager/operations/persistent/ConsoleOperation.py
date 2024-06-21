@@ -72,10 +72,10 @@ class ConsoleOperation(BaseOperation):
 
                 await self._user_input_manager.process_user_input(user_input)
             except EOFError:
-                self._handle_error("EOFError: No input provided")
+                self.handle_error("EOFError: No input provided")
                 break
             except UnicodeDecodeError as e:  # Catch specific exception
-                self._handle_error(e)
+                self.handle_error(e)
             except Exception as e:  # Catch all other exceptions
-                self._handle_error(e)
+                self.handle_error(e)
                 break
