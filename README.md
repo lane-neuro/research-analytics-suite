@@ -51,6 +51,10 @@
   <summary>Table of Contents</summary>
   <ol>
     <li><a href="#about-the-project">About The Project</a></li>
+      <ul>
+        <li><a href="#key-features">Key Features</a></li>
+        <li><a href="#developed-with">Developed With</a></li>
+      </ul>
     <li><a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
@@ -94,16 +98,71 @@ In addition, RAS aspires to cultivate a collaborative research community. It env
 
 By providing a versatile and accessible toolset, RAS not only enhances the efficiency and effectiveness of data analysis but also fosters a culture of open collaboration and shared progress in the scientific community.
 
+### Developed With:
+RAS is built using a variety of powerful tools and libraries to ensure robust functionality and performance. Key technologies include: <br />
+<div align="center">
+
+<table>
+  <tr>
+    <th style="text-align: center;">Package</th>
+    <th style="text-align: left;">Description</th>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://www.python.org/"><img src="https://img.shields.io/badge/-Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a></td>
+    <td><a href="https://www.python.org/">Python</a>: The core programming language used for the development of RAS.</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://dask.org/"><img src="https://img.shields.io/badge/-Dask-171A21?style=flat-square&logo=dask&logoColor=white" alt="Dask"></a></td>
+    <td><a href="https://dask.org/">Dask</a>: A flexible parallel computing library for analytic computing.</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://pytorch.org/"><img src="https://img.shields.io/badge/-PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch"></a></td>
+    <td><a href="https://pytorch.org/">PyTorch</a>: An open-source machine learning framework for deep learning.</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://www.tensorflow.org/"><img src="https://img.shields.io/badge/-TensorFlow-FF6F00?style=flat-square&logo=tensorflow&logoColor=white" alt="TensorFlow"></a></td>
+    <td><a href="https://www.tensorflow.org/">TensorFlow</a>: An end-to-end open-source platform for machine learning.</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://distributed.dask.org/"><img src="https://img.shields.io/badge/-Distributed-3776AB?style=flat-square&logo=python&logoColor=white" alt="Distributed"></a></td>
+    <td><a href="https://distributed.dask.org/">Distributed</a>: A library for distributed computing with Python.</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://github.com/hoffstadt/DearPyGui"><img src="https://img.shields.io/badge/-DearPyGui-3776AB?style=flat-square&logo=python&logoColor=white" alt="DearPyGui"></a></td>
+    <td><a href="https://github.com/hoffstadt/DearPyGui">DearPyGui</a>: An easy-to-use, high-performance GUI framework for Python.</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://pypi.org/project/dearpygui-async/"><img src="https://img.shields.io/badge/-DearPyGui--Async-3776AB?style=flat-square&logo=python&logoColor=white" alt="DearPyGui-Async"></a></td>
+    <td><a href="https://pypi.org/project/dearpygui-async/">DearPyGui-Async</a>: An extension for DearPyGui to support asynchronous operations.</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://pypi.org/project/cachey/"><img src="https://img.shields.io/badge/-Cachey-3776AB?style=flat-square&logo=python&logoColor=white" alt="Cachey"></a></td>
+    <td><a href="https://pypi.org/project/cachey/">Cachey</a>: A caching library for managing the lifecycle of cached objects.</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://matplotlib.org/"><img src="https://img.shields.io/badge/-Matplotlib-3776AB?style=flat-square&logo=python&logoColor=white" alt="Matplotlib"></a></td>
+    <td><a href="https://matplotlib.org/">Matplotlib</a>: A comprehensive library for creating static, animated, and interactive visualizations in Python.</td>
+  </tr>
+  <tr>
+    <td style="text-align: center;"><a href="https://numpy.org/"><img src="https://img.shields.io/badge/-NumPy-013243?style=flat-square&logo=numpy&logoColor=white" alt="NumPy"></a></td>
+    <td><a href="https://numpy.org/">NumPy</a>: The fundamental package for scientific computing with Python.</td>
+  </tr>
+</table>
+
+</div>
+
+
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
 ## Getting Started
 
-To get a local copy up and running, follow these simple example steps.
+To get a local copy up and running, follow these steps.
 
 ### Prerequisites
 Once you have cloned the repo (see [Installation](#installation)), you will need to install the required packages. This can be done in one of two ways:
-* If you are using [Anaconda](https://www.anaconda.com/) as a virtual environment, you can use the supplied `environment.yml` file to create a new environment with all the required packages. 
+* If you are using [Anaconda](https://www.anaconda.com/) as a virtual environment (recommended until a stand-alone executable is available), you can use the supplied `environment.yml` file to create a new environment with all the required packages. 
     <br />
     <br />
     
@@ -165,44 +224,49 @@ The `operation_manager` package orchestrates and manages data processing operati
 - **nodes**: Manages operation nodes.
 - **operations**:
   - **computation**: Includes computational operations.
-  - **core**: Contains core operations.
-  - **persistent**: Includes persistent operations.
-  - **task**: Manages task-related operations.
+  - **core**: Contains core operation logic.
+  - **persistent**: Includes common persistent (continuous) operations, such as ```ResourceMonitorOperation``` and ```ConsoleOperation```
+- **task**: Manages all tasks associated with operations.
 
 ### GUI
 The `gui` package provides graphical user interfaces for interacting with RAS.
-- **launcher**: GUI launcher scripts.
+<br />
+
+```Note: The GUI package will be optional in future distributions, given RAS has real-time command-line interface integration.```
+- **assets**: Contains GUI assets, such as images and icons.
+- **base**: Base GUI components.
 - **dialogs**: Contains dialog components, divided into subcategories:
   - **data_handling**: Dialogs related to data handling.
   - **visualization**: Dialogs for data visualization.
   - **settings**: Settings-related dialogs.
   - **management**: Management-related dialogs.
+- **launcher**: GUI launcher scripts.
 - **modules**: Different GUI modules.
 - **utils**: Utility scripts for GUI components.
 
 ### Data Engine
 The `data_engine` package handles the primary functionality for data processing and management within a project.
 - **core**: Core data processing modules.
-- **integration**: Integration with external data sources.
+- **data_streams**: Handles live data input streams.
 - **engine**: Data engine implementations.
+- **integration**: Integration with external data sources, such as Amazon S3.
 - **utils**: Utility scripts for data handling.
 - **variable_storage**: Manages variable storage.
   - **storage**: Different storage backends for variables.
-- **data_streams**: Handles live data input streams.
 
 ### Analytics
 The `analytics` package handles the application and visualization of data transformations within a project.
 - **core**: Core analytical processing and transformations.
-- **visualization**: Display and visualization of analytical transformations.
+- **custom_user**: Custom user-defined transformations and configurations.
+- **evaluation**: Metrics and evaluation scripts for model performance.
+- **models**: Machine learning and statistical models.
+- **prediction**: Modules for making predictions using trained models.
 - **preloaded**: Preloaded transformations and configurations.
   - **transformations**: Preloaded transformation modules.
-- **custom_user**: Custom user-defined transformations and configurations.
-- **models**: Machine learning and statistical models.
-- **evaluation**: Metrics and evaluation scripts for model performance.
-- **prediction**: Modules for making predictions using trained models.
 - **preprocessing**: Data preprocessing modules.
 - **training**: Modules for training machine learning models.
 - **utils**: Utility functions and common metrics.
+- **visualization**: Display and visualization of analytical transformations.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
