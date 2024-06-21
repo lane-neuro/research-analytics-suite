@@ -99,7 +99,7 @@ In addition, RAS aspires to cultivate a collaborative research community. It env
 By providing a versatile and accessible toolset, RAS not only enhances the efficiency and effectiveness of data analysis but also fosters a culture of open collaboration and shared progress in the scientific community.
 
 ### Developed With:
-RAS is built using a variety of powerful tools and libraries to ensure robust functionality and performance. Key technologies include: <br />
+RAS is built using a variety of powerful tools and libraries to ensure robust functionality and performance, including (but not limited to): <br />
 <div align="center">
 
 <table>
