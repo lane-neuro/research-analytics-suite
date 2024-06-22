@@ -30,9 +30,9 @@ async def stop_operation(operation, child_operations=False):
         except Exception as e:
             operation.handle_error(e)
         finally:
-            await operation.add_log_entry(f"[STOP] {operation.name}")
+            operation.add_log_entry(f"[STOP] {operation.name}")
     else:
-        await operation.add_log_entry(f"[STOP] {operation.name} - Already stopped")
+        operation.add_log_entry(f"[STOP] {operation.name} - Already stopped")
 
 
 async def _stop_child_operations(operation):

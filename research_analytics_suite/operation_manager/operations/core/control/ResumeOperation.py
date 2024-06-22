@@ -30,9 +30,9 @@ async def resume_operation(operation, child_operations=False):
         except Exception as e:
             operation.handle_error(e)
         finally:
-            await operation.add_log_entry(f"[RESUME] {operation.name}")
+            operation.add_log_entry(f"[RESUME] {operation.name}")
     else:
-        await operation.add_log_entry(f"[RESUME] {operation.name} - Already running")
+        operation.add_log_entry(f"[RESUME] {operation.name} - Already running")
 
 
 async def _resume_child_operations(operation):

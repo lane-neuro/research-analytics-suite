@@ -23,7 +23,8 @@ from typing import Tuple, List
 from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 from .control import (start_operation, pause_operation,
-                      resume_operation, stop_operation)
+                      resume_operation, stop_operation,
+                      reset_operation)
 from .execution import execute_operation, execute_action, execute_child_operations
 from .progress import update_progress
 from .child_operations import (add_child_operation, link_child_operation, remove_child_operation,
@@ -228,6 +229,12 @@ class BaseOperation(ABC):
         Stop the operation and all child operations, if applicable.
         """
         await stop_operation(self, child_operations)
+
+    async def reset(self, child_operations=False):
+        """
+        Reset the operation and all child operations, if applicable.
+        """
+        await reset_operation(self, child_operations)
 
     async def execute(self):
         """
@@ -601,25 +608,6 @@ class BaseOperation(ABC):
         for child in self._child_operations.values():
             if not child.is_complete and not child.concurrent:
                 self._is_ready = False
-
-    async def reset(self, child_operations=False):
-        """
-        Reset the operation and all child operations, if applicable.
-        """
-        self.is_ready = False
-
-        if (self._status == "running"
-                or self._status == "paused"
-                or self._status == "completed"
-                or self._status == "error"):
-            if child_operations and self._child_operations is not None:
-                await self.reset_child_operations()
-            await self.stop()
-            await self.start()
-            self._progress = 0
-            self.add_log_entry(f"[RESET] {self.name}")
-        else:
-            self.add_log_entry(f"[RESET] {self.name} - Already reset")
 
     async def restart(self, child_operations=False):
         """

@@ -31,9 +31,9 @@ async def pause_operation(operation, child_operations=False):
         except Exception as e:
             operation.handle_error(e)
         finally:
-            await operation.add_log_entry(f"[PAUSE] {operation.name}")
+            operation.add_log_entry(f"[PAUSE] {operation.name}")
     else:
-        await operation.add_log_entry(f"[PAUSE] {operation.name} - Already paused")
+        operation.add_log_entry(f"[PAUSE] {operation.name} - Already paused")
 
 
 async def _pause_child_operations(operation):

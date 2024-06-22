@@ -1,7 +1,7 @@
 """
 Control Package
 
-Provides control functionalities for operations including start, pause, resume, and stop.
+Provides control functionalities for operations including start, pause, reset, resume, and stop.
 
 Author: Lane
 Copyright: Lane
@@ -17,3 +17,4 @@ from .StartOperation import start_operation
 from .PauseOperation import pause_operation
 from .ResumeOperation import resume_operation
 from .StopOperation import stop_operation
+from .ResetOperation import reset_operation
