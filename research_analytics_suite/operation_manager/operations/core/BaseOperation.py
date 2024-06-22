@@ -225,6 +225,16 @@ class BaseOperation(ABC):
         """
         await stop_operation(self, child_operations)
 
+    async def restart(self, child_operations=False):
+        """
+        Restart the operation and all child operations, if applicable.
+        """
+        self.is_ready = False
+        await self.reset(child_operations)
+
+        self.is_ready = True
+        await self.execute()
+
     async def reset(self, child_operations=False):
         """
         Reset the operation and all child operations, if applicable.
@@ -592,16 +602,6 @@ class BaseOperation(ABC):
         for child in self._child_operations.values():
             if not child.is_complete and not child.concurrent:
                 self._is_ready = False
-
-    async def restart(self, child_operations=False):
-        """
-        Restart the operation and all child operations, if applicable.
-        """
-        self.is_ready = False
-        await self.reset(child_operations)
-
-        self.is_ready = True
-        await self.execute()
 
     @property
     def is_running(self) -> bool:
