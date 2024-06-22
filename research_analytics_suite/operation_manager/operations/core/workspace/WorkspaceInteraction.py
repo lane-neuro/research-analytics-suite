@@ -39,7 +39,7 @@ def pack_for_save(operation) -> dict:
         'unique_id': operation.unique_id,
         'version': operation.version,
         'name': operation.name,
-        'action': operation.action_serialized,
+        'action': operation.action,
         'persistent': operation.persistent,
         'concurrent': operation.concurrent,
         'is_cpu_bound': operation.is_cpu_bound,

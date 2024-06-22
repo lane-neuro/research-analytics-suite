@@ -13,25 +13,24 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
-import json
+import inspect
 import os.path
 import types
 import uuid
 from abc import ABC
-from concurrent.futures import ProcessPoolExecutor
 from typing import Tuple, List
-import aiofiles
 
 from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 from .control import (start_operation, pause_operation,
                       resume_operation, stop_operation)
-from .execution import execute_operation, run_operations
+from .execution import execute_operation, execute_action, execute_child_operations
 from .progress import update_progress
 from .child_operations import (add_child_operation, link_child_operation, remove_child_operation,
                                start_child_operations, pause_child_operations, resume_child_operations,
                                stop_child_operations, reset_child_operations)
-from .workspace import (save_operation_in_workspace, get_result, load_from_disk, load_operation_group)
+from .workspace import (save_operation_in_workspace, get_result, load_from_disk, load_operation_group,
+                        from_dict)
 
 
 class BaseOperation(ABC):
@@ -114,6 +113,7 @@ class BaseOperation(ABC):
             self._unique_id = None
             self._version = 0
             self._action = None
+            self._action_callable = None
             self._persistent = None
             self._is_cpu_bound = None
             self._concurrent = None
@@ -140,65 +140,6 @@ class BaseOperation(ABC):
         Set the state of the operation.
         """
         self.__dict__.update(state)
-
-    @staticmethod
-    async def from_dict(data: dict, file_dir, parent_operation: 'BaseOperation' = None,
-                        ) -> 'BaseOperation':
-        """Create a BaseOperation instance from a dictionary."""
-        data_metadata = data.copy()
-
-        # Search for the operation file if data does not contain an action
-        # An operation filename consists of the operation name, unique ID[:4], and version, if applicable
-        if 'action' not in data_metadata.keys():
-            operation_file = f"{data_metadata.get('name')}_{data_metadata.get('unique_id')[:4]}"
-            if 'version' in data_metadata and data_metadata.get('version') != 0:
-                operation_file += f"-{data_metadata.get('version')}"
-            operation_file += ".json"
-            operation_file = os.path.join(file_dir, operation_file)
-
-            # Check if the operation file exists
-            if os.path.exists(operation_file):
-                # Use the operation file to populate the data dictionary
-                try:
-                    async with aiofiles.open(operation_file, mode='r') as f:
-                        operation_data = await f.read()
-                        op_file_data = json.loads(operation_data)
-
-                        data_metadata['action'] = op_file_data.get('action')
-                        data_metadata['dependencies'] = op_file_data.get('dependencies')
-                        data_metadata['child_operations'] = op_file_data.get('child_operations')
-                        # data_metadata['operation_logs'] = op_file_data.get('operation_logs')
-                        data_metadata['persistent'] = op_file_data.get('persistent')
-                        data_metadata['is_cpu_bound'] = op_file_data.get('is_cpu_bound')
-                        data_metadata['concurrent'] = op_file_data.get('concurrent')
-                        data_metadata['result_variable_id'] = op_file_data.get('result_variable_id')
-                except Exception as e:
-                    raise e
-
-            else:
-                raise FileNotFoundError(f"Operation file not found for operation: {operation_file}")
-
-        if parent_operation is not None:
-            data_metadata['parent_operation'] = parent_operation
-
-        # Check if the parent operation is a dictionary
-        if isinstance(data_metadata.get('parent_operation'), dict):
-            try:
-                data_metadata['parent_operation'] = await BaseOperation.from_dict(
-                    data=data_metadata.get('parent_operation'),
-                    file_dir=file_dir
-                )
-            except Exception as e:
-                raise e
-        else:
-            data_metadata['parent_operation'] = parent_operation
-
-        # Initialize the base operation instance
-        operation = BaseOperation()
-        operation.temp_kwargs = data_metadata
-        await operation.initialize_operation()
-
-        return operation
 
     async def initialize_operation(self):
         """Initialize any resources or setup required for the operation before it starts."""
@@ -294,6 +235,12 @@ class BaseOperation(ABC):
         """
         await execute_operation(self)
 
+    async def execute_action(self):
+        """
+        Execute the action associated with the operation.
+        """
+        return await execute_action(self)
+
     async def update_progress(self):
         """
         Update the progress of the operation.
@@ -330,35 +277,41 @@ class BaseOperation(ABC):
         """
         remove_child_operation(self, operation)
 
-    async def _start_child_operations(self):
+    async def start_child_operations(self):
         """
         Start all child operations.
         """
         await start_child_operations(self)
 
-    async def _pause_child_operations(self):
+    async def pause_child_operations(self):
         """
         Pause all child operations.
         """
         await pause_child_operations(self)
 
-    async def _resume_child_operations(self):
+    async def resume_child_operations(self):
         """
         Resume all child operations.
         """
         await resume_child_operations(self)
 
-    async def _stop_child_operations(self):
+    async def stop_child_operations(self):
         """
         Stop all child operations.
         """
         await stop_child_operations(self)
 
-    async def _reset_child_operations(self):
+    async def reset_child_operations(self):
         """
         Reset all child operations.
         """
         await reset_child_operations(self)
+
+    async def execute_child_operations(self):
+        """
+        Execute all child operations.
+        """
+        await execute_child_operations(self)
 
     async def save_operation_in_workspace(self, overwrite: bool = False):
         """
@@ -410,6 +363,21 @@ class BaseOperation(ABC):
             dict: The loaded operation group.
         """
         return await load_operation_group(file_path, operation_group, iterate_child_operations)
+
+    @staticmethod
+    async def from_dict(data: dict, file_dir, parent_operation: 'BaseOperation' = None) -> 'BaseOperation':
+        """
+        Create a BaseOperation instance from a dictionary.
+
+        Args:
+            data (dict): The dictionary containing the operation data.
+            file_dir: The directory where the operation file is located.
+            parent_operation (BaseOperation, optional): The parent operation. Defaults to None.
+
+        Returns:
+            BaseOperation: The created operation instance.
+        """
+        return await from_dict(data, file_dir, parent_operation)
 
     @property
     def workspace(self):
@@ -474,17 +442,22 @@ class BaseOperation(ABC):
         self._name = value
 
     @property
-    def action(self) -> callable:
+    def action(self):
         """Gets the action to be executed by the operation."""
         return self._action
 
     @property
     def action_serialized(self) -> str:
         """Gets the serializable action to be executed by the operation."""
-        if isinstance(self._action, types.MethodType) or isinstance(self._action, types.FunctionType):
-            action = f"{self._action.__code__}"
-        elif isinstance(self._action, str):
-            action = self._action
+        if isinstance(self.action, (types.MethodType, types.FunctionType)):
+            action = inspect.getsource(self.action)
+        elif callable(self.action):
+            try:
+                action = inspect.getsource(self.action)
+            except OSError:
+                action = f"{self.action}"
+        elif isinstance(self.action, str):
+            action = self.action
         else:
             action = None
         return action
@@ -493,6 +466,17 @@ class BaseOperation(ABC):
     def action(self, value):
         """Sets the action to be executed by the operation."""
         self._action = value
+        self._action_callable = None
+
+    @property
+    def action_callable(self):
+        """Gets the callable action to be executed by the operation."""
+        return self._action_callable
+
+    @action_callable.setter
+    def action_callable(self, value):
+        """Sets the callable action to be executed by the operation."""
+        self._action_callable = value
 
     @property
     def persistent(self) -> bool:
@@ -618,50 +602,6 @@ class BaseOperation(ABC):
             if not child.is_complete and not child.concurrent:
                 self._is_ready = False
 
-    async def execute_action(self):
-        """
-        Execute the action associated with the operation.
-        """
-        try:
-            if self._is_cpu_bound:
-                with ProcessPoolExecutor() as executor:
-                    self._status = "running"
-                    self.add_log_entry(f"[RUN] {self.name}: CPU-bound Operation")
-                    _exec_output = await asyncio.get_event_loop().run_in_executor(executor, self._action)
-                    if _exec_output is not None:
-                        self.result_variable_id, _result = await self._workspace.add_user_variable(
-                            name=f"result_{self._name}",
-                            value=_exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output,
-                            memory_id=f'{self.runtime_id}')
-                        self.add_log_entry(f"[RESULT] {self.result_variable_id} {_result}")
-            else:
-                if self._action is not None:
-                    if callable(self._action):
-                        self._status = "running"
-                        if asyncio.iscoroutinefunction(self._action):
-                            self.add_log_entry(f"[RUN - ASYNC] {self._name}")
-                            _exec_output = await self._action()
-                            if _exec_output is not None:
-                                self.result_variable_id, _result = await self._workspace.add_user_variable(
-                                    name=f"result_{self._name}",
-                                    value=_exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output,
-                                    memory_id=f'{self.runtime_id}')
-                                self.add_log_entry(f"[RESULT] {self.result_variable_id} {_result}")
-
-                        else:
-                            self.add_log_entry(f"[RUN] {self._name}")
-                            _exec_output = self._action()
-                            if _exec_output is not None:
-                                self.result_variable_id, _result = await self._workspace.add_user_variable(
-                                    name=f"result_{self._name}",
-                                    value=_exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output,
-                                    memory_id=f'{self.runtime_id}')
-                                self.add_log_entry(f"[RESULT] {self.result_variable_id} {_result}")
-                else:
-                    self.handle_error(Exception("No action provided for operation"))
-        except Exception as e:
-            self.handle_error(e)
-
     async def reset(self, child_operations=False):
         """
         Reset the operation and all child operations, if applicable.
@@ -673,7 +613,7 @@ class BaseOperation(ABC):
                 or self._status == "completed"
                 or self._status == "error"):
             if child_operations and self._child_operations is not None:
-                await self._reset_child_operations()
+                await self.reset_child_operations()
             await self.stop()
             await self.start()
             self._progress = 0
@@ -762,17 +702,6 @@ class BaseOperation(ABC):
         self._progress = 0
         self._status = "idle"
         self._task = None
-
-    async def execute_child_operations(self):
-        """
-        Execute all child operations.
-        """
-        if not self._dependencies:
-            if self._child_operations is not None:
-                await run_operations(self, self._child_operations.values())
-        else:
-            execution_order = self._determine_execution_order()
-            await run_operations(self, execution_order)
 
     def _determine_execution_order(self) -> List['BaseOperation']:
         """

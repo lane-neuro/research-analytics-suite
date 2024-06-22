@@ -20,17 +20,19 @@ async def prepare_action_for_exec(operation):
     """
     Prepare the action for execution.
     """
+    _action = None
     try:
         if isinstance(operation.action, str):
             code = operation.action
-            operation.action = _execute_code_action(code)
+            _action = _execute_code_action(code)
             operation.add_log_entry(f"[CODE] {code}")
         elif callable(operation.action):
             if isinstance(operation.action, types.MethodType):
-                operation._action = operation.action
+                _action = operation.action
             else:
                 t_action = operation.action
-                operation.action = _execute_callable_action(t_action)
+                _action = _execute_callable_action(t_action)
+        operation.action_callable = _action
     except Exception as e:
         operation.handle_error(e)
 
