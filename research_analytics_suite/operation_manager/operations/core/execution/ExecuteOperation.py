@@ -14,6 +14,7 @@ Status: Prototype
 """
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
+from typing import List
 
 from .PrepareAction import prepare_action_for_exec
 
@@ -43,8 +44,27 @@ async def execute_child_operations(parent_operation):
         if parent_operation.child_operations is not None:
             await run_operations(parent_operation, parent_operation.child_operations.values())
     else:
-        execution_order = parent_operation.determine_execution_order()
+        execution_order = _determine_execution_order(parent_operation)
         await run_operations(parent_operation, execution_order)
+
+
+def _determine_execution_order(parent_operation) -> List:
+    """
+    Determine the execution order of child operations based on dependencies.
+
+    Returns:
+        List[BaseOperation]: The execution order of child operations.
+    """
+    parent_operation.add_log_entry(f"Determining execution order")
+    execution_order = []
+    processed = set()
+    while len(processed) < len(parent_operation.child_operations.keys()):
+        for op in parent_operation.child_operations.values():
+            if op.name not in processed and all(
+                    dep in processed for dep in parent_operation.dependencies.get(op.name, [])):
+                execution_order.append(op)
+                processed.add(op.name)
+    return execution_order
 
 
 async def run_operations(operation, operations):

@@ -690,20 +690,3 @@ class BaseOperation(ABC):
         self._progress = 0
         self._status = "idle"
         self._task = None
-
-    def _determine_execution_order(self) -> List['BaseOperation']:
-        """
-        Determine the execution order of child operations based on dependencies.
-
-        Returns:
-            List[BaseOperation]: The execution order of child operations.
-        """
-        self.add_log_entry(f"Determining execution order")
-        execution_order = []
-        processed = set()
-        while len(processed) < len(self._child_operations.keys()):
-            for op in self._child_operations.values():
-                if op.name not in processed and all(dep in processed for dep in self._dependencies.get(op.name, [])):
-                    execution_order.append(op)
-                    processed.add(op.name)
-        return execution_order
