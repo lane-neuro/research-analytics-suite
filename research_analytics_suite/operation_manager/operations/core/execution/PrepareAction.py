@@ -12,9 +12,25 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+import inspect
 import types
 from typing import Any
 
+
+def action_serialized(operation) -> str:
+    """Gets the serializable action to be executed by the operation."""
+    if isinstance(operation.action, (types.MethodType, types.FunctionType)):
+        action = inspect.getsource(operation.action)
+    elif callable(operation.action):
+        try:
+            action = inspect.getsource(operation.action)
+        except OSError:
+            action = f"{operation.action}"
+    elif isinstance(operation.action, str):
+        action = operation.action
+    else:
+        action = None
+    return action
 
 async def prepare_action_for_exec(operation):
     """

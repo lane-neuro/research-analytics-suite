@@ -83,7 +83,7 @@ async def save_operation_in_workspace(operation, overwrite: bool = False):
         await file.write(json.dumps(stripped_state))
 
 
-async def get_result(operation):
+async def get_result(operation) -> tuple[dict, str]:
     """
     Retrieve the results of the operation from the workspace.
 

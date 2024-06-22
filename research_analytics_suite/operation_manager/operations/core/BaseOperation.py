@@ -13,9 +13,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
-import inspect
 import os.path
-import types
 import uuid
 from abc import ABC
 from typing import Tuple
@@ -23,7 +21,7 @@ from typing import Tuple
 from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
-from .execution import execute_operation, execute_action, execute_child_operations
+from .execution import execute_operation, execute_action, execute_child_operations, action_serialized
 from .progress import update_progress
 from .child_operations import (add_child_operation, link_child_operation, remove_child_operation,
                                start_child_operations, pause_child_operations, resume_child_operations,
@@ -36,7 +34,7 @@ class BaseOperation(ABC):
     An Abstract Base Class that defines a common interface for all operations. The BaseOperation class provides a set
     of properties and methods that all operations must implement. Operations are the building blocks of the Research
     Analytics Suite (RAS) and are used to perform tasks on data. They can be executed independently or chained
-    together to form complex workflows.  It also includes functionality for managing child operations, dependencies,
+    together to form complex workflows. It also includes functionality for managing child operations, dependencies,
     and logging. The BaseOperation class is designed to be subclassed by concrete Operation classes that implement
     specific functionality.
 
@@ -326,7 +324,7 @@ class BaseOperation(ABC):
         """
         await save_operation_in_workspace(self, overwrite)
 
-    async def get_result(self):
+    async def get_result(self) -> Tuple[dict, str]:
         """
         Retrieve the results of the operation from the workspace.
 
@@ -453,18 +451,7 @@ class BaseOperation(ABC):
     @property
     def action_serialized(self) -> str:
         """Gets the serializable action to be executed by the operation."""
-        if isinstance(self.action, (types.MethodType, types.FunctionType)):
-            action = inspect.getsource(self.action)
-        elif callable(self.action):
-            try:
-                action = inspect.getsource(self.action)
-            except OSError:
-                action = f"{self.action}"
-        elif isinstance(self.action, str):
-            action = self.action
-        else:
-            action = None
-        return action
+        return action_serialized(self)
 
     @action.setter
     def action(self, value):
