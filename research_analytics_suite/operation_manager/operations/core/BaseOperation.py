@@ -18,20 +18,17 @@ import os.path
 import types
 import uuid
 from abc import ABC
-from typing import Tuple, List
+from typing import Tuple
 
 from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
-from .control import (start_operation, pause_operation,
-                      resume_operation, stop_operation,
-                      reset_operation)
+from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
 from .execution import execute_operation, execute_action, execute_child_operations
 from .progress import update_progress
 from .child_operations import (add_child_operation, link_child_operation, remove_child_operation,
                                start_child_operations, pause_child_operations, resume_child_operations,
                                stop_child_operations, reset_child_operations)
-from .workspace import (save_operation_in_workspace, get_result, load_from_disk, load_operation_group,
-                        from_dict)
+from .workspace import save_operation_in_workspace, get_result, load_from_disk, load_operation_group, from_dict
 
 
 class BaseOperation(ABC):
