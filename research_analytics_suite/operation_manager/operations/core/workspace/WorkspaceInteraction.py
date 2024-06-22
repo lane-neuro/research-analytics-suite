@@ -81,19 +81,3 @@ async def save_operation_in_workspace(operation, overwrite: bool = False):
 
     async with aiofiles.open(file_path, 'w') as file:
         await file.write(json.dumps(stripped_state))
-
-
-async def get_result(operation) -> tuple[dict, str]:
-    """
-    Retrieve the results of the operation from the workspace.
-
-    Returns:
-        dict[name, value]: The name of the variable and its value.
-        str: The memory_id location of the stored variable.
-    """
-    try:
-        _memory_id, _value = await operation.workspace.get_user_variable_value(name=f"result_{operation.name}",
-                                                                               memory_id=f'{operation.runtime_id}')
-        return _value, _memory_id
-    except Exception as e:
-        operation.logger.error(Exception(f"Error retrieving result for operation '{operation.name}': {e}"), operation)

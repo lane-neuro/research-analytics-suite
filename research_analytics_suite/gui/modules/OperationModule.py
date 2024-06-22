@@ -265,16 +265,16 @@ class OperationModule:
 
     async def view_result(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Handles the event when the user clicks the 'View Result' button."""
-        _result, _memory_id = await self._operation.get_result()
+        _result = await self._operation.get_results_from_memory()
         self._operation.add_log_entry(f"Result viewed: {_result}")
 
     async def add_child_operation(self, child_operation: BaseOperation) -> None:
         """Adds a child operation to the current operation."""
         await self._operation.add_child_operation(child_operation)
 
-    def remove_child_operation(self, child_operation: BaseOperation) -> None:
+    async def remove_child_operation(self, child_operation: BaseOperation) -> None:
         """Removes a child operation from the current operation."""
-        self._operation.remove_child_operation(child_operation)
+        await self._operation.remove_child_operation(child_operation)
 
     async def _open_parent_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Opens the parent operation in the GUI."""

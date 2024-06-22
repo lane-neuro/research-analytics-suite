@@ -86,7 +86,7 @@ async def link_child_operation(operation, child_operation, dependencies: dict = 
     return True
 
 
-def remove_child_operation(operation, child_operation):
+async def remove_child_operation(operation, child_operation):
     """
     Remove a child operation from the current operation.
 

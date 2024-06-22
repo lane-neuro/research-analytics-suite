@@ -26,7 +26,8 @@ from .progress import update_progress
 from .child_operations import (add_child_operation, link_child_operation, remove_child_operation,
                                start_child_operations, pause_child_operations, resume_child_operations,
                                stop_child_operations, reset_child_operations)
-from .workspace import save_operation_in_workspace, get_result, load_from_disk, load_operation_group, from_dict
+from .workspace import save_operation_in_workspace, load_from_disk, load_operation_group, from_dict
+from .workspace.memory import MemoryInput, MemoryOutput
 
 
 class BaseOperation(ABC):
@@ -57,28 +58,30 @@ class BaseOperation(ABC):
             (refer to property methods and docstrings for more details)
         _lock (asyncio.Lock): A lock to ensure thread safety, primarily for initializing operations.
         _GENERATED_ID (uuid.UUID): A unique ID generated for the operation.
-        _initialized (bool): Whether the operation has been initialized.
-        _workspace (Workspace): The workspace instance.
-        _logger (CustomLogger): The logger instance.
-        _config (Config): The configuration instance.
-        _operation_control (OperationControl): The operation control instance.
-        _gui_module (Any): The GUI module attached to the operation.
-        _name (str): The name of the operation.
-        _unique_id (str): The unique ID of the operation.
-        _version (int): The version of the operation.
-        _action (callable): The action to be executed by the operation.
-        _persistent (bool): Whether the operation should run indefinitely.
-        _is_cpu_bound (bool): Whether the operation is CPU-bound.
-        _concurrent (bool): Whether child operations should run concurrently.
+        initialized (bool): Whether the operation has been initialized.
+        workspace (Workspace): The workspace instance.
+        logger (CustomLogger): The logger instance.
+        config (Config): The configuration instance.
+        operation_control (OperationControl): The operation control instance.
+        gui_module (Any): The GUI module attached to the operation.
+        name (str): The name of the operation.
+        unique_id (str): The unique ID of the operation.
+        version (int): The version of the operation.
+        action (callable): The action to be executed by the operation.
+        persistent (bool): Whether the operation should run indefinitely.
+        is_cpu_bound (bool): Whether the operation is CPU-bound.
+        concurrent (bool): Whether child operations should run concurrently.
         result_variable_id (str): Reference to the user variable storing the result.
-        _status (str): The status of the operation.
-        _task (asyncio.Task): The task associated with the operation.
-        _progress (int): The progress of the operation.
-        _is_ready (bool): Whether the operation is ready to be executed.
-        _dependencies (dict[str, BaseOperation]): The dependencies of the operation.
-        _parent_operation (BaseOperation): The parent operation.
-        _child_operations (dict[str, BaseOperation]): The child operations.
+        status (str): The status of the operation.
+        task (asyncio.Task): The task associated with the operation.
+        progress (int): The progress of the operation.
+        is_ready (bool): Whether the operation is ready to be executed.
+        dependencies (dict[str, BaseOperation]): The dependencies of the operation.
+        parent_operation (BaseOperation): The parent operation.
+        child_operations (dict[str, BaseOperation]): The child operations.
         operation_logs (List[str]): The logs of the operation.
+        memory_inputs (MemoryInput): Memory input slots associated with the operation.
+        memory_outputs (MemoryOutput): Memory output slots associated with the operation.
     """
     _lock = asyncio.Lock()
     _GENERATED_ID = None
@@ -113,7 +116,7 @@ class BaseOperation(ABC):
             self._persistent = None
             self._is_cpu_bound = None
             self._concurrent = None
-            self.result_variable_id = None  # Reference to the user variable storing the result
+            self.result_variable_id = None
 
             self._status = None
             self._task = None
@@ -128,6 +131,9 @@ class BaseOperation(ABC):
                 dict[BaseOperation.runtime_id, 'BaseOperation']()
             )
             self.operation_logs = []
+
+            self.memory_inputs = MemoryInput()
+            self.memory_outputs = MemoryOutput()
 
             self._initialized = False
 
@@ -279,14 +285,14 @@ class BaseOperation(ABC):
         """
         await link_child_operation(self, child_operation, dependencies)
 
-    def remove_child_operation(self, operation):
+    async def remove_child_operation(self, operation):
         """
         Remove a child operation from the current operation.
 
         Args:
             operation: The child operation to be removed.
         """
-        remove_child_operation(self, operation)
+        await remove_child_operation(self, operation)
 
     async def start_child_operations(self):
         """
@@ -324,6 +330,55 @@ class BaseOperation(ABC):
         """
         await execute_child_operations(self)
 
+    async def add_memory_input_slot(self, memory_slot):
+        """Add a memory input slot."""
+        await self.memory_inputs.add_slot(memory_slot)
+
+    async def remove_memory_input_slot(self, memory_id):
+        """Remove a memory input slot by its ID."""
+        await self.memory_inputs.remove_slot(memory_id)
+
+    async def get_memory_input_slot(self, memory_id):
+        """Get a memory input slot by its ID."""
+        return self.memory_inputs.get_slot(memory_id)
+
+    async def add_memory_output_slot(self, memory_slot):
+        """Add a memory output slot."""
+        await self.memory_outputs.add_slot(memory_slot)
+
+    async def remove_memory_output_slot(self, memory_id):
+        """Remove a memory output slot by its ID."""
+        await self.memory_outputs.remove_slot(memory_id)
+
+    async def get_memory_output_slot(self, memory_id):
+        """Get a memory output slot by its ID."""
+        return self.memory_outputs.get_slot(memory_id)
+
+    async def validate_memory_inputs(self):
+        """Validate all memory inputs."""
+        await self.memory_inputs.validate_inputs()
+
+    async def validate_memory_outputs(self):
+        """Validate all memory outputs."""
+        await self.memory_outputs.validate_results()
+
+    async def get_results_from_memory(self) -> dict:
+        """
+        Retrieve the results of the operation from the workspace.
+
+        Returns:
+            dict[name, value]: The name of the variable and its value.
+        """
+        return await self.memory_outputs.aggregate_results()
+
+    async def clear_memory_inputs(self):
+        """Clear all memory inputs."""
+        await self.memory_inputs.clear_slots()
+
+    async def clear_memory_outputs(self):
+        """Clear all memory outputs."""
+        await self.memory_outputs.clear_slots()
+
     async def save_operation_in_workspace(self, overwrite: bool = False):
         """
         Save the BaseOperation object to disk.
@@ -332,16 +387,6 @@ class BaseOperation(ABC):
             overwrite (bool, optional): Whether to overwrite the existing operation file. Defaults to False.
         """
         await save_operation_in_workspace(self, overwrite)
-
-    async def get_result(self) -> Tuple[dict, str]:
-        """
-        Retrieve the results of the operation from the workspace.
-
-        Returns:
-            dict[name, value]: The name of the variable and its value.
-            str: The memory_id location of the stored variable.
-        """
-        return await get_result(self)
 
     @staticmethod
     async def load_from_disk(file_path: str, operation_group: dict[str, 'BaseOperation']) -> 'BaseOperation':

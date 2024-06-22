@@ -87,7 +87,7 @@ class DaskOperation(BaseOperation):
         finally:
             self._local_vars = temp_vars
 
-    def get_result(self):
+    def get_results_from_memory(self):
         """
         Retrieve the result of the Dask computation.
 

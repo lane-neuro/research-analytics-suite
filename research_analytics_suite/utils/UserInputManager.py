@@ -14,9 +14,6 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-import dask.distributed
-
-from research_analytics_suite.operation_manager.operations.computation.DaskOperation import DaskOperation
 from research_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
     ResourceMonitorOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -56,18 +53,18 @@ class UserInputManager:
             await self._operation_control.operation_manager.stop_all_operations()
             return "UserInputManager.process_user_input: Stopping all operations..."
 
-        elif user_input == "load_data":
-            def load_data():
-                import dask.dataframe as dd
-                df = dd.read_csv("../sample_datasets/2024-Tariq-et-al_olfaction/8-30-2021-2-08 "
-                                 "PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor"
-                                 "-arenaOct3shuffle1_200000_filtered.csv")
-                return df.compute()
-
-            await self._operation_control.operation_manager.add_operation_with_parameters(operation_type=DaskOperation,
-                                                                                          action=load_data,
-                                                                                          name="LoadData",
-                                                                                          client=dask.distributed.Client())
+        # elif user_input == "load_data":
+        #     def load_data():
+        #         import dask.dataframe as dd
+        #         df = dd.read_csv("../sample_datasets/2024-Tariq-et-al_olfaction/8-30-2021-2-08 "
+        #                          "PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor"
+        #                          "-arenaOct3shuffle1_200000_filtered.csv")
+        #         return df.compute()
+        #
+        #     await self._operation_control.operation_manager.add_operation_with_parameters(operation_type=DaskOperation,
+        #                                                                                   action=load_data,
+        #                                                                                   name="LoadData",
+        #                                                                                   client=dask.distributed.Client())
 
         elif user_input == "machine_learning":
             self._logger.error(Exception("UserInputManager.process_user_input: Machine Learning not implemented."))

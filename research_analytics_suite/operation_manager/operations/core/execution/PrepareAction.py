@@ -32,12 +32,16 @@ def action_serialized(operation) -> str:
         action = None
     return action
 
+
 async def prepare_action_for_exec(operation):
     """
     Prepare the action for execution.
     """
     _action = None
     try:
+        # Preprocess memory inputs
+        await operation.memory_inputs.preprocess_data()
+
         if isinstance(operation.action, str):
             code = operation.action
             _action = _execute_code_action(code)
@@ -47,7 +51,7 @@ async def prepare_action_for_exec(operation):
                 _action = operation.action
             else:
                 t_action = operation.action
-                _action = _execute_callable_action(t_action)
+                _action = _execute_callable_action(t_action, operation.memory_inputs)
         operation.action_callable = _action
     except Exception as e:
         operation.handle_error(e)
@@ -63,7 +67,7 @@ def _execute_code_action(code) -> callable:
     Returns:
         callable: The action callable.
     """
-    def action():
+    def action(*inputs):
         _output = dict()
         exec(code, {}, _output)
         return _output
@@ -71,18 +75,20 @@ def _execute_code_action(code) -> callable:
     return action
 
 
-def _execute_callable_action(t_action) -> callable:
+def _execute_callable_action(t_action, memory_inputs) -> callable:
     """
     Execute a callable action.
 
     Args:
         t_action (callable): The callable to execute.
+        memory_inputs (MemoryInput): The memory inputs to use for the action.
 
     Returns:
         callable: The action callable.
     """
-    def action() -> Any:
-        _output = t_action()
+    def action(*inputs) -> Any:
+        inputs = [slot.data for slot in memory_inputs.list_slots()]
+        _output = t_action(*inputs)
         if _output is not None:
             return _output
         return

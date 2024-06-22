@@ -17,6 +17,7 @@ from concurrent.futures import ProcessPoolExecutor
 from typing import List
 
 from .PrepareAction import prepare_action_for_exec
+from ..workspace.memory.MemorySlot import MemorySlot
 
 
 async def execute_operation(operation):
@@ -24,11 +25,18 @@ async def execute_operation(operation):
     Execute the operation and all child operations.
     """
     try:
+        # Validate memory inputs before execution
+        await operation.validate_memory_inputs()
+
         if operation.child_operations is not None:
             await execute_child_operations(operation)
 
         await prepare_action_for_exec(operation)
         await run_operations(operation, [operation])
+
+        # Validate memory outputs after execution
+        await operation.validate_memory_outputs()
+
         if not operation.persistent:
             operation.status = "completed"
             operation.add_log_entry(f"[COMPLETE]")
@@ -75,7 +83,8 @@ async def run_operations(operation, operations):
     for op in operations:
         if op.status != "completed":
             if op.action_callable is not None:
-                tasks.append(op.execute_action())
+                inputs = [await op.get_memory_input_slot(memory_slot.memory_id).get_data_by_key('value') for memory_slot in op.memory_inputs.list_slots()]
+                tasks.append(op.execute_action(*inputs))
 
     if operation.concurrent and tasks and len(tasks) > 0:
         await asyncio.gather(*tasks)
@@ -85,7 +94,7 @@ async def run_operations(operation, operations):
             operation.add_log_entry(f"[RESULT] {operation.result_variable_id}")
 
 
-async def execute_action(operation):
+async def execute_action(operation, *inputs):
     """
     Execute the action associated with the operation.
     """
@@ -94,36 +103,42 @@ async def execute_action(operation):
             with ProcessPoolExecutor() as executor:
                 operation._status = "running"
                 operation.add_log_entry(f"[RUN] {operation.name}: CPU-bound Operation")
-                _exec_output = await asyncio.get_event_loop().run_in_executor(executor, operation.action_callable)
+                _exec_output = await asyncio.get_event_loop().run_in_executor(executor, operation.action_callable, *inputs)
                 if _exec_output is not None:
-                    operation.result_variable_id, _result = await operation.workspace.add_user_variable(
+                    await operation.add_memory_output_slot(MemorySlot(
+                        memory_id=f'{operation.runtime_id}',
                         name=f"result_{operation.name}",
-                        value=_exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output,
-                        memory_id=f'{operation.runtime_id}')
-                    operation.add_log_entry(f"[RESULT] {operation.result_variable_id} {_result}")
+                        operation_required=False,
+                        data={'value': _exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output}
+                    ))
+                    operation.add_log_entry(f"[RESULT] {operation.result_variable_id}")
         else:
             if operation.action_callable is not None:
                 if callable(operation.action_callable):
                     operation._status = "running"
                     if asyncio.iscoroutinefunction(operation.action_callable):
                         operation.add_log_entry(f"[RUN - ASYNC] {operation.name}")
-                        _exec_output = await operation.action_callable()
+                        _exec_output = await operation.action_callable(*inputs)
                         if _exec_output is not None:
-                            operation.result_variable_id, _result = await operation.workspace.add_user_variable(
+                            await operation.add_memory_output_slot(MemorySlot(
+                                memory_id=f'{operation.runtime_id}',
                                 name=f"result_{operation.name}",
-                                value=_exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output,
-                                memory_id=f'{operation.runtime_id}')
-                            operation.add_log_entry(f"[RESULT] {operation.result_variable_id} {_result}")
+                                operation_required=False,
+                                data={'value': _exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output}
+                            ))
+                            operation.add_log_entry(f"[RESULT] {operation.result_variable_id}")
 
                     else:
                         operation.add_log_entry(f"[RUN] {operation.name}")
-                        _exec_output = operation.action_callable()
+                        _exec_output = operation.action_callable(*inputs)
                         if _exec_output is not None:
-                            operation.result_variable_id, _result = await operation.workspace.add_user_variable(
+                            await operation.add_memory_output_slot(MemorySlot(
+                                memory_id=f'{operation.runtime_id}',
                                 name=f"result_{operation.name}",
-                                value=_exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output,
-                                memory_id=f'{operation.runtime_id}')
-                            operation.add_log_entry(f"[RESULT] {operation.result_variable_id} {_result}")
+                                operation_required=False,
+                                data={'value': _exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output}
+                            ))
+                            operation.add_log_entry(f"[RESULT] {operation.result_variable_id}")
             else:
                 operation.handle_error(Exception("No action provided for operation"))
     except Exception as e:
