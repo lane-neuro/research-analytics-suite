@@ -229,7 +229,6 @@ class BaseOperation(ABC):
         """
         Restart the operation and all child operations, if applicable.
         """
-        self.is_ready = False
         await self.reset(child_operations)
 
         self.is_ready = True
