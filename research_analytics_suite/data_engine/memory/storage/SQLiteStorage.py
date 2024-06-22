@@ -8,7 +8,7 @@ Author: Lane
 
 import json
 import aiosqlite
-from research_analytics_suite.data_engine.variable_storage.storage.BaseStorage import BaseStorage
+from research_analytics_suite.data_engine.memory.storage.BaseStorage import BaseStorage
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

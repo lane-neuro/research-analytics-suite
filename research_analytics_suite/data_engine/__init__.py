@@ -9,6 +9,6 @@ from .core import *
 from .integration import *
 from .engine import *
 from .utils import *
-from .variable_storage import *
+from .memory import *
 from .data_streams import *
 from .Workspace import Workspace

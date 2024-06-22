@@ -8,7 +8,7 @@ justlane@uw.edu Status: Prototype
 """
 
 import numpy as np
-from .MemorySlotCollection import MemorySlotCollection
+from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 
 
 class MemoryOutput(MemorySlotCollection):

@@ -15,7 +15,7 @@ Status: Prototype
 from typing import List
 
 import numpy as np
-from .MemorySlotCollection import MemorySlotCollection
+from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 
 
 class MemoryInput(MemorySlotCollection):

@@ -130,14 +130,20 @@ async def RASLauncher():
                 _args.open_workspace = os.path.expanduser(f"~\\Research-Analytics-Suite\\workspaces")
 
         if not os.path.exists(f"{_args.directory}\\{_args.open_workspace}"):
-            _logger.error(Exception(f"Workspace folder '{_args.open_workspace}' does not exist."))
-            return
-        _logger.info('Opening Existing Workspace at:\t' + f"{_args.directory}\\{_args.open_workspace}")
+            _logger.error(Exception(
+                f"Workspace folder '{_args.open_workspace}' does not exist. Creating new workspace..."))
+            try:
+                _workspace = await _workspace.create_workspace(_args.directory, _args.open_workspace)
+            except Exception as e:
+                _logger.error(e)
+                return
+        else:
+            _logger.info('Opening Existing Workspace at:\t' + f"{_args.directory}\\{_args.open_workspace}")
 
-        try:
-            _workspace = await _workspace.load_workspace(f"{_args.directory}\\{_args.open_workspace}")
-        except Exception as e:
-            _logger.error(e)
+            try:
+                _workspace = await _workspace.load_workspace(f"{_args.directory}\\{_args.open_workspace}")
+            except Exception as e:
+                _logger.error(e)
 
     # Launch the GUI if specified
     if _args.gui is not None and _args.gui.lower() == 'true':

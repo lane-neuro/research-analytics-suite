@@ -13,7 +13,5 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from .MemorySlot import MemorySlot
-from .MemorySlotCollection import MemorySlotCollection
 from .MemoryInput import MemoryInput
 from .MemoryOutput import MemoryOutput

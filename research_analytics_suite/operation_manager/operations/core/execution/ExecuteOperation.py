@@ -16,8 +16,8 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor
 from typing import List
 
+from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 from .PrepareAction import prepare_action_for_exec
-from ..workspace.memory.MemorySlot import MemorySlot
 
 
 async def execute_operation(operation):

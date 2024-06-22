@@ -10,7 +10,7 @@ Author: Lane
 import asyncio
 from typing import Mapping, Any, Tuple
 
-from research_analytics_suite.data_engine.variable_storage.storage.BaseStorage import BaseStorage
+from research_analytics_suite.data_engine.memory.storage.BaseStorage import BaseStorage
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

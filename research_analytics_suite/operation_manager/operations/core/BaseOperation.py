@@ -27,7 +27,7 @@ from .child_operations import (add_child_operation, link_child_operation, remove
                                start_child_operations, pause_child_operations, resume_child_operations,
                                stop_child_operations, reset_child_operations)
 from .workspace import save_operation_in_workspace, load_from_disk, load_operation_group, from_dict
-from .workspace.memory import MemoryInput, MemoryOutput
+from research_analytics_suite.operation_manager.operations.core.memory import MemoryInput, MemoryOutput
 
 
 class BaseOperation(ABC):

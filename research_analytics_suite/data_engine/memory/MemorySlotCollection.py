@@ -16,7 +16,7 @@ from abc import ABC
 from typing import List, Optional
 import json
 
-from research_analytics_suite.operation_manager.operations.core.workspace.memory import MemorySlot
+from .MemorySlot import MemorySlot
 
 
 class MemorySlotCollection(ABC):
