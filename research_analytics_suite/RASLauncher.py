@@ -9,6 +9,7 @@ Author: Lane
 import asyncio
 import os.path
 
+from research_analytics_suite.data_engine import MemoryManager
 from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.gui.launcher.GuiLauncher import GuiLauncher
@@ -32,13 +33,17 @@ async def RASLauncher():
     _launch_tasks = []
     _gui_launcher = None
 
-    # Initialize Configuration singleton class
-    _config = Config()
-    await _config.initialize()
-
     # Initialize Logging singleton class
     _logger = CustomLogger()
     await _logger.initialize()
+
+    # Initialize the default collection if it doesn't exist
+    _memory_manager = MemoryManager()
+    await _memory_manager.initialize()
+
+    # Initialize Configuration singleton class
+    _config = Config()
+    await _config.initialize()
 
     # Initialize OperationControl singleton class
     _operation_control = OperationControl()

@@ -1,13 +1,12 @@
 """
 Base Storage Module
 
-This module defines the abstract base class for storage backends for user variables.
+This module defines the abstract base class for storage backends for memory slot collections.
 
 Author: Lane
 """
 import uuid
 from abc import ABC, abstractmethod
-from typing import Tuple
 
 from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -37,60 +36,47 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    async def add_variable(self, name, value, memory_id=None) -> Tuple[str, dict]:
+    async def add_collection(self, collection) -> str:
         """
-        Adds a new variable to the storage, optionally filtered by memory ID.
+        Adds a new MemorySlotCollection to the storage.
 
         Args:
-            name (str): The name of the variable.
-            value: The value of the variable.
-            memory_id (str, optional): The ID of the memory to which the variable belongs.
+            collection (MemorySlotCollection): The collection to add.
 
         Returns:
-            str: The memory_id location of the stored variable.
-            dict[name, value]:
-                name (str): The name of the variable. (aka: the key)
-                value: The value of the stored variable in the associated memory_id location.
+            str: The ID of the added collection.
         """
         pass
 
     @abstractmethod
-    async def get_variable_value(self, name, memory_id=None) -> Tuple[str, dict]:
+    async def get_collection(self, collection_id: str):
         """
-        Retrieves the value of a variable by name from storage.
+        Retrieves a MemorySlotCollection by its ID from the storage.
 
         Args:
-            name (str): The name of the variable.
-            memory_id (str, optional): The ID of the memory to which the variable belongs.
+            collection_id (str): The ID of the collection to retrieve.
 
         Returns:
-            str: The memory_id location of the stored variable.
-            dict[name, value]:
-                name (str): The name of the variable. (aka: the key)
-                value: The value of the stored variable in the associated memory_id location.
+            MemorySlotCollection: The retrieved collection.
         """
         pass
 
     @abstractmethod
-    async def remove_variable(self, name, memory_id=None):
+    async def remove_collection(self, collection_id: str):
         """
-        Removes a variable by name from the storage, optionally filtered by memory ID.
+        Removes a MemorySlotCollection by its ID from the storage.
 
         Args:
-            name (str): The name of the variable to remove.
-            memory_id (str, optional): The ID of the memory to which the variable belongs.
+            collection_id (str): The ID of the collection to remove.
         """
         pass
 
     @abstractmethod
-    async def list_variables(self, memory_id=None) -> dict:
+    async def list_collections(self) -> dict:
         """
-        Lists all variables from the storage, optionally filtered by memory ID.
-
-        Args:
-            memory_id (str, optional): The ID of the memory to which the variables
+        Lists all MemorySlotCollections from the storage.
 
         Returns:
-            dict: A dictionary of variables.
+            dict: A dictionary of MemorySlotCollections.
         """
         pass

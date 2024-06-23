@@ -9,7 +9,8 @@ Author: Lane
 import asyncio
 import os
 import json
-from typing import LiteralString, Tuple
+import uuid
+from typing import LiteralString, Tuple, Optional, Any
 
 import aiofiles
 from collections import defaultdict
@@ -18,7 +19,9 @@ from research_analytics_suite.data_engine.utils.DataCache import DataCache
 from research_analytics_suite.data_engine.engine.DataEngineOptimized import DataEngineOptimized
 from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
 from research_analytics_suite.utils.CustomLogger import CustomLogger
-from research_analytics_suite.data_engine.memory import UserVariablesManager, SQLiteStorage, MemoryStorage
+from research_analytics_suite.data_engine.memory import MemoryManager, SQLiteStorage, MemoryStorage
+from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
+from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 
 
 class Workspace:
@@ -45,6 +48,7 @@ class Workspace:
         if not hasattr(self, '_initialized'):
             self._logger = CustomLogger()
             self._config = Config()
+            self._memory_manager = MemoryManager()
 
             self._data_engines = None
             self._dependencies = None
@@ -56,7 +60,6 @@ class Workspace:
 
             self._storage = None
 
-            self.user_variables = None
             self._initialized = False
 
     async def initialize(self):
@@ -73,17 +76,15 @@ class Workspace:
                     self._data_cache = DataCache()
 
                     if self._db_path is None:
-                        self._db_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
-                                                     'user_variables.db')
+                        self._db_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'user_variables.db')
                         self._logger.info(f"Using default database path: {self._db_path}")
                     if self._storage_type == 'sqlite':
                         self._storage = SQLiteStorage(db_path=self._db_path)
                     elif self._storage_type == 'memory':
                         self._storage = MemoryStorage(db_path=self._db_path)
+                        await self._storage.setup()
                     else:
                         self._logger.error(ValueError(f"Unsupported storage type: {self._storage_type}"), self)
-
-                    self.user_variables = UserVariablesManager(self._storage)
 
                     self._logger.info("Workspace initialized successfully")
                     self._initialized = True
@@ -156,30 +157,20 @@ class Workspace:
             The path to the saved workspace directory.
         """
         try:
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME),
-                        exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.DATA_DIR),
-                        exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.LOG_DIR),
-                        exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.WORKSPACE_DIR),
-                        exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
-                             self._config.WORKSPACE_OPERATIONS_DIR),
-                        exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.BACKUP_DIR),
-                        exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR),
-                        exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME), exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.DATA_DIR), exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.LOG_DIR), exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.WORKSPACE_DIR), exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.WORKSPACE_OPERATIONS_DIR), exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.BACKUP_DIR), exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR), exist_ok=True)
 
             for runtime_id, data_engine in self._data_engines.items():
-                engine_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR,
-                                           data_engine.engine_id)
+                engine_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR, data_engine.engine_id)
                 os.makedirs(engine_path, exist_ok=True)
                 await data_engine.save_engine(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME))
 
-            await self.save_user_variables(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
-                                                        'user_variables.db'))
+            await self.save_user_variables(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'user_variables.db'))
             config_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'config.json')
             await self._config.save_to_file(config_path)
             self._logger.info(f"Workspace folder saved in directory:\t{self._config.BASE_DIR}")
@@ -275,92 +266,146 @@ class Workspace:
             'scheduler_interval': self._config.SCHEDULER_INTERVAL,
         }, indent=4)
 
-    # Methods to interact with UserVariables
-    async def add_user_variable(self, name, value=None, memory_id=None) -> Tuple[str, dict]:
+    # Methods to interact with MemorySlotCollections
+    def add_memory_collection(self, collection: MemorySlotCollection):
         """
-        Adds a new user variable to the workspace, optionally filtered by memory ID.
+        Adds a new MemorySlotCollection to the workspace.
 
         Args:
-            name (str): The name of the variable.
-            value: The value of the variable.
-            memory_id (str, optional): The ID of the memory to which the variable belongs.
-
-        Returns (Tuple[str, dict]):
-            str: The memory_id location of the stored variable in the user_variables database.
-            dict[name, value]:
-                name (str): The name of the variable. (aka: the key)
-                value: The value of the stored variable in the associated memory_id location.
+            collection (MemorySlotCollection): The collection to add.
         """
         try:
-            return await self.user_variables.add_variable_to_manager(name=name, value=value, memory_id=memory_id)
+            self._memory_manager.add_collection(collection=collection)
         except Exception as e:
-            self._logger.error(Exception(f"Failed to add user variable '{name}': {e}"), self)
+            self._logger.error(Exception(f"Failed to add MemorySlotCollection: {e}"), self)
 
-    async def get_user_variable_value(self, name, memory_id=None) -> Tuple[str, dict]:
+    async def get_memory_collection(self, collection_id: str) -> MemorySlotCollection:
         """
-        Retrieves the value of a user variable by name from the workspace, optionally filtered by memory ID.
+        Retrieves a MemorySlotCollection by its ID from the workspace.
 
         Args:
-            name (str): The name of the stored variable. (aka: the key)
-            memory_id (str, optional): The ID of the memory to which the variable belongs.
+            collection_id (str): The ID of the collection to retrieve.
 
         Returns:
-            str: The memory_id location of the stored variable in the user_variables database.
-            dict[name, value]:
-                name (str): The name of the variable. (aka: the key)
-                value: The value of the stored variable in the associated memory_id location.
+            MemorySlotCollection: The retrieved collection.
         """
         try:
-            return await self.user_variables.get_variable(name=name, memory_id=memory_id)
+            return await self._memory_manager.get_collection(collection_id=collection_id)
         except Exception as e:
-            self._logger.error(Exception(f"Failed to get user variable '{name}': {e}"), self)
+            self._logger.error(Exception(f"Failed to get MemorySlotCollection: {e}"), self)
 
-    async def remove_user_variable(self, name, memory_id=None):
+    async def remove_memory_collection(self, collection_id: str):
         """
-        Removes a user variable by name from the workspace, optionally filtered by memory ID.
+        Removes a MemorySlotCollection by its ID from the workspace.
 
         Args:
-            name (str): The name of the variable to remove.
-            memory_id (str, optional): The ID of the memory to which the variable belongs.
+            collection_id (str): The ID of the collection to remove.
         """
         try:
-            await self.user_variables.remove_variable(name=name, memory_id=memory_id)
+            await self._memory_manager.remove_collection(collection_id=collection_id)
         except Exception as e:
-            self._logger.error(Exception(f"Failed to remove user variable '{name}': {e}"), self)
+            self._logger.error(Exception(f"Failed to remove MemorySlotCollection: {e}"), self)
 
-    async def list_user_variables(self, memory_id=None) -> dict:
+    async def list_memory_collections(self) -> dict:
         """
-        Lists all user variables in the workspace, optionally filtered by memory ID.
-
-        Args:
-            memory_id (str, optional): The ID of the memory to which the variables belong.
+        Lists all MemorySlotCollections in the workspace.
 
         Returns:
-            dict[name, value]:
-                name (str): The name of the variable. (aka: the key)
-                value: The value of the stored variable in the associated memory_id location.
+            dict: A dictionary of MemorySlotCollections.
         """
         try:
-            return await self.user_variables.list_variables(memory_id=memory_id)
+            return await self._memory_manager.list_collections()
         except Exception as e:
-            self._logger.error(Exception(f"Failed to list user variables: {e}"), self)
+            self._logger.error(Exception(f"Failed to list MemorySlotCollections: {e}"), self)
 
-    async def save_user_variables(self, file_path, memory_id=None):
+    async def add_variable_to_collection(self, collection_id: str, name: str, value: Any,
+                                         memory_slot_id: Optional[str] = None) -> Tuple[str, dict]:
+        collection_id = collection_id or await self._memory_manager.get_default_collection_id()
+        try:
+            collection = await self._memory_manager.get_collection(collection_id)
+            if collection:
+                if memory_slot_id:
+                    slot = collection.get_slot(memory_slot_id)
+                    if not slot:
+                        raise ValueError(f"MemorySlot with ID {memory_slot_id} not found")
+                else:
+                    slot = MemorySlot(memory_id=str(uuid.uuid4()), name=name, operation_required=True, data={})
+                    await collection.add_slot(slot)
+
+                await slot.set_data_by_key(name, value)
+                return slot.memory_id, {name: value}
+            else:
+                raise ValueError(f"Collection with ID {collection_id} not found")
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to add variable '{name}' to collection '{collection_id}': {e}"), self)
+
+    async def get_variable_from_collection(self, collection_id: str, name: str,
+                                           memory_slot_id: Optional[str] = None) -> Any:
+        collection_id = collection_id or await self._memory_manager.get_default_collection_id()
+        try:
+            collection = await self._memory_manager.get_collection(collection_id)
+            if collection:
+                if memory_slot_id:
+                    slot = collection.get_slot(memory_slot_id)
+                    if slot:
+                        return await slot.get_data_by_key(name)
+                    raise KeyError(f"Variable '{name}' not found in MemorySlot '{memory_slot_id}'")
+                else:
+                    if collection.list_slots:
+                        for slot in collection.list_slots:
+                            if await slot.has_key(name):
+                                return await slot.get_data_by_key(name)
+                    else:
+                        raise KeyError(f"Variable '{name}' not found in collection '{collection_id}'")
+            else:
+                raise ValueError(f"Collection with ID {collection_id} not found")
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to get variable '{name}' from collection '{collection_id}': {e}"),
+                               self)
+
+    async def remove_variable_from_collection(self, collection_id: str, name: str,
+                                              memory_slot_id: Optional[str] = None):
+        collection_id = collection_id or await self._memory_manager.get_default_collection_id()
+        try:
+            collection = await self._memory_manager.get_collection(collection_id)
+            if collection:
+                if memory_slot_id:
+                    slot = collection.get_slot(memory_slot_id)
+                    if slot:
+                        await slot.remove_data_by_key(name)
+                        return
+                    raise KeyError(f"Variable '{name}' not found in MemorySlot '{memory_slot_id}'")
+                else:
+                    if collection.list_slots:
+                        for slot in collection.list_slots:
+                            if await slot.has_key(name):
+                                await slot.remove_data_by_key(name)
+                                return
+                            else:
+                                raise KeyError(f"Variable '{name}' not found in collection '{collection_id}'"
+                                               f", MemorySlot '{slot.memory_id}'")
+                    else:
+                        raise KeyError(f"Variable '{name}' not found in collection '{collection_id}'")
+            else:
+                raise ValueError(f"Collection with ID {collection_id} not found")
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to remove variable '{name}' from collection '{collection_id}': {e}"),
+                               self)
+
+    async def save_user_variables(self, file_path):
         """
-        Saves the user variables database to the specified file, optionally filtered by memory ID. If memory_id is not
-        specified, all variables will be saved as a nested dictionary, with the memory ID as the key.
+        Saves the user variables database to the specified file.
 
         Args:
             file_path: The path to the save file.
-            memory_id (str, optional): The ID of the memory to which the variables belong.
         """
         try:
-            # Ensure the directory for the save file exists
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            user_vars = await self.user_variables.list_variables(memory_id=memory_id)
+            collections = await self._memory_manager.list_collections()
 
             async with aiofiles.open(file_path, 'w') as dst:
-                await dst.write(json.dumps(user_vars))
+                collections_data = {cid: await col.to_dict() for cid, col in collections.items()}
+                await dst.write(json.dumps(collections_data))
 
             self._logger.info(f"User variables saved to {file_path}")
 
@@ -369,35 +414,21 @@ class Workspace:
 
     async def restore_user_variables(self, file_path):
         """
-        Restores the user variables database from the specified save file. If memory IDs are present in the save file,
-        the variables will be restored to their respective memory slots. Otherwise, the variables will be restored
-        to a new memory slot.
+        Restores the user variables database from the specified save file.
 
         Args:
             file_path: The path to the save file.
-
-        Returns:
-            str: The memory_id location of the stored variable in the user_variables database.
-            dict[name, value]:
-                name (str): The name of the variable. (aka: the key)
-                value: The value of the stored variable in the associated memory_id location.
         """
-        _output_dict = dict[str, dict()]()
-
         try:
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"User variables file not found: {file_path}")
 
             async with aiofiles.open(file_path, 'r') as src:
-                variables = json.loads(await src.read())
-                for memory_id, memory_vars in variables.items():
-                    if isinstance(memory_vars, dict):
-                        for name, value in memory_vars.items():
-                            await self.user_variables.add_variable_to_manager(
-                                name=name, value=value, memory_id=memory_id)
-                    else:
-                        await self.user_variables.add_variable_to_manager(
-                            name=memory_id, value=memory_vars)
+                collections_data = json.loads(await src.read())
+
+                for collection_id, collection_dict in collections_data.items():
+                    collection = await MemorySlotCollection.from_dict(collection_dict)
+                    self._memory_manager.add_collection(collection)
 
             self._logger.info(f"User variables restored from {file_path}")
         except Exception as e:

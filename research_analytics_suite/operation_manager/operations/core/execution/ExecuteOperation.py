@@ -83,7 +83,14 @@ async def run_operations(operation, operations):
     for op in operations:
         if op.status != "completed":
             if op.action_callable is not None:
-                inputs = [await op.get_memory_input_slot(memory_slot.memory_id).get_data_by_key('value') for memory_slot in op.memory_inputs.list_slots()]
+                if op.memory_inputs is not None:
+                    if op.memory_inputs.list_slots:
+                        inputs = [await op.get_memory_input_slot(memory_slot.memory_id).get_data_by_key('value') for
+                                  memory_slot in op.memory_inputs.list_slots]
+                    else:
+                        inputs = []
+                else:
+                    inputs = []
                 tasks.append(op.execute_action(*inputs))
 
     if operation.concurrent and tasks and len(tasks) > 0:
@@ -103,7 +110,8 @@ async def execute_action(operation, *inputs):
             with ProcessPoolExecutor() as executor:
                 operation._status = "running"
                 operation.add_log_entry(f"[RUN] {operation.name}: CPU-bound Operation")
-                _exec_output = await asyncio.get_event_loop().run_in_executor(executor, operation.action_callable, *inputs)
+                _exec_output = await asyncio.get_event_loop().run_in_executor(executor, operation.action_callable,
+                                                                              *inputs)
                 if _exec_output is not None:
                     await operation.add_memory_output_slot(MemorySlot(
                         memory_id=f'{operation.runtime_id}',
@@ -124,7 +132,8 @@ async def execute_action(operation, *inputs):
                                 memory_id=f'{operation.runtime_id}',
                                 name=f"result_{operation.name}",
                                 operation_required=False,
-                                data={'value': _exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output}
+                                data={'value': _exec_output.result()
+                                      if asyncio.isfuture(_exec_output) else _exec_output}
                             ))
                             operation.add_log_entry(f"[RESULT] {operation.result_variable_id}")
 

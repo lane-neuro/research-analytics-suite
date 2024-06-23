@@ -4,17 +4,11 @@ MemorySlotCollection Module
 An abstract base class representing a collection of memory slots for storing data.
 
 Author: Lane
-Copyright: Lane
-Credits: Lane
-License: BSD 3-Clause License
-Version: 0.0.0.1
-Maintainer: Lane
-Email: justlane@uw.edu
-Status: Prototype
 """
 from abc import ABC
 from typing import List, Optional
 import json
+import uuid
 
 from .MemorySlot import MemorySlot
 
@@ -24,6 +18,8 @@ class MemorySlotCollection(ABC):
     An abstract base class representing a collection of memory slots for storing data.
 
     Properties:
+        collection_id (str): A unique identifier for the collection.
+        name (str): A name for the collection.
         slots (List[MemorySlot]): A list of memory slots.
 
     Methods:
@@ -44,7 +40,12 @@ class MemorySlotCollection(ABC):
         remove_slots(memory_ids: List[str]): Remove multiple slots at once by their IDs.
     """
     def __init__(self):
+        self.collection_id = str(uuid.uuid4())  # Generate a unique identifier for the collection
+        self.name = str(uuid.uuid4().hex[:4])
         self.slots: List[MemorySlot] = []
+
+        from research_analytics_suite.data_engine import Workspace
+        Workspace().add_memory_collection(self)
 
     async def add_slot(self, slot: MemorySlot):
         """Add a memory slot to the collection."""
@@ -61,9 +62,12 @@ class MemorySlotCollection(ABC):
                 return slot
         return None
 
-    def list_slots(self) -> List[MemorySlot]:
+    @property
+    def list_slots(self) -> list[MemorySlot] | None:
         """List all memory slots."""
-        return self.slots
+        if len(self.slots) > 0:
+            return self.slots
+        return None
 
     async def clear_slots(self):
         """Clear all memory slots."""
@@ -84,6 +88,7 @@ class MemorySlotCollection(ABC):
     async def to_dict(self) -> dict:
         """Convert the collection to a dictionary."""
         return {
+            'collection_id': self.collection_id,
             'slots': [await slot.to_dict() for slot in self.slots]
         }
 
@@ -91,6 +96,7 @@ class MemorySlotCollection(ABC):
     async def from_dict(data: dict) -> 'MemorySlotCollection':
         """Initialize the collection from a dictionary."""
         collection = MemorySlotCollection()
+        collection.collection_id = data.get('collection_id', str(uuid.uuid4()))
         for slot_data in data.get('slots', []):
             await collection.add_slot(await MemorySlot.from_dict(slot_data))
         return collection

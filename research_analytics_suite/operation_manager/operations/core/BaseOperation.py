@@ -132,8 +132,8 @@ class BaseOperation(ABC):
             )
             self.operation_logs = []
 
-            self.memory_inputs = MemoryInput()
-            self.memory_outputs = MemoryOutput()
+            self.memory_inputs = None
+            self.memory_outputs = None
 
             self._initialized = False
 
@@ -199,6 +199,10 @@ class BaseOperation(ABC):
                                 self._child_operations[u_id].parent_operation = self
 
                     self.operation_logs = self.temp_kwargs.get('operation_logs', [])
+
+                    self.memory_inputs = MemoryInput()
+                    self.memory_outputs = MemoryOutput()
+
                     self.add_log_entry(f"[INIT] {self._name}")
                     self._initialized = True
                     await self._operation_control.operation_manager.add_initialized_operation(self)
@@ -356,11 +360,13 @@ class BaseOperation(ABC):
 
     async def validate_memory_inputs(self):
         """Validate all memory inputs."""
-        await self.memory_inputs.validate_inputs()
+        if self.memory_inputs is not None:
+            await self.memory_inputs.validate_inputs()
 
     async def validate_memory_outputs(self):
         """Validate all memory outputs."""
-        await self.memory_outputs.validate_results()
+        if self.memory_outputs is not None:
+            await self.memory_outputs.validate_results()
 
     async def get_results_from_memory(self) -> dict:
         """

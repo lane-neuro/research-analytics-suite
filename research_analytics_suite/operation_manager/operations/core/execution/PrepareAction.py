@@ -40,7 +40,8 @@ async def prepare_action_for_exec(operation):
     _action = None
     try:
         # Preprocess memory inputs
-        await operation.memory_inputs.preprocess_data()
+        if operation.memory_inputs is not None:
+            await operation.memory_inputs.preprocess_data()
 
         if isinstance(operation.action, str):
             code = operation.action
@@ -87,7 +88,7 @@ def _execute_callable_action(t_action, memory_inputs) -> callable:
         callable: The action callable.
     """
     def action(*inputs) -> Any:
-        inputs = [slot.data for slot in memory_inputs.list_slots()]
+        inputs = [slot.data for slot in memory_inputs.list_slots]
         _output = t_action(*inputs)
         if _output is not None:
             return _output
