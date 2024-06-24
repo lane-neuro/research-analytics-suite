@@ -100,7 +100,7 @@ class WorkspaceModule:
         collection_group_tag = f"collection_group_{collection_id}"
         if not dpg.does_item_exist(collection_group_tag):
             with dpg.group(tag=collection_group_tag, parent=self.collection_list_id):
-                dpg.add_text(f"{collection.display_name}", parent=collection_group_tag)
+                dpg.add_text(f"Collection: {collection.display_name}", parent=collection_group_tag)
         else:
             dpg.configure_item(collection_group_tag, show=True)
 

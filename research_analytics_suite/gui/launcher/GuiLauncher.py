@@ -232,5 +232,7 @@ class GuiLauncher:
     async def setup_data_collection_pane(self) -> None:
         """Sets up the data collection pane asynchronously."""
         with dpg.group(parent="data_collection_pane"):
+            self.data_collection_dialog = DataCollectionDialog(width=800, height=600)
             dpg.add_text("Data Collection Tools")
+            await self.data_collection_dialog.show_memory_collections()
 
