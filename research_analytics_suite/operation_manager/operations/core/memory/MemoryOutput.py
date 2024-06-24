@@ -20,8 +20,8 @@ class MemoryOutput(MemorySlotCollection):
         postprocess_data(): Postprocess all output data.
         validate_results(): Validate all output results.
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name):
+        super().__init__(name=name)
 
     async def aggregate_results(self) -> dict:
         """Aggregate results from all output slots."""

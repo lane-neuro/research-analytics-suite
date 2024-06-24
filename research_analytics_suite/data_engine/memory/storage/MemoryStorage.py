@@ -33,7 +33,7 @@ class MemoryStorage(BaseStorage):
             collection (MemorySlotCollection): The collection to add.
         """
         self.collections[collection.collection_id] = collection
-        self._logger.info(f"Added MemorySlotCollection with ID: {collection.collection_id}")
+        self._logger.info(f"[MemoryStorage] Added collection: {collection.display_name}")
 
     async def get_collection(self, collection_id: str) -> MemorySlotCollection:
         """
@@ -56,7 +56,7 @@ class MemoryStorage(BaseStorage):
         """
         if collection_id in self.collections:
             del self.collections[collection_id]
-            self._logger.info(f"Removed MemorySlotCollection with ID: {collection_id}")
+            self._logger.info(f"[MemoryStorage] Removed collection with ID: {collection_id}")
 
     async def list_collections(self) -> dict:
         """

@@ -190,6 +190,8 @@ class OperationModule:
                     dpg.add_button(label="Resume", callback=self.resume_operation, width=button_width)
                     dpg.add_button(label="Reset", callback=self.reset_operation, width=button_width)
 
+                dpg.add_button(label="View Result", callback=self.view_result, width=-1)
+
             with dpg.child_window(height=-1, width=-1, border=True):
                 self._child_ops_parent = f"child_ops_{self._unique_id}"
                 with dpg.group(tag=f"container_{self._unique_id}", width=-1):

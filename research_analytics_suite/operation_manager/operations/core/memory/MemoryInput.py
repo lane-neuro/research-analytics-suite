@@ -29,8 +29,8 @@ class MemoryInput(MemorySlotCollection):
         remove_dependency(memory_id: str, dependency_id: str): Remove a dependency between input slots.
         list_dependencies(memory_id: str) -> List[str]: List all dependencies for a given input slot.
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name):
+        super().__init__(name=name)
         self._dependencies = {}
 
     async def validate_inputs(self):

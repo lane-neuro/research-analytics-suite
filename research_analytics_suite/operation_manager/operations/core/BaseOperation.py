@@ -21,7 +21,7 @@ from typing import Tuple
 from research_analytics_suite.data_engine.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
-from .execution import execute_operation, execute_action, execute_child_operations, action_serialized
+from .execution import execute_operation, execute_child_operations, action_serialized
 from .progress import update_progress
 from .child_operations import (add_child_operation, link_child_operation, remove_child_operation,
                                start_child_operations, pause_child_operations, resume_child_operations,
@@ -164,13 +164,18 @@ class BaseOperation(ABC):
                     self._gui_module = None
 
                     self._name = self.temp_kwargs.get('name', "[missing name]")
+
                     self._unique_id = self.temp_kwargs.get('unique_id', f"{uuid.uuid4()}")
                     self._version = self.temp_kwargs.get('version', 0)
                     self._action = self.temp_kwargs.get('action')
+                    self._action_callable = None
                     self._persistent = self.temp_kwargs.get('../persistent', False)
                     self._is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', False)
                     self._concurrent = self.temp_kwargs.get('concurrent', False)
                     self.result_variable_id = self.temp_kwargs.get('result_variable_id', f'result_{self.runtime_id}')
+
+                    self.memory_inputs = MemoryInput(name=f"{self.name}_input")
+                    self.memory_outputs = MemoryOutput(name=f"{self.name}_output")
 
                     self._status = "idle"
                     self._task = None
@@ -199,9 +204,6 @@ class BaseOperation(ABC):
                                 self._child_operations[u_id].parent_operation = self
 
                     self.operation_logs = self.temp_kwargs.get('operation_logs', [])
-
-                    self.memory_inputs = MemoryInput()
-                    self.memory_outputs = MemoryOutput()
 
                     self.add_log_entry(f"[INIT] {self._name}")
                     self._initialized = True
@@ -255,12 +257,6 @@ class BaseOperation(ABC):
         Execute the operation and all child operations.
         """
         await execute_operation(self)
-
-    async def execute_action(self):
-        """
-        Execute the action associated with the operation.
-        """
-        return await execute_action(self)
 
     async def update_progress(self):
         """
@@ -342,9 +338,13 @@ class BaseOperation(ABC):
         """Remove a memory input slot by its ID."""
         await self.memory_inputs.remove_slot(memory_id)
 
-    async def get_memory_input_slot(self, memory_id):
+    def get_memory_input_slot(self, memory_id):
         """Get a memory input slot by its ID."""
         return self.memory_inputs.get_slot(memory_id)
+
+    def get_memory_input_slot_data(self, memory_id):
+        """Get the data of a memory input slot by its ID."""
+        return self.memory_inputs.get_slot_data(memory_id)
 
     async def add_memory_output_slot(self, memory_slot):
         """Add a memory output slot."""
@@ -354,9 +354,13 @@ class BaseOperation(ABC):
         """Remove a memory output slot by its ID."""
         await self.memory_outputs.remove_slot(memory_id)
 
-    async def get_memory_output_slot(self, memory_id):
+    def get_memory_output_slot(self, memory_id):
         """Get a memory output slot by its ID."""
         return self.memory_outputs.get_slot(memory_id)
+
+    def get_memory_output_slot_data(self, memory_id):
+        """Get the data of a memory output slot by its ID."""
+        return self.memory_outputs.get_slot_data(memory_id)
 
     async def validate_memory_inputs(self):
         """Validate all memory inputs."""
@@ -517,15 +521,15 @@ class BaseOperation(ABC):
     def action(self, value):
         """Sets the action to be executed by the operation."""
         self._action = value
-        self._action_callable = None
+        self._action_callable = None  # Reset _action_callable when action is set
 
     @property
-    def action_callable(self):
+    def action_callable(self) -> callable:
         """Gets the callable action to be executed by the operation."""
-        return self._action_callable
+        return self._action_callable()
 
     @action_callable.setter
-    def action_callable(self, value):
+    def action_callable(self, value: callable):
         """Sets the callable action to be executed by the operation."""
         self._action_callable = value
 

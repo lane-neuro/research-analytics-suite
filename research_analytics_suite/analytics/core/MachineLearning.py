@@ -51,9 +51,10 @@ class MachineLearning:
 
     def preprocess_data(self, data):
         """Preprocess the data using the Preprocessor."""
-        preprocessed_data = self.preprocessor.fit_transform(data)
-        self.data_loader_operation.transformed_data = preprocessed_data
-        return preprocessed_data
+        # preprocessed_data = self.preprocessor.fit_transform(data)
+        # self.data_loader_operation.transformed_data = preprocessed_data
+        # return preprocessed_data
+        pass
 
     def split_data(self, data, target_column, test_size=0.2, random_state=42):
         """Split the data into training and validation sets."""

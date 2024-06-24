@@ -170,7 +170,7 @@ class Workspace:
                 os.makedirs(engine_path, exist_ok=True)
                 await data_engine.save_engine(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME))
 
-            await self.save_user_variables(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'user_variables.db'))
+            await self.save_memory_manager(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'user_variables.db'))
             config_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'config.json')
             await self._config.save_to_file(config_path)
             self._logger.info(f"Workspace folder saved in directory:\t{self._config.BASE_DIR}")
@@ -207,7 +207,7 @@ class Workspace:
                 data_engine = await UnifiedDataEngine.load_engine(workspace_path, engine_id)
                 workspace.add_data_engine(data_engine)
 
-            await self.restore_user_variables(os.path.join(workspace_path, 'user_variables.db'))
+            await self.restore_memory_manager(os.path.join(workspace_path, 'user_variables.db'))
             return workspace
         except Exception as e:
             self._logger.error(Exception(f"Failed to load workspace: {e}"), self)
@@ -351,8 +351,8 @@ class Workspace:
                         return await slot.get_data_by_key(name)
                     raise KeyError(f"Variable '{name}' not found in MemorySlot '{memory_slot_id}'")
                 else:
-                    if collection.list_slots:
-                        for slot in collection.list_slots:
+                    if collection.list_slots():
+                        for slot in collection.list_slots():
                             if await slot.has_key(name):
                                 return await slot.get_data_by_key(name)
                     else:
@@ -376,8 +376,8 @@ class Workspace:
                         return
                     raise KeyError(f"Variable '{name}' not found in MemorySlot '{memory_slot_id}'")
                 else:
-                    if collection.list_slots:
-                        for slot in collection.list_slots:
+                    if collection.list_slots():
+                        for slot in collection.list_slots():
                             if await slot.has_key(name):
                                 await slot.remove_data_by_key(name)
                                 return
@@ -392,7 +392,7 @@ class Workspace:
             self._logger.error(Exception(f"Failed to remove variable '{name}' from collection '{collection_id}': {e}"),
                                self)
 
-    async def save_user_variables(self, file_path):
+    async def save_memory_manager(self, file_path):
         """
         Saves the user variables database to the specified file.
 
@@ -405,6 +405,10 @@ class Workspace:
 
             async with aiofiles.open(file_path, 'w') as dst:
                 collections_data = {cid: await col.to_dict() for cid, col in collections.items()}
+
+                # Remove any slots that are not serializable
+                collections_data = remove_non_serializable(collections_data)
+
                 await dst.write(json.dumps(collections_data))
 
             self._logger.info(f"User variables saved to {file_path}")
@@ -412,16 +416,16 @@ class Workspace:
         except Exception as e:
             self._logger.error(Exception(f"Failed to save user variables: {e}"), self)
 
-    async def restore_user_variables(self, file_path):
+    async def restore_memory_manager(self, file_path):
         """
-        Restores the user variables database from the specified save file.
+        Restores a serialized MemorySlotCollection object from the specified save file.
 
         Args:
             file_path: The path to the save file.
         """
         try:
             if not os.path.exists(file_path):
-                raise FileNotFoundError(f"User variables file not found: {file_path}")
+                raise FileNotFoundError(f"Memory bank file not found: {file_path}")
 
             async with aiofiles.open(file_path, 'r') as src:
                 collections_data = json.loads(await src.read())
@@ -430,6 +434,23 @@ class Workspace:
                     collection = await MemorySlotCollection.from_dict(collection_dict)
                     self._memory_manager.add_collection(collection)
 
-            self._logger.info(f"User variables restored from {file_path}")
+            self._logger.info(f"Memory restored from {file_path}")
         except Exception as e:
-            self._logger.error(Exception(f"Failed to restore user variables: {e}"), self)
+            self._logger.error(Exception(f"Failed to restore memory bank: {e}"), self)
+
+
+def remove_non_serializable(obj):
+    if isinstance(obj, dict):
+        return {k: remove_non_serializable(v) for k, v in obj.items() if is_serializable(v)}
+    elif isinstance(obj, list):
+        return [remove_non_serializable(item) for item in obj if is_serializable(item)]
+    else:
+        return obj if is_serializable(obj) else None
+
+
+def is_serializable(obj):
+    try:
+        json.dumps(obj)
+        return True
+    except (TypeError, OverflowError):
+        return False

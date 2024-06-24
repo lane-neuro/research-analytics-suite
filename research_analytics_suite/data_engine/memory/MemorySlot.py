@@ -1,19 +1,6 @@
-"""
-MemorySlot Module
-
-A class representing a slot of memory for storing data associated with operations.
-
-Author: Lane
-Copyright: Lane
-Credits: Lane
-License: BSD 3-Clause License
-Version: 0.0.0.1
-Maintainer: Lane
-Email: justlane@uw.edu
-Status: Prototype
-"""
 import time
 import asyncio
+from typing import Any
 
 
 class MemorySlot:
@@ -106,9 +93,9 @@ class MemorySlot:
             self.update_modified_time()
 
     @property
-    def data(self) -> dict:
+    def data(self):
         """Get the data dictionary."""
-        return self._data
+        return self._data.items()
 
     @data.setter
     async def data(self, value: dict):

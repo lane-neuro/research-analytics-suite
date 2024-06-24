@@ -1,17 +1,3 @@
-"""
-ExecuteOperation Module
-
-Contains functionality to execute an operation.
-
-Author: Lane
-Copyright: Lane
-Credits: Lane
-License: BSD 3-Clause License
-Version: 0.0.0.1
-Maintainer: Lane
-Email: justlane@uw.edu
-Status: Prototype
-"""
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
 from typing import List
@@ -25,16 +11,13 @@ async def execute_operation(operation):
     Execute the operation and all child operations.
     """
     try:
-        # Validate memory inputs before execution
         await operation.validate_memory_inputs()
-
-        if operation.child_operations is not None:
+        if operation.child_operations:
             await execute_child_operations(operation)
 
         await prepare_action_for_exec(operation)
         await run_operations(operation, [operation])
 
-        # Validate memory outputs after execution
         await operation.validate_memory_outputs()
 
         if not operation.persistent:
@@ -49,7 +32,7 @@ async def execute_child_operations(parent_operation):
     Execute all child operations.
     """
     if not parent_operation.dependencies:
-        if parent_operation.child_operations is not None:
+        if parent_operation.child_operations:
             await run_operations(parent_operation, parent_operation.child_operations.values())
     else:
         execution_order = _determine_execution_order(parent_operation)
@@ -82,73 +65,55 @@ async def run_operations(operation, operations):
     tasks = []
     for op in operations:
         if op.status != "completed":
-            if op.action_callable is not None:
-                if op.memory_inputs is not None:
-                    if op.memory_inputs.list_slots:
-                        inputs = [await op.get_memory_input_slot(memory_slot.memory_id).get_data_by_key('value') for
-                                  memory_slot in op.memory_inputs.list_slots]
-                    else:
-                        inputs = []
-                else:
-                    inputs = []
-                tasks.append(op.execute_action(*inputs))
+            tasks.append(execute_action(op))
 
-    if operation.concurrent and tasks and len(tasks) > 0:
+    if operation.concurrent and tasks:
         await asyncio.gather(*tasks)
-    elif not operation.concurrent and tasks and len(tasks) > 0:
+    elif tasks:
         for task in tasks:
             await task
             operation.add_log_entry(f"[RESULT] {operation.result_variable_id}")
 
 
-async def execute_action(operation, *inputs):
+async def execute_action(operation):
     """
     Execute the action associated with the operation.
     """
     try:
         if operation.is_cpu_bound:
             with ProcessPoolExecutor() as executor:
-                operation._status = "running"
+                operation.status = "running"
                 operation.add_log_entry(f"[RUN] {operation.name}: CPU-bound Operation")
-                _exec_output = await asyncio.get_event_loop().run_in_executor(executor, operation.action_callable,
-                                                                              *inputs)
-                if _exec_output is not None:
-                    await operation.add_memory_output_slot(MemorySlot(
-                        memory_id=f'{operation.runtime_id}',
-                        name=f"result_{operation.name}",
-                        operation_required=False,
-                        data={'value': _exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output}
-                    ))
-                    operation.add_log_entry(f"[RESULT] {operation.result_variable_id}")
+                _exec_output = await asyncio.get_event_loop().run_in_executor(executor, operation.action_callable)
         else:
-            if operation.action_callable is not None:
-                if callable(operation.action_callable):
-                    operation._status = "running"
-                    if asyncio.iscoroutinefunction(operation.action_callable):
-                        operation.add_log_entry(f"[RUN - ASYNC] {operation.name}")
-                        _exec_output = await operation.action_callable(*inputs)
-                        if _exec_output is not None:
-                            await operation.add_memory_output_slot(MemorySlot(
-                                memory_id=f'{operation.runtime_id}',
-                                name=f"result_{operation.name}",
-                                operation_required=False,
-                                data={'value': _exec_output.result()
-                                      if asyncio.isfuture(_exec_output) else _exec_output}
-                            ))
-                            operation.add_log_entry(f"[RESULT] {operation.result_variable_id}")
+            operation.status = "running"
+            operation.add_log_entry(f"[RUN - ASYNC] {operation.name}")
+            _exec_output = operation.action_callable
+            _exec_output = await _exec_output if asyncio.iscoroutine(_exec_output) else _exec_output
 
-                    else:
-                        operation.add_log_entry(f"[RUN] {operation.name}")
-                        _exec_output = operation.action_callable(*inputs)
-                        if _exec_output is not None:
-                            await operation.add_memory_output_slot(MemorySlot(
-                                memory_id=f'{operation.runtime_id}',
-                                name=f"result_{operation.name}",
-                                operation_required=False,
-                                data={'value': _exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output}
-                            ))
-                            operation.add_log_entry(f"[RESULT] {operation.result_variable_id}")
-            else:
-                operation.handle_error(Exception("No action provided for operation"))
+        if _exec_output is not None:
+            _result = _exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output
+
+            # Ensure the result is a dictionary
+            if not isinstance(_result, dict):
+                raise ValueError("The result of the executed action must be a dictionary.")
+
+            # Update all memory output slots with the result of the operation
+            for name, value in _result.items():
+                slots = operation.memory_outputs.find_slots_by_name(name)
+                if slots and len(slots) > 0:
+                    for slot in slots:
+                        slot.data = value
+                        await operation.memory_outputs.update_slot(slot)
+                else:
+                    new_slot = MemorySlot(
+                        memory_id=f'{operation.runtime_id}',
+                        name=f"{name}",
+                        operation_required=False,
+                        data={name: value}
+                    )
+                    await operation.add_memory_output_slot(new_slot)
+
+        operation.add_log_entry(f"[RESULT] {operation.memory_outputs.list_slots()}")
     except Exception as e:
         operation.handle_error(e)

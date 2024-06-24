@@ -46,7 +46,7 @@ class OperationExecutor:
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
-    async def execute_operation(self, operation: BaseOperation) -> asyncio.Task:
+    async def execute_operation(self, operation: 'BaseOperation') -> asyncio.Task:
         """
         Executes a single operation.
 
@@ -91,7 +91,7 @@ class OperationExecutor:
                         continue
                     self._logger.debug(f"execute_all: [OP] {operation.name} - {operation.status} - {operation.task}")
 
-                    if not operation.task and operation.is_ready:
+                    if not operation.task and operation.is_ready is True:
                         try:
                             operation.task = self.task_creator.create_task(
                                 self.execute_operation(operation),

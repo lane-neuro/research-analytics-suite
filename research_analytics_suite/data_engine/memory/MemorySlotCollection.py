@@ -39,13 +39,40 @@ class MemorySlotCollection(ABC):
         add_slots(slots: List[MemorySlot]): Add multiple slots at once.
         remove_slots(memory_ids: List[str]): Remove multiple slots at once by their IDs.
     """
-    def __init__(self):
+    def __init__(self, name: str = None):
+        if name is None or name == "" or not isinstance(name, str):
+            self._name = f"Collection - {uuid.uuid4().hex[:4]}"
+        else:
+            self._name = name
+
         self.collection_id = str(uuid.uuid4())  # Generate a unique identifier for the collection
-        self.name = str(uuid.uuid4().hex[:4])
         self.slots: List[MemorySlot] = []
 
         from research_analytics_suite.data_engine import Workspace
         Workspace().add_memory_collection(self)
+
+    @property
+    def display_name(self) -> str:
+        """Get the display name of the collection."""
+        return f"{self.name} [{self.collection_id[:4]}] ({len(self.slots)} slots)"
+
+    @property
+    def name(self) -> str:
+        """Get the name of the collection."""
+        return self._name
+
+    @name.setter
+    def name(self, value: str):
+        """Set the name of the collection."""
+        if not isinstance(value, str):
+            raise ValueError("name must be a string")
+        self._name = value
+
+    def list_slots(self) -> list[MemorySlot] | None:
+        """List all memory slots."""
+        if len(self.slots) > 0:
+            return self.slots
+        return None
 
     async def add_slot(self, slot: MemorySlot):
         """Add a memory slot to the collection."""
@@ -62,12 +89,10 @@ class MemorySlotCollection(ABC):
                 return slot
         return None
 
-    @property
-    def list_slots(self) -> list[MemorySlot] | None:
-        """List all memory slots."""
-        if len(self.slots) > 0:
-            return self.slots
-        return None
+    def get_slot_data(self, memory_id: str) -> Optional[dict]:
+        """Retrieve the data of a memory slot by its ID."""
+        slot = self.get_slot(memory_id)
+        return slot.data if slot else None
 
     async def clear_slots(self):
         """Clear all memory slots."""
@@ -89,13 +114,15 @@ class MemorySlotCollection(ABC):
         """Convert the collection to a dictionary."""
         return {
             'collection_id': self.collection_id,
+            'name': self.name,
             'slots': [await slot.to_dict() for slot in self.slots]
         }
 
     @staticmethod
     async def from_dict(data: dict) -> 'MemorySlotCollection':
         """Initialize the collection from a dictionary."""
-        collection = MemorySlotCollection()
+        _name = data.get('name', None)
+        collection = MemorySlotCollection(name=_name)
         collection.collection_id = data.get('collection_id', str(uuid.uuid4()))
         for slot_data in data.get('slots', []):
             await collection.add_slot(await MemorySlot.from_dict(slot_data))

@@ -53,9 +53,8 @@ class MemoryManager:
     async def initialize_default_collection(self):
         if not self.memory_slot_collections:
             if not self.default_collection:
-                default_collection = MemorySlotCollection()
-                default_collection.name = "Main Collection"
-                self.add_collection(default_collection)
+                default_collection = MemorySlotCollection("Primary")
+                # self.add_collection(default_collection)
                 self.default_collection = default_collection
             else:
                 self.add_collection(self.default_collection)
@@ -72,8 +71,19 @@ class MemoryManager:
         Args:
             collection (MemorySlotCollection): The collection to add.
         """
-        self.memory_slot_collections[collection.collection_id] = collection
-        self._logger.info(f"Added MemorySlotCollection with ID: {collection.collection_id}")
+        # If the collection is named "Primary", merge it with the current default collection
+        if collection.name == "Primary":
+            if self.default_collection:
+                self.default_collection.add_slots(collection.slots)
+                self._logger.info(f"Merged new collection with default collection: {collection.display_name}")
+                return
+            else:
+                self.default_collection = collection
+                self.memory_slot_collections[collection.collection_id] = collection
+                self._logger.info(f"Set new collection as default collection: {collection.display_name}")
+        else:
+            self.memory_slot_collections[collection.collection_id] = collection
+            self._logger.info(f"Added MemorySlotCollection: {collection.display_name}")
 
     async def get_collection(self, collection_id: str) -> MemorySlotCollection:
         """
@@ -94,9 +104,16 @@ class MemoryManager:
         Args:
             collection_id (str): The ID of the collection to remove.
         """
-        if collection_id in self.memory_slot_collections:
+        # If the collection is the default collection, reset the default collection
+        if collection_id == self.default_collection.collection_id:
+            self.default_collection = None
+            self._logger.info(f"Removed default collection with ID: {collection_id}")
+            await self.initialize_default_collection()
+        elif collection_id in self.memory_slot_collections:
             del self.memory_slot_collections[collection_id]
             self._logger.info(f"Removed MemorySlotCollection with ID: {collection_id}")
+        else:
+            self._logger.info(f"No collection found with ID: {collection_id}")
 
     async def list_collections(self) -> dict:
         """
