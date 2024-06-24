@@ -8,7 +8,6 @@ from typing import Optional, Any
 
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
-from research_analytics_suite.gui.modules.CollectionSummaryView import CollectionSummaryView
 from research_analytics_suite.operation_manager import BaseOperation
 from research_analytics_suite.utils import CustomLogger
 

@@ -13,10 +13,9 @@ class DataCollectionDialog:
         self.primary_view = None
         self._logger = CustomLogger()
 
-    async def draw(self, parent):
+    def draw(self, parent):
         with dpg.group(parent=parent, tag="data_collection_tools_group"):
             dpg.add_text("Data Collection Tools")
-            await self.show_memory_collections()
 
     async def show_memory_collections(self):
         with dpg.group(label="Memory Collections", tag="memory_collections_group",

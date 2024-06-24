@@ -9,3 +9,5 @@ from .TimelineModule import TimelineModule
 from .WorkspaceModule import WorkspaceModule
 from .SlotPreview import SlotPreview
 from .AdvancedSlotView import AdvancedSlotView
+from .PrimaryView import PrimaryView
+from .CollectionSummaryView import CollectionSummaryView
