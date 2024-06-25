@@ -6,3 +6,4 @@ from .MemorySlot import *
 from .MemorySlotCollection import *
 from .MemoryManager import *
 from .storage import *
+from .DataCache import *

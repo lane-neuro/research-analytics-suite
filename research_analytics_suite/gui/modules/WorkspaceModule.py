@@ -67,10 +67,8 @@ class WorkspaceModule:
         """Loads a workspace."""
         try:
             workspace_path = os.path.normpath(dpg.get_value("workspace_name_input"))
-            print(workspace_path)
             if not os.path.exists(workspace_path):
                 path_attempt = os.path.normpath(os.path.join(self._config.BASE_DIR, workspace_path))
-                print(path_attempt)
                 if os.path.exists(path_attempt):
                     workspace_path = os.path.normpath(os.path.join(self._config.BASE_DIR, workspace_path,
                                                                    'config.json'))

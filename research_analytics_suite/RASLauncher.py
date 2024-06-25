@@ -63,9 +63,6 @@ async def RASLauncher():
     if _args.open_workspace is None and _args.config is None:
         _logger.info('New Workspace Parameters Detected - Creating New Workspace')
         try:
-            # Set default directory if not specified
-            # TODO: Ensure to accomodate all operating systems (e.g. ~ for Unix, %UserProfile% for Windows)
-
             # Create the directory if it doesn't exist
             try:
                 os.makedirs(_args.directory, exist_ok=True)

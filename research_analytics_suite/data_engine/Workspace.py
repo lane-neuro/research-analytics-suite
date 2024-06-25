@@ -15,7 +15,7 @@ from typing import LiteralString, Tuple, Optional, Any
 import aiofiles
 from collections import defaultdict
 from research_analytics_suite.utils.Config import Config
-from research_analytics_suite.data_engine.utils.DataCache import DataCache
+from research_analytics_suite.data_engine.memory.DataCache import DataCache
 from research_analytics_suite.data_engine.engine.DataEngineOptimized import DataEngineOptimized
 from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -49,6 +49,7 @@ class Workspace:
             self._logger = CustomLogger()
             self._config = Config()
             self._memory_manager = MemoryManager()
+            self._data_cache = DataCache()
 
             self._data_engines = None
             self._dependencies = None
@@ -73,7 +74,6 @@ class Workspace:
                 if not self._initialized:
                     self._data_engines = dict()
                     self._dependencies = defaultdict(list)
-                    self._data_cache = DataCache()
 
                     if self._db_path is None:
                         self._db_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,

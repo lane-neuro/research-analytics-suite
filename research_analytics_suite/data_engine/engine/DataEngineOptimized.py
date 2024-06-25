@@ -10,7 +10,7 @@ Author: Lane
 import psutil
 
 from research_analytics_suite.utils.Config import Config
-from research_analytics_suite.data_engine.utils.DataCache import DataCache
+from research_analytics_suite.data_engine.memory.DataCache import DataCache
 from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
 from research_analytics_suite.data_engine.data_streams.LiveDataHandler import LiveDataHandler
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -35,8 +35,7 @@ class DataEngineOptimized(UnifiedDataEngine):
 
         self._config = Config()
 
-        self._cache = DataCache(self._config.CACHE_SIZE)
-        self._cache.register()
+        self._cache = DataCache()
         self._memory_limit = self._config.MEMORY_LIMIT
 
         self.live_data_handler = LiveDataHandler(data_engine=self)

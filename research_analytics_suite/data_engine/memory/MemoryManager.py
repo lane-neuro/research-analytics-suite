@@ -8,7 +8,6 @@ Author: Lane
 """
 import asyncio
 
-from research_analytics_suite.utils.CustomLogger import CustomLogger
 from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 
 
@@ -29,11 +28,14 @@ class MemoryManager:
         Initializes the MemoryManager instance.
         """
         if not hasattr(self, "_initialized"):
+            from research_analytics_suite.utils.CustomLogger import CustomLogger
             self._logger = CustomLogger()
+
+            from research_analytics_suite.data_engine.memory import DataCache
+            self._data_cache = DataCache()
 
             self.memory_slot_collections = {}  # Holds multiple MemorySlotCollections
             self.default_collection = None
-
             self._initialized = False
 
     async def initialize(self):
@@ -43,19 +45,16 @@ class MemoryManager:
         if not self._initialized:
             async with MemoryManager._lock:
                 if not self._initialized:
-
+                    await self._data_cache.initialize()
                     self.memory_slot_collections = {}
                     await self.initialize_default_collection()
-
                     self._logger.info("MemoryManager initialized.")
                     self._initialized = True
 
     async def initialize_default_collection(self):
         if not self.memory_slot_collections:
             if not self.default_collection:
-                default_collection = MemorySlotCollection("Primary")
-                # self.add_collection(default_collection)
-                self.default_collection = default_collection
+                self.default_collection = MemorySlotCollection("Primary")
             else:
                 self.add_collection(self.default_collection)
         else:
@@ -71,7 +70,6 @@ class MemoryManager:
         Args:
             collection (MemorySlotCollection): The collection to add.
         """
-        # If the collection is named "Primary", merge it with the current default collection
         if collection.name == "Primary":
             if self.default_collection:
                 self.default_collection.add_slots(collection.slots)
@@ -82,8 +80,13 @@ class MemoryManager:
                 self.memory_slot_collections[collection.collection_id] = collection
                 self._logger.info(f"Set new collection as default collection: {collection.display_name}")
         else:
-            self.memory_slot_collections[collection.collection_id] = collection
-            self._logger.info(f"Added MemorySlotCollection: {collection.display_name}")
+            if collection.collection_id not in self.memory_slot_collections:
+                self.memory_slot_collections[collection.collection_id] = collection
+                self._logger.info(f"Added MemorySlotCollection: {collection.display_name}")
+            else:
+                self._logger.info(f"Collection with ID {collection.collection_id} already exists, "
+                                  f"importing existing memory slots as new slots.")
+                self.memory_slot_collections[collection.collection_id].add_slots(collection.slots)
 
     async def get_collection(self, collection_id: str) -> MemorySlotCollection:
         """
@@ -95,7 +98,17 @@ class MemoryManager:
         Returns:
             MemorySlotCollection: The retrieved collection.
         """
-        return self.memory_slot_collections.get(collection_id)
+        cached_collection = self._data_cache.get(collection_id)
+        if cached_collection:
+            self._logger.info(f"Cache hit for collection ID: {collection_id}")
+            self._data_cache.set(collection_id, cached_collection)  # Update cache to keep it fresh
+            return cached_collection
+
+        self._logger.info(f"Cache miss for collection ID: {collection_id}")
+        collection = self.memory_slot_collections.get(collection_id)
+        if collection:
+            self._data_cache.set(collection_id, collection)
+        return collection
 
     def get_collection_by_display_name(self, collection_name: str) -> MemorySlotCollection:
         """
@@ -109,7 +122,10 @@ class MemoryManager:
         """
         for collection in self.memory_slot_collections.values():
             if collection.display_name == collection_name:
+                self._logger.info(f"Cache hit for collection display name: {collection_name}")
+                self._data_cache.set(collection.collection_id, collection)  # Update cache to keep it fresh
                 return collection
+        self._logger.info(f"Cache miss for collection display name: {collection_name}")
 
     async def remove_collection(self, collection_id: str):
         """
@@ -118,13 +134,13 @@ class MemoryManager:
         Args:
             collection_id (str): The ID of the collection to remove.
         """
-        # If the collection is the default collection, reset the default collection
         if collection_id == self.default_collection.collection_id:
             self.default_collection = None
             self._logger.info(f"Removed default collection with ID: {collection_id}")
             await self.initialize_default_collection()
         elif collection_id in self.memory_slot_collections:
             del self.memory_slot_collections[collection_id]
+            self._data_cache.set(collection_id, None)  # Remove from cache
             self._logger.info(f"Removed MemorySlotCollection with ID: {collection_id}")
         else:
             self._logger.info(f"No collection found with ID: {collection_id}")
