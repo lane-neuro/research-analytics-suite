@@ -77,13 +77,14 @@ class Config:
     def reset_to_defaults(self):
         # Workspace settings
         self.WORKSPACE_NAME = 'default_workspace'
-        self.BASE_DIR = os.path.abspath(os.path.join(os.path.expanduser('~'), 'Research-Analytics-Suite'))
+        self.BASE_DIR = os.path.normpath(os.path.abspath(
+            os.path.join(os.path.expanduser('~'), 'Research-Analytics-Suite')))
 
         # Paths
         self.DATA_DIR = 'data'
         self.LOG_DIR = 'logs'
         self.WORKSPACE_DIR = 'workspace'
-        self.WORKSPACE_OPERATIONS_DIR = os.path.join(self.WORKSPACE_DIR, 'operations')
+        self.WORKSPACE_OPERATIONS_DIR = os.path.normpath(os.path.join(self.WORKSPACE_DIR, 'operations'))
         self.BACKUP_DIR = 'backup'
         self.ENGINE_DIR = 'engine'
 
@@ -92,7 +93,7 @@ class Config:
 
         # Logging settings
         self.LOG_LEVEL = 'INFO'
-        self.LOG_FILE = os.path.join(self.LOG_DIR, 'app.log')
+        self.LOG_FILE = os.path.normpath(os.path.join(self.LOG_DIR, 'app.log'))
         self.LOG_ROTATION = '1 week'  # Rotate logs every week
         self.LOG_RETENTION = '4 weeks'  # Retain logs for 4 weeks
 
@@ -164,7 +165,7 @@ class Config:
         """
         # Check if the file is a configuration file
         if not file_path.endswith('.json'):
-            file_path = os.path.join(file_path, 'config.json')
+            file_path = os.path.normpath(os.path.join(file_path, 'config.json'))
 
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Configuration file not found at")

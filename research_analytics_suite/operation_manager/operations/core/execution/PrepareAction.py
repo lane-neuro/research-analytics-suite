@@ -1,7 +1,22 @@
 import asyncio
 import inspect
 import types
-from typing import Any
+from typing import Any, Callable
+import ast
+
+SAFE_BUILTINS = {
+    'print': print,
+    'range': range,
+    'len': len,
+    'int': int,
+    'float': float,
+    '__import__': __import__,
+}
+
+SAFE_MODULES = {
+    'math': __import__('math'),
+    # Add other safe modules as needed
+}
 
 
 def action_serialized(operation) -> str:
@@ -19,15 +34,13 @@ def action_serialized(operation) -> str:
         action = None
     return action
 
+
 async def prepare_action_for_exec(operation):
     """
     Prepare the action for execution.
     """
     _action = None
     try:
-        # if operation.memory_inputs is not None:
-        #     await operation.memory_inputs.preprocess_data()
-
         if isinstance(operation.action, str):
             code = operation.action
             if operation.memory_inputs and operation.memory_inputs.list_slots():
@@ -52,7 +65,7 @@ async def prepare_action_for_exec(operation):
         operation.handle_error(e)
 
 
-async def _execute_code_action(code, memory_inputs: list = None) -> callable:
+async def _execute_code_action(code: str, memory_inputs: list = None) -> Callable[[], Any]:
     """
     Execute a code action.
 
@@ -63,25 +76,27 @@ async def _execute_code_action(code, memory_inputs: list = None) -> callable:
     Returns:
         callable: The action callable.
     """
+
     async def action() -> Any:
-        locals_dict = {}
-        if memory_inputs:
-            for slot in memory_inputs:
-                locals_dict[slot.name] = await slot.get_data_by_key(slot.name)
-        print(locals_dict)
+        inputs = {slot.name: await slot.get_data_by_key(slot.name) for slot in memory_inputs} if memory_inputs else {}
+
+        # Create a restricted execution environment
+        safe_globals = {"__builtins__": SAFE_BUILTINS}
+        
+        # noinspection PyTypeChecker
+        safe_globals.update(SAFE_MODULES)
+
         try:
-            exec(code, {}, locals_dict)
-            # Ensure the result is a dictionary
-            if not isinstance(locals_dict, dict):
-                raise ValueError("The result of the executed code must be a dictionary.")
-            return locals_dict
+            parsed_code = ast.parse(code, mode='exec')
+            exec(compile(parsed_code, '<string>', 'exec'), safe_globals, inputs)
+            return inputs  # Return the modified inputs dictionary
         except Exception as e:
             raise RuntimeError(f"Error executing code: {e}")
 
     return action
 
 
-def _execute_callable_action(t_action, memory_inputs: list = None) -> callable:
+def _execute_callable_action(t_action, memory_inputs: list = None) -> Callable[[], Any]:
     """
     Execute a callable action.
 
@@ -92,6 +107,7 @@ def _execute_callable_action(t_action, memory_inputs: list = None) -> callable:
     Returns:
         callable: The action callable.
     """
+
     def action() -> Any:
         inputs = {slot.name: slot.data for slot in memory_inputs} if memory_inputs else {}
         _output = t_action(*inputs)

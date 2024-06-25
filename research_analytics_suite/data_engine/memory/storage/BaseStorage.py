@@ -8,7 +8,7 @@ Author: Lane
 import uuid
 from abc import ABC, abstractmethod
 
-from research_analytics_suite.data_engine.utils.Config import Config
+from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

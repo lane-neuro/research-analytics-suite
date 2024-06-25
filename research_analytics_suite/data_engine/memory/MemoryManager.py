@@ -97,6 +97,20 @@ class MemoryManager:
         """
         return self.memory_slot_collections.get(collection_id)
 
+    def get_collection_by_display_name(self, collection_name: str) -> MemorySlotCollection:
+        """
+        Retrieves a MemorySlotCollection by its display name.
+
+        Args:
+            collection_name (str): The display name of the collection to retrieve.
+
+        Returns:
+            MemorySlotCollection: The retrieved collection.
+        """
+        for collection in self.memory_slot_collections.values():
+            if collection.display_name == collection_name:
+                return collection
+
     async def remove_collection(self, collection_id: str):
         """
         Removes a MemorySlotCollection by its ID.

@@ -18,7 +18,7 @@ import uuid
 from abc import ABC
 from typing import Tuple
 
-from research_analytics_suite.data_engine.utils.Config import Config
+from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
 from .execution import execute_operation, execute_child_operations, action_serialized

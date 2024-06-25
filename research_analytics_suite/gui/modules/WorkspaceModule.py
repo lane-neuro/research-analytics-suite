@@ -3,7 +3,7 @@ import os
 import uuid
 import dearpygui.dearpygui as dpg
 
-from research_analytics_suite.data_engine.utils.Config import Config
+from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -48,17 +48,12 @@ class WorkspaceModule:
                                   parent="workspace_pane_group"):
                 dpg.add_text("Workspace Details")
                 dpg.add_separator()
+                dpg.add_text("Workspace Name:")
+                dpg.add_input_text(tag="workspace_name_input", default_value=self._config.WORKSPACE_NAME, enabled=True,
+                                   width=-1)
                 dpg.add_button(label="Save Workspace", callback=lambda: asyncio.create_task(self.save_workspace()))
                 dpg.add_button(label="Load Workspace", callback=lambda: asyncio.create_task(self.load_workspace()))
                 dpg.add_separator()
-                dpg.add_text("Workspace Name:")
-                dpg.add_input_text(tag="workspace_name_input", default_value=self._config.WORKSPACE_NAME, enabled=False)
-                dpg.add_separator()
-            with dpg.child_window(label="Memory Collections",
-                                  tag="memory_collections_pane",
-                                  width=self._user_vars_width,
-                                  border=True, parent="workspace_pane_group"):
-                dpg.add_group(tag=self.collection_list_id)  # Create the group for memory collections list
 
     async def save_workspace(self) -> None:
         """Saves the current workspace."""
@@ -71,7 +66,14 @@ class WorkspaceModule:
     async def load_workspace(self) -> None:
         """Loads a workspace."""
         try:
-            workspace_path = dpg.get_value("workspace_path_input")
+            workspace_path = os.path.normpath(dpg.get_value("workspace_name_input"))
+            print(workspace_path)
+            if not os.path.exists(workspace_path):
+                path_attempt = os.path.normpath(os.path.join(self._config.BASE_DIR, workspace_path))
+                print(path_attempt)
+                if os.path.exists(path_attempt):
+                    workspace_path = os.path.normpath(os.path.join(self._config.BASE_DIR, workspace_path,
+                                                                   'config.json'))
             await self._workspace.load_workspace(workspace_path)
             self._logger.info("Workspace loaded successfully")
         except Exception as e:

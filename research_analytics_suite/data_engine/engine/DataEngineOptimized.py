@@ -9,7 +9,7 @@ Author: Lane
 """
 import psutil
 
-from research_analytics_suite.data_engine.utils.Config import Config
+from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.utils.DataCache import DataCache
 from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
 from research_analytics_suite.data_engine.data_streams.LiveDataHandler import LiveDataHandler

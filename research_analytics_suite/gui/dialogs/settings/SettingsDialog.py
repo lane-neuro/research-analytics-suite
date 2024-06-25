@@ -10,7 +10,7 @@ import os
 
 import dearpygui.dearpygui as dpg
 
-from research_analytics_suite.data_engine.utils.Config import Config
+from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

@@ -31,7 +31,7 @@ class CollectionViewDialog:
         from research_analytics_suite.data_engine import Workspace
         self._workspace = Workspace()
 
-        from research_analytics_suite.data_engine.utils.Config import Config
+        from research_analytics_suite.utils.Config import Config
         self._config = Config()
 
         self.collections = []
@@ -241,9 +241,9 @@ class CollectionViewDialog:
             save_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
                                      dpg.get_value("save_path_input"))
             await self._workspace.save_memory_manager(save_path)
-            self._logger.debug(f"User variables saved to {save_path}")
+            self._logger.debug(f"Memory collections saved to {save_path}")
         except Exception as e:
-            self._logger.error(Exception(f"Failed to save user variables: {e}", self))
+            self._logger.error(Exception(f"Failed to save memory collections: {e}", self))
 
     async def restore_memory_collections(self) -> None:
         """Restores a memory collections file from disk."""
@@ -251,9 +251,20 @@ class CollectionViewDialog:
             restore_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
                                         dpg.get_value("save_path_input"))
             await self._workspace.restore_memory_manager(restore_path)
-            self._logger.debug(f"Memory restored from {restore_path}")
+            self._logger.debug(f"Memory collections restored from {restore_path}")
         except Exception as e:
-            self._logger.error(Exception(f"Failed to restore memory bank: {e}", self))
+            self._logger.error(Exception(f"Failed to restore memory collections: {e}", self))
+
+    async def update_slot_combobox(self):
+        """Updates the slot combobox in the GUI."""
+        if dpg.does_item_exist("memory_slot_id_input"):
+            slot_items = []
+            for slot in self._memory_manager.get_collection_by_display_name(
+                    dpg.get_value("collection_id_input")).list_slots():
+                slot_items.append(f"{slot.name}")
+
+            dpg.configure_item("memory_slot_id_input", items=slot_items,
+                               default_value=slot_items[0] if slot_items else "")
 
     async def open_add_var_dialog(self) -> None:
         """Opens a dialog to add a user variable."""
@@ -264,8 +275,9 @@ class CollectionViewDialog:
         with dpg.window(label="Add Variable to Collection", modal=True, tag=self.add_var_dialog_id):
             dpg.add_input_text(label="Variable Name", tag="var_name_input")
             dpg.add_input_text(label="Variable Value", tag="var_value_input")
-            dpg.add_combo(label="Collection ID", tag="collection_id_input", items=[])
-            dpg.add_input_text(label="Memory Slot ID (Optional)", tag="memory_slot_id_input")
+            dpg.add_combo(label="Collection ID", tag="collection_id_input", items=[],
+                          callback=self.update_slot_combobox)
+            dpg.add_combo(label="Memory Slot ID (Optional)", tag="memory_slot_id_input", items=[])
             dpg.add_button(label="Add", callback=lambda: asyncio.create_task(self.add_user_variable_from_dialog()))
             dpg.add_button(label="Cancel", callback=lambda: dpg.hide_item(self.add_var_dialog_id))
 
@@ -277,7 +289,6 @@ class CollectionViewDialog:
             selected_collection_display_name = dpg.get_value("collection_id_input")
 
             collection_id = None
-            print(self.collection_groups)
             for _id, collection in self.collection_groups.items():
                 if collection == selected_collection_display_name:
                     collection_id = _id

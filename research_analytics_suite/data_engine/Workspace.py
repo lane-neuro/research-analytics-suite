@@ -14,7 +14,7 @@ from typing import LiteralString, Tuple, Optional, Any
 
 import aiofiles
 from collections import defaultdict
-from research_analytics_suite.data_engine.utils.Config import Config
+from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.utils.DataCache import DataCache
 from research_analytics_suite.data_engine.engine.DataEngineOptimized import DataEngineOptimized
 from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
