@@ -177,7 +177,7 @@ class CollectionViewDialog:
         slot_group_tag = f"slot_group_{collection_id}_{slot.memory_id}"
         if not dpg.does_item_exist(slot_group_tag):
             with dpg.group(tag=slot_group_tag, parent=f"collection_group_{collection_id}", horizontal=True):
-                dpg.add_text(f"Slot: {slot.name} (ID: {slot.memory_id})", parent=slot_group_tag)
+                dpg.add_text(f"Slot: {slot.name} (ID: {slot.memory_id[:4]})", parent=slot_group_tag)
         await self.update_variables_in_gui(collection_id, slot)
 
     async def update_variables_in_gui(self, collection_id, slot):

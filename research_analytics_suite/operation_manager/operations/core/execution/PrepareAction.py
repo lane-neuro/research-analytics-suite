@@ -82,7 +82,7 @@ async def _execute_code_action(code: str, memory_inputs: list = None) -> Callabl
 
         # Create a restricted execution environment
         safe_globals = {"__builtins__": SAFE_BUILTINS}
-        
+
         # noinspection PyTypeChecker
         safe_globals.update(SAFE_MODULES)
 

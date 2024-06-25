@@ -11,4 +11,3 @@ __maintainer__ = 'Lane'
 __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
 
-#DEBUG = True and "DEBUG" in os.environ["DEBUG"]

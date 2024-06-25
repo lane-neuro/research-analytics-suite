@@ -27,7 +27,7 @@ class OperationLifecycleManager:
     """Manages the lifecycle of operations."""
 
     def __init__(self, sequencer: OperationSequencer, operation_manager, executor: OperationExecutor,
-                 persistent_op_checker, task_monitor: TaskMonitor):
+                 system_op_checker, task_monitor: TaskMonitor):
         """
         Initializes the OperationLifecycleManager with the given parameters.
 
@@ -39,7 +39,7 @@ class OperationLifecycleManager:
         self.sequencer = sequencer
         self.operation_manager = operation_manager
         self.operation_executor = executor
-        self.persistent_operation_checker = persistent_op_checker
+        self.persistent_operation_checker = system_op_checker
         self.task_monitor = task_monitor
         self._logger = CustomLogger()
 
@@ -85,7 +85,7 @@ class OperationLifecycleManager:
 
     async def exec_loop(self):
         """Executes the main loop of the operations manager."""
-        tasks = [self.persistent_operation_checker.check_persistent_operations(),
+        tasks = [self.persistent_operation_checker.check_system_operations(),
                  self.start_all_operations(),
                  self.operation_executor.execute_ready_operations(),
                  self.task_monitor.handle_tasks()]

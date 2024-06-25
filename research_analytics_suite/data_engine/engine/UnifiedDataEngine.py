@@ -178,7 +178,7 @@ class UnifiedDataEngine:
         os.makedirs(data_path, exist_ok=True)
         data_file_path = os.path.join(data_path, f"{self.data_name}.joblib")
 
-        self._logger.info(f"Saving instance to {engine_path}")
+        self._logger.info(f"Saving engine to {engine_path}")
 
         # Save data
         async with aiofiles.open(data_file_path, 'w') as data_file:
@@ -198,7 +198,7 @@ class UnifiedDataEngine:
         async with aiofiles.open(os.path.join(f"{engine_path}", 'engine_state.joblib'), 'w') as state_file:
             await state_file.write(json.dumps(engine_state))
 
-        self._logger.info(f"Instance saved to {instance_path}")
+        self._logger.info(f"Engine saved to {instance_path}")
 
     @staticmethod
     async def load_engine(instance_path, engine_id):

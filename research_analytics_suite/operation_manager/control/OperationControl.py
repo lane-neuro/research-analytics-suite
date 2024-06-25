@@ -18,11 +18,11 @@ Status: Prototype
 import asyncio
 
 from research_analytics_suite.operation_manager.execution.OperationExecutor import OperationExecutor
-from research_analytics_suite.operation_manager.lifecycle.OperationLifecycleManager import OperationLifecycleManager
+from research_analytics_suite.operation_manager.management.OperationLifecycleManager import OperationLifecycleManager
 from research_analytics_suite.operation_manager.management.OperationManager import OperationManager
 from research_analytics_suite.operation_manager.management.OperationSequencer import OperationSequencer
 from research_analytics_suite.operation_manager.management.OperationStatusChecker import OperationStatusChecker
-from research_analytics_suite.operation_manager.management.PersistentOperationChecker import PersistentOperationChecker
+from research_analytics_suite.operation_manager.management.SystemOperationChecker import SystemOperationChecker
 from research_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
 from research_analytics_suite.operation_manager.task.TaskMonitor import TaskMonitor
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -58,7 +58,7 @@ class OperationControl:
             self.operation_executor = None
             self.operation_status_checker = None
             self.user_input_manager = None
-            self.persistent_operation_checker = None
+            self.system_op_checker = None
             self.lifecycle_manager = None
 
             self._initialized = False
@@ -88,16 +88,15 @@ class OperationControl:
                     self.operation_executor = OperationExecutor(sequencer=self.sequencer, task_creator=self.task_creator)
                     self.operation_status_checker = OperationStatusChecker(sequencer=self.sequencer)
 
-                    from research_analytics_suite.utils.UserInputManager import UserInputManager
+                    from research_analytics_suite.operation_manager.management.UserInputManager import UserInputManager
                     self.user_input_manager = UserInputManager()
-                    self.persistent_operation_checker = PersistentOperationChecker(operation_manager=self.operation_manager,
-                                                                                   sequencer=self.sequencer,
-                                                                                   task_creator=self.task_creator)
+                    self.system_op_checker = SystemOperationChecker(sequencer=self.sequencer,
+                                                                    task_creator=self.task_creator)
                     self.lifecycle_manager = OperationLifecycleManager(sequencer=self.sequencer,
                                                                        operation_manager=self.operation_manager,
                                                                        executor=self.operation_executor,
                                                                        task_monitor=self.task_monitor,
-                                                                       persistent_op_checker=self.persistent_operation_checker)
+                                                                       system_op_checker=self.system_op_checker)
                     self._initialized = True
                     self._logger.info("OperationControl.initialize: OperationControl initialized.")
 

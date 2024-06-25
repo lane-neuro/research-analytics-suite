@@ -22,7 +22,7 @@ import dearpygui.dearpygui as dpg
 from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
-from research_analytics_suite.utils.UserInputManager import UserInputManager
+from research_analytics_suite.operation_manager.management.UserInputManager import UserInputManager
 
 
 class ConsoleDialog:
