@@ -79,6 +79,8 @@ async def _execute_code_action(code: str, memory_inputs: list = None) -> Callabl
 
     async def action() -> Any:
         inputs = {slot.name: await slot.get_data_by_key(slot.name) for slot in memory_inputs} if memory_inputs else {}
+        # Extract the actual data values from the MemorySlot tuples
+        inputs = {k: v for k, v in inputs.items()}
 
         # Create a restricted execution environment
         safe_globals = {"__builtins__": SAFE_BUILTINS}
@@ -89,7 +91,7 @@ async def _execute_code_action(code: str, memory_inputs: list = None) -> Callabl
         try:
             parsed_code = ast.parse(code, mode='exec')
             exec(compile(parsed_code, '<string>', 'exec'), safe_globals, inputs)
-            return inputs  # Return the modified inputs dictionary
+            return inputs  # Return the modified inputs dictionary with updated values
         except Exception as e:
             raise RuntimeError(f"Error executing code: {e}")
 
@@ -110,6 +112,8 @@ def _execute_callable_action(t_action, memory_inputs: list = None) -> Callable[[
 
     def action() -> Any:
         inputs = {slot.name: slot.data for slot in memory_inputs} if memory_inputs else {}
+        # Extract the actual data values from the MemorySlot tuples
+        inputs = {k: v[1] for k, v in inputs.items()}
         _output = t_action(*inputs)
         if _output is not None:
             return _output

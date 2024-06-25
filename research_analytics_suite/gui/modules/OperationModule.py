@@ -55,6 +55,7 @@ class OperationModule:
 
         self._unique_id = str(uuid.uuid4())
         self._concurrent_id = f"concurrent_{self._unique_id}"
+        self._progress_id = f"progress_{self._unique_id}"
         self._result_id = f"result_{self._unique_id}"
         self._log_id = f"log_{self._unique_id}"
         self._persistent_id = f"persistent_{self._unique_id}"
@@ -63,7 +64,7 @@ class OperationModule:
         self._left_panel_id = f"left_panel_{self._unique_id}"
 
     @property
-    def operation(self) -> BaseOperation:
+    def operation(self) -> 'BaseOperation':
         """Returns the operation."""
         return self._operation
 
@@ -79,7 +80,7 @@ class OperationModule:
         except Exception as e:
             self._logger.error(e, self)
 
-    async def add_update_operation(self) -> BaseOperation:
+    async def add_update_operation(self) -> 'BaseOperation':
         """
         Adds an update operation to the operations manager.
 
@@ -164,22 +165,24 @@ class OperationModule:
                                          tag=f"action_{self._unique_id}", parent=f"description_{self._unique_id}",
                                          readonly=False)
 
-        with dpg.child_window(border=False, width=-1, parent=self._parent_id, tag=f"parameters_{self._unique_id}"):
-            left_aligned_checkbox(label="Persistent", tag=self._persistent_id, value=self._operation.persistent,
-                                  parent=f"parameters_{self._unique_id}", label_indent=self.MIDDLE_INDENT)
-            left_aligned_checkbox(label="CPU Bound", tag=self._cpu_bound_id, value=self._operation.is_cpu_bound,
-                                  parent=f"parameters_{self._unique_id}", label_indent=self.MIDDLE_INDENT)
-            left_aligned_checkbox(label="Concurrent", tag=self._concurrent_id, value=self._operation.concurrent,
-                                  parent=f"parameters_{self._unique_id}", label_indent=self.MIDDLE_INDENT)
+        with dpg.child_window(border=True, width=-1, parent=self._parent_id, tag=f"parameters_{self._unique_id}"):
+            dpg.add_checkbox(label="Continuous/Loop", tag=self._persistent_id,
+                             default_value=self._operation.persistent,
+                             parent=f"parameters_{self._unique_id}")
+            dpg.add_checkbox(label="CPU Bound", tag=self._cpu_bound_id,
+                             default_value=self._operation.is_cpu_bound,
+                             parent=f"parameters_{self._unique_id}")
+            dpg.add_checkbox(label="Parallel Execution", tag=self._concurrent_id,
+                             default_value=self._operation.concurrent,
+                             parent=f"parameters_{self._unique_id}")
 
         with dpg.group(parent=parent, horizontal=True, tag=self._left_panel_id,
                        height=max(int(self._height * 0.6), 100)):
 
             with dpg.child_window(height=-1, width=int(self._width * 0.5), border=False,
                                   parent=self._left_panel_id):
-                dpg.add_input_text(label="Status", default_value=self._operation.status, readonly=True)
-                dpg.add_slider_int(label="Progress", min_value=0, max_value=100,
-                                   default_value=self._operation.progress[0], tag=f"progress_{self._unique_id}")
+                dpg.add_progress_bar(default_value=self._operation.progress[0],
+                                     tag=self._progress_id, overlay=self._operation.progress[1].upper(), width=-1)
 
                 button_width = int(((self._width * 0.4) - 45) / 3)
                 with dpg.group(horizontal=True):
@@ -190,7 +193,9 @@ class OperationModule:
                     dpg.add_button(label="Resume", callback=self.resume_operation, width=button_width)
                     dpg.add_button(label="Reset", callback=self.reset_operation, width=button_width)
 
-                dpg.add_button(label="View Result", callback=self.view_result, width=-1)
+                dpg.add_button(label="Input & Output", callback=self.view_result, width=-1)
+                dpg.add_button(label="Save as Template", callback=self._operation.save_operation_in_workspace,
+                               user_data=self._operation, width=-1)
 
             with dpg.child_window(height=-1, width=-1, border=True):
                 self._child_ops_parent = f"child_ops_{self._unique_id}"
@@ -219,8 +224,6 @@ class OperationModule:
                                                                     parent_operation=self._operation)
                     create_operation_module.draw_button(parent=f"container_{self._unique_id}",
                                                         label="Add Child Operation")
-                    dpg.add_button(label="Save Operation", callback=self._operation.save_operation_in_workspace,
-                                   user_data=self._operation, parent=f"container_{self._unique_id}")
 
     def dict_to_listbox_items(self, dictionary) -> list[str]:
         """Converts a dictionary to a list of strings for use in a listbox."""
@@ -229,13 +232,10 @@ class OperationModule:
     async def update_gui(self) -> None:
         """Updates the GUI with the current status and progress."""
         while True:
-            if dpg.does_item_exist(f"status_{self._operation.name}_{self._unique_id}"):
-                dpg.set_value(f"status_{self._operation.name}_{self._unique_id}", self._operation.status)
 
-            if dpg.does_item_exist(f"progress_{self._operation.name}_{self._unique_id}"):
-                dpg.set_value(f"progress_{self._operation.name}_{self._unique_id}", self._operation.progress[0])
-                dpg.configure_item(f"progress_{self._operation.name}_{self._unique_id}",
-                                   overlay="%.1f%%" % self._operation.progress[0])
+            if dpg.does_item_exist(self._progress_id):
+                dpg.set_value(self._progress_id, self._operation.progress[0])
+                dpg.configure_item(self._progress_id, overlay=self._operation.progress[1].upper())
 
             if dpg.does_item_exist(self._child_ops_parent):
                 current_child_operations = len(self._operation.child_operations)

@@ -1,6 +1,6 @@
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
-from typing import List
+from typing import List, Dict
 
 from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 from .PrepareAction import prepare_action_for_exec
@@ -103,14 +103,14 @@ async def execute_action(operation):
                 slots = operation.memory_outputs.find_slots_by_name(name)
                 if slots and len(slots) > 0:
                     for slot in slots:
-                        slot.data = value
+                        slot.data = {name: (type(value), value)}
                         await operation.memory_outputs.update_slot(slot)
                 else:
                     new_slot = MemorySlot(
                         memory_id=f'{operation.runtime_id}',
                         name=f"{name}",
                         operation_required=False,
-                        data={name: value}
+                        data={name: (type(value), value)}
                     )
                     await operation.add_memory_output_slot(new_slot)
 

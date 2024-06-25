@@ -1,6 +1,6 @@
 import time
 import asyncio
-from typing import Any
+from typing import Any, Type, Tuple, Dict
 
 
 class MemorySlot:
@@ -11,14 +11,14 @@ class MemorySlot:
         memory_id (str): A unique identifier for the memory slot.
         name (str): A name for the memory slot.
         operation_required (bool): Indicates whether the operation requires this memory slot to function.
-        data (dict): A dictionary to store key-value pairs representing the data in the memory slot.
+        data (dict): A dictionary to store key-value pairs where each value is a tuple (data_type, data_value).
         metadata (dict): A dictionary to store additional metadata.
         created_at (float): The timestamp of when the memory slot was created.
         modified_at (float): The timestamp of when the memory slot was last modified.
 
     Methods:
         get_data_by_key(key: str): Retrieve the value associated with a specific key.
-        set_data_by_key(key: str, value): Set the value for a specific key.
+        set_data_by_key(key: str, value: Any, data_type: Type): Set the value for a specific key.
         remove_data_by_key(key: str): Remove the key-value pair associated with a specific key.
         clear_data(): Clear all data in the data dictionary.
         has_key(key: str) -> bool: Check if a specific key exists in the data dictionary.
@@ -30,7 +30,7 @@ class MemorySlot:
         to_dict() -> dict: Convert the MemorySlot instance to a dictionary.
         from_dict(data: dict) -> 'MemorySlot': Initialize a MemorySlot instance from a dictionary.
     """
-    def __init__(self, memory_id: str, name: str, operation_required: bool, data: dict):
+    def __init__(self, memory_id: str, name: str, operation_required: bool, data: Dict[str, Tuple[Type, Any]]):
         """
         Initialize the MemorySlot instance.
 
@@ -38,7 +38,7 @@ class MemorySlot:
             memory_id (str): A unique identifier for the memory slot.
             name (str): A name for the memory slot.
             operation_required (bool): Indicates whether the operation requires this memory slot to function.
-            data (dict): A dictionary to store key-value pairs representing the data in the memory slot.
+            data (Dict[str, Tuple[Type, Any]]): A dictionary to store key-value pairs representing the data in the memory slot.
         """
         self._memory_id = memory_id
         self._name = name
@@ -95,13 +95,18 @@ class MemorySlot:
     @property
     def data(self):
         """Get the data dictionary."""
-        return self._data.items()
+        return self._data
 
     @data.setter
-    async def data(self, value: dict):
+    async def data(self, value: Dict[str, Tuple[Type, Any]]):
         """Set the data dictionary."""
         if not isinstance(value, dict):
             raise ValueError("data must be a dictionary")
+        for k, (t, v) in value.items():
+            if not isinstance(k, str):
+                raise ValueError("All keys in data must be strings")
+            if not isinstance(v, t):
+                raise ValueError(f"Value for key '{k}' must be of type {t}")
         async with self._lock:
             self._data = value
             self.update_modified_time()
@@ -136,18 +141,30 @@ class MemorySlot:
 
     def validate_data(self):
         """Ensure that the data dictionary contains valid key-value pairs."""
-        if not all(isinstance(k, str) for k in self._data.keys()):
-            raise ValueError("All keys in data must be strings")
+        for k, (t, v) in self._data.items():
+            if not isinstance(k, str):
+                raise ValueError("All keys in data must be strings")
+            if not isinstance(v, t):
+                raise ValueError(f"Value for key '{k}' must be of type {t}")
 
-    async def get_data_by_key(self, key: str):
+    async def get_data_by_key(self, key: str) -> Any:
         """Retrieve the value associated with a specific key."""
         async with self._lock:
-            return self._data.get(key, None)
+            return self._data.get(key, (None, None))[1]
 
-    async def set_data_by_key(self, key: str, value):
-        """Set the value for a specific key."""
+    async def get_data_type_by_key(self, key: str) -> Type:
+        """Retrieve the data type associated with a specific key."""
         async with self._lock:
-            self._data[key] = value
+            return self._data.get(key, (None, None))[0]
+
+    async def set_data_by_key(self, key: str, value: Any, data_type: Type):
+        """Set the value for a specific key."""
+        if not isinstance(key, str):
+            raise ValueError("Key must be a string")
+        if not isinstance(value, data_type):
+            raise ValueError(f"value must be of type {data_type}")
+        async with self._lock:
+            self._data[key] = (data_type, value)
             self.update_modified_time()
 
     async def remove_data_by_key(self, key: str):
@@ -168,18 +185,28 @@ class MemorySlot:
         async with self._lock:
             return key in self._data
 
-    async def update_data(self, data: dict):
+    async def update_data(self, data: Dict[str, Tuple[Type, Any]]):
         """Update multiple key-value pairs in the data dictionary."""
         if not isinstance(data, dict):
             raise ValueError("data must be a dictionary")
+        for k, (t, v) in data.items():
+            if not isinstance(k, str):
+                raise ValueError("All keys in data must be strings")
+            if not isinstance(v, t):
+                raise ValueError(f"Value for key '{k}' must be of type {t}")
         async with self._lock:
             self._data.update(data)
             self.update_modified_time()
 
-    async def merge_data(self, data: dict):
+    async def merge_data(self, data: Dict[str, Tuple[Type, Any]]):
         """Merge another dictionary into the data dictionary."""
         if not isinstance(data, dict):
             raise ValueError("data must be a dictionary")
+        for k, (t, v) in data.items():
+            if not isinstance(k, str):
+                raise ValueError("All keys in data must be strings")
+            if not isinstance(v, t):
+                raise ValueError(f"Value for key '{k}' must be of type {t}")
         async with self._lock:
             self._data = {**self._data, **data}
             self.update_modified_time()
@@ -192,12 +219,12 @@ class MemorySlot:
     async def data_values(self) -> list:
         """Return a list of values in the data dictionary."""
         async with self._lock:
-            return list(self._data.values())
+            return [v for t, v in self._data.values()]
 
     async def data_items(self) -> list:
         """Return a list of key-value pairs in the data dictionary."""
         async with self._lock:
-            return list(self._data.items())
+            return [(k, v) for k, (t, v) in self._data.items()]
 
     async def to_dict(self) -> dict:
         """Convert the MemorySlot instance to a dictionary."""
@@ -206,7 +233,7 @@ class MemorySlot:
                 'memory_id': self._memory_id,
                 'name': self._name,
                 'operation_required': self._operation_required,
-                'data': self._data,
+                'data': {k: (t.__name__, v) for k, (t, v) in self._data.items()},
                 'metadata': self._metadata,
                 'created_at': self._created_at,
                 'modified_at': self._modified_at
@@ -215,11 +242,12 @@ class MemorySlot:
     @staticmethod
     async def from_dict(data: dict) -> 'MemorySlot':
         """Initialize a MemorySlot instance from a dictionary."""
+        slot_data = {k: (eval(t), v) for k, (t, v) in data.get('data', {}).items()}
         slot = MemorySlot(
             memory_id=data.get('memory_id', ''),
             name=data.get('name', ''),
             operation_required=data.get('operation_required', False),
-            data=data.get('data', {})
+            data=slot_data
         )
         slot._metadata = data.get('metadata', {})
         slot._created_at = data.get('created_at', time.time())

@@ -30,7 +30,7 @@ def left_aligned_checkbox(label: str, tag: str, parent: int | str, value: bool, 
         width = dpg.get_item_width(parent)
 
     with dpg.group(horizontal=True, parent=parent, width=width, height=height):
-        with dpg.group(horizontal=False, width=int(width * 0.4), height=height):
+        with dpg.group(horizontal=False, width=int(width * 0.9), height=height):
             dpg.add_text(default_value=label, bullet=bullet, indent=label_indent)
-        with dpg.group(horizontal=True, width=-1, height=height):
+        with dpg.group(horizontal=True, height=height):
             dpg.add_checkbox(tag=tag, default_value=value, enabled=not readonly)

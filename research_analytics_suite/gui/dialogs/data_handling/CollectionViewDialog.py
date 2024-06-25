@@ -1,9 +1,3 @@
-"""
-CollectionViewDialog.py
-
-This module defines the CollectionViewDialog class, which is responsible for managing the main memory management window
-and its components.
-"""
 import asyncio
 import os
 from typing import Optional, Any
@@ -183,12 +177,12 @@ class CollectionViewDialog:
     async def update_variables_in_gui(self, collection_id, slot):
         """Updates the variables in a memory slot in the GUI."""
         slot_group_tag = f"slot_group_{collection_id}_{slot.memory_id}"
-        for key, value in slot.data:
+        for key, (data_type, value) in slot.data.items():
             var_tag = f"var_{collection_id}_{slot.memory_id}_{key}"
             if not dpg.does_item_exist(var_tag):
-                dpg.add_text(f"{key}: {value}", tag=var_tag, parent=slot_group_tag)
+                dpg.add_text(f"{key}: {value} ({data_type.__name__})", tag=var_tag, parent=slot_group_tag)
             else:
-                dpg.set_value(var_tag, f"{key}: {value}")
+                dpg.set_value(var_tag, f"{key}: {value} ({data_type.__name__})")
 
     async def add_variable_to_gui(self, collection_id, slot_id, key, value) -> None:
         """Adds a user variable to the GUI."""
@@ -205,11 +199,11 @@ class CollectionViewDialog:
         if dpg.does_item_exist(slot_group_tag):
             dpg.delete_item(slot_group_tag)
 
-    async def add_variable(self, name, value, collection_id: str, memory_slot_id: Optional[str] = None) -> None:
+    async def add_variable(self, name, value, data_type, collection_id: str, memory_slot_id: Optional[str] = None) -> None:
         """Adds a user variable."""
         try:
             await self._workspace.add_variable_to_collection(collection_id=collection_id, name=name, value=value,
-                                                             memory_slot_id=memory_slot_id)
+                                                             data_type=data_type, memory_slot_id=memory_slot_id)
         except Exception as e:
             self._logger.error(Exception(f"Failed to add variable '{name}': {e}", self))
 
@@ -259,9 +253,11 @@ class CollectionViewDialog:
         """Updates the slot combobox in the GUI."""
         if dpg.does_item_exist("memory_slot_id_input"):
             slot_items = []
-            for slot in self._memory_manager.get_collection_by_display_name(
-                    dpg.get_value("collection_id_input")).list_slots():
-                slot_items.append(f"{slot.name}")
+            slots = self._memory_manager.get_collection_by_display_name(
+                dpg.get_value("collection_id_input"))
+            if slots.list_slots():
+                for slot in slots.list_slots():
+                    slot_items.append(f"{slot.name}")
 
             dpg.configure_item("memory_slot_id_input", items=slot_items,
                                default_value=slot_items[0] if slot_items else "")
@@ -274,19 +270,57 @@ class CollectionViewDialog:
         self.add_var_dialog_id = dpg.generate_uuid()
         with dpg.window(label="Add Variable to Collection", modal=True, tag=self.add_var_dialog_id):
             dpg.add_input_text(label="Variable Name", tag="var_name_input")
-            dpg.add_input_text(label="Variable Value", tag="var_value_input")
-            dpg.add_combo(label="Collection ID", tag="collection_id_input", items=[],
+            dpg.add_combo(label="Data Type", tag="var_data_type_input", items=["int", "float", "str", "list", "dict"],
+                          callback=self.update_var_value_input)
+            dpg.add_input_text(label="Data Value", tag="var_value_input")
+            dpg.add_combo(label="Collection", tag="collection_id_input", items=[],
                           callback=self.update_slot_combobox)
-            dpg.add_combo(label="Memory Slot ID (Optional)", tag="memory_slot_id_input", items=[])
+            dpg.add_combo(label="Memory Slot", tag="memory_slot_id_input", items=[])
             dpg.add_button(label="Add", callback=lambda: asyncio.create_task(self.add_user_variable_from_dialog()))
             dpg.add_button(label="Cancel", callback=lambda: dpg.hide_item(self.add_var_dialog_id))
+
+    def update_var_value_input(self, sender, app_data):
+        """Updates the variable value input field based on the selected data type."""
+        data_type = dpg.get_value("var_data_type_input")
+        var_value = dpg.get_value("var_value_input")
+
+        # Adjust input field based on the selected data type
+        if data_type in ["int", "float", "str"]:
+            dpg.configure_item("var_value_input", default_value="")
+        elif data_type == "list":
+            dpg.configure_item("var_value_input", default_value="[]")
+        elif data_type == "dict":
+            dpg.configure_item("var_value_input", default_value="{}")
+
+        dpg.set_value("var_value_input", var_value)
 
     async def add_user_variable_from_dialog(self) -> None:
         """Adds a user variable from the dialog inputs."""
         try:
             name = dpg.get_value("var_name_input")
             value = dpg.get_value("var_value_input")
+            data_type_str = dpg.get_value("var_data_type_input")
             selected_collection_display_name = dpg.get_value("collection_id_input")
+
+            # Map string representation of data type to actual type
+            data_type_map = {
+                "int": int,
+                "float": float,
+                "str": str,
+                "list": list,
+                "dict": dict
+            }
+            data_type = data_type_map.get(data_type_str, str)
+
+            # Convert value to the appropriate data type
+            if data_type == int:
+                value = int(value)
+            elif data_type == float:
+                value = float(value)
+            elif data_type == list:
+                value = eval(value)
+            elif data_type == dict:
+                value = eval(value)
 
             collection_id = None
             for _id, collection in self.collection_groups.items():
@@ -299,7 +333,7 @@ class CollectionViewDialog:
                 memory_slot_id = None
 
             if collection_id:
-                await self.add_variable(name=name, value=value, collection_id=collection_id,
+                await self.add_variable(name=name, value=value, data_type=data_type, collection_id=collection_id,
                                         memory_slot_id=memory_slot_id)
                 dpg.hide_item(self.add_var_dialog_id)
             else:

@@ -328,7 +328,7 @@ class Workspace:
         except Exception as e:
             self._logger.error(Exception(f"Failed to list MemorySlotCollections: {e}"), self)
 
-    async def add_variable_to_collection(self, collection_id: str, name: str, value: Any,
+    async def add_variable_to_collection(self, collection_id: str, name: str, value: Any, data_type: type,
                                          memory_slot_id: Optional[str] = None) -> Tuple[str, dict]:
         collection_id = collection_id or await self._memory_manager.get_default_collection_id()
         try:
@@ -342,7 +342,7 @@ class Workspace:
                     slot = MemorySlot(memory_id=str(uuid.uuid4()), name=name, operation_required=True, data={})
                     await collection.add_slot(slot)
 
-                await slot.set_data_by_key(name, value)
+                await slot.set_data_by_key(name, value, data_type)
                 return slot.memory_id, {name: value}
             else:
                 raise ValueError(f"Collection with ID {collection_id} not found")
