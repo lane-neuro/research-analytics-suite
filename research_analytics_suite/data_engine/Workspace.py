@@ -76,7 +76,8 @@ class Workspace:
                     self._data_cache = DataCache()
 
                     if self._db_path is None:
-                        self._db_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'user_variables.db')
+                        self._db_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
+                                                     'user_variables.db')
                         self._logger.info(f"Using default database path: {self._db_path}")
                     if self._storage_type == 'sqlite':
                         self._storage = SQLiteStorage(db_path=self._db_path)
@@ -158,19 +159,28 @@ class Workspace:
         """
         try:
             os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME), exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.DATA_DIR), exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.LOG_DIR), exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.WORKSPACE_DIR), exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.WORKSPACE_OPERATIONS_DIR), exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.BACKUP_DIR), exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR), exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.DATA_DIR),
+                        exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.LOG_DIR),
+                        exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.WORKSPACE_DIR),
+                        exist_ok=True)
+            os.makedirs(
+                os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.WORKSPACE_OPERATIONS_DIR),
+                exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.BACKUP_DIR),
+                        exist_ok=True)
+            os.makedirs(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR),
+                        exist_ok=True)
 
             for runtime_id, data_engine in self._data_engines.items():
-                engine_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR, data_engine.engine_id)
+                engine_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, self._config.ENGINE_DIR,
+                                           data_engine.engine_id)
                 os.makedirs(engine_path, exist_ok=True)
                 await data_engine.save_engine(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME))
 
-            await self.save_memory_manager(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'user_variables.db'))
+            await self.save_memory_manager(
+                os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'user_variables.db'))
             config_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'config.json')
             await self._config.save_to_file(config_path)
             self._logger.info(f"Workspace folder saved in directory:\t{self._config.BASE_DIR}")
@@ -411,7 +421,8 @@ class Workspace:
 
                 # Remove any slots that start with 'gui_' or 'sys_'
                 collections_data = {
-                    k: v for k, v in collections_data.items() if not k.startswith('gui_') and not k.startswith('sys_')
+                    k: v for k, v in collections_data.items() if not v['name'].startswith('gui_') and
+                    not v['name'].startswith('sys_')
                 }
 
                 await dst.write(json.dumps(collections_data))

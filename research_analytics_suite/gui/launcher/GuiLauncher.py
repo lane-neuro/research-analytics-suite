@@ -20,6 +20,7 @@ import os
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
 from research_analytics_suite.data_engine.Workspace import Workspace
+from research_analytics_suite.gui.dialogs.data_handling.CollectionViewDialog import CollectionViewDialog
 from research_analytics_suite.gui.dialogs.management.ConsoleDialog import ConsoleDialog
 from research_analytics_suite.gui.dialogs.management.OperationManagerDialog import OperationManagerDialog
 from research_analytics_suite.gui.dialogs.settings.SettingsDialog import SettingsDialog
@@ -30,7 +31,6 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 # Importing the new dialog modules
 from research_analytics_suite.gui.dialogs.management.PlanningDialog import PlanningDialog
-from research_analytics_suite.gui.dialogs.data_handling.DataCollectionDialog import DataCollectionDialog
 from research_analytics_suite.gui.dialogs.data_handling.AnalyzeDataDialog import AnalyzeDataDialog
 from research_analytics_suite.gui.dialogs.visualization.VisualizeDataDialog import VisualizeDataDialog
 from research_analytics_suite.gui.dialogs.management.ProjectManagerDialog import ProjectManagerDialog
@@ -60,7 +60,7 @@ class GuiLauncher:
 
         # Initializing the new dialog classes
         self.planning_dialog = PlanningDialog(width=800, height=600)
-        self.data_collection_dialog = DataCollectionDialog(width=800, height=600)
+        self.collection_view_dialog = None
         self.analyze_data_dialog = AnalyzeDataDialog(width=800, height=600)
         self.visualize_data_dialog = VisualizeDataDialog(width=800, height=600)
         self.manage_project_dialog = ProjectManagerDialog(width=800, height=600)
@@ -185,7 +185,8 @@ class GuiLauncher:
             self.planning_dialog.draw(parent="planning_pane")
 
         with dpg.child_window(tag="data_collection_pane", parent="middle_pane", show=False):
-            self.data_collection_dialog.draw(parent="data_collection_pane")
+            await self.setup_data_collection_pane()
+            await self.collection_view_dialog.draw_collections()
 
         with dpg.child_window(tag="analyze_data_pane", parent="middle_pane", show=False):
             self.analyze_data_dialog.draw(parent="analyze_data_pane")
@@ -232,7 +233,7 @@ class GuiLauncher:
     async def setup_data_collection_pane(self) -> None:
         """Sets up the data collection pane asynchronously."""
         with dpg.group(parent="data_collection_pane"):
-            # self.data_collection_dialog = DataCollectionDialog(width=800, height=600)
+            self.collection_view_dialog = CollectionViewDialog(width=800, height=600, parent="data_collection_pane")
             dpg.add_text("Data Collection Tools")
-            await self.data_collection_dialog.show_memory_collections()
+            await self.collection_view_dialog.initialize_dialog()
 
