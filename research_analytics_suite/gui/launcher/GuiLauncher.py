@@ -153,7 +153,7 @@ class GuiLauncher:
         dpg.show_viewport()
         await self.dpg_async.start()
 
-        with dpg.window(label="RAS", tag="main_window",
+        with dpg.window(label="Research Analytics Suite - Main Window", tag="main_window",
                         width=dpg.get_viewport_width(), height=dpg.get_viewport_height()):
             with dpg.group(horizontal=True, tag="main_pane", height=dpg.get_viewport_height() - 370):
                 with dpg.child_window(tag="left_pane", width=200):
@@ -232,7 +232,7 @@ class GuiLauncher:
     async def setup_data_collection_pane(self) -> None:
         """Sets up the data collection pane asynchronously."""
         with dpg.group(parent="data_collection_pane"):
-            self.data_collection_dialog = DataCollectionDialog(width=800, height=600)
+            # self.data_collection_dialog = DataCollectionDialog(width=800, height=600)
             dpg.add_text("Data Collection Tools")
             await self.data_collection_dialog.show_memory_collections()
 

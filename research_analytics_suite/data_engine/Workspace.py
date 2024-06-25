@@ -409,12 +409,17 @@ class Workspace:
                 # Remove any slots that are not serializable
                 collections_data = remove_non_serializable(collections_data)
 
+                # Remove any slots that start with 'gui_' or 'sys_'
+                collections_data = {
+                    k: v for k, v in collections_data.items() if not k.startswith('gui_') and not k.startswith('sys_')
+                }
+
                 await dst.write(json.dumps(collections_data))
 
-            self._logger.info(f"User variables saved to {file_path}")
+            self._logger.info(f"Memory Management saved to {file_path}")
 
         except Exception as e:
-            self._logger.error(Exception(f"Failed to save user variables: {e}"), self)
+            self._logger.error(Exception(f"Failed to save Memory Management: {e}"), self)
 
     async def restore_memory_manager(self, file_path):
         """
@@ -431,8 +436,7 @@ class Workspace:
                 collections_data = json.loads(await src.read())
 
                 for collection_id, collection_dict in collections_data.items():
-                    collection = await MemorySlotCollection.from_dict(collection_dict)
-                    self._memory_manager.add_collection(collection)
+                    await MemorySlotCollection.from_dict(collection_dict)
 
             self._logger.info(f"Memory restored from {file_path}")
         except Exception as e:
