@@ -9,24 +9,36 @@ Author: Lane
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.data_engine.engine.DataEngineOptimized import DataEngineOptimized
-from research_analytics_suite.utils.CustomLogger import CustomLogger
+from research_analytics_suite.gui.GUIBase import GUIBase
 
 
-class RealTimeDataVisualization:
+class RealTimeDataVisualization(GUIBase):
     """Class to create and manage the Real-Time Data Visualization pane."""
 
-    def __init__(self, data_engine: DataEngineOptimized):
+    def __init__(self, data_engine: DataEngineOptimized, width: int, height: int, parent):
         """
         Initializes the RealTimeDataVisualization instance.
 
         Args:
             data_engine (DataEngineOptimized): The data engine with real-time data.
         """
-        self.data_engine = data_engine
-        self._logger = CustomLogger()
+        super().__init__(width, height, parent)
+        self._data_engine = data_engine
 
-    async def initialize(self):
+    async def initialize_gui(self):
         """Initializes the Real-Time Data Visualization pane."""
+        pass
+
+    async def _update_async(self) -> None:
+        """Updates the Real-Time Data Visualization pane asynchronously."""
+        pass
+
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        """Resizes the Real-Time Data Visualization pane."""
+        pass
+
+    def draw(self):
+        """Draws the GUI elements for the Real-Time Data Visualization pane."""
         with dpg.window(label="Real-Time Data Visualization", tag="real_time_data_visualization"):
             dpg.add_text("Real-Time Data Visualization", color=(255, 255, 0))
             dpg.add_plot(label="Real-Time Data", tag="real_time_plot")
