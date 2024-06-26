@@ -53,7 +53,7 @@ class GuiLauncher:
         self.data_engine_dialog = None
         self.data_import_wizard = None
         self.real_time_data_visualization = None
-        self.settings_dialog = SettingsDialog()
+        self.settings_dialog = None
         self.console = None
         self.operation_window = None
         self.workspace_dialog = None
@@ -75,7 +75,7 @@ class GuiLauncher:
             dpg.add_button(label="Data Visualization", callback=lambda: self.switch_pane("visualize_data"))
             dpg.add_button(label="Project Management", callback=lambda: self.switch_pane("manage_projects"))
             dpg.add_button(label="Reports", callback=lambda: self.switch_pane("reports"))
-            dpg.add_button(label="Configuration", callback=self.settings_dialog.show)
+            dpg.add_button(label="Configuration", callback=self.settings_popup)
             dpg.add_button(label="Logs", callback=lambda: self.switch_pane("console_log_output"))
             dpg.add_button(label="Exit", callback=dpg.stop_dearpygui)
 
@@ -159,7 +159,7 @@ class GuiLauncher:
                 with dpg.child_window(tag="left_pane", width=200):
                     await self.setup_navigation_menu()
 
-                with dpg.child_window(tag="middle_pane", width=int(dpg.get_viewport_width() * 0.50)):
+                with dpg.child_window(tag="middle_pane", width=int(dpg.get_viewport_width() * 0.60)):
                     await self.setup_panes()
 
                 with dpg.child_window(tag="right_pane", width=-1):
@@ -238,3 +238,9 @@ class GuiLauncher:
             self.collection_view_dialog = CollectionViewDialog(width=800, height=600, parent="data_collection_pane")
             dpg.add_text("Data Collection Tools")
             await self.collection_view_dialog.initialize_gui()
+
+    async def settings_popup(self) -> None:
+        """Sets up the settings popup asynchronously."""
+        self.settings_dialog = SettingsDialog(width=800, height=600, parent=None)
+        await self.settings_dialog.initialize_gui()
+        self.settings_dialog.draw()

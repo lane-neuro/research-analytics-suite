@@ -24,9 +24,7 @@ from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
 from research_analytics_suite.gui.utils.left_aligned_button import left_aligned_button
 from research_analytics_suite.gui.utils.left_aligned_input_field import left_aligned_input_field
-from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class OperationModule(GUIBase):
@@ -46,8 +44,6 @@ class OperationModule(GUIBase):
         self._operation = operation
         self._child_ops_parent = None
         self._log_container_id = None
-        self._operation_control = OperationControl()
-        self._logger = CustomLogger()
 
         self._concurrent_id = f"concurrent_{self._unique_id}"
         self._progress_id = f"progress_{self._unique_id}"

@@ -10,27 +10,35 @@ import os
 
 import dearpygui.dearpygui as dpg
 
+from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
-class SettingsDialog:
+class SettingsDialog(GUIBase):
     """Class to create and manage the settings dialog for self._configuration variables."""
 
-    def __init__(self):
+    def __init__(self, width: int, height: int, parent):
         """
         Initializes the SettingsDialog instance.
         """
-        self._logger = CustomLogger()
-        self._config = Config()
+        super().__init__(width, height, parent)
 
-    async def show(self):
-        """Shows the settings dialog."""
+    async def initialize_gui(self) -> None:
         if dpg.does_item_exist("settings_dialog"):
             dpg.delete_item("settings_dialog")
-            self._config = await self._config.reload_from_file(os.path.join(self._config.BASE_DIR,
-                                                               self._config.WORKSPACE_NAME))
 
+        self._config = await self._config.reload_from_file(os.path.join(self._config.BASE_DIR,
+                                                           self._config.WORKSPACE_NAME))
+
+    async def _update_async(self) -> None:
+        pass
+
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        pass
+
+    def draw(self):
+        """Shows the settings dialog."""
         with dpg.window(label="Settings", modal=True, tag="settings_dialog", width=500):
             dpg.add_text("Configuration Settings", color=(255, 255, 0))
 
