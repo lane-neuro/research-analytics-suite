@@ -62,7 +62,7 @@ class GuiLauncher:
         self.planning_dialog = PlanningDialog(width=800, height=600)
         self.collection_view_dialog = None
         self.analyze_data_dialog = AnalyzeDataDialog(width=800, height=600)
-        self.visualize_data_dialog = VisualizeDataDialog(width=800, height=600)
+        self.visualize_data_dialog = None
         self.manage_project_dialog = ProjectManagerDialog(width=800, height=600)
         self.reports_dialog = ReportsDialog(width=800, height=600)
 
@@ -163,10 +163,7 @@ class GuiLauncher:
                     await self.setup_panes()
 
                 with dpg.child_window(tag="right_pane", width=-1):
-                    self.operation_window = OperationManagerDialog(width=dpg.get_item_width("right_pane"), height=-1,
-                                                                   parent="right_pane")
-                    await self.operation_window.initialize_gui()
-                    self.operation_window.draw()
+                    await self.setup_operation_pane()
 
             with dpg.child_window(tag="bottom_pane", parent="main_window", width=-1):
                 with dpg.group(horizontal=True, tag="bottom_pane_group"):
@@ -175,6 +172,7 @@ class GuiLauncher:
         dpg.set_primary_window("main_window", True)
 
         while dpg.is_dearpygui_running():
+            dpg.render_dearpygui_frame()
             await asyncio.sleep(0.01)
 
         self._logger.info("Shutting down GUI...")
@@ -182,7 +180,7 @@ class GuiLauncher:
         dpg.destroy_context()
 
     async def setup_panes(self) -> None:
-        """Sets up all the panes asynchronously."""
+        """Sets up asynchronous panes."""
         with dpg.child_window(tag="planning_pane", parent="middle_pane", show=True):
             self.planning_dialog.draw(parent="planning_pane")
 
@@ -194,7 +192,8 @@ class GuiLauncher:
             self.analyze_data_dialog.draw(parent="analyze_data_pane")
 
         with dpg.child_window(tag="visualize_data_pane", parent="middle_pane", show=False):
-            self.visualize_data_dialog.draw(parent="visualize_data_pane")
+            self.visualize_data_dialog = VisualizeDataDialog(width=800, height=600, parent="visualize_data_pane")
+            self.visualize_data_dialog.draw()
 
         with dpg.child_window(tag="manage_projects_pane", parent="middle_pane", show=False):
             self.manage_project_dialog.draw(parent="manage_projects_pane")
@@ -208,8 +207,15 @@ class GuiLauncher:
         with dpg.child_window(tag="console_log_output_pane", parent="middle_pane", show=False):
             await self.setup_console_log_viewer_pane()
 
+    async def setup_operation_pane(self) -> None:
+        """Sets up the operation pane."""
+        self.operation_window = OperationManagerDialog(width=dpg.get_item_width("right_pane"), height=-1,
+                                                       parent="right_pane")
+        await self.operation_window.initialize_gui()
+        self.operation_window.draw()
+
     async def setup_console_log_viewer_pane(self) -> None:
-        """Sets up the console/log viewer asynchronously."""
+        """Sets up the console/log viewer."""
         with dpg.group(parent="console_log_output_pane"):
             dpg.add_text("Console/Log Output", tag="console_log_output")
 
@@ -217,14 +223,14 @@ class GuiLauncher:
         await self.console.initialize()
 
     async def setup_workspace_pane(self) -> None:
-        """Sets up the workspace pane asynchronously."""
+        """Sets up the workspace pane."""
         with dpg.group(parent="bottom_pane_group", horizontal=True, tag="workspace_group"):
             self.workspace_dialog = WorkspaceModule(height=300,
                                                     width=int(dpg.get_viewport_width() * 0.5))
             await self.workspace_dialog.initialize()
 
     async def setup_planning_pane(self) -> None:
-        """Sets up the planning pane asynchronously."""
+        """Sets up the planning pane."""
         with dpg.group(parent="planning_pane"):
             dpg.add_text("Planning Tools")
             self.timeline = TimelineModule(width=int(dpg.get_viewport_width() * 0.5),
@@ -233,14 +239,14 @@ class GuiLauncher:
             await self.timeline.initialize_dialog()
 
     async def setup_data_collection_pane(self) -> None:
-        """Sets up the data collection pane asynchronously."""
+        """Sets up the data collection pane."""
         with dpg.group(parent="data_collection_pane"):
             self.collection_view_dialog = CollectionViewDialog(width=800, height=600, parent="data_collection_pane")
             dpg.add_text("Data Collection Tools")
             await self.collection_view_dialog.initialize_gui()
 
     async def settings_popup(self) -> None:
-        """Sets up the settings popup asynchronously."""
+        """Sets up the settings popup."""
         self.settings_dialog = SettingsDialog(width=800, height=600, parent=None)
         await self.settings_dialog.initialize_gui()
         self.settings_dialog.draw()
