@@ -13,15 +13,15 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
 import dearpygui.dearpygui as dpg
-from research_analytics_suite.utils.CustomLogger import CustomLogger
+
+from research_analytics_suite.gui.GUIBase import GUIBase
 
 
-class ReportsDialog:
+class ReportsDialog(GUIBase):
     """A class to manage Reports tools and their GUI representation."""
 
-    def __init__(self, width: int, height: int):
+    def __init__(self, width: int, height: int, parent):
         """
         Initializes the ReportsDialog with the given width and height.
 
@@ -29,14 +29,20 @@ class ReportsDialog:
             width (int): The width of the dialog.
             height (int): The height of the dialog.
         """
-        self.width = width
-        self.height = height
-        self._logger = CustomLogger()
+        super().__init__(width, height, parent)
 
-    def draw(self, parent):
+    async def initialize_gui(self) -> None:
+        """Initializes the GUI elements for the Reports section."""
+        pass
+
+    async def _update_async(self) -> None:
+        pass
+
+    def draw(self):
         """Draws the GUI elements for the Reports section."""
-        with dpg.group(parent=parent):
-            dpg.add_text("Reports Tools", parent=parent)
+        with dpg.group(parent=self._parent):
+            dpg.add_text("Reports")
+            dpg.add_separator()
 
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Generate Reports", callback=self.show_generate_reports)
@@ -69,3 +75,6 @@ class ReportsDialog:
     def show_custom_reports(self, sender, app_data, user_data):
         """Displays the Custom Reports section."""
         self._logger.info("Custom Reports clicked")
+
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        pass

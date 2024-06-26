@@ -63,11 +63,11 @@ class GuiLauncher:
         self.collection_view_dialog = None
         self.visualize_data_dialog = None
         self.resource_monitor_dialog = None
+        self.reports_dialog = None
 
         self.planning_dialog = PlanningDialog(width=800, height=600)
         self.analyze_data_dialog = AnalyzeDataDialog(width=800, height=600)
         self.manage_project_dialog = ProjectManagerDialog(width=800, height=600)
-        self.reports_dialog = ReportsDialog(width=800, height=600)
 
     async def setup_navigation_menu(self) -> None:
         """Sets up the navigation menu on the left pane."""
@@ -203,14 +203,16 @@ class GuiLauncher:
             self.analyze_data_dialog.draw(parent="analyze_data_pane")
 
         with dpg.child_window(tag="visualize_data_pane", parent="middle_pane", show=False):
-            self.visualize_data_dialog = VisualizeDataDialog(width=800, height=600, parent="visualize_data_pane")
+            self.visualize_data_dialog = VisualizeDataDialog(width=-1, height=-1, parent="visualize_data_pane")
             self.visualize_data_dialog.draw()
 
         with dpg.child_window(tag="manage_projects_pane", parent="middle_pane", show=False):
             self.manage_project_dialog.draw(parent="manage_projects_pane")
 
         with dpg.child_window(tag="reports_pane", parent="middle_pane", show=False):
-            self.reports_dialog.draw(parent="reports_pane")
+            self.reports_dialog = ReportsDialog(width=-1, height=-1, parent="reports_pane")
+            await self.reports_dialog.initialize_gui()
+            self.reports_dialog.draw()
 
         with dpg.child_window(tag="settings_pane", parent="middle_pane", show=False):
             dpg.add_text("Settings Pane")
