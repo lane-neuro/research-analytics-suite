@@ -124,10 +124,6 @@ class OperationManagerDialog:
                             and not node.operation.name.startswith("sys_")):
                         self._logger.debug(f"Adding operation to display: {node.operation.name} with runtime_id: "
                                            f"{node.operation.runtime_id}")
-                        self.operation_items[node.operation.runtime_id] = OperationModule(operation=node.operation,
-                                                                                          width=self.TILE_WIDTH,
-                                                                                          height=self.TILE_HEIGHT,
-                                                                                          parent=None)
                         await self.add_operation_tile(node.operation)
             await asyncio.sleep(self.SLEEP_DURATION)
             self._logger.debug("Display operations loop sleeping...")
@@ -149,8 +145,11 @@ class OperationManagerDialog:
         child_window = dpg.add_child_window(width=self.TILE_WIDTH, height=self.TILE_HEIGHT,
                                             parent=self.current_row_group, tag=tag)
         self._logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
-        self.operation_items[operation.runtime_id].parent = tag
+
+        self.operation_items[operation.runtime_id] = OperationModule(
+            operation=operation, width=self.TILE_WIDTH, height=self.TILE_HEIGHT, parent=tag)
         await self.operation_items[operation.runtime_id].initialize_gui()
+
         self.operation_items[operation.runtime_id].draw()
 
     def load_operation(self, sender: str, data: dict) -> None:
