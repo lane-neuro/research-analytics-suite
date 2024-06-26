@@ -16,13 +16,15 @@ Status: Prototype
 """
 
 import dearpygui.dearpygui as dpg
+
+from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
-class ProjectManagerDialog:
+class ProjectManagerDialog(GUIBase):
     """A class to manage Project Management tools and their GUI representation."""
 
-    def __init__(self, width: int, height: int):
+    def __init__(self, width: int, height: int, parent):
         """
         Initializes the ManageProjectDialog with the given width and height.
 
@@ -30,14 +32,19 @@ class ProjectManagerDialog:
             width (int): The width of the dialog.
             height (int): The height of the dialog.
         """
-        self.width = width
-        self.height = height
-        self._logger = CustomLogger()
+        super().__init__(width, height, parent)
 
-    def draw(self, parent):
+    async def initialize_gui(self) -> None:
+        pass
+
+    async def _update_async(self) -> None:
+        pass
+
+    def draw(self):
         """Draws the GUI elements for the Project Management section."""
-        with dpg.group(parent=parent):
-            dpg.add_text("Project Management Tools", parent=parent)
+        with dpg.group(parent=self._parent):
+            dpg.add_text("Project Management Tools")
+            dpg.add_separator()
 
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Task Management", callback=self.show_task_management)
@@ -70,3 +77,6 @@ class ProjectManagerDialog:
     def show_documentation(self, sender, app_data, user_data):
         """Displays the Documentation section."""
         self._logger.info("Documentation clicked")
+
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        pass
