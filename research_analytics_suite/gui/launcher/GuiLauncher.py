@@ -235,5 +235,4 @@ class GuiLauncher:
         with dpg.group(parent="data_collection_pane"):
             self.collection_view_dialog = CollectionViewDialog(width=800, height=600, parent="data_collection_pane")
             dpg.add_text("Data Collection Tools")
-            await self.collection_view_dialog.initialize_dialog()
-
+            await self.collection_view_dialog.initialize_gui()

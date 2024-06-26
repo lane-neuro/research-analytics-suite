@@ -4,20 +4,16 @@ from typing import Optional, Any
 
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
+from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager import BaseOperation
-from research_analytics_suite.utils import CustomLogger
 
 
-class CollectionViewDialog:
+class CollectionViewDialog(GUIBase):
     """A class to manage the main GUI window and its components."""
 
     def __init__(self, width: int, height: int, parent=None):
         """Initializes the CollectionViewDialog."""
-
-        from research_analytics_suite.operation_manager import OperationControl
-        self.operation_control = OperationControl()
-
-        self._logger = CustomLogger()
+        super().__init__(width, height, parent)
 
         from research_analytics_suite.data_engine import MemoryManager
         self._memory_manager = MemoryManager()
@@ -25,23 +21,15 @@ class CollectionViewDialog:
         from research_analytics_suite.data_engine import Workspace
         self._workspace = Workspace()
 
-        from research_analytics_suite.utils.Config import Config
-        self._config = Config()
-
         self.collections = []
         self.search_bar = None
         self.notification_area = None
         self.collection_list = None
         self.collection_groups = {}
         self.advanced_slot_view = None
-        self.update_operation = None
         self.add_var_dialog_id = None
 
-        self.parent = parent
-        self.width = width
-        self.height = height
-
-    async def initialize_dialog(self) -> None:
+    async def initialize_gui(self) -> None:
         """Initializes the user interface."""
         with dpg.child_window(tag="collection_view_dialog",
                               parent=self.parent, width=-1, height=125, border=True):
@@ -72,7 +60,24 @@ class CollectionViewDialog:
                        callback=lambda: asyncio.create_task(self.open_add_var_dialog()))
         dpg.add_group(tag="data_collection_tools_group", parent="memory_collections_window", width=-1, height=-1, horizontal=True)
 
-        self.update_operation = await self.add_update_operation()
+        self._update_operation = await self.add_update_operation()
+
+    async def draw(self, parent: Any) -> None:
+        """Draws the GUI."""
+        self.parent = parent
+        await self.initialize_gui()
+        await self.draw_collections()
+
+    async def _update_async(self) -> None:
+        """Performs async updates."""
+        await self.update_collections()
+
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        """Resizes the GUI."""
+        self.width = new_width
+        self.height = new_height
+        dpg.set_item_width("collection_view_dialog", new_width)
+        dpg.set_item_height("collection_view_dialog", new_height)
 
     async def draw_collections(self):
         if dpg.does_item_exist("collection_group"):
@@ -101,7 +106,7 @@ class CollectionViewDialog:
 
     async def add_update_operation(self) -> Optional[Any]:
         try:
-            operation = await self.operation_control.operation_manager.add_operation_with_parameters(
+            operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_MainCollectionUpdateTask",
                 action=self.update_collections, persistent=True, concurrent=True)
             operation.is_ready = True
