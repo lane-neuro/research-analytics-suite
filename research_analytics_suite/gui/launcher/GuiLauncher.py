@@ -163,8 +163,10 @@ class GuiLauncher:
                     await self.setup_panes()
 
                 with dpg.child_window(tag="right_pane", width=-1):
-                    self.operation_window = OperationManagerDialog(container_width=dpg.get_item_width("right_pane"))
-                    await self.operation_window.initialize_dialog()
+                    self.operation_window = OperationManagerDialog(width=dpg.get_item_width("right_pane"), height=-1,
+                                                                   parent="right_pane")
+                    await self.operation_window.initialize_gui()
+                    self.operation_window.draw()
 
             with dpg.child_window(tag="bottom_pane", parent="main_window", width=-1):
                 with dpg.group(horizontal=True, tag="bottom_pane_group"):

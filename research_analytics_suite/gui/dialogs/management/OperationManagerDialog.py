@@ -18,15 +18,13 @@ import asyncio
 from typing import Optional, Any
 import dearpygui.dearpygui as dpg
 
-from research_analytics_suite.utils.Config import Config
+from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
 from research_analytics_suite.gui.modules.OperationModule import OperationModule
-from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
-class OperationManagerDialog:
+class OperationManagerDialog(GUIBase):
     """A class to manage the dialog for displaying and controlling operations."""
 
     SLEEP_DURATION = 0.05
@@ -34,24 +32,21 @@ class OperationManagerDialog:
     TILE_HEIGHT = 450  # Fixed height for each operation tile
     TILE_PADDING = 20  # Padding between tiles
 
-    def __init__(self, container_width: int = 1700):
+    def __init__(self, width: int, height: int, parent):
         """
         Initializes the OperationManagerDialog with the given operation control, logger, and container width.
 
         Args:
-            container_width (int): Initial width of the container.
+            width (int): Initial width of the container.
+            height (int): Initial height of the container.
+            parent: Parent container
         """
-        self.window = None
-        self.create_operation_module = CreateOperationModule(height=400, width=800,
-                                                             parent_operation=None)
-        self._config = Config()
-        self.operation_control = OperationControl()
-        self._logger = CustomLogger()
-        self.operation_items = dict[BaseOperation.runtime_id, OperationModule]()
-        self.update_operation = None
-        self.container_width = container_width
-        self.tiles_per_row = self.calculate_tiles_per_row(container_width)
+        super().__init__(width, height, parent)
+        self.create_operation_module = CreateOperationModule(height=400, width=800, parent_operation=None)
+        self.operation_items = {}
+        self.tiles_per_row = self.calculate_tiles_per_row(width)
         self.current_row_group = None
+        self.window = None
 
     def calculate_tiles_per_row(self, width: int) -> int:
         """
@@ -65,16 +60,30 @@ class OperationManagerDialog:
         """
         return max(1, width // (self.TILE_WIDTH + self.TILE_PADDING))
 
-    async def initialize_dialog(self) -> None:
+    async def initialize_gui(self) -> None:
         """Initializes the operation manager dialog by adding the update operation."""
-        self.update_operation = await self.add_update_operation()
-        dpg.add_text("Operation Manager", parent="right_pane")
-        self.create_operation_module.draw_button(label="Create New Operation", width=200, parent="right_pane")
-        dpg.add_button(label="Load Operation from File", width=200, parent="right_pane",
-                       callback=self.load_operation)
-        self.window = dpg.add_group(parent="right_pane", tag="operation_gallery",
-                                    horizontal=False)
+        self._update_operation = await self.add_update_operation()
         dpg.set_viewport_resize_callback(self.on_resize)
+
+    def draw(self) -> None:
+        """Draws the GUI elements for the operation manager dialog."""
+        dpg.add_text("Operation Manager", parent=self.parent)
+        self.create_operation_module.draw_button(label="Create New Operation", width=200, parent=self.parent)
+        dpg.add_button(label="Load Operation from File", width=200, parent=self.parent, callback=self.load_operation)
+        self.window = dpg.add_group(parent=self.parent, tag="operation_gallery", horizontal=False)
+
+    async def _update_async(self) -> None:
+        """Performs async updates."""
+        await self.display_operations()
+
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        """Handles the resize event and adjusts the number of tiles per row."""
+        self.width = new_width
+        self.height = new_height
+        new_tiles_per_row = self.calculate_tiles_per_row(new_width)
+        if new_tiles_per_row != self.tiles_per_row:
+            self.tiles_per_row = new_tiles_per_row
+            await self.refresh_display()
 
     async def add_update_operation(self) -> Optional[Any]:
         """
@@ -85,7 +94,7 @@ class OperationManagerDialog:
         """
         try:
             self._logger.debug("Adding update operation...")
-            operation = await self.operation_control.operation_manager.add_operation_with_parameters(
+            operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_OperationManagerUpdateTask",
                 action=self.display_operations, persistent=True, concurrent=True)
             operation.is_ready = True
@@ -98,7 +107,7 @@ class OperationManagerDialog:
     async def display_operations(self) -> None:
         """Continuously checks for new operations and displays them in the GUI."""
         while True:
-            sequencer_copy = set(self.operation_control.sequencer.sequencer)
+            sequencer_copy = set(self._operation_control.sequencer.sequencer)
             self._logger.debug(f"Current operations in sequencer: {len(sequencer_copy)} chains")
 
             for operation_chain in sequencer_copy:
@@ -137,7 +146,7 @@ class OperationManagerDialog:
         """
         if (self.current_row_group is None
                 or len(dpg.get_item_children(self.current_row_group)[1]) >= self.tiles_per_row):
-            self.current_row_group = dpg.add_group(horizontal=True, parent=self.window)
+            self.current_row_group = dpg.add_group(horizontal=True, parent=self._parent)
             self._logger.debug(f"Created new row group: {self.current_row_group}")
 
         tag = f"{operation.runtime_id}_tile"
@@ -189,7 +198,7 @@ class OperationManagerDialog:
         self._logger.info(f"Loading operation from file: {_file_path}")
         self._logger.debug(f"Loading operation from file: {_file_path}")
 
-        loaded_operations = dict[BaseOperation.runtime_id, 'BaseOperation']()
+        loaded_operations = {}
         try:
             await BaseOperation.load_operation_group(_file_path, loaded_operations)
             self._logger.debug(f"Loaded operations: {loaded_operations}")
