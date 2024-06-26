@@ -70,32 +70,16 @@ class OperationModule:
 
     async def initialize(self) -> None:
         """Initializes resources and adds the update operation."""
-        self.update_operation = await self.add_update_operation()
-        self.initialize_resources()
-
-    def initialize_resources(self) -> None:
-        """Initializes necessary resources and logs the event."""
         try:
-            self._operation.attach_gui_module(self)
-        except Exception as e:
-            self._logger.error(e, self)
-
-    async def add_update_operation(self) -> 'BaseOperation':
-        """
-        Adds an update operation to the operations manager.
-
-        Returns:
-            The created update operation or None if an error occurred.
-        """
-        try:
-            operation = await self._operation_control.operation_manager.add_operation_with_parameters(
+            self.update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_OperationUpdateTask",
                 action=self.update_gui, persistent=True, concurrent=True)
-            operation.is_ready = True
-            return operation
+            self.update_operation.is_ready = True
         except Exception as e:
             self._logger.error(e, self)
             self._operation.add_log_entry(f"Error creating task: {e}")
+
+        self._operation.attach_gui_module(self)
 
     async def execute_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Executes the operation."""
