@@ -15,62 +15,51 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
-from typing import Optional, Any
-
 import dearpygui.dearpygui as dpg
 
-from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
+from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.utils.CustomLogger import CustomLogger
 from research_analytics_suite.operation_manager.management.UserInputManager import UserInputManager
 
 
-class ConsoleDialog:
+class ConsoleDialog(GUIBase):
     """A class to create a console dialog for user input and operations control."""
 
-    def __init__(self, user_input_handler: UserInputManager):
+    def __init__(self, user_input_handler: UserInputManager, width: int, height: int, parent):
         """
         Initializes the ConsoleDialog with the given user input handler, operations control, and logger.
 
         Args:
             user_input_handler (UserInputManager): Instance to handle user inputs.
         """
-        self._logger = CustomLogger()
-        self.operation_control = OperationControl()
-        self.window = dpg.add_child_window(tag="console_window", parent="bottom_pane")
-
-        with dpg.group(horizontal=True, parent=self.window):
-            dpg.add_input_text(label="", tag="input_text", width=500)
-            dpg.add_button(label="Submit", callback=self.submit_command)
-
-        self._logger_output = dpg.add_text(default_value="", parent=self.window, wrap=-1)
+        super().__init__(width, height, parent)
         self.user_input_handler = user_input_handler
         self.command_history = []
         self.command_help = {"command1": "This is command1", "command2": "This is command2"}
         self.command_aliases = {"c1": "command1", "c2": "command2"}
 
-        self.update_operation = None
-
-    async def initialize(self) -> None:
-        """Initializes the console dialog by adding the update operations."""
-        self.update_operation = await self.add_update_operation()
-
-    async def add_update_operation(self) -> Optional[Any]:
-        """
-        Adds an update operations to the operations manager.
-
-        Returns:
-            The created update operations or None if an error occurred.
-        """
-        try:
-            operation = await self.operation_control.operation_manager.add_operation_with_parameters(
-                operation_type=BaseOperation, name="gui_ConsoleUpdateTask", action=self.update_logger_output,
+    async def initialize_gui(self) -> None:
+        self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
+                operation_type=BaseOperation, name="gui_ConsoleUpdateTask", action=self._update_async,
                 persistent=True, concurrent=True)
-            operation.is_ready = True
-            return operation
-        except Exception as e:
-            self._logger.error(e, self)
-        return None
+        self._update_operation.is_ready = True
+
+    async def _update_async(self) -> None:
+        """Continuously updates the logger output with new messages."""
+        while True:
+            new_log = await self._logger.log_message_queue.get()
+            current_logs = dpg.get_value("logger_output")
+            updated_logs = new_log + "\n" + current_logs
+            dpg.set_value("logger_output", updated_logs)
+            await asyncio.sleep(0.01)
+
+    def draw(self) -> None:
+        """Draws the GUI elements for the console dialog."""
+        with dpg.group(horizontal=True, parent=self._parent):
+            dpg.add_input_text(label="", tag="input_text", width=500)
+            dpg.add_button(label="Submit", callback=self.submit_command)
+        dpg.add_separator()
+        dpg.add_text(default_value="", parent=self._parent, wrap=-1, tag="logger_output")
 
     async def submit_command(self, sender: str, app_data: dict) -> None:
         """
@@ -86,7 +75,7 @@ class ConsoleDialog:
         if command.startswith("help"):
             _, command = command.split()
             help_text = self.command_help.get(command, "No help available for this command")
-            dpg.set_value(self._logger_output, help_text)
+            dpg.set_value("logger_output", help_text)
         else:
             try:
                 await self.user_input_handler.process_user_input(command)
@@ -95,18 +84,9 @@ class ConsoleDialog:
                 self._logger.error(e, self)
         dpg.set_value('input_text', "")  # Clear the input field
 
-    async def update_logger_output(self) -> None:
-        """Continuously updates the logger output with new messages."""
-        while True:
-            new_log = await self._logger.log_message_queue.get()
-            current_logs = dpg.get_value(self._logger_output)
-            updated_logs = new_log + "\n" + current_logs
-            dpg.set_value(self._logger_output, updated_logs)
-            await asyncio.sleep(0.01)
-
     def clear_logger_output(self) -> None:
         """Clears the logger output display."""
-        dpg.set_value(self._logger_output, "")
+        dpg.set_value("logger_output", "")
 
     def search_command(self, sender: str, app_data: dict) -> None:
         """
@@ -117,8 +97,11 @@ class ConsoleDialog:
             app_data (dict): Additional application data.
         """
         search_text = dpg.get_value('search_text')
-        console_output = dpg.get_value(self._logger_output)
+        console_output = dpg.get_value("logger_output")
         if search_text in console_output:
-            dpg.set_value(self._logger_output, search_text)
+            dpg.set_value("logger_output", search_text)
         else:
-            dpg.set_value(self._logger_output, "Text not found")
+            dpg.set_value("logger_output", "Text not found")
+
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        pass

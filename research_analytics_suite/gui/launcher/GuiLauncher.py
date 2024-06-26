@@ -29,8 +29,6 @@ from research_analytics_suite.gui.modules.TimelineModule import TimelineModule
 from research_analytics_suite.gui.modules.WorkspaceModule import WorkspaceModule
 from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
 from research_analytics_suite.utils.CustomLogger import CustomLogger
-
-# Importing the new dialog modules
 from research_analytics_suite.gui.dialogs.management.PlanningDialog import PlanningDialog
 from research_analytics_suite.gui.dialogs.data_handling.AnalyzeDataDialog import AnalyzeDataDialog
 from research_analytics_suite.gui.dialogs.visualization.VisualizeDataDialog import VisualizeDataDialog
@@ -45,28 +43,28 @@ class GuiLauncher:
         """
         Initializes the GUI launcher with necessary components.
         """
-        self.dpg_async = DearPyGuiAsync()
+        self._dpg_async = DearPyGuiAsync()
 
         self._logger = CustomLogger()
         self._operation_control = OperationControl()
         self._workspace = Workspace()
 
-        self.timeline = None
-        self.visualization_dialog = None
-        self.data_engine_dialog = None
-        self.data_import_wizard = None
-        self.real_time_data_visualization = None
-        self.settings_dialog = None
-        self.console = None
-        self.operation_window = None
-        self.workspace_dialog = None
-        self.collection_view_dialog = None
-        self.visualize_data_dialog = None
-        self.resource_monitor_dialog = None
-        self.reports_dialog = None
-        self.manage_project_dialog = None
-        self.planning_dialog = None
-        self.analyze_data_dialog = AnalyzeDataDialog(width=800, height=600)
+        self._timeline_dialog = None
+        self._visualization_dialog = None
+        self._data_engine_dialog = None
+        self._data_import_wizard = None
+        self._real_time_data_dialog = None
+        self._settings_dialog = None
+        self._console_dialog = None
+        self._operation_window = None
+        self._workspace_dialog = None
+        self._collection_view_dialog = None
+        self._visualize_data_dialog = None
+        self._resource_monitor_dialog = None
+        self._reports_dialog = None
+        self._manage_project_dialog = None
+        self._planning_dialog = None
+        self._analyze_data_dialog = AnalyzeDataDialog(width=800, height=600)
 
     async def setup_navigation_menu(self) -> None:
         """Sets up the navigation menu on the left pane."""
@@ -153,7 +151,7 @@ class GuiLauncher:
         # dpg.show_metrics()
 
         dpg.show_viewport()
-        await self.dpg_async.start()
+        await self._dpg_async.start()
 
         with dpg.window(label="Research Analytics Suite - Main Window", tag="main_window",
                         width=dpg.get_viewport_width(), height=dpg.get_viewport_height()):
@@ -174,10 +172,10 @@ class GuiLauncher:
                     with dpg.child_window(tag="resource_monitor_pane", width=600):
                         dpg.add_text("Resource Monitor")
                         with dpg.group(horizontal=True, tag="resource_monitor_group"):
-                            self.resource_monitor_dialog = ResourceMonitorDialog(width=-1, height=-1,
-                                                                                 parent="resource_monitor_group")
-                            await self.resource_monitor_dialog.initialize_gui()
-                            self.resource_monitor_dialog.draw()
+                            self._resource_monitor_dialog = ResourceMonitorDialog(width=-1, height=-1,
+                                                                                  parent="resource_monitor_group")
+                            await self._resource_monitor_dialog.initialize_gui()
+                            self._resource_monitor_dialog.draw()
 
         dpg.set_primary_window("main_window", True)
 
@@ -192,31 +190,31 @@ class GuiLauncher:
     async def setup_panes(self) -> None:
         """Sets up asynchronous panes."""
         with dpg.child_window(tag="planning_pane", parent="middle_pane", show=True):
-            self.planning_dialog = PlanningDialog(width=-1, height=-1, parent="planning_pane")
-            await self.planning_dialog.initialize_gui()
-            self.planning_dialog.draw()
+            self._planning_dialog = PlanningDialog(width=-1, height=-1, parent="planning_pane")
+            await self._planning_dialog.initialize_gui()
+            self._planning_dialog.draw()
 
         with dpg.child_window(tag="data_collection_pane", parent="middle_pane", show=False):
             await self.setup_data_collection_pane()
-            self.collection_view_dialog.draw()
+            self._collection_view_dialog.draw()
 
         with dpg.child_window(tag="analyze_data_pane", parent="middle_pane", show=False):
-            self.analyze_data_dialog.draw(parent="analyze_data_pane")
+            self._analyze_data_dialog.draw(parent="analyze_data_pane")
 
         with dpg.child_window(tag="visualize_data_pane", parent="middle_pane", show=False):
-            self.visualize_data_dialog = VisualizeDataDialog(width=-1, height=-1, parent="visualize_data_pane")
-            await self.visualize_data_dialog.initialize_gui()
-            self.visualize_data_dialog.draw()
+            self._visualize_data_dialog = VisualizeDataDialog(width=-1, height=-1, parent="visualize_data_pane")
+            await self._visualize_data_dialog.initialize_gui()
+            self._visualize_data_dialog.draw()
 
         with dpg.child_window(tag="manage_projects_pane", parent="middle_pane", show=False):
-            self.manage_project_dialog = ProjectManagerDialog(width=-1, height=-1, parent="manage_projects_pane")
-            await self.manage_project_dialog.initialize_gui()
-            self.manage_project_dialog.draw()
+            self._manage_project_dialog = ProjectManagerDialog(width=-1, height=-1, parent="manage_projects_pane")
+            await self._manage_project_dialog.initialize_gui()
+            self._manage_project_dialog.draw()
 
         with dpg.child_window(tag="reports_pane", parent="middle_pane", show=False):
-            self.reports_dialog = ReportsDialog(width=-1, height=-1, parent="reports_pane")
-            await self.reports_dialog.initialize_gui()
-            self.reports_dialog.draw()
+            self._reports_dialog = ReportsDialog(width=-1, height=-1, parent="reports_pane")
+            await self._reports_dialog.initialize_gui()
+            self._reports_dialog.draw()
 
         with dpg.child_window(tag="settings_pane", parent="middle_pane", show=False):
             dpg.add_text("Settings Pane")
@@ -226,44 +224,47 @@ class GuiLauncher:
 
     async def setup_operation_pane(self) -> None:
         """Sets up the operation pane."""
-        self.operation_window = OperationManagerDialog(width=dpg.get_item_width("right_pane"), height=-1,
-                                                       parent="right_pane")
-        await self.operation_window.initialize_gui()
-        self.operation_window.draw()
+        self._operation_window = OperationManagerDialog(width=dpg.get_item_width("right_pane"), height=-1,
+                                                        parent="right_pane")
+        await self._operation_window.initialize_gui()
+        self._operation_window.draw()
 
     async def setup_console_log_viewer_pane(self) -> None:
         """Sets up the console/log viewer."""
         with dpg.group(parent="console_log_output_pane"):
             dpg.add_text("Console/Log Output", tag="console_log_output")
 
-        self.console = ConsoleDialog(self._operation_control.user_input_manager)
-        await self.console.initialize()
+        self._console_dialog = ConsoleDialog(self._operation_control.user_input_manager,
+                                             parent="console_log_output_pane",
+                                             width=-1, height=-1)
+        await self._console_dialog.initialize_gui()
+        self._console_dialog.draw()
 
     async def setup_workspace_pane(self) -> None:
         """Sets up the workspace pane."""
         with dpg.group(parent="bottom_pane_group", horizontal=True, tag="workspace_group"):
-            self.workspace_dialog = WorkspaceModule(height=300,
-                                                    width=int(dpg.get_viewport_width() * 0.5))
-            await self.workspace_dialog.initialize()
+            self._workspace_dialog = WorkspaceModule(height=-1,
+                                                     width=int(dpg.get_viewport_width() * 0.5))
+            await self._workspace_dialog.initialize()
 
     async def setup_planning_pane(self) -> None:
         """Sets up the planning pane."""
         with dpg.group(parent="planning_pane"):
             dpg.add_text("Planning Tools")
-            self.timeline = TimelineModule(width=int(dpg.get_viewport_width() * 0.5),
-                                           height=300,
-                                           operation_sequencer=self._operation_control.sequencer)
-            await self.timeline.initialize_dialog()
+            self._timeline_dialog = TimelineModule(width=int(dpg.get_viewport_width() * 0.5),
+                                                   height=300,
+                                                   operation_sequencer=self._operation_control.sequencer)
+            await self._timeline_dialog.initialize_dialog()
 
     async def setup_data_collection_pane(self) -> None:
         """Sets up the data collection pane."""
         with dpg.group(parent="data_collection_pane"):
-            self.collection_view_dialog = CollectionViewDialog(width=800, height=600, parent="data_collection_pane")
+            self._collection_view_dialog = CollectionViewDialog(width=800, height=600, parent="data_collection_pane")
             dpg.add_text("Data Collection Tools")
-            await self.collection_view_dialog.initialize_gui()
+            await self._collection_view_dialog.initialize_gui()
 
     async def settings_popup(self) -> None:
         """Sets up the settings popup."""
-        self.settings_dialog = SettingsDialog(width=800, height=600, parent=None)
-        await self.settings_dialog.initialize_gui()
-        self.settings_dialog.draw()
+        self._settings_dialog = SettingsDialog(width=800, height=600, parent=None)
+        await self._settings_dialog.initialize_gui()
+        self._settings_dialog.draw()
