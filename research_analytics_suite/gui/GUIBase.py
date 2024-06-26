@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 
 class GUIBase(ABC):
-    def __init__(self, width: int, height: int, parent: Optional[Any] = None):
+    def __init__(self, width: int, height: int, parent):
 
         from research_analytics_suite.utils import CustomLogger
         self._logger = CustomLogger()
@@ -73,7 +73,7 @@ class GUIBase(ABC):
         return self._width
 
     @abstractmethod
-    def draw(self, parent: Any) -> None:
+    def draw(self) -> None:
         pass
 
     @abstractmethod

@@ -186,6 +186,7 @@ class GuiLauncher:
 
         with dpg.child_window(tag="data_collection_pane", parent="middle_pane", show=False):
             await self.setup_data_collection_pane()
+            self.collection_view_dialog.draw()
 
         with dpg.child_window(tag="analyze_data_pane", parent="middle_pane", show=False):
             self.analyze_data_dialog.draw(parent="analyze_data_pane")

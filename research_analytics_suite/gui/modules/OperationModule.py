@@ -17,25 +17,23 @@ Status: Prototype
 """
 
 import asyncio
-import uuid
 from typing import Any
-
 import dearpygui.dearpygui as dpg
 
+from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
 from research_analytics_suite.gui.utils.left_aligned_button import left_aligned_button
-from research_analytics_suite.gui.utils.left_aligned_checkbox import left_aligned_checkbox
 from research_analytics_suite.gui.utils.left_aligned_input_field import left_aligned_input_field
 from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
-class OperationModule:
+class OperationModule(GUIBase):
     """A class to manage operations and their GUI representation."""
     MIDDLE_INDENT = 20
 
-    def __init__(self, operation: BaseOperation, width: int, height: int):
+    def __init__(self, operation: 'BaseOperation', width: int, height: int, parent):
         """
         Initializes the OperationModule with the given operation, control, and logger.
 
@@ -44,16 +42,13 @@ class OperationModule:
             width (int): The width of the module.
             height (int): The height of the module.
         """
+        super().__init__(width, height, parent)
+        self._operation = operation
         self._child_ops_parent = None
         self._log_container_id = None
-        self._operation = operation
         self._operation_control = OperationControl()
-        self._width = int(width * 1.0)
-        self._height = int(height * 1.0)
         self._logger = CustomLogger()
-        self.update_operation = None
 
-        self._unique_id = str(uuid.uuid4())
         self._concurrent_id = f"concurrent_{self._unique_id}"
         self._progress_id = f"progress_{self._unique_id}"
         self._result_id = f"result_{self._unique_id}"
@@ -68,70 +63,22 @@ class OperationModule:
         """Returns the operation."""
         return self._operation
 
-    async def initialize(self) -> None:
+    async def initialize_gui(self) -> None:
         """Initializes resources and adds the update operation."""
         try:
-            self.update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
+            self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_OperationUpdateTask",
                 action=self.update_gui, persistent=True, concurrent=True)
-            self.update_operation.is_ready = True
+            self._update_operation.is_ready = True
         except Exception as e:
             self._logger.error(e, self)
             self._operation.add_log_entry(f"Error creating task: {e}")
 
         self._operation.attach_gui_module(self)
 
-    async def execute_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
-        """Executes the operation."""
-        try:
-            self._operation.is_ready = True
-        except Exception as e:
-            self._logger.error(e, self)
-            self._operation.status = "error"
-            self._operation.add_log_entry(f"Error executing operation: {e}")
-
-    async def stop_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
-        """Stops the operation."""
-        if not self._operation.persistent:
-            try:
-                await self._operation.stop()
-            except Exception as e:
-                self._logger.error(e, self)
-                self._operation.status = "error"
-                self._operation.add_log_entry(f"Error stopping operation: {e}")
-
-    async def pause_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
-        """Pauses the operation."""
-        if not self._operation.persistent:
-            try:
-                await self._operation.pause()
-            except Exception as e:
-                self._logger.error(e, self)
-                self._operation.status = "error"
-                self._operation.add_log_entry(f"Error pausing operation: {e}")
-
-    async def resume_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
-        """Resumes the operation."""
-        if not self._operation.persistent:
-            try:
-                await self._operation.resume()
-            except Exception as e:
-                self._logger.error(e, self)
-                self._operation.status = "error"
-                self._operation.add_log_entry(f"Error resuming operation: {e}")
-
-    async def reset_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
-        """Resets the operation."""
-        try:
-            await self._operation.reset()
-        except Exception as e:
-            self._logger.error(e, self)
-            self._operation.status = "error"
-            self._operation.add_log_entry(f"Error resetting operation: {e}")
-
-    async def draw(self, parent) -> None:
+    def draw(self) -> None:
         """Draws the GUI elements for the operation."""
-        with dpg.group(parent=parent, tag=self._parent_id, horizontal=True,
+        with dpg.group(parent=self._parent, tag=self._parent_id, horizontal=True,
                        height=max(int(self._height * 0.3), 120)):
             with dpg.child_window(border=False, width=int(self._width * 0.5), parent=self._parent_id,
                                   tag=f"description_{self._unique_id}"):
@@ -149,18 +96,18 @@ class OperationModule:
                                          tag=f"action_{self._unique_id}", parent=f"description_{self._unique_id}",
                                          readonly=False)
 
-        with dpg.child_window(border=True, width=-1, parent=self._parent_id, tag=f"parameters_{self._unique_id}"):
-            dpg.add_checkbox(label="Continuous/Loop", tag=self._persistent_id,
-                             default_value=self._operation.persistent,
-                             parent=f"parameters_{self._unique_id}")
-            dpg.add_checkbox(label="CPU Bound", tag=self._cpu_bound_id,
-                             default_value=self._operation.is_cpu_bound,
-                             parent=f"parameters_{self._unique_id}")
-            dpg.add_checkbox(label="Parallel Execution", tag=self._concurrent_id,
-                             default_value=self._operation.concurrent,
-                             parent=f"parameters_{self._unique_id}")
+            with dpg.child_window(border=True, width=-1, parent=self._parent_id, tag=f"parameters_{self._unique_id}"):
+                dpg.add_checkbox(label="Continuous/Loop", tag=self._persistent_id,
+                                 default_value=self._operation.persistent,
+                                 parent=f"parameters_{self._unique_id}")
+                dpg.add_checkbox(label="CPU Bound", tag=self._cpu_bound_id,
+                                 default_value=self._operation.is_cpu_bound,
+                                 parent=f"parameters_{self._unique_id}")
+                dpg.add_checkbox(label="Parallel Execution", tag=self._concurrent_id,
+                                 default_value=self._operation.concurrent,
+                                 parent=f"parameters_{self._unique_id}")
 
-        with dpg.group(parent=parent, horizontal=True, tag=self._left_panel_id,
+        with dpg.group(parent=self._parent, horizontal=True, tag=self._left_panel_id,
                        height=max(int(self._height * 0.6), 100)):
 
             with dpg.child_window(height=-1, width=int(self._width * 0.5), border=False,
@@ -249,6 +196,54 @@ class OperationModule:
 
             await asyncio.sleep(0.05)
 
+    async def execute_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+        """Executes the operation."""
+        try:
+            self._operation.is_ready = True
+        except Exception as e:
+            self._logger.error(e, self)
+            self._operation.status = "error"
+            self._operation.add_log_entry(f"Error executing operation: {e}")
+
+    async def stop_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+        """Stops the operation."""
+        if not self._operation.persistent:
+            try:
+                await self._operation.stop()
+            except Exception as e:
+                self._logger.error(e, self)
+                self._operation.status = "error"
+                self._operation.add_log_entry(f"Error stopping operation: {e}")
+
+    async def pause_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+        """Pauses the operation."""
+        if not self._operation.persistent:
+            try:
+                await self._operation.pause()
+            except Exception as e:
+                self._logger.error(e, self)
+                self._operation.status = "error"
+                self._operation.add_log_entry(f"Error pausing operation: {e}")
+
+    async def resume_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+        """Resumes the operation."""
+        if not self._operation.persistent:
+            try:
+                await self._operation.resume()
+            except Exception as e:
+                self._logger.error(e, self)
+                self._operation.status = "error"
+                self._operation.add_log_entry(f"Error resuming operation: {e}")
+
+    async def reset_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+        """Resets the operation."""
+        try:
+            await self._operation.reset()
+        except Exception as e:
+            self._logger.error(e, self)
+            self._operation.status = "error"
+            self._operation.add_log_entry(f"Error resetting operation: {e}")
+
     async def view_result(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Handles the event when the user clicks the 'View Result' button."""
         _result = await self._operation.get_results_from_memory()
@@ -265,16 +260,17 @@ class OperationModule:
     async def _open_parent_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Opens the parent operation in the GUI."""
 
-        def on_ok_button(sender, app_data, user_data):
+        def on_ok_button(_sender, _app_data, _user_data):
             dpg.delete_item(popup_id)
 
         parent_operation = self._operation.parent_operation
         if parent_operation:
-            parent_operation_gui = OperationModule(operation=parent_operation, width=self._width, height=self._height)
             popup_id = dpg.generate_uuid()
 
             with dpg.window(label="Parent Operation", modal=True, tag=popup_id, width=self._width, height=self._height):
-                await parent_operation_gui.draw(popup_id)
+                parent_operation_gui = OperationModule(operation=parent_operation,
+                                                       width=self._width, height=self._height, parent=popup_id)
+                await parent_operation_gui.initialize_gui()
                 dpg.add_button(label="Close", callback=on_ok_button)
 
             dpg.show_item(popup_id)
@@ -287,3 +283,14 @@ class OperationModule:
             # Show the popup dialog
             dpg.show_item(popup_id)
             self._operation.add_log_entry("No parent operation found.")
+
+    async def _update_async(self) -> None:
+        """Performs async updates."""
+        await self.update_gui()
+
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        """Resizes the GUI."""
+        self.width = new_width
+        self.height = new_height
+        dpg.set_item_width(self._parent_id, new_width)
+        dpg.set_item_height(self._parent_id, new_height)

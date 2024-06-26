@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import Optional, Any
+from typing import Optional
 
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
@@ -11,7 +11,7 @@ from research_analytics_suite.operation_manager import BaseOperation
 class CollectionViewDialog(GUIBase):
     """A class to manage the main GUI window and its components."""
 
-    def __init__(self, width: int, height: int, parent=None):
+    def __init__(self, width: int, height: int, parent):
         """Initializes the CollectionViewDialog."""
         super().__init__(width, height, parent)
 
@@ -31,8 +31,17 @@ class CollectionViewDialog(GUIBase):
 
     async def initialize_gui(self) -> None:
         """Initializes the user interface."""
+        try:
+            self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
+                operation_type=BaseOperation, name="gui_MainCollectionUpdateTask",
+                action=self._update_async, persistent=True, concurrent=True)
+            self._update_operation.is_ready = True
+        except Exception as e:
+            self._logger.error(e, self)
+
+    def draw(self) -> None:
         with dpg.child_window(tag="collection_view_dialog",
-                              parent=self.parent, width=-1, height=125, border=True):
+                              parent=self._parent, width=-1, height=125, border=True):
             from research_analytics_suite.gui import left_aligned_input_field
             left_aligned_input_field(label="Search", tag="search_input", parent="collection_view_dialog",
                                      callback=self.search, value="")
@@ -54,23 +63,32 @@ class CollectionViewDialog(GUIBase):
                     self.notification_area = dpg.add_text("Notifications: [in the future]")
                     dpg.add_separator()
 
-        dpg.add_child_window(label="Memory Collections", parent=self.parent, width=-1, height=-1,
+        dpg.add_child_window(label="Memory Collections", parent=self._parent, width=-1, height=-1,
                              border=True, tag="memory_collections_window")
         dpg.add_button(label="Add Variable", parent="memory_collections_window",
                        callback=lambda: asyncio.create_task(self.open_add_var_dialog()))
-        dpg.add_group(tag="data_collection_tools_group", parent="memory_collections_window", width=-1, height=-1, horizontal=True)
-
-        self._update_operation = await self.add_update_operation()
-
-    async def draw(self, parent: Any) -> None:
-        """Draws the GUI."""
-        self.parent = parent
-        await self.initialize_gui()
-        await self.draw_collections()
+        dpg.add_group(tag="data_collection_tools_group", parent="memory_collections_window", width=-1, height=-1,
+                      horizontal=True)
 
     async def _update_async(self) -> None:
-        """Performs async updates."""
-        await self.update_collections()
+        """Updates the collection dropdown list and the GUI display of variables."""
+        while not dpg.does_item_exist("data_collection_tools_group"):
+            await asyncio.sleep(0.1)
+
+        while True:
+            collections = await self._workspace.list_memory_collections()
+            collection_items = []
+            for collection_id, collection in collections.items():
+                if collection.name.startswith('sys_') or collection.name.startswith('gui_'):
+                    continue
+                collection_items.append(f"{collection.display_name}")
+                self.collection_groups[collection_id] = f"{collection.display_name}"
+                await self.display_collection_in_gui(collection_id, collection)
+
+            if dpg.does_item_exist("collection_id_input"):
+                dpg.configure_item("collection_id_input", items=collection_items)
+
+            await asyncio.sleep(0.05)
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         """Resizes the GUI."""
@@ -104,17 +122,6 @@ class CollectionViewDialog(GUIBase):
                             slot_preview = SlotPreview(parent=collection_tag, slot=slot, width=200, height=100)
                             slot_preview.draw()
 
-    async def add_update_operation(self) -> Optional[Any]:
-        try:
-            operation = await self._operation_control.operation_manager.add_operation_with_parameters(
-                operation_type=BaseOperation, name="gui_MainCollectionUpdateTask",
-                action=self.update_collections, persistent=True, concurrent=True)
-            operation.is_ready = True
-            return operation
-        except Exception as e:
-            self._logger.error(e, self)
-        return None
-
     def search(self, sender, data):
         """Callback function for search bar."""
         search_query = dpg.get_value(self.search_bar)
@@ -141,26 +148,6 @@ class CollectionViewDialog(GUIBase):
                         width=500, height=500):
             from research_analytics_suite.gui import AdvancedSlotView
             self.advanced_slot_view = AdvancedSlotView(parent="advanced_slot_group", slot=slot)
-
-    async def update_collections(self):
-        """Updates the collection dropdown list and the GUI display of variables."""
-        while not dpg.does_item_exist("data_collection_tools_group"):
-            await asyncio.sleep(0.1)
-
-        while True:
-            collections = await self._workspace.list_memory_collections()
-            collection_items = []
-            for collection_id, collection in collections.items():
-                if collection.name.startswith('sys_') or collection.name.startswith('gui_'):
-                    continue
-                collection_items.append(f"{collection.display_name}")
-                self.collection_groups[collection_id] = f"{collection.display_name}"
-                await self.display_collection_in_gui(collection_id, collection)
-
-            if dpg.does_item_exist("collection_id_input"):
-                dpg.configure_item("collection_id_input", items=collection_items)
-
-            await asyncio.sleep(0.05)
 
     async def display_collection_in_gui(self, collection_id, collection):
         """Displays or updates a collection and its variables in the GUI."""

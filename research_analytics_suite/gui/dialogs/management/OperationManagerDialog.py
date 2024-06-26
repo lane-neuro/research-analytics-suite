@@ -103,27 +103,31 @@ class OperationManagerDialog:
 
             for operation_chain in sequencer_copy:
                 for node in operation_chain:
-                    self._logger.debug(f"Checking operation: {node.operation.name} with runtime_id: {node.operation.runtime_id}")
+                    self._logger.debug(f"Checking operation: {node.operation.name} with runtime_id: "
+                                       f"{node.operation.runtime_id}")
 
                     # Debugging conditions
                     if node.operation.runtime_id in self.operation_items.keys():
-                        self._logger.debug(f"Operation {node.operation.name} with runtime_id: {node.operation.runtime_id} is already in operation_items.")
+                        self._logger.debug(f"Operation {node.operation.name} with runtime_id: "
+                                           f"{node.operation.runtime_id} is already in operation_items.")
                     if node.operation.name == "gui_OperationManagerUpdateTask":
-                        self._logger.debug(f"Operation {node.operation.name} with runtime_id: {node.operation.runtime_id} is gui_OperationManagerUpdateTask.")
+                        self._logger.debug(f"Operation {node.operation.name} with runtime_id: "
+                                           f"{node.operation.runtime_id} is gui_OperationManagerUpdateTask.")
                     if node.operation.name.startswith("gui_") or node.operation.name.startswith("sys_"):
-                        self._logger.debug(f"Operation {node.operation.name} with runtime_id: {node.operation.runtime_id} starts with gui_ or sys_.")
+                        self._logger.debug(f"Operation {node.operation.name} with runtime_id: "
+                                           f"{node.operation.runtime_id} starts with gui_ or sys_.")
 
                     # Condition to add operations
                     if (node.operation.runtime_id not in self.operation_items.keys()
                             and node.operation.name != "gui_OperationManagerUpdateTask"
                             and not node.operation.name.startswith("gui_")
                             and not node.operation.name.startswith("sys_")):
-                        self._logger.info(f"Adding operation to display: {node.operation.name} with runtime_id: {node.operation.runtime_id}")
-                        self._logger.debug(f"Adding operation to display: {node.operation.name} with runtime_id: {node.operation.runtime_id}")
+                        self._logger.debug(f"Adding operation to display: {node.operation.name} with runtime_id: "
+                                           f"{node.operation.runtime_id}")
                         self.operation_items[node.operation.runtime_id] = OperationModule(operation=node.operation,
                                                                                           width=self.TILE_WIDTH,
-                                                                                          height=self.TILE_HEIGHT)
-                        await self.operation_items[node.operation.runtime_id].initialize()
+                                                                                          height=self.TILE_HEIGHT,
+                                                                                          parent=None)
                         await self.add_operation_tile(node.operation)
             await asyncio.sleep(self.SLEEP_DURATION)
             self._logger.debug("Display operations loop sleeping...")
@@ -139,16 +143,15 @@ class OperationManagerDialog:
                 or len(dpg.get_item_children(self.current_row_group)[1]) >= self.tiles_per_row):
             self.current_row_group = dpg.add_group(horizontal=True, parent=self.window)
             self._logger.debug(f"Created new row group: {self.current_row_group}")
-            self._logger.debug(f"Created new row group: {self.current_row_group}")
 
         tag = f"{operation.runtime_id}_tile"
-        self._logger.debug(f"Creating child window for operation: {operation.name} with tag: {tag}")
         self._logger.debug(f"Creating child window for operation: {operation.name} with tag: {tag}")
         child_window = dpg.add_child_window(width=self.TILE_WIDTH, height=self.TILE_HEIGHT,
                                             parent=self.current_row_group, tag=tag)
         self._logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
-        self._logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
-        await self.operation_items[operation.runtime_id].draw(parent=tag)
+        self.operation_items[operation.runtime_id].parent = tag
+        await self.operation_items[operation.runtime_id].initialize_gui()
+        self.operation_items[operation.runtime_id].draw()
 
     def load_operation(self, sender: str, data: dict) -> None:
         """Loads operations from a file."""
