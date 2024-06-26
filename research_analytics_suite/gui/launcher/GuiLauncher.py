@@ -65,8 +65,7 @@ class GuiLauncher:
         self.resource_monitor_dialog = None
         self.reports_dialog = None
         self.manage_project_dialog = None
-
-        self.planning_dialog = PlanningDialog(width=800, height=600)
+        self.planning_dialog = None
         self.analyze_data_dialog = AnalyzeDataDialog(width=800, height=600)
 
     async def setup_navigation_menu(self) -> None:
@@ -193,7 +192,9 @@ class GuiLauncher:
     async def setup_panes(self) -> None:
         """Sets up asynchronous panes."""
         with dpg.child_window(tag="planning_pane", parent="middle_pane", show=True):
-            self.planning_dialog.draw(parent="planning_pane")
+            self.planning_dialog = PlanningDialog(width=-1, height=-1, parent="planning_pane")
+            await self.planning_dialog.initialize_gui()
+            self.planning_dialog.draw()
 
         with dpg.child_window(tag="data_collection_pane", parent="middle_pane", show=False):
             await self.setup_data_collection_pane()
