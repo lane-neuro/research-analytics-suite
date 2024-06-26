@@ -15,7 +15,6 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
-from typing import Optional, Any
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.gui.GUIBase import GUIBase
@@ -62,49 +61,20 @@ class OperationManagerDialog(GUIBase):
 
     async def initialize_gui(self) -> None:
         """Initializes the operation manager dialog by adding the update operation."""
-        self._update_operation = await self.add_update_operation()
+        self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
+                operation_type=BaseOperation, name="gui_OperationManagerUpdateTask",
+                action=self._update_async, persistent=True, concurrent=True)
+        self._update_operation.is_ready = True
         dpg.set_viewport_resize_callback(self.on_resize)
 
     def draw(self) -> None:
         """Draws the GUI elements for the operation manager dialog."""
-        dpg.add_text("Operation Manager", parent=self.parent)
+        dpg.add_text("Operation Manager", parent=self._parent)
         self.create_operation_module.draw_button(label="Create New Operation", width=200, parent=self.parent)
         dpg.add_button(label="Load Operation from File", width=200, parent=self.parent, callback=self.load_operation)
         self.window = dpg.add_group(parent=self.parent, tag="operation_gallery", horizontal=False)
 
     async def _update_async(self) -> None:
-        """Performs async updates."""
-        await self.display_operations()
-
-    async def resize_gui(self, new_width: int, new_height: int) -> None:
-        """Handles the resize event and adjusts the number of tiles per row."""
-        self.width = new_width
-        self.height = new_height
-        new_tiles_per_row = self.calculate_tiles_per_row(new_width)
-        if new_tiles_per_row != self.tiles_per_row:
-            self.tiles_per_row = new_tiles_per_row
-            await self.refresh_display()
-
-    async def add_update_operation(self) -> Optional[Any]:
-        """
-        Adds an update operations to the operations manager.
-
-        Returns:
-            Operation: The created update operations or None if an error occurred.
-        """
-        try:
-            self._logger.debug("Adding update operation...")
-            operation = await self._operation_control.operation_manager.add_operation_with_parameters(
-                operation_type=BaseOperation, name="gui_OperationManagerUpdateTask",
-                action=self.display_operations, persistent=True, concurrent=True)
-            operation.is_ready = True
-            self._logger.debug(f"Update operation added: {operation}")
-            return operation
-        except Exception as e:
-            self._logger.error(e, self)
-        return None
-
-    async def display_operations(self) -> None:
         """Continuously checks for new operations and displays them in the GUI."""
         while True:
             sequencer_copy = set(self._operation_control.sequencer.sequencer)
@@ -136,6 +106,15 @@ class OperationManagerDialog(GUIBase):
                         await self.add_operation_tile(node.operation)
             await asyncio.sleep(self.SLEEP_DURATION)
             self._logger.debug("Display operations loop sleeping...")
+
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        """Handles the resize event and adjusts the number of tiles per row."""
+        self.width = new_width
+        self.height = new_height
+        new_tiles_per_row = self.calculate_tiles_per_row(new_width)
+        if new_tiles_per_row != self.tiles_per_row:
+            self.tiles_per_row = new_tiles_per_row
+            await self.refresh_display()
 
     async def add_operation_tile(self, operation: 'BaseOperation') -> None:
         """
