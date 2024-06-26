@@ -16,7 +16,7 @@ Status: Prototype
 """
 import json
 from collections import deque
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Type
 
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.nodes.OperationNode import OperationNode
@@ -169,19 +169,19 @@ class OperationSequencer:
                     return node.operation
         return None
 
-    def get_operation_by_type(self, operation_type: type) -> Optional[BaseOperation]:
+    def get_operation_by_type(self, operation_type) -> Optional[BaseOperation]:
         """
         Gets an operation of a specific type.
 
         Args:
-            operation_type (type): The type of operation to find.
+            operation_type: The type of operation to find.
 
         Returns:
             Optional[BaseOperation]: The found operation, or None if not found.
         """
         for chain in self.sequencer:
             for node in chain:
-                if isinstance(type(node.operation), operation_type):
+                if isinstance(node.operation, operation_type):
                     return node.operation
         self._logger.error(Exception(f"No operation found of type {operation_type.__name__}"), self)
         return None

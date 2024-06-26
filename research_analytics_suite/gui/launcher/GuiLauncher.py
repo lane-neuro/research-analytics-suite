@@ -20,6 +20,7 @@ import os
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
 from research_analytics_suite.data_engine.Workspace import Workspace
+from research_analytics_suite.gui.dialogs.management.ResourceMonitorDialog import ResourceMonitorDialog
 from research_analytics_suite.gui.dialogs.data_handling.CollectionViewDialog import CollectionViewDialog
 from research_analytics_suite.gui.dialogs.management.ConsoleDialog import ConsoleDialog
 from research_analytics_suite.gui.dialogs.management.OperationManagerDialog import OperationManagerDialog
@@ -44,11 +45,13 @@ class GuiLauncher:
         """
         Initializes the GUI launcher with necessary components.
         """
-        self.timeline = None
         self.dpg_async = DearPyGuiAsync()
+
         self._logger = CustomLogger()
-        self.operation_control = OperationControl()
-        self.workspace = Workspace()
+        self._operation_control = OperationControl()
+        self._workspace = Workspace()
+
+        self.timeline = None
         self.visualization_dialog = None
         self.data_engine_dialog = None
         self.data_import_wizard = None
@@ -57,12 +60,12 @@ class GuiLauncher:
         self.console = None
         self.operation_window = None
         self.workspace_dialog = None
-
-        # Initializing the new dialog classes
-        self.planning_dialog = PlanningDialog(width=800, height=600)
         self.collection_view_dialog = None
-        self.analyze_data_dialog = AnalyzeDataDialog(width=800, height=600)
         self.visualize_data_dialog = None
+        self.resource_monitor_dialog = None
+
+        self.planning_dialog = PlanningDialog(width=800, height=600)
+        self.analyze_data_dialog = AnalyzeDataDialog(width=800, height=600)
         self.manage_project_dialog = ProjectManagerDialog(width=800, height=600)
         self.reports_dialog = ReportsDialog(width=800, height=600)
 
@@ -169,6 +172,14 @@ class GuiLauncher:
                 with dpg.group(horizontal=True, tag="bottom_pane_group"):
                     await self.setup_workspace_pane()
 
+                    with dpg.child_window(tag="resource_monitor_pane", width=600):
+                        dpg.add_text("Resource Monitor")
+                        with dpg.group(horizontal=True, tag="resource_monitor_group"):
+                            self.resource_monitor_dialog = ResourceMonitorDialog(width=-1, height=-1,
+                                                                                 parent="resource_monitor_group")
+                            await self.resource_monitor_dialog.initialize_gui()
+                            self.resource_monitor_dialog.draw()
+
         dpg.set_primary_window("main_window", True)
 
         while dpg.is_dearpygui_running():
@@ -176,7 +187,7 @@ class GuiLauncher:
             await asyncio.sleep(0.01)
 
         self._logger.info("Shutting down GUI...")
-        await self.workspace.save_current_workspace()
+        await self._workspace.save_current_workspace()
         dpg.destroy_context()
 
     async def setup_panes(self) -> None:
@@ -219,7 +230,7 @@ class GuiLauncher:
         with dpg.group(parent="console_log_output_pane"):
             dpg.add_text("Console/Log Output", tag="console_log_output")
 
-        self.console = ConsoleDialog(self.operation_control.user_input_manager)
+        self.console = ConsoleDialog(self._operation_control.user_input_manager)
         await self.console.initialize()
 
     async def setup_workspace_pane(self) -> None:
@@ -235,7 +246,7 @@ class GuiLauncher:
             dpg.add_text("Planning Tools")
             self.timeline = TimelineModule(width=int(dpg.get_viewport_width() * 0.5),
                                            height=300,
-                                           operation_sequencer=self.operation_control.sequencer)
+                                           operation_sequencer=self._operation_control.sequencer)
             await self.timeline.initialize_dialog()
 
     async def setup_data_collection_pane(self) -> None:
