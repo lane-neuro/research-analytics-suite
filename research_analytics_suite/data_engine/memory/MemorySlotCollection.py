@@ -45,7 +45,7 @@ class MemorySlotCollection(ABC):
         else:
             self._name = name
 
-        self.collection_id = str(uuid.uuid4())  # Generate a unique identifier for the collection
+        self.collection_id = str(uuid.uuid4().hex)  # Generate a unique identifier for the collection
         self.slots: List[MemorySlot] = []
 
         from research_analytics_suite.data_engine import Workspace
@@ -54,7 +54,7 @@ class MemorySlotCollection(ABC):
     @property
     def display_name(self) -> str:
         """Get the display name of the collection."""
-        return f"{self.name} [{self.collection_id[:4]}] ({len(self.slots)} slots)"
+        return f"{self.name} [{self.collection_id[:3]}]"
 
     @property
     def name(self) -> str:

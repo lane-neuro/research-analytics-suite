@@ -43,24 +43,34 @@ class CollectionViewDialog:
 
     async def initialize_dialog(self) -> None:
         """Initializes the user interface."""
-        with dpg.child_window(label="Memory Collections", tag="collection_view_dialog",
-                              parent=self.parent, width=self.width, height=self.height, border=True):
-            self.search_bar = dpg.add_input_text(label="Search", callback=self.search)
-            dpg.add_button(label="Add User Variable", callback=self.open_add_var_dialog)
-
-            dpg.add_text("Save and Restore")
+        with dpg.child_window(tag="collection_view_dialog",
+                              parent=self.parent, width=-1, height=125, border=True):
+            from research_analytics_suite.gui import left_aligned_input_field
+            left_aligned_input_field(label="Search", tag="search_input", parent="collection_view_dialog",
+                                     callback=self.search, value="")
             dpg.add_separator()
-            dpg.add_button(label="Save User Variables",
-                           callback=lambda: asyncio.create_task(self.save_memory_collections()))
-            dpg.add_button(label="Restore User Variables",
-                           callback=lambda: asyncio.create_task(self.restore_memory_collections()))
-            dpg.add_separator()
-            dpg.add_text("Filename:")
-            dpg.add_input_text(tag="save_path_input", default_value=os.path.join('user_variables.db'), width=-1)
 
-            self.notification_area = dpg.add_text("Notifications will appear here.")
-            self.advanced_slot_view = None
-            dpg.add_child_window(tag="data_collection_tools_group", border=True, width=-1, height=-1)
+            with dpg.group(horizontal=True):
+                with dpg.group(horizontal=False, width=200):
+                    dpg.add_text("Save and Restore")
+                    dpg.add_separator()
+                    dpg.add_button(label="Save Memory Collections",
+                                   callback=lambda: asyncio.create_task(self.save_memory_collections()))
+                    dpg.add_button(label="Restore Memory Collections",
+                                   callback=lambda: asyncio.create_task(self.restore_memory_collections()))
+                with dpg.group(horizontal=False, width=200):
+                    dpg.add_text("Filename")
+                    dpg.add_separator()
+                    dpg.add_input_text(tag="save_path_input", default_value=os.path.join('user_variables.db'), width=-1)
+                with dpg.group(horizontal=False, width=-1):
+                    self.notification_area = dpg.add_text("Notifications: [in the future]")
+                    dpg.add_separator()
+
+        dpg.add_child_window(label="Memory Collections", parent=self.parent, width=-1, height=-1,
+                             border=True, tag="memory_collections_window")
+        dpg.add_button(label="Add Variable", parent="memory_collections_window",
+                       callback=lambda: asyncio.create_task(self.open_add_var_dialog()))
+        dpg.add_group(tag="data_collection_tools_group", parent="memory_collections_window", width=-1, height=-1, horizontal=True)
 
         self.update_operation = await self.add_update_operation()
 
@@ -68,7 +78,8 @@ class CollectionViewDialog:
         if dpg.does_item_exist("collection_group"):
             dpg.delete_item("collection_group")
 
-        with dpg.group(parent="data_collection_tools_group", tag="collection_group", width=-1, height=-1):
+        with dpg.group(parent="data_collection_tools_group", tag="collection_group",
+                       width=-1, height=-1, horizontal=True):
             """Draws the collection summary view elements."""
             if self.collection_list is None:
                 return
@@ -80,8 +91,8 @@ class CollectionViewDialog:
                 collection_tag = f"collection_group_{collection}"
                 self.collection_groups[collection] = collection_tag
 
-                with dpg.group(tag=collection_tag, horizontal=True):
-                    dpg.add_text(f"Collection: {collection.name}", parent=collection_tag)
+                with dpg.group(tag=collection_tag, horizontal=False):
+                    dpg.add_text(collection.name, parent=collection_tag)
                     if collection.list_slots():
                         for slot in collection.list_slots():
                             from research_analytics_suite.gui import SlotPreview
@@ -153,8 +164,8 @@ class CollectionViewDialog:
 
         collection_group_tag = f"collection_group_{collection_id}"
         if not dpg.does_item_exist(collection_group_tag):
-            with dpg.group(tag=collection_group_tag, parent="data_collection_tools_group", horizontal=True):
-                dpg.add_text(f"Collection: {collection.display_name}")
+            with dpg.group(tag=collection_group_tag, parent="data_collection_tools_group", horizontal=False):
+                dpg.add_text(f"{collection.display_name}", tag=f"collection_{collection_id}_name")
         else:
             dpg.configure_item(collection_group_tag, show=True)
 
@@ -170,8 +181,8 @@ class CollectionViewDialog:
         """Displays or updates a memory slot and its variables in the GUI."""
         slot_group_tag = f"slot_group_{collection_id}_{slot.memory_id}"
         if not dpg.does_item_exist(slot_group_tag):
-            with dpg.group(tag=slot_group_tag, parent=f"collection_group_{collection_id}", horizontal=True):
-                dpg.add_text(f"Slot: {slot.name} (ID: {slot.memory_id[:4]})", parent=slot_group_tag)
+            with dpg.group(tag=slot_group_tag, parent=f"collection_group_{collection_id}", horizontal=False):
+                dpg.add_text(f"Slot: {slot.name}", parent=slot_group_tag)
         await self.update_variables_in_gui(collection_id, slot)
 
     async def update_variables_in_gui(self, collection_id, slot):
@@ -183,15 +194,6 @@ class CollectionViewDialog:
                 dpg.add_text(f"{key}: {value} ({data_type.__name__})", tag=var_tag, parent=slot_group_tag)
             else:
                 dpg.set_value(var_tag, f"{key}: {value} ({data_type.__name__})")
-
-    async def add_variable_to_gui(self, collection_id, slot_id, key, value) -> None:
-        """Adds a user variable to the GUI."""
-        var_tag = f"var_{collection_id}_{slot_id}_{key}"
-        slot_group_tag = f"slot_group_{collection_id}_{slot_id}"
-        if not dpg.does_item_exist(var_tag):
-            dpg.add_text(f"{key}: {value}", tag=var_tag, parent=slot_group_tag)
-        else:
-            dpg.set_value(var_tag, f"{key}: {value}")
 
     async def remove_memory_slot_from_gui(self, collection_id, slot_id=None) -> None:
         """Removes a memory slot from the GUI."""
