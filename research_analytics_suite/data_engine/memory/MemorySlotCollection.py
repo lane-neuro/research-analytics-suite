@@ -74,9 +74,16 @@ class MemorySlotCollection(ABC):
             return self.slots
         return None
 
-    async def add_slot(self, slot: MemorySlot):
+    def add_slot(self, slot: MemorySlot):
         """Add a memory slot to the collection."""
         self.slots.append(slot)
+
+    def new_slot_with_data(self, data: dict) -> MemorySlot:
+        """Create a new memory slot from data and add it to the collection."""
+        slot = MemorySlot(memory_id=str(uuid.uuid4()), data=data, operation_required=False, name="imported_data")
+
+        self.add_slot(slot)
+        return slot
 
     async def remove_slot(self, memory_id: str):
         """Remove a memory slot from the collection by its ID."""
@@ -125,7 +132,7 @@ class MemorySlotCollection(ABC):
         collection = MemorySlotCollection(name=_name)
         collection.collection_id = data.get('collection_id', str(uuid.uuid4()))
         for slot_data in data.get('slots', []):
-            await collection.add_slot(await MemorySlot.from_dict(slot_data))
+            collection.add_slot(await MemorySlot.load_from_disk(slot_data))
         return collection
 
     def to_json(self) -> str:

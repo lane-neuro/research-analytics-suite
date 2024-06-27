@@ -141,6 +141,11 @@ class MemorySlot:
 
     def validate_data(self):
         """Ensure that the data dictionary contains valid key-value pairs."""
+        if not isinstance(self._data.values(), tuple):
+            values = list(self._data.values())
+            _types = [type(v) for v in values]
+            self._data = {k: (t, v) for k, t, v in zip(self._data.keys(), _types, values)}
+
         for k, (t, v) in self._data.items():
             if not isinstance(k, str):
                 raise ValueError("All keys in data must be strings")
@@ -240,7 +245,7 @@ class MemorySlot:
             }
 
     @staticmethod
-    async def from_dict(data: dict) -> 'MemorySlot':
+    async def load_from_disk(data: dict) -> 'MemorySlot':
         """Initialize a MemorySlot instance from a dictionary."""
         slot_data = {k: (eval(t), v) for k, (t, v) in data.get('data', {}).items()}
         slot = MemorySlot(

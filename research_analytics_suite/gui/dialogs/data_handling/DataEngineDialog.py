@@ -35,7 +35,7 @@ class DataEngineDialog:
             dpg.add_text("Data Engine Operations", color=(255, 255, 0))
 
             with dpg.group(horizontal=True):
-                dpg.add_button(label="Import Data", callback=self._import_data)
+                #dpg.add_button(label="Import Data", callback=self._import_data)
                 dpg.add_button(label="Execute Operation", callback=self._execute_operation)
                 dpg.add_button(label="Show Results", callback=self._show_results)
 
@@ -49,20 +49,6 @@ class DataEngineDialog:
             dpg.add_input_text(label="Variable Value", tag="variable_value_input")
             dpg.add_button(label="Update Variable", callback=self._update_variable)
             dpg.add_text("", tag="workspace_status")
-
-    def _import_data(self, sender, app_data, user_data):
-        """
-        Imports data into the data engine.
-
-        Args:
-            sender: Sender of the import command.
-            app_data: Application data.
-            user_data: User data.
-        """
-        data_path = "path/to/data.csv"
-        self._data_engine.load_data(data_path)
-        dpg.set_value("data_engine_status", f"Data imported from {data_path}")
-        self._logger.info(f"Data imported from {data_path}")
 
     def _execute_operation(self, sender, app_data, user_data):
         """

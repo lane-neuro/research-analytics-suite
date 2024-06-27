@@ -130,6 +130,15 @@ class Workspace:
         """
         return self._data_engines.get(name, None)
 
+    def get_default_data_engine(self):
+        """
+        Retrieves the default data engine.
+
+        Returns:
+            DataEngineOptimized: The default data engine.
+        """
+        return next(iter(self._data_engines.values()), None)
+
     async def create_workspace(self, workspace_directory, workspace_name):
         """
         Creates a new workspace with the specified parameters.
@@ -300,7 +309,7 @@ class Workspace:
             MemorySlotCollection: The retrieved collection.
         """
         try:
-            return await self._memory_manager.get_collection(collection_id=collection_id)
+            return self._memory_manager.get_collection(collection_id=collection_id)
         except Exception as e:
             self._logger.error(Exception(f"Failed to get MemorySlotCollection: {e}"), self)
 
@@ -330,9 +339,9 @@ class Workspace:
 
     async def add_variable_to_collection(self, collection_id: str, name: str, value: Any, data_type: type,
                                          memory_slot_id: Optional[str] = None) -> Tuple[str, dict]:
-        collection_id = collection_id or await self._memory_manager.get_default_collection_id()
+        collection_id = collection_id or self._memory_manager.get_default_collection_id()
         try:
-            collection = await self._memory_manager.get_collection(collection_id)
+            collection = self._memory_manager.get_collection(collection_id)
             if collection:
                 if memory_slot_id:
                     slot = collection.get_slot(memory_slot_id)
@@ -351,9 +360,9 @@ class Workspace:
 
     async def get_variable_from_collection(self, collection_id: str, name: str,
                                            memory_slot_id: Optional[str] = None) -> Any:
-        collection_id = collection_id or await self._memory_manager.get_default_collection_id()
+        collection_id = collection_id or self._memory_manager.get_default_collection_id()
         try:
-            collection = await self._memory_manager.get_collection(collection_id)
+            collection = self._memory_manager.get_collection(collection_id)
             if collection:
                 if memory_slot_id:
                     slot = collection.get_slot(memory_slot_id)
@@ -375,9 +384,9 @@ class Workspace:
 
     async def remove_variable_from_collection(self, collection_id: str, name: str,
                                               memory_slot_id: Optional[str] = None):
-        collection_id = collection_id or await self._memory_manager.get_default_collection_id()
+        collection_id = collection_id or self._memory_manager.get_default_collection_id()
         try:
-            collection = await self._memory_manager.get_collection(collection_id)
+            collection = self._memory_manager.get_collection(collection_id)
             if collection:
                 if memory_slot_id:
                     slot = collection.get_slot(memory_slot_id)

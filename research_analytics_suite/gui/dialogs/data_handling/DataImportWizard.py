@@ -6,31 +6,41 @@ research analytics suite. It supports various data formats and provides options 
 
 Author: Lane
 """
+import asyncio
+
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
-from research_analytics_suite.utils.CustomLogger import CustomLogger
+from research_analytics_suite.gui.GUIBase import GUIBase
 
 
-class DataImportWizard:
+class DataImportWizard(GUIBase):
     """
     A class to guide users through the process of importing data.
     """
-    def __init__(self, data_engine: UnifiedDataEngine):
+
+    def __init__(self, data_engine: UnifiedDataEngine, parent, width: int = 600, height: int = 400):
         """
         Initializes the DataImportWizard instance.
 
         Args:
             data_engine (UnifiedDataEngine): The data engine for handling data operations.
         """
+        super().__init__(width, height, parent)
         self._data_engine = data_engine
-        self._logger = CustomLogger()
 
-    async def initialize(self):
+    async def initialize_gui(self) -> None:
         """
         Initializes the data import wizard dialog.
         """
-        with dpg.group(tag="data_import_wizard"):
+        pass
+
+    async def _update_async(self) -> None:
+        pass
+
+    def draw(self) -> None:
+        """Draws the GUI elements for the Data Import Wizard."""
+        with dpg.group(tag="data_import_wizard", parent=self._parent):
             dpg.add_text("Data Import Wizard", color=(255, 255, 0))
 
             with dpg.group(horizontal=True):
@@ -43,7 +53,7 @@ class DataImportWizard:
                 dpg.add_button(label="Preview Data", callback=self._preview_data)
                 dpg.add_text("Data Preview:", tag="data_preview_text")
 
-            dpg.add_button(label="Import Data", callback=self._import_data)
+            dpg.add_button(label="Import Data")
 
     def _choose_file(self, sender, app_data, user_data):
         """
@@ -54,10 +64,8 @@ class DataImportWizard:
             app_data: Application data.
             user_data: User data.
         """
-        file_path = dpg.open_file_dialog()
-        if file_path:
-            dpg.set_value("selected_file_text", f"Selected File: {file_path}")
-            self._logger.info(f"Selected file for import: {file_path}")
+        if dpg.does_item_exist("selected_file"):
+            dpg.delete_item("selected_file")
 
     def _preview_data(self, sender, app_data, user_data):
         """
@@ -73,16 +81,5 @@ class DataImportWizard:
         # dpg.set_value("data_preview_text", f"Data Preview:\n{data_preview}")
         self._logger.info(f"Previewing data from: {file_path}")
 
-    def _import_data(self, sender, app_data, user_data):
-        """
-        Imports data from the selected file into the data engine.
-
-        Args:
-            sender: Sender of the import data command.
-            app_data: Application data.
-            user_data: User data.
-        """
-        file_path = dpg.get_value("selected_file_text").replace("Selected File: ", "")
-        self._data_engine.load_data(file_path)
-        dpg.set_value("data_preview_text", f"Data imported from {file_path}")
-        self._logger.info(f"Data imported from {file_path}")
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        pass

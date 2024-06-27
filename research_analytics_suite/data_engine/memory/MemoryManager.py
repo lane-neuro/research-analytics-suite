@@ -60,7 +60,7 @@ class MemoryManager:
         else:
             self.default_collection = next(iter(self.memory_slot_collections.values()))
 
-    async def get_default_collection_id(self) -> str:
+    def get_default_collection_id(self) -> str:
         return self.default_collection.collection_id
 
     def add_collection(self, collection: MemorySlotCollection):
@@ -88,7 +88,7 @@ class MemoryManager:
                                   f"importing existing memory slots as new slots.")
                 self.memory_slot_collections[collection.collection_id].add_slots(collection.slots)
 
-    async def get_collection(self, collection_id: str) -> MemorySlotCollection:
+    def get_collection(self, collection_id: str) -> MemorySlotCollection:
         """
         Retrieves a MemorySlotCollection by its ID.
 

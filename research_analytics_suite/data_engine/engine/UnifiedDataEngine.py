@@ -9,10 +9,12 @@ Author: Lane
 import json
 import os
 import uuid
+from typing import Type, Any, Dict, Tuple
 
 import aiofiles
 import dask.dataframe as dd
 import pandas as pd
+from numpy import dtype
 from torch.utils.data import DataLoader
 
 from research_analytics_suite.analytics.core.AnalyticsCore import AnalyticsCore
@@ -126,24 +128,27 @@ class UnifiedDataEngine:
         Args:
             file_path (str): The path to the data file.
         """
-        data_type = DataTypeDetector.detect_type(file_path)
+        # data_type = DataTypeDetector.detect_type(file_path)
+        data_type = os.path.splitext(file_path)[1][1:]
         self._logger.info(f"Loading data from {file_path} as {data_type}")
 
         if data_type == 'csv':
-            self.data = dd.read_csv(file_path)
+            data = dd.read_csv(file_path)
         elif data_type == 'json':
-            self.data = dd.read_json(file_path)
+            data = dd.read_json(file_path)
         elif data_type == 'parquet':
-            self.data = dd.read_parquet(file_path)
+            data = dd.read_parquet(file_path)
         elif data_type == 'hdf5':
-            self.data = dd.read_hdf(file_path)
+            data = dd.read_hdf(file_path)
         elif data_type == 'excel':
             pandas_df = pd.read_excel(file_path)
-            self.data = dd.from_pandas(pandas_df, npartitions=1)
+            data = dd.from_pandas(pandas_df, npartitions=1)
         else:
             raise ValueError(f"Unsupported data type: {data_type}")
 
-        self._logger.info("Data loaded")
+        data_dict = data.compute() if isinstance(data, dd.DataFrame) else data
+        data_dict = data_dict if isinstance(data_dict, dict) else data_dict.to_dict()
+        return data_dict
 
     def save_data(self, file_path):
         """

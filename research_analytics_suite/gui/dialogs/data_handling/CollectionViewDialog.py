@@ -67,6 +67,8 @@ class CollectionViewDialog(GUIBase):
                              border=True, tag="memory_collections_window")
         dpg.add_button(label="Add Variable", parent="memory_collections_window",
                        callback=lambda: asyncio.create_task(self.open_add_var_dialog()))
+        dpg.add_button(label="Data Import", parent="memory_collections_window",
+                       callback=self.show_data_import)
         dpg.add_group(tag="data_collection_tools_group", parent="memory_collections_window", width=-1, height=-1,
                       horizontal=True)
 
@@ -108,7 +110,7 @@ class CollectionViewDialog(GUIBase):
                 return
 
             for collection in self.collection_list:
-                collection = await self._memory_manager.get_collection(collection)
+                collection = self._memory_manager.get_collection(collection)
                 if collection.name.startswith("gui_") or collection.name.startswith("sys_"):
                     continue
                 collection_tag = f"collection_group_{collection}"
@@ -193,7 +195,8 @@ class CollectionViewDialog(GUIBase):
         if dpg.does_item_exist(slot_group_tag):
             dpg.delete_item(slot_group_tag)
 
-    async def add_variable(self, name, value, data_type, collection_id: str, memory_slot_id: Optional[str] = None) -> None:
+    async def add_variable(self, name, value, data_type, collection_id: str,
+                           memory_slot_id: Optional[str] = None) -> None:
         """Adds a user variable."""
         try:
             await self._workspace.add_variable_to_collection(collection_id=collection_id, name=name, value=value,
@@ -209,7 +212,22 @@ class CollectionViewDialog(GUIBase):
             self._logger.error(Exception(f"Failed to remove variable '{name}': {e}", self))
 
     def show_data_import(self, sender, app_data, user_data):
-        self._logger.info("Data Import clicked")
+        if dpg.does_item_exist("selected_file"):
+            dpg.delete_item("selected_file")
+
+        with dpg.file_dialog(show=True,
+                             default_path=f"{self._config.BASE_DIR}/{self._config.WORKSPACE_NAME}/"
+                                          f"{self._config.DATA_DIR}",
+                             callback=self._import_data,
+                             tag="selected_file",
+                             width=500, height=500, modal=True):
+            dpg.add_file_extension(".json", color=(255, 255, 255, 255))
+            dpg.add_file_extension(".csv", color=(255, 255, 255, 255))
+            dpg.add_file_extension(".xlsx", color=(255, 255, 255, 255))
+            dpg.add_file_extension(".txt", color=(255, 255, 255, 255))
+            dpg.add_file_extension(".tsv", color=(255, 255, 255, 255))
+            dpg.add_file_extension(".xml", color=(255, 255, 255, 255))
+            dpg.add_file_extension(".hd5", color=(255, 255, 255, 255))
 
     def show_surveys_forms(self, sender, app_data, user_data):
         self._logger.info("Surveys/Forms clicked")
@@ -335,3 +353,23 @@ class CollectionViewDialog(GUIBase):
 
         except Exception as e:
             self._logger.error(Exception(f"Error adding user variable: {e}", self))
+
+    def _import_data(self, sender, app_data, user_data):
+        """
+        Imports data from the selected file into the data engine.
+
+        Args:
+            sender: Sender of the import data command.
+            app_data: Application data.
+            user_data: User data.
+        """
+        _selected_files = app_data['selections'].values()
+        if not _selected_files:
+            return
+
+        for file in _selected_files:
+            file_path = file
+            data = self._workspace.get_default_data_engine().load_data(file_path)
+            collection = self._memory_manager.get_default_collection_id()
+            collection = self._memory_manager.get_collection(collection)
+            collection.new_slot_with_data(data)
