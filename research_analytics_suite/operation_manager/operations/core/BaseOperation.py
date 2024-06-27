@@ -332,7 +332,7 @@ class BaseOperation(ABC):
 
     async def add_memory_input_slot(self, memory_slot):
         """Add a memory input slot."""
-        await self.memory_inputs.add_slot(memory_slot)
+        self.memory_inputs.add_slot(memory_slot)
 
     async def remove_memory_input_slot(self, memory_id):
         """Remove a memory input slot by its ID."""
@@ -348,7 +348,7 @@ class BaseOperation(ABC):
 
     async def add_memory_output_slot(self, memory_slot):
         """Add a memory output slot."""
-        await self.memory_outputs.add_slot(memory_slot)
+        self.memory_outputs.add_slot(memory_slot)
 
     async def remove_memory_output_slot(self, memory_id):
         """Remove a memory output slot by its ID."""

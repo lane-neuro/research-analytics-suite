@@ -27,6 +27,34 @@ from research_analytics_suite.data_engine.data_streams.BaseInput import BaseInpu
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
+def flatten_json(y: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Flattens a nested JSON dictionary.
+
+    Args:
+        y (Dict[str, Any]): The JSON dictionary to flatten.
+
+    Returns:
+        Dict[str, Any]: The flattened JSON dictionary.
+    """
+    out = {}
+
+    def flatten(x: Any, name: str = ''):
+        if isinstance(x, dict):
+            for a in x:
+                flatten(x[a], name + a + '_')
+        elif isinstance(x, list):
+            i = 0
+            for a in x:
+                flatten(a, name + str(i) + '_')
+                i += 1
+        else:
+            out[name[:-1]] = x
+
+    flatten(y)
+    return out
+
+
 class UnifiedDataEngine:
     """
     A class that combines functionalities from DaskData and TorchData.
@@ -121,34 +149,83 @@ class UnifiedDataEngine:
         """
         return f"{self.data_name}_{self.engine_id[:4]}"
 
-    def load_data(self, file_path):
-        """
-        Loads data from the specified file path.
+    def detect_data_row(self, file_path, data_type):
+        def is_numerical(_row):
+            return all(self.is_number(_cell) for _cell in _row)
 
-        Args:
-            file_path (str): The path to the data file.
-        """
-        # data_type = DataTypeDetector.detect_type(file_path)
+        if data_type == 'csv':
+            with open(file_path, 'r') as f:
+                for i, line in enumerate(f):
+                    row = line.strip().split(',')
+                    if is_numerical(row):
+                        return i
+
+        elif data_type == 'json':
+            return 0
+
+        elif data_type == 'parquet':
+            return 0
+
+        elif data_type == 'hdf5':
+            return 0
+
+        elif data_type == 'excel':
+            xls = pd.ExcelFile(file_path)
+            for sheet_name in xls.sheet_names:
+                df = pd.read_excel(file_path, sheet_name=sheet_name)
+                for i, row in df.iterrows():
+                    if is_numerical(row):
+                        return i
+
+        raise ValueError(f"Unsupported data type: {data_type}")
+
+    @staticmethod
+    def is_number(value):
+        try:
+            float(value)
+            return True
+        except ValueError:
+            return False
+
+    def load_data(self, file_path, return_type='dict'):
         data_type = os.path.splitext(file_path)[1][1:]
         self._logger.info(f"Loading data from {file_path} as {data_type}")
 
-        if data_type == 'csv':
-            data = dd.read_csv(file_path)
-        elif data_type == 'json':
-            data = dd.read_json(file_path)
-        elif data_type == 'parquet':
-            data = dd.read_parquet(file_path)
-        elif data_type == 'hdf5':
-            data = dd.read_hdf(file_path)
-        elif data_type == 'excel':
-            pandas_df = pd.read_excel(file_path)
-            data = dd.from_pandas(pandas_df, npartitions=1)
-        else:
-            raise ValueError(f"Unsupported data type: {data_type}")
+        try:
+            if data_type == 'csv':
+                data = dd.read_csv(file_path)
+            elif data_type == 'json':
+                with open(file_path, 'r') as f:
+                    json_data = json.load(f)
+                    flattened_data = [flatten_json(json_data)]
+                    pandas_df = pd.DataFrame(flattened_data)
+                    data = dd.from_pandas(pandas_df, npartitions=1)
+            elif data_type == 'parquet':
+                data = dd.read_parquet(file_path)
+            elif data_type == 'hdf5':
+                data = dd.read_hdf(file_path)
+            elif data_type == 'excel':
+                pandas_df = pd.read_excel(file_path)
+                data = dd.from_pandas(pandas_df, npartitions=1)
+            else:
+                raise ValueError(f"Unsupported data type: {data_type}")
 
-        data_dict = data.compute() if isinstance(data, dd.DataFrame) else data
-        data_dict = data_dict if isinstance(data_dict, dict) else data_dict.to_dict()
-        return data_dict
+            if isinstance(data, dd.DataFrame):
+                data = data.compute()
+
+            if return_type == 'dict':
+                data = data.to_dict()
+            elif return_type != 'dataframe':
+                raise ValueError(f"Unsupported return type: {return_type}")
+
+            return data
+
+        except FileNotFoundError:
+            self._logger.error(Exception(f"File not found: {file_path}"), self)
+            raise
+        except Exception as e:
+            self._logger.error(Exception(f"Error loading data from {file_path}: {e}"), self)
+            raise
 
     def save_data(self, file_path):
         """

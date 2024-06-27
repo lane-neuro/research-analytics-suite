@@ -1,3 +1,4 @@
+import sys
 import time
 import asyncio
 from typing import Any, Type, Tuple, Dict
@@ -96,6 +97,22 @@ class MemorySlot:
     def data(self):
         """Get the data dictionary."""
         return self._data
+
+    @property
+    def preview_data(self) -> Dict[str, Tuple[Type, str]]:
+        """Get a data dictionary with the data value replaced by size as a formatted string."""
+        def format_size(size_in_bytes: int) -> str:
+            """Convert size from bytes to a human-readable string."""
+            for unit in ['bytes', 'KB', 'MB', 'GB', 'TB']:
+                if size_in_bytes < 1024:
+                    return f"{size_in_bytes:.2f} {unit}"
+                size_in_bytes /= 1024
+            return f"{size_in_bytes:.2f} PB"  # For completeness, although unlikely to reach PB.
+
+        return {key: (data_type, format_size(sys.getsizeof(value))) for key, (data_type, value) in self._data.items()}
+
+    def data_length(self) -> int:
+        return sys.getsizeof(self._data)
 
     @data.setter
     async def data(self, value: Dict[str, Tuple[Type, Any]]):

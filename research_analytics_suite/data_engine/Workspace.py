@@ -349,7 +349,7 @@ class Workspace:
                         raise ValueError(f"MemorySlot with ID {memory_slot_id} not found")
                 else:
                     slot = MemorySlot(memory_id=str(uuid.uuid4()), name=name, operation_required=True, data={})
-                    await collection.add_slot(slot)
+                    collection.add_slot(slot)
 
                 await slot.set_data_by_key(name, value, data_type)
                 return slot.memory_id, {name: value}
