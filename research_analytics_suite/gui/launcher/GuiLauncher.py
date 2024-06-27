@@ -169,7 +169,10 @@ class GuiLauncher:
                 with dpg.group(horizontal=True, tag="bottom_pane_group"):
                     await self.setup_workspace_pane()
 
-                    with dpg.child_window(tag="resource_monitor_pane", width=600):
+                    await self.setup_timeline_module()
+
+                    with dpg.child_window(tag="resource_monitor_pane", width=-1,
+                                          pos=(dpg.get_viewport_width() - 640, 8)):
                         dpg.add_text("Resource Monitor")
                         with dpg.group(horizontal=True, tag="resource_monitor_group"):
                             self._resource_monitor_dialog = ResourceMonitorDialog(width=-1, height=-1,
@@ -251,15 +254,6 @@ class GuiLauncher:
             await self._workspace_dialog.initialize_gui()
             self._workspace_dialog.draw()
 
-    async def setup_planning_pane(self) -> None:
-        """Sets up the planning pane."""
-        with dpg.group(parent="planning_pane"):
-            dpg.add_text("Planning Tools")
-            self._timeline_dialog = TimelineModule(width=int(dpg.get_viewport_width() * 0.5),
-                                                   height=300,
-                                                   operation_sequencer=self._operation_control.sequencer)
-            await self._timeline_dialog.initialize_dialog()
-
     async def setup_data_collection_pane(self) -> None:
         """Sets up the data collection pane."""
         with dpg.group(parent="data_collection_pane"):
@@ -272,3 +266,10 @@ class GuiLauncher:
         self._settings_dialog = SettingsDialog(width=800, height=600, parent=None)
         await self._settings_dialog.initialize_gui()
         self._settings_dialog.draw()
+
+    async def setup_timeline_module(self) -> None:
+        """Sets up the timeline module."""
+        self._timeline_dialog = TimelineModule(width=800, height=-1, parent="bottom_pane_group",
+                                               operation_sequencer=self._operation_control.sequencer)
+        await self._timeline_dialog.initialize_gui()
+        self._timeline_dialog.draw()

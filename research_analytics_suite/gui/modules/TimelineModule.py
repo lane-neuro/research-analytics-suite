@@ -12,82 +12,68 @@ from typing import Optional, Any
 import dearpygui.dearpygui as dpg
 from uuid import uuid4
 
+from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
-class TimelineModule:
+class TimelineModule(GUIBase):
     """A class to manage a multi-layered timeline interface for reordering OperationModule instances."""
 
-    def __init__(self, operation_sequencer, width: int, height: int):
-        self.window = dpg.add_group(label="Timeline", parent="bottom_pane_group", tag="timeline_manager",
-                                    horizontal=False)
-        self._logger = CustomLogger()
-        self.operation_control = OperationControl()
-        self.update_operation = None
-        self.width = width
-        self.height = height
-        self.operation_sequencer = operation_sequencer
-        self.unique_id = str(uuid4())
-        self.dragging_operation = None
-        self.operation_elements = {}
+    def __init__(self, operation_sequencer, width: int, height: int, parent):
+        super().__init__(width, height, parent)
+        self._operation_sequencer = operation_sequencer
+        self._dragging_operation = None
+        self._operation_elements = {}
 
-    async def initialize_dialog(self) -> None:
-        self.update_operation = await self.add_update_operation()
-
-    async def add_update_operation(self) -> Optional[Any]:
-        try:
-            operation = await self.operation_control.operation_manager.add_operation_with_parameters(
+    async def initialize_gui(self) -> None:
+        dpg.add_child_window(tag=self._unique_id, border=True, width=self.width, parent=self._parent)
+        self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_TimelineUpdateTask",
-                action=self.draw_timeline, persistent=True, concurrent=True)
-            operation.is_ready = True
-            return operation
-        except Exception as e:
-            self._logger.error(e, self)
-        return None
+                action=self._update_async, persistent=True, concurrent=True)
+        self._update_operation.is_ready = True
 
-    async def draw_timeline(self) -> None:
-        if not dpg.does_item_exist(self.unique_id):
-            dpg.add_child_window(tag=self.unique_id, border=True, width=self.width,
-                                 parent="timeline_manager")
-
-        dpg.add_button(label="Print Sequencer", callback=self.operation_sequencer.print_sequencer, parent=self.unique_id)
-
-        while True:
-            for layer_index, operation_chain in enumerate(self.operation_sequencer.sequencer):
-                for idx, node in enumerate(operation_chain):
-                    if not node.operation.name.startswith("gui_") and not node.operation.name.startswith("sys_"):
-                        self.update_operation_element(node.operation, layer_index, idx)
+    async def _update_async(self) -> None:
+        while not dpg.does_item_exist(f"print_sequencer_{self._unique_id}"):
             await asyncio.sleep(0.1)
 
-    def update_operation_element(self, operation: BaseOperation, layer_index: int, idx: int) -> None:
+        while True:
+            await self.update_all_elements()
+            await asyncio.sleep(0.1)
+
+    def draw(self) -> None:
+        dpg.add_button(label="Print Sequencer", callback=self._operation_sequencer.print_sequencer,
+                       parent=self._unique_id, tag=f"print_sequencer_{self._unique_id}")
+
+    async def update_operation_element(self, operation: BaseOperation, layer_index: int, idx: int) -> None:
         operation_id = f"operation_{operation.name}_{idx}_{layer_index}"
 
-        if operation_id in self.operation_elements:
-            dpg.set_value(self.operation_elements[operation_id]['text'], f"Operation {idx + 1}: {operation.name}")
+        if operation_id in self._operation_elements:
+            dpg.set_value(self._operation_elements[operation_id]['text'], f"Operation {idx + 1}: {operation.name}")
         else:
-            with dpg.group(horizontal=True, parent=self.unique_id):
+            with dpg.group(horizontal=True, parent=self._unique_id):
                 text_tag = dpg.add_text(f"Operation {idx + 1}: {operation.name}", tag=operation_id)
-                dpg.add_button(label="Drag", callback=lambda: self.set_dragging_operation(operation, operation_id))
-                dpg.add_button(label="Drop Here", callback=lambda: self.reorder_operations(layer_index, operation, idx))
-                self.operation_elements[operation_id] = {'text': text_tag}
+                #dpg.add_button(label="Drag", callback=lambda: self.set_dragging_operation(operation, operation_id))
+                #dpg.add_button(label="Drop Here", callback=lambda: self.reorder_operations(layer_index, operation, idx))
+                self._operation_elements[operation_id] = {'text': text_tag}
 
     def set_dragging_operation(self, operation: BaseOperation, operation_id: str) -> None:
-        self.dragging_operation = (operation, operation_id)
+        self._dragging_operation = (operation, operation_id)
 
     def reorder_operations(self, layer_index: int, operation: BaseOperation, new_index: int) -> None:
-        if self.dragging_operation:
-            dragged_operation, _ = self.dragging_operation
-            operation_chain = self.operation_sequencer.sequencer[layer_index]
+        if self._dragging_operation:
+            dragged_operation, _ = self._dragging_operation
+            operation_chain = self._operation_sequencer.sequencer[layer_index]
             if operation_chain.contains(dragged_operation):
-                self.operation_sequencer.move_operation(dragged_operation, new_index)
-            self.dragging_operation = None
-            # Update UI after reordering
-            self.update_all_elements()
+                self._operation_sequencer.move_operation(dragged_operation, new_index)
+            self._dragging_operation = None
 
-    def update_all_elements(self) -> None:
-        for layer_index, operation_chain in enumerate(self.operation_sequencer.sequencer):
+    async def update_all_elements(self) -> None:
+        for layer_index, operation_chain in enumerate(self._operation_sequencer.sequencer):
             for idx, node in enumerate(operation_chain):
                 if not node.operation.name.startswith("gui_") and not node.operation.name.startswith("sys_"):
-                    self.update_operation_element(node.operation, layer_index, idx)
+                    await self.update_operation_element(node.operation, layer_index, idx)
+
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        pass

@@ -39,7 +39,7 @@ class OperationManager:
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
-    async def add_initialized_operation(self, operation: 'BaseOperation') -> None:
+    async def add_initialized_operation(self, operation) -> 'BaseOperation':
         """
         Adds an initialized operation to the sequencer.
 
@@ -48,13 +48,14 @@ class OperationManager:
         """
         if operation is None:
             self._logger.error(Exception("Attempted to add a None operation to the sequencer."), self)
-            return
+            raise
         self._logger.info(f"Adding initialized operation to sequencer: {operation.name} with ID: {operation.unique_id}")
         await self.sequencer.add_operation_to_sequencer(operation)
         self._logger.info(f"Operation {operation.name} added to sequencer.")
         operation.add_log_entry(f"[SEQ] {operation.name}")
+        return operation
 
-    async def add_operation_with_parameters(self, operation_type, *args, **kwargs) -> BaseOperation:
+    async def add_operation_with_parameters(self, operation_type, *args, **kwargs) -> 'BaseOperation':
         """
         Creates a new Operation object with the specified parameters and adds it to the sequencer.
 
@@ -76,12 +77,11 @@ class OperationManager:
                 await operation.parent_operation.add_child_operation(operation)
                 self._logger.info(f"Added operation {operation.name} as child of {operation.parent_operation.name}")
 
-            await self.add_initialized_operation(operation)
-            return operation
+            return await self.add_initialized_operation(operation)
         except Exception as e:
             self._logger.error(e, operation_type)
 
-    async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> BaseOperation:
+    async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> 'BaseOperation':
         """
         Adds an operation to the sequencer if it does not already exist.
 
@@ -93,7 +93,7 @@ class OperationManager:
         if not self.task_creator.task_exists(operation_type):
             return await self.add_operation_with_parameters(operation_type=operation_type, *args, **kwargs)
 
-    async def resume_operation(self, operation: BaseOperation) -> None:
+    async def resume_operation(self, operation: 'BaseOperation') -> None:
         """
         Resumes a specific operation.
 
@@ -103,7 +103,7 @@ class OperationManager:
         if operation.status == "paused":
             await operation.resume()
 
-    async def pause_operation(self, operation: BaseOperation) -> None:
+    async def pause_operation(self, operation: 'BaseOperation') -> None:
         """
         Pauses a specific operation.
 
@@ -113,7 +113,7 @@ class OperationManager:
         if operation.status == "running":
             await operation.pause()
 
-    async def stop_operation(self, operation: BaseOperation) -> None:
+    async def stop_operation(self, operation: 'BaseOperation') -> None:
         """
         Stops a specific operation.
 

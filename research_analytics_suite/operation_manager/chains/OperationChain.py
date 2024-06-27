@@ -92,7 +92,7 @@ class OperationChain:
             current_node = current_node.next_node
         return count
 
-    def contains(self, operation: BaseOperation) -> bool:
+    def contains(self, operation: 'BaseOperation') -> bool:
         """
         Checks if the chain contains a specific operation.
 
@@ -104,7 +104,7 @@ class OperationChain:
         """
         current_node = self.head
         while current_node:
-            if current_node.operation == operation:
+            if current_node.operation.runtime_id == operation.runtime_id:
                 return True
             current_node = current_node.next_node
         return False
