@@ -64,7 +64,7 @@ class GuiLauncher:
         self._reports_dialog = None
         self._manage_project_dialog = None
         self._planning_dialog = None
-        self._analyze_data_dialog = AnalyzeDataDialog(width=800, height=600)
+        self._analyze_data_dialog = None
 
     async def setup_navigation_menu(self) -> None:
         """Sets up the navigation menu on the left pane."""
@@ -199,7 +199,9 @@ class GuiLauncher:
             self._collection_view_dialog.draw()
 
         with dpg.child_window(tag="analyze_data_pane", parent="middle_pane", show=False):
-            self._analyze_data_dialog.draw(parent="analyze_data_pane")
+            self._analyze_data_dialog = AnalyzeDataDialog(width=800, height=600, parent="analyze_data_pane")
+            await self._analyze_data_dialog.initialize_gui()
+            self._analyze_data_dialog.draw()
 
         with dpg.child_window(tag="visualize_data_pane", parent="middle_pane", show=False):
             self._visualize_data_dialog = VisualizeDataDialog(width=-1, height=-1, parent="visualize_data_pane")

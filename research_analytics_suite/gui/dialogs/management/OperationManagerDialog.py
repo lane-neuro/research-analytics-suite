@@ -18,7 +18,6 @@ import asyncio
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.gui.GUIBase import GUIBase
-from research_analytics_suite.gui.modules.CreateOperationModule import CreateOperationModule
 from research_analytics_suite.gui.modules.OperationModule import OperationModule
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
@@ -41,11 +40,11 @@ class OperationManagerDialog(GUIBase):
             parent: Parent container
         """
         super().__init__(width, height, parent)
-        self.create_operation_module = CreateOperationModule(height=400, width=800, parent_operation=None)
         self.operation_items = {}
         self.tiles_per_row = self.calculate_tiles_per_row(width)
         self.current_row_group = None
         self.window = None
+        self._create_operation_module = None
 
     def calculate_tiles_per_row(self, width: int) -> int:
         """
@@ -70,7 +69,12 @@ class OperationManagerDialog(GUIBase):
     def draw(self) -> None:
         """Draws the GUI elements for the operation manager dialog."""
         dpg.add_text("Operation Manager", parent=self._parent)
-        self.create_operation_module.draw_button(label="Create New Operation", width=200, parent=self.parent)
+
+        from research_analytics_suite.gui import CreateOperationModule
+        self._create_operation_module = CreateOperationModule(height=400, width=800,
+                                                              parent_operation=None, parent=self._parent)
+        self._create_operation_module.draw_button(label="Create New Operation", width=200, parent=self._parent)
+
         dpg.add_button(label="Load Operation from File", width=200, parent=self.parent, callback=self.load_operation)
         self.window = dpg.add_group(parent=self.parent, tag="operation_gallery", horizontal=False)
 

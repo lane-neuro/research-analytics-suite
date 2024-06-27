@@ -148,7 +148,8 @@ class OperationModule(GUIBase):
 
                     create_operation_module = CreateOperationModule(width=700,
                                                                     height=400,
-                                                                    parent_operation=self._operation)
+                                                                    parent_operation=self._operation,
+                                                                    parent=f"container_{self._unique_id}")
                     create_operation_module.draw_button(parent=f"container_{self._unique_id}",
                                                         label="Add Child Operation")
 
