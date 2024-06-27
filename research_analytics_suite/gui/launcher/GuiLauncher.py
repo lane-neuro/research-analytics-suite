@@ -144,8 +144,8 @@ class GuiLauncher:
         """Sets up the main window of the GUI and runs the event loop."""
         dpg.create_context()
         dpg.create_viewport(title='Research Analytics Suite', width=1920, height=1080,
-                            large_icon="gui/assets/images/logo_small_light_transparent.ico",
-                            small_icon="gui/assets/images/logo_dialog_icon_light_transparent.ico")
+                            large_icon="gui/assets/images/logo_extra_large_dark.ico",
+                            small_icon="gui/assets/images/logo_large_icon_dark.ico")
         dpg.setup_dearpygui()
         await self.apply_theme()  # Apply theme after setup
         # dpg.show_metrics()
