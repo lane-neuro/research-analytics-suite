@@ -1,18 +1,15 @@
 import asyncio
 import os
-import uuid
 import dearpygui.dearpygui as dpg
 
-from research_analytics_suite.utils.Config import Config
+from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.data_engine.Workspace import Workspace
-from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
-from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
-class WorkspaceModule:
+class WorkspaceModule(GUIBase):
     """A class to manage the GUI representation of the Workspace."""
 
-    def __init__(self, width: int, height: int):
+    def __init__(self, width: int, height: int, parent):
         """
         Initializes the WorkspaceModule with the given workspace.
 
@@ -20,29 +17,21 @@ class WorkspaceModule:
             width (int): The width of the module.
             height (int): The height of the module.
         """
+        super().__init__(width, height, parent)
         self._workspace = Workspace()
-        self._logger = CustomLogger()
-        self._config = Config()
-        self._operation_control = OperationControl()
-        self.width = width
+
         self._user_vars_width = int(self.width * 0.6)
         self._management_width = int(self.width * 0.20)
-        self.height = height
-        self.unique_id = str(uuid.uuid4())
-        self.collection_list_id = f"collection_list_{self.unique_id}"
-        self._collection_list = dict()
 
-    async def initialize(self) -> None:
+    async def initialize_gui(self) -> None:
         """Initializes resources and sets up the GUI."""
-        self.initialize_resources()
-        await self.setup_workspace_pane()
-
-    def initialize_resources(self) -> None:
-        """Initializes necessary resources and logs the event."""
         pass
 
-    async def setup_workspace_pane(self) -> None:
-        """Sets up the workspace pane asynchronously."""
+    async def _update_async(self) -> None:
+        pass
+
+    def draw(self) -> None:
+        """Sets up the workspace pane."""
         with dpg.group(tag="workspace_pane_group", horizontal=True, parent="workspace_group"):
             with dpg.child_window(tag="workspace_management_pane", width=self._management_width, border=True,
                                   parent="workspace_pane_group"):
@@ -76,3 +65,6 @@ class WorkspaceModule:
             self._logger.info("Workspace loaded successfully")
         except Exception as e:
             self._logger.error(Exception(f"Failed to load workspace: {e}", self))
+
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        pass

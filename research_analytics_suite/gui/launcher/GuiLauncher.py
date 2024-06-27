@@ -244,8 +244,10 @@ class GuiLauncher:
         """Sets up the workspace pane."""
         with dpg.group(parent="bottom_pane_group", horizontal=True, tag="workspace_group"):
             self._workspace_dialog = WorkspaceModule(height=-1,
-                                                     width=int(dpg.get_viewport_width() * 0.5))
-            await self._workspace_dialog.initialize()
+                                                     width=int(dpg.get_viewport_width() * 0.5),
+                                                     parent="bottom_pane_group")
+            await self._workspace_dialog.initialize_gui()
+            self._workspace_dialog.draw()
 
     async def setup_planning_pane(self) -> None:
         """Sets up the planning pane."""
