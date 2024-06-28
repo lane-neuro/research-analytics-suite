@@ -11,14 +11,18 @@ async def execute_operation(operation):
     Execute the operation and all child operations.
     """
     try:
-        await operation.validate_memory_inputs()
         if operation.child_operations:
             await execute_child_operations(operation)
+
+        await operation.validate_memory_inputs()
 
         await prepare_action_for_exec(operation)
         await run_operations(operation, [operation])
 
         await operation.validate_memory_outputs()
+        if operation.parent_operation:
+            for slot in operation.memory_outputs.slots:
+                await operation.parent_operation.add_memory_input_slot(slot)
 
         if not operation.persistent:
             operation.status = "completed"

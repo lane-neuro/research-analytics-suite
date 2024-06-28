@@ -456,7 +456,7 @@ class Workspace:
                 collections_data = json.loads(await src.read())
 
                 for collection_id, collection_dict in collections_data.items():
-                    await MemorySlotCollection.from_dict(collection_dict)
+                    self.add_memory_collection(await MemorySlotCollection.from_dict(collection_dict))
 
             self._logger.info(f"Memory restored from {file_path}")
         except Exception as e:

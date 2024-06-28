@@ -1,6 +1,8 @@
+import builtins
 import sys
 import time
 import asyncio
+import types
 from typing import Any, Type, Tuple, Dict
 
 
@@ -31,7 +33,7 @@ class MemorySlot:
         to_dict() -> dict: Convert the MemorySlot instance to a dictionary.
         from_dict(data: dict) -> 'MemorySlot': Initialize a MemorySlot instance from a dictionary.
     """
-    def __init__(self, memory_id: str, name: str, operation_required: bool, data: Dict[str, Tuple[Type, Any]]):
+    def __init__(self, memory_id: str, name: str, operation_required: bool, data: Dict[str, tuple[type, Any]]):
         """
         Initialize the MemorySlot instance.
 
@@ -251,11 +253,18 @@ class MemorySlot:
     async def to_dict(self) -> dict:
         """Convert the MemorySlot instance to a dictionary."""
         async with self._lock:
+            _data = dict()
+            for k, v in self._data.items():
+                if isinstance(v, tuple):
+                    if v[0] is not types.NoneType:
+                        _data[k] = (v[0].__name__, v[1])
+                else:
+                    _data[k] = v
             return {
                 'memory_id': self._memory_id,
                 'name': self._name,
                 'operation_required': self._operation_required,
-                'data': {k: (t.__name__, v) for k, (t, v) in self._data.items()},
+                'data': _data,
                 'metadata': self._metadata,
                 'created_at': self._created_at,
                 'modified_at': self._modified_at
@@ -264,7 +273,14 @@ class MemorySlot:
     @staticmethod
     async def load_from_disk(data: dict) -> 'MemorySlot':
         """Initialize a MemorySlot instance from a dictionary."""
-        slot_data = {k: (eval(t), v) for k, (t, v) in data.get('data', {}).items()}
+        slot_data = data.get('data', {})
+        for k, v in slot_data.items():
+            print(v)
+            _type = getattr(builtins, v[0])
+            print(_type)
+            slot_data[k] = (_type, v[1])
+        print(slot_data)
+
         slot = MemorySlot(
             memory_id=data.get('memory_id', ''),
             name=data.get('name', ''),

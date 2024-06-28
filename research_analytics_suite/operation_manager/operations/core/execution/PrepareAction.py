@@ -15,7 +15,11 @@ SAFE_BUILTINS = {
 
 SAFE_MODULES = {
     'math': __import__('math'),
-    # Add other safe modules as needed
+    'numpy': __import__('numpy'),
+    'pandas': __import__('pandas'),
+    'sklearn': __import__('sklearn'),
+    'torch': __import__('torch'),
+    'matplotlib': __import__('matplotlib'),
 }
 
 
@@ -78,9 +82,17 @@ async def _execute_code_action(code: str, memory_inputs: list = None) -> Callabl
     """
 
     async def action() -> Any:
-        inputs = {slot.name: await slot.get_data_by_key(slot.name) for slot in memory_inputs} if memory_inputs else {}
+
         # Extract the actual data values from the MemorySlot tuples
-        inputs = {k: v for k, v in inputs.items()}
+        inputs = {slot.name: await slot.get_data_by_key(slot.name) for slot in memory_inputs} if memory_inputs else {}
+        for k, v in inputs.items():
+            if isinstance(v, tuple):
+                if v[0] is types.NoneType:
+                    inputs[k] = None
+                else:
+                    inputs[k] = v[0](v[1])
+            else:
+                inputs[k] = v
 
         # Create a restricted execution environment
         safe_globals = {"__builtins__": SAFE_BUILTINS}

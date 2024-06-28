@@ -33,7 +33,7 @@ def pack_for_save(operation) -> dict:
 
     _child_operations = None
     if operation.child_operations is not None:
-        _child_operations = [child.pack_as_local_reference() for child in operation.child_operations.values()]
+        _child_operations = [pack_as_local_reference(child) for child in operation.child_operations.values()]
 
     return {
         'unique_id': operation.unique_id,
@@ -44,7 +44,7 @@ def pack_for_save(operation) -> dict:
         'concurrent': operation.concurrent,
         'is_cpu_bound': operation.is_cpu_bound,
         'dependencies': operation.dependencies if operation.dependencies else None,
-        'parent_operation': operation.parent_operation.pack_as_local_reference() if operation.parent_operation else None,
+        'parent_operation': pack_as_local_reference(operation.parent_operation) if operation.parent_operation else None,
         'child_operations': _child_operations if _child_operations else None,
         'result_variable_id': operation.result_variable_id,
     }
@@ -55,6 +55,7 @@ async def save_operation_in_workspace(operation, overwrite: bool = False):
     Save the BaseOperation object to disk.
 
     Args:
+        operation (BaseOperation): The operation to save.
         overwrite (bool, optional): Whether to overwrite the existing operation file. Defaults to False.
     """
     file_ext = f".json"
