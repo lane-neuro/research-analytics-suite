@@ -10,7 +10,7 @@ import asyncio
 import os
 import json
 import uuid
-from typing import LiteralString, Tuple, Optional, Any
+from typing import Tuple, Optional, Any
 
 import aiofiles
 from collections import defaultdict
@@ -159,7 +159,7 @@ class Workspace:
         new_workspace = os.path.join(f"{new_workspace}", 'config.json')
         return await self.load_workspace(new_workspace)
 
-    async def save_current_workspace(self) -> LiteralString | str | bytes:
+    async def save_current_workspace(self) -> str:
         """
         Saves the current workspace to the directory specified in the configuration.
 
@@ -193,7 +193,7 @@ class Workspace:
             config_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME, 'config.json')
             await self._config.save_to_file(config_path)
             self._logger.info(f"Workspace folder saved in directory:\t{self._config.BASE_DIR}")
-            return os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME)
+            return f"{os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME)}"
 
         except Exception as e:
             self._logger.error(Exception(f"Failed to save current workspace: {e}"), self)

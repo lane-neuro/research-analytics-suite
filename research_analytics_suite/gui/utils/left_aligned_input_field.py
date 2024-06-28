@@ -8,7 +8,7 @@ License: BSD 3-Clause License
 import dearpygui.dearpygui as dpg
 
 
-def left_aligned_input_field(label: str, tag: str, parent: int | str, value: str, height: int = -1,
+def left_aligned_input_field(label: str, tag: str, parent, value: str, height: int = -1,
                              width: int = -1,
                              bullet: bool = False, multiline: bool = False, readonly: bool = False,
                              callback=None) -> None:
@@ -18,7 +18,7 @@ def left_aligned_input_field(label: str, tag: str, parent: int | str, value: str
     Args:
         label (str): The label for the input field.
         tag (str): The tag for the input field.
-        parent (int | str): The parent of the input field.
+        parent: The parent of the input field.
         value (str): The default value for the input field.
         height (int): The height of the input field. Default is -1 (parent).
         width (int): The width of the input field. Default is -1 (parent).

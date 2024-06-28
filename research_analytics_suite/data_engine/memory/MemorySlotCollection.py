@@ -68,7 +68,7 @@ class MemorySlotCollection(ABC):
             raise ValueError("name must be a string")
         self._name = value
 
-    def list_slots(self) -> list[MemorySlot] | None:
+    def list_slots(self) -> Optional[list[MemorySlot]]:
         """List all memory slots."""
         if len(self.slots) > 0:
             return self.slots

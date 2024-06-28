@@ -87,8 +87,16 @@ async def _execute_code_action(code: str, memory_inputs: list = None) -> Callabl
         inputs = {slot.name: await slot.get_data_by_key(slot.name) for slot in memory_inputs} if memory_inputs else {}
         for k, v in inputs.items():
             if isinstance(v, tuple):
-                if v[0] is types.NoneType:
+                if v[0] is type(None):
                     inputs[k] = None
+                elif v[0] == 'module':
+                    try:
+                        inputs[k] = __import__(v[1])
+                    except ImportError:
+                        inputs[k] = None
+                elif (v[0] == 'function' or v[0] == 'method' or v[0] == 'builtin_function_or_method' or
+                      v[0] == 'method-wrapper' or v[0] == 'class'):
+                    inputs[k] = v[1]
                 else:
                     inputs[k] = v[0](v[1])
             else:

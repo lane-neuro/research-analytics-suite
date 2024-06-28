@@ -256,7 +256,7 @@ class MemorySlot:
             _data = dict()
             for k, v in self._data.items():
                 if isinstance(v, tuple):
-                    if v[0] is not types.NoneType:
+                    if v[0] is not type(None):
                         _data[k] = (v[0].__name__, v[1])
                 else:
                     _data[k] = v

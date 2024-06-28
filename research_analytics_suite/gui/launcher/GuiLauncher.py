@@ -143,7 +143,7 @@ class GuiLauncher:
     async def setup_main_window(self) -> None:
         """Sets up the main window of the GUI and runs the event loop."""
         dpg.create_context()
-        dpg.create_viewport(title='Research Analytics Suite', width=1920, height=1080,
+        dpg.create_viewport(title='Research Analytics Suite - Main Window', width=1366, height=768,
                             large_icon="gui/assets/images/logo_extra_large_dark.ico",
                             small_icon="gui/assets/images/logo_large_icon_dark.ico")
         dpg.setup_dearpygui()
@@ -153,7 +153,7 @@ class GuiLauncher:
         dpg.show_viewport()
         await self._dpg_async.start()
 
-        with dpg.window(label="Research Analytics Suite - Main Window", tag="main_window",
+        with dpg.window(label="Research Analytics Suite", tag="main_window",
                         width=dpg.get_viewport_width(), height=dpg.get_viewport_height()):
             with dpg.group(horizontal=True, tag="main_pane", height=dpg.get_viewport_height() - 370):
                 with dpg.child_window(tag="left_pane", width=200):

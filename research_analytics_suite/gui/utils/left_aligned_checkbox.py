@@ -8,7 +8,7 @@ License: BSD 3-Clause License
 import dearpygui.dearpygui as dpg
 
 
-def left_aligned_checkbox(label: str, tag: str, parent: int | str, value: bool, height: int = -1, width: int = -1,
+def left_aligned_checkbox(label: str, tag: str, parent, value: bool, height: int = -1, width: int = -1,
                           bullet: bool = False, readonly: bool = False, label_indent: int = -1) -> None:
     """
     Adds a new left-aligned checkbox to the GUI.
@@ -16,7 +16,7 @@ def left_aligned_checkbox(label: str, tag: str, parent: int | str, value: bool, 
     Args:
         label (str): The label for the checkbox.
         tag (str): The tag for the checkbox.
-        parent (int | str): The parent of the checkbox.
+        parent: The parent of the checkbox.
         value (bool): The default value for the checkbox.
         height (int): The height of the checkbox. Default is -1 (parent).
         width (int): The width of the checkbox. Default is -1 (parent).
