@@ -155,11 +155,11 @@ class GuiLauncher:
 
         with dpg.window(label="Research Analytics Suite", tag="main_window",
                         width=dpg.get_viewport_width(), height=dpg.get_viewport_height()):
-            with dpg.group(horizontal=True, tag="main_pane", height=dpg.get_viewport_height() - 370):
-                with dpg.child_window(tag="left_pane", width=200):
+            with dpg.group(horizontal=True, tag="main_pane", height=dpg.get_viewport_height() - 300):
+                with dpg.child_window(tag="left_pane", width=180):
                     await self.setup_navigation_menu()
 
-                with dpg.child_window(tag="middle_pane", width=int(dpg.get_viewport_width() * 0.60)):
+                with dpg.child_window(tag="middle_pane", width=int(dpg.get_viewport_width() * 0.50)):
                     await self.setup_panes()
 
                 with dpg.child_window(tag="right_pane", width=-1):

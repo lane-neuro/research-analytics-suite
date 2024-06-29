@@ -15,8 +15,8 @@ Status: Prototype
 import asyncio
 import os.path
 import uuid
-from abc import ABC
-from typing import Tuple
+from abc import ABC, abstractmethod
+from typing import Tuple, final
 
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -71,7 +71,6 @@ class BaseOperation(ABC):
         persistent (bool): Whether the operation should run indefinitely.
         is_cpu_bound (bool): Whether the operation is CPU-bound.
         concurrent (bool): Whether child operations should run concurrently.
-        result_variable_id (str): Reference to the user variable storing the result.
         status (str): The status of the operation.
         task (asyncio.Task): The task associated with the operation.
         progress (int): The progress of the operation.
@@ -116,7 +115,6 @@ class BaseOperation(ABC):
             self._persistent = None
             self._is_cpu_bound = None
             self._concurrent = None
-            self.result_variable_id = None
 
             self._status = None
             self._task = None
@@ -137,9 +135,13 @@ class BaseOperation(ABC):
 
             self._initialized = False
 
+    @final
     def __setstate__(self, state):
         """
         Set the state of the operation.
+
+        Args:
+            state: The state of the operation.
         """
         self.__dict__.update(state)
 
@@ -169,10 +171,9 @@ class BaseOperation(ABC):
                     self._version = self.temp_kwargs.get('version', 0)
                     self._action = self.temp_kwargs.get('action')
                     self._action_callable = None
-                    self._persistent = self.temp_kwargs.get('../persistent', False)
+                    self._persistent = self.temp_kwargs.get('persistent', False)
                     self._is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', False)
                     self._concurrent = self.temp_kwargs.get('concurrent', False)
-                    self.result_variable_id = self.temp_kwargs.get('result_variable_id', f'result_{self.runtime_id}')
 
                     self.memory_inputs = MemoryInput(name=f"{self.name}_input")
                     self.memory_outputs = MemoryOutput(name=f"{self.name}_output")
@@ -195,9 +196,9 @@ class BaseOperation(ABC):
 
                             # Convert dictionary to BaseOperation instance
                             if isinstance(child, dict):
-                                await self.link_child_operation(await BaseOperation.from_dict(data=child,
-                                                                                              file_dir=_file_dir,
-                                                                                              parent_operation=self))
+                                await self.link_child_operation(
+                                    await BaseOperation.from_dict(data=child, file_dir=_file_dir,
+                                                                  parent_operation=self))
 
                             # Set the parent operation of the child operation
                             if self._child_operations[u_id].parent_operation is None:
@@ -222,24 +223,36 @@ class BaseOperation(ABC):
     async def pause(self, child_operations=False):
         """
         Pause the operation and all child operations, if applicable.
+
+        Args:
+            child_operations (bool, optional): Whether to pause child operations. Defaults to False.
         """
         await pause_operation(self, child_operations)
 
     async def resume(self, child_operations=False):
         """
         Resume the operation and all child operations, if applicable.
+
+        Args:
+            child_operations (bool, optional): Whether to resume child operations. Defaults to False.
         """
         await resume_operation(self, child_operations)
 
     async def stop(self, child_operations=False):
         """
         Stop the operation and all child operations, if applicable.
+
+        Args:
+            child_operations (bool, optional): Whether to stop child operations. Defaults to False.
         """
         await stop_operation(self, child_operations)
 
     async def restart(self, child_operations=False):
         """
         Restart the operation and all child operations, if applicable.
+
+        Args:
+            child_operations (bool, optional): Whether to restart child operations. Defaults to False.
         """
         await self.reset(child_operations)
 
@@ -249,6 +262,9 @@ class BaseOperation(ABC):
     async def reset(self, child_operations=False):
         """
         Reset the operation and all child operations, if applicable.
+
+        Args:
+            child_operations (bool, optional): Whether to reset child operations. Defaults to False.
         """
         await reset_operation(self, child_operations)
 
@@ -264,6 +280,7 @@ class BaseOperation(ABC):
         """
         await update_progress(self)
 
+    @final
     async def add_child_operation(self, operation, dependencies: dict = None):
         """
         Add a child operation to the current operation.
@@ -275,6 +292,7 @@ class BaseOperation(ABC):
         """
         await add_child_operation(self, operation, dependencies)
 
+    @final
     async def link_child_operation(self, child_operation, dependencies: dict = None):
         """
         Link a child operation to the current operation.
@@ -285,6 +303,7 @@ class BaseOperation(ABC):
         """
         await link_child_operation(self, child_operation, dependencies)
 
+    @final
     async def remove_child_operation(self, operation):
         """
         Remove a child operation from the current operation.
@@ -330,34 +349,42 @@ class BaseOperation(ABC):
         """
         await execute_child_operations(self)
 
+    @final
     async def add_memory_input_slot(self, memory_slot):
         """Add a memory input slot."""
         self.memory_inputs.add_slot(memory_slot)
 
+    @final
     async def remove_memory_input_slot(self, memory_id):
         """Remove a memory input slot by its ID."""
         await self.memory_inputs.remove_slot(memory_id)
 
+    @final
     def get_memory_input_slot(self, memory_id):
         """Get a memory input slot by its ID."""
         return self.memory_inputs.get_slot(memory_id)
 
+    @final
     def get_memory_input_slot_data(self, memory_id):
         """Get the data of a memory input slot by its ID."""
         return self.memory_inputs.get_slot_data(memory_id)
 
+    @final
     async def add_memory_output_slot(self, memory_slot):
         """Add a memory output slot."""
         self.memory_outputs.add_slot(memory_slot)
 
+    @final
     async def remove_memory_output_slot(self, memory_id):
         """Remove a memory output slot by its ID."""
         await self.memory_outputs.remove_slot(memory_id)
 
+    @final
     def get_memory_output_slot(self, memory_id):
         """Get a memory output slot by its ID."""
         return self.memory_outputs.get_slot(memory_id)
 
+    @final
     def get_memory_output_slot_data(self, memory_id):
         """Get the data of a memory output slot by its ID."""
         return self.memory_outputs.get_slot_data(memory_id)
@@ -372,6 +399,7 @@ class BaseOperation(ABC):
         if self.memory_outputs is not None:
             await self.memory_outputs.validate_results()
 
+    @final
     async def get_results_from_memory(self) -> dict:
         """
         Retrieve the results of the operation from the workspace.
@@ -685,6 +713,7 @@ class BaseOperation(ABC):
         """
         return self._status == "stopped"
 
+    @final
     def attach_gui_module(self, gui_module):
         """
         Attach a GUI module to the operation.
