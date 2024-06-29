@@ -9,12 +9,11 @@ Author: Lane
 import json
 import os
 import uuid
-from typing import Type, Any, Dict, Tuple
+from typing import Any, Dict
 
 import aiofiles
 import dask.dataframe as dd
 import pandas as pd
-from numpy import dtype
 from torch.utils.data import DataLoader
 
 from research_analytics_suite.analytics.core.AnalyticsCore import AnalyticsCore
@@ -264,7 +263,7 @@ class UnifiedDataEngine:
 
         # Save data
         async with aiofiles.open(data_file_path, 'w') as data_file:
-            await data_file.write(json.dumps(self.data))
+            await data_file.write(json.dumps(self.data, indent=4))
 
         # Save metadata
         metadata = {
@@ -273,24 +272,24 @@ class UnifiedDataEngine:
             'engine_id': self.engine_id,
         }
         async with aiofiles.open(os.path.join(f"{engine_path}", "metadata.json"), 'w') as metadata_file:
-            await metadata_file.write(json.dumps(metadata))
+            await metadata_file.write(json.dumps(metadata, indent=4))
 
         # Save a pickleable state of the engine
         engine_state = self.__getstate__()
         async with aiofiles.open(os.path.join(f"{engine_path}", 'engine_state.joblib'), 'w') as state_file:
-            await state_file.write(json.dumps(engine_state))
+            await state_file.write(json.dumps(engine_state, indent=4))
 
         self._logger.info(f"Engine saved to {instance_path}")
 
     @staticmethod
     async def load_engine(instance_path, engine_id):
-        engine_path = os.path.join(instance_path, 'engine', engine_id)
+        engine_path = os.path.join(instance_path, engine_id)
 
         # Load metadata
         async with aiofiles.open(os.path.join(f"{engine_path}", 'metadata.json'), 'r') as metadata_file:
             metadata = json.loads(await metadata_file.read())
 
-        data_path = os.path.join(instance_path, 'data', f"{metadata['data_name']}.joblib")
+        data_path = os.path.join(instance_path, '../data', f"{metadata['data_name']}.joblib")
 
         # Load data
         async with aiofiles.open(data_path, 'r') as data_file:

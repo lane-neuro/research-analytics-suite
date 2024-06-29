@@ -19,7 +19,7 @@ from research_analytics_suite.data_engine.memory.DataCache import DataCache
 from research_analytics_suite.data_engine.engine.DataEngineOptimized import DataEngineOptimized
 from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
 from research_analytics_suite.utils.CustomLogger import CustomLogger
-from research_analytics_suite.data_engine.memory import MemoryManager, SQLiteStorage, MemoryStorage
+from research_analytics_suite.data_engine.memory import MemoryManager
 from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 
@@ -32,18 +32,13 @@ class Workspace:
     _lock = asyncio.Lock()
 
     def __new__(cls, *args, **kwargs):
-        if not cls._instance:
+        if cls._instance is None:
             cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
 
-    def __init__(self, distributed=False, storage_type='memory', db_path=None):
+    def __init__(self):
         """
         Initializes the Workspace instance.
-
-        Args:
-            distributed (bool): Whether to use distributed computing. Default is False.
-            storage_type (str): The type of storage to use ('sqlite' or 'memory'). Default is 'memory'.
-            db_path (str): The path to the SQLite database file (required if storage_type is 'sqlite').
         """
         if not hasattr(self, '_initialized'):
             self._logger = CustomLogger()
@@ -51,19 +46,16 @@ class Workspace:
             self._memory_manager = MemoryManager()
             self._data_cache = DataCache()
 
-            self._data_engines = None
-            self._dependencies = None
-            self._data_cache = None
+            self._data_engines = {}
+            self._dependencies = defaultdict(list)
 
-            self._distributed = distributed
-            self._storage_type = storage_type
-            self._db_path = db_path
-
-            self._storage = None
+            self._distributed = None
+            self._storage_type = "memory"
+            self._db_path = None
 
             self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self, config=None):
         """
         Initializes the workspace.
 
@@ -72,20 +64,10 @@ class Workspace:
         if not self._initialized:
             async with Workspace._lock:
                 if not self._initialized:
+                    if config:
+                        self._config = config
                     self._data_engines = dict()
                     self._dependencies = defaultdict(list)
-
-                    if self._db_path is None:
-                        self._db_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
-                                                     'user_variables.db')
-                        self._logger.info(f"Using default database path: {self._db_path}")
-                    if self._storage_type == 'sqlite':
-                        self._storage = SQLiteStorage(db_path=self._db_path)
-                    elif self._storage_type == 'memory':
-                        self._storage = MemoryStorage(db_path=self._db_path)
-                        await self._storage.setup()
-                    else:
-                        self._logger.error(ValueError(f"Unsupported storage type: {self._storage_type}"), self)
 
                     self._logger.info("Workspace initialized successfully")
                     self._initialized = True
@@ -155,9 +137,11 @@ class Workspace:
         data_engine = DataEngineOptimized()
         self.add_data_engine(data_engine=data_engine)
         self._logger.info(f"Workspace created at {workspace_directory}")
-        new_workspace = await self.save_current_workspace()
-        new_workspace = os.path.join(f"{new_workspace}", 'config.json')
-        return await self.load_workspace(new_workspace)
+        try:
+            new_workspace = await self.save_current_workspace()
+            return await self.load_workspace(os.path.join(f"{new_workspace}", 'config.json'))
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to create workspace: {e}"), self)
 
     async def save_current_workspace(self) -> str:
         """
@@ -210,80 +194,41 @@ class Workspace:
         """
         try:
             if not os.path.exists(workspace_path):
-                if os.path.exists(os.path.join(workspace_path, 'config.json')):
-                    workspace_path = os.path.join(workspace_path, 'config.json')
-                else:
-                    raise FileNotFoundError(f"Workspace directory not found: {workspace_path}")
-
-            self._config = await self._config.reload_from_file(workspace_path)
+                raise FileNotFoundError(f"Workspace directory not found: {workspace_path}")
 
             if workspace_path.endswith('config.json'):
                 workspace_path = os.path.dirname(workspace_path)
 
-            workspace = Workspace(self._config.DISTRIBUTED)
+            # Clear existing data
+            self._clear_existing_data()
 
-            for engine_id in os.listdir(os.path.join(workspace_path, f"{self._config.ENGINE_DIR}")):
-                data_engine = await UnifiedDataEngine.load_engine(workspace_path, engine_id)
-                workspace.add_data_engine(data_engine)
+            self._config = await self._config.reload_from_file(os.path.join(workspace_path, 'config.json'))
+
+            if not self._config:
+                raise ValueError(f"Failed to load configuration from {workspace_path}")
+
+            self.__init__()
+            await self.initialize(config=self._config)
+
+            engine_dir = os.path.join(workspace_path, self._config.ENGINE_DIR)
+            for engine_id in os.listdir(f"{engine_dir}"):
+                data_engine = await UnifiedDataEngine.load_engine(engine_dir, engine_id)
+                self.add_data_engine(data_engine)
 
             await self.restore_memory_manager(os.path.join(workspace_path, 'user_variables.db'))
-            return workspace
+            self._logger.info(f"Workspace loaded from {workspace_path}")
+            return self
+
         except Exception as e:
             self._logger.error(Exception(f"Failed to load workspace: {e}"), self)
 
-    def _get_config_settings(self):
+    def _clear_existing_data(self):
         """
-        Retrieves the current self._configuration settings.
-
-        Returns:
-            str: The self._configuration settings in JSON format.
+        Clears existing data in the workspace to ensure a clean load.
         """
-        return json.dumps({
-            'workspace_name': self._config.WORKSPACE_NAME,
-            'base_dir': self._config.BASE_DIR,
-            'data_dir': self._config.DATA_DIR,
-            'log_dir': self._config.LOG_DIR,
-            'workspace_dir': self._config.WORKSPACE_DIR,
-            'backup_dir': self._config.BACKUP_DIR,
-            'engine_dir': self._config.ENGINE_DIR,
-
-            'memory_limit': self._config.MEMORY_LIMIT,
-
-            'log_level': self._config.LOG_LEVEL,
-            'log_file': self._config.LOG_FILE,
-            'log_rotation': self._config.LOG_ROTATION,
-            'log_retention': self._config.LOG_RETENTION,
-
-            'cache_size': self._config.CACHE_SIZE,
-            'num_threads': self._config.NUM_THREADS,
-
-            'db_host': self._config.DB_HOST,
-            'db_port': self._config.DB_PORT,
-            'db_user': self._config.DB_USER,
-            'db_password': self._config.DB_PASSWORD,
-            'db_name': self._config.DB_NAME,
-
-            'api_base_url': self._config.API_BASE_URL,
-            'api_key': self._config.API_KEY,
-
-            'email_host': self._config.EMAIL_HOST,
-            'email_port': self._config.EMAIL_PORT,
-            'email_user': self._config.EMAIL_USER,
-            'email_password': self._config.EMAIL_PASSWORD,
-            'email_use_tls': self._config.EMAIL_USE_TLS,
-            'email_use_ssl': self._config.EMAIL_USE_SSL,
-
-            'theme': self._config.THEME,
-            'language': self._config.LANGUAGE,
-
-            'encryption_key': self._config.ENCRYPTION_KEY,
-            'authentication_method': self._config.AUTHENTICATION_METHOD,
-
-            'batch_size': self._config.BATCH_SIZE,
-            'transformations': self._config.TRANSFORMATIONS,
-
-            'scheduler_interval': self._config.SCHEDULER_INTERVAL,
-        }, indent=4)
+        self._data_engines = {}
+        self._dependencies = defaultdict(list)
+        self._initialized = False
 
     # Methods to interact with MemorySlotCollections
     def add_memory_collection(self, collection: MemorySlotCollection):
@@ -425,16 +370,16 @@ class Workspace:
             async with aiofiles.open(file_path, 'w') as dst:
                 collections_data = {cid: await col.to_dict() for cid, col in collections.items()}
 
-                # Remove any slots that are not serializable
-                collections_data = remove_non_serializable(collections_data)
-
                 # Remove any slots that start with 'gui_' or 'sys_'
                 collections_data = {
-                    k: v for k, v in collections_data.items() if not v['name'].startswith('gui_') and
-                    not v['name'].startswith('sys_')
+                    k: v for k, v in collections_data.items() if not (v['name'].startswith('gui_') or
+                                                                      v['name'].startswith('sys_'))
                 }
 
-                await dst.write(json.dumps(collections_data))
+                # Remove any modules that are not serializable
+                collections_data = remove_non_serializable(collections_data)
+
+                await dst.write(json.dumps(collections_data, indent=4))
 
             self._logger.info(f"Memory Management saved to {file_path}")
 
@@ -465,16 +410,24 @@ class Workspace:
 
 def remove_non_serializable(obj):
     if isinstance(obj, dict):
-        return {k: remove_non_serializable(v) for k, v in obj.items() if is_serializable(v)}
+        for v in obj.values():
+            if isinstance(v, dict):  # Each value should be a dictionary
+                slots = v.get('slots')  # Get the list of slots
+                for slot in slots if slots else {}:
+                    slot_data = slot.get('data')  # Get the data dictionary for each slot
+                    for name, value in list(slot_data.items()):  # Create a copy of items
+                        if (isinstance(value, tuple) and not is_serializable(value[1])) or not is_serializable(value):
+                            del slot_data[name]
     elif isinstance(obj, list):
         return [remove_non_serializable(item) for item in obj if is_serializable(item)]
     else:
         return obj if is_serializable(obj) else None
+    return obj
 
 
 def is_serializable(obj):
     try:
-        json.dumps(obj)
+        json.dumps(obj, indent=4)
         return True
     except (TypeError, OverflowError):
         return False

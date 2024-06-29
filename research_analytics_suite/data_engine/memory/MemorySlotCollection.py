@@ -48,9 +48,6 @@ class MemorySlotCollection(ABC):
         self.collection_id = str(uuid.uuid4().hex)  # Generate a unique identifier for the collection
         self.slots: List[MemorySlot] = []
 
-        from research_analytics_suite.data_engine import Workspace
-        Workspace().add_memory_collection(self)
-
     @property
     def display_name(self) -> str:
         """Get the display name of the collection."""
@@ -137,7 +134,7 @@ class MemorySlotCollection(ABC):
 
     def to_json(self) -> str:
         """Convert the collection to a JSON string."""
-        return json.dumps(self.to_dict())
+        return json.dumps(self.to_dict(), indent=4)
 
     @staticmethod
     async def from_json(data: str) -> 'MemorySlotCollection':

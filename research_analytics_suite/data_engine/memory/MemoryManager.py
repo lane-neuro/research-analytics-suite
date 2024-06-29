@@ -52,15 +52,18 @@ class MemoryManager:
                     self._initialized = True
 
     async def initialize_default_collection(self):
-        if not self.memory_slot_collections:
+        if self.memory_slot_collections == {}:
             if not self.default_collection:
                 self.default_collection = MemorySlotCollection("Primary")
+                self.memory_slot_collections[self.default_collection.collection_id] = self.default_collection
             else:
                 self.add_collection(self.default_collection)
         else:
             self.default_collection = next(iter(self.memory_slot_collections.values()))
 
     def get_default_collection_id(self) -> str:
+        if not self.default_collection:
+            asyncio.create_task(self.initialize_default_collection())
         return self.default_collection.collection_id
 
     def add_collection(self, collection: MemorySlotCollection):
@@ -80,13 +83,15 @@ class MemoryManager:
                 self.memory_slot_collections[collection.collection_id] = collection
                 self._logger.info(f"Set new collection as default collection: {collection.display_name}")
         else:
-            if collection.collection_id not in self.memory_slot_collections:
-                self.memory_slot_collections[collection.collection_id] = collection
-                self._logger.info(f"Added MemorySlotCollection: {collection.display_name}")
-            else:
-                self._logger.info(f"Collection with ID {collection.collection_id} already exists, "
-                                  f"importing existing memory slots as new slots.")
-                self.memory_slot_collections[collection.collection_id].add_slots(collection.slots)
+            # Check if collection_id already exists within one of the existing collection slots
+            for r_id, props in self.memory_slot_collections.items():
+                if props.collection_id == collection.collection_id:
+                    self._logger.info(f"Collection with ID {collection.collection_id} already exists, "
+                                      f"importing existing memory slots as new slots.")
+                    self.memory_slot_collections[r_id].add_slots(collection.slots)
+                    return
+
+            self.memory_slot_collections[collection.collection_id] = collection
 
     def get_collection(self, collection_id: str) -> MemorySlotCollection:
         """
@@ -100,11 +105,9 @@ class MemoryManager:
         """
         cached_collection = self._data_cache.get(collection_id)
         if cached_collection:
-            self._logger.info(f"Cache hit for collection ID: {collection_id}")
             self._data_cache.set(collection_id, cached_collection)  # Update cache to keep it fresh
             return cached_collection
 
-        self._logger.info(f"Cache miss for collection ID: {collection_id}")
         collection = self.memory_slot_collections.get(collection_id)
         if collection:
             self._data_cache.set(collection_id, collection)
@@ -122,10 +125,8 @@ class MemoryManager:
         """
         for collection in self.memory_slot_collections.values():
             if collection.display_name == collection_name:
-                self._logger.info(f"Cache hit for collection display name: {collection_name}")
                 self._data_cache.set(collection.collection_id, collection)  # Update cache to keep it fresh
                 return collection
-        self._logger.info(f"Cache miss for collection display name: {collection_name}")
 
     async def remove_collection(self, collection_id: str):
         """

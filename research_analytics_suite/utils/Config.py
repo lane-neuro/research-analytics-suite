@@ -168,11 +168,10 @@ class Config:
             file_path = os.path.normpath(os.path.join(file_path, 'config.json'))
 
         if not os.path.exists(file_path):
-            raise FileNotFoundError(f"Configuration file not found at")
+            raise FileNotFoundError(f"Configuration file not found at path: {file_path}")
 
         async with aiofiles.open(file_path, 'r') as f:
-            await self.reload(json.loads(await f.read()))
-            return self
+            return await self.reload(json.loads(await f.read()))
 
     async def save_to_file(self, file_path):
         async with aiofiles.open(file_path, 'w') as f:

@@ -170,7 +170,8 @@ class CollectionViewDialog(GUIBase):
         """Updates the slots and their variables in the GUI."""
         if collection.list_slots():
             for slot in collection.list_slots():
-                await self.display_slot_in_gui(collection_id, slot)
+                if slot is not None:
+                    await self.display_slot_in_gui(collection_id, slot)
 
     async def display_slot_in_gui(self, collection_id, slot):
         """Displays or updates a memory slot and its variables in the GUI."""

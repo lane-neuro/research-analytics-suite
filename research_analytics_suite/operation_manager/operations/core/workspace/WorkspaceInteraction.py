@@ -81,4 +81,4 @@ async def save_operation_in_workspace(operation, overwrite: bool = False):
     file_path = f"{dir_path}/{name}{file_ext}"
 
     async with aiofiles.open(file_path, 'w') as file:
-        await file.write(json.dumps(stripped_state))
+        await file.write(json.dumps(stripped_state, indent=4))
