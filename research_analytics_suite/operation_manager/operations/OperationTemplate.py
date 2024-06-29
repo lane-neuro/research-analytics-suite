@@ -1,11 +1,10 @@
 """
 Operation: [Operation Name]
 Version: [0.0.1]
-Description:
-    [A template class to help developers create their own Operation classes by extending BaseOperation.
-    This template provides a starting point for creating new operations with the necessary attributes and methods.
-    Developers can customize the operation by adding their own logic and attributes as needed.
-    Replace any '[placeholders]' with the actual values for the operation.]
+Description: [A template class to help developers create their own Operation classes by extending BaseOperation.
+             This template provides a starting point for creating new operations with the necessary attributes
+             and methods. Developers can customize the operation by adding their own logic and attributes
+             as needed. Replace any '[placeholders]' with the actual values for the operation.]
 
 Author: [Your Name]
 GitHub: [Your GitHub Username] (optional)
@@ -13,6 +12,7 @@ Email: [Your Email Address] (optional)
 
 ---
 Part of the Research Analytics Suite
+    https://github.com/lane-neuro/research-analytics-suite
 License: BSD 3-Clause License
 Maintainer: Lane
 Status: Template
@@ -24,7 +24,7 @@ from research_analytics_suite.operation_manager import BaseOperation
 
 class OperationTemplate(BaseOperation):
     """
-    [OperationTemplate class extends the BaseOperation class to provide a template for creating new operations.
+    [OperationTemplate class extends the BaseOperation class to provide a basic template for creating new operations.
         To create a new operation, follow these steps:
             1. Define the operation-specific attributes and methods.
             2. Override the `execute` method to implement the operation's logic.
@@ -63,7 +63,7 @@ class OperationTemplate(BaseOperation):
     required_children: Optional[Dict[str, Type[BaseOperation]]] = None
     required_dependencies: Optional[Dict[str, Type[BaseOperation]]] = None
 
-    def __init__(self, *args: Any, **kwargs: Any):
+    def __init__(self, template_attribute: Optional[Any], *args: Any, **kwargs: Any):
         """
         Initialize the operation instance. Update kwargs with preset attributes and call the parent class constructor.
 
@@ -79,15 +79,15 @@ class OperationTemplate(BaseOperation):
             'is_cpu_bound': self.is_cpu_bound,
             'concurrent': self.concurrent
         })
+        self._required_parent = self.required_parent
+        self._required_children = self.required_children
+        self._required_dependencies = self.required_dependencies
 
         # Call the parent class constructor
         super().__init__(*args, **kwargs)
 
         # Custom attributes
-        self._required_parent = self.required_parent
-        self._required_children = self.required_children
-        self._required_dependencies = self.required_dependencies
-        self._template_attribute: Optional[Any] = kwargs.get('template_attribute', None)
+        self._template_attribute = template_attribute
 
     async def initialize_operation(self):
         """
@@ -97,32 +97,34 @@ class OperationTemplate(BaseOperation):
 
     async def pre_execute(self):
         """
-        Logic to run before the main execution. Override as needed.
-        """
-        pass
-
-    async def post_execute(self):
-        """
-        Logic to run after the main execution. Override as needed.
+        Logic to run before the main execution.
+            This optional method is an example; not required.
         """
         pass
 
     async def execute(self):
         """
-        Execute the operation's logic. Override or extend this method with the operation's specific logic.
+        Execute the operation's logic.
         """
         await self.pre_execute()
-        await super().execute()
+
+        # Example: Print the template attribute
+        print(f"Template attribute: {self._template_attribute}")
+
         await self.post_execute()
+
+    async def post_execute(self):
+        """
+        Logic to run after the main execution.
+            This optional method is an example; not required by BaseOperation.
+        """
+        self._progress = 100
+        self._status = "completed"
+        self.add_log_entry("OperationTemplate completed.")
 
     def validate(self):
         """
         Validate inputs and outputs of the operation.
-        """
-        pass
-
-    def custom_method(self):
-        """
-        Example of a custom method that can be added to the operation.
+            This optional method is an example; not required by BaseOperation.
         """
         pass

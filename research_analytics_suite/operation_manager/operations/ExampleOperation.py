@@ -1,37 +1,56 @@
 """
-Operation: ExampleOperation
-Version: 0.0.1
-Description: A basic implementation of an operation that calculates the mean and standard deviation of a list of
-             numbers.
+Operation:      ExampleOperation
+Version:        0.0.1
+Description:    A basic implementation of an operation that calculates the mean and standard deviation of a list of
+                numbers.
 
-Author: Lane
-GitHub: @lane-neuro
-Email: justlane@uw.edu
+Author:         Example Author
+GitHub:         @example_author
+Email:          example@author.com
 
 ---
-Part of the Research Analytics Suite
-License: BSD 3-Clause License
-Maintainer: Lane
-Status: Template
+Part of the Research Analytics Suite (RAS)
+    https://github.com/lane-neuro/research-analytics-suite
+License:        BSD 3-Clause License
+Maintainer:     Lane (GitHub: @lane-neuro)
+Status:         Example
 """
 
 import statistics
 from typing import Any, List
-from research_analytics_suite.operation_manager.operations.OperationTemplate import OperationTemplate
+
+from research_analytics_suite.operation_manager import BaseOperation
 
 
-class ExampleOperation(OperationTemplate):
+class ExampleOperation(BaseOperation):
     """
-    ExampleOperation class extends the OperationTemplate to perform a specific analytical task: calculating the mean
-    and standard deviation of a list of numbers.
+    ExampleOperation class extends the BaseOperation class to provide a concrete implementation of an operation.
+    This operation calculates the mean and standard deviation of a list of numbers provided as input.
     
-    Example Usage:
+    Example Usage (in a script):
     ```python
+        # Create an instance of the operation with a list of numbers
         numbers = [1, 2, 3, 4, 5]
         operation = ExampleOperation(numbers)
+
+        # Initialize the operation
         await operation.initialize_operation()
+
+        # Execute the operation
         await operation.execute()
+
+        # Retrieve the result (dictionary) from memory outputs
         result = await operation.get_results_from_memory()
+    ```
+
+    Example Usage (within RAS):
+    ```python
+        # Create an instance of the operation with a list of numbers
+        numbers = [1, 2, 3, 4, 5]
+        operation = ExampleOperation(numbers)
+
+        # Add the operation to the operation manager
+        await operation_manager.add_operation(operation)
     ```
 
     Attributes:
@@ -47,6 +66,9 @@ class ExampleOperation(OperationTemplate):
     persistent: bool = False
     is_cpu_bound: bool = False
     concurrent: bool = False
+    required_parent: None
+    required_children: None
+    required_dependencies: None
 
     def __init__(self, numbers: List[float], *args: Any, **kwargs: Any):
         """
@@ -57,16 +79,34 @@ class ExampleOperation(OperationTemplate):
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
+        # Update kwargs with attributes
+        kwargs.update({
+            'name': self.name,
+            'action': self.execute,
+            'persistent': self.persistent,
+            'is_cpu_bound': self.is_cpu_bound,
+            'concurrent': self.concurrent
+        })
+
+        # Don't forget to initialize any custom attributes/input parameters
         self.numbers = numbers
+
+        # Call the parent class constructor
         super().__init__(*args, **kwargs)
-        self._action = self.execute
 
     async def initialize_operation(self):
         """
         Initialize any resources or setup required for the operation before it starts.
         """
         await super().initialize_operation()
-        self.add_log_entry("ExampleOperation initialized")
+        self.add_log_entry(f"ExampleOperation initialized with numbers: {self.numbers}")
+
+    async def pre_execute(self):
+        """
+        Logic to run before the main execution.
+        """
+        self.validate()
+        self.add_log_entry("Pre-execution checks completed")
 
     async def execute(self):
         """
@@ -82,16 +122,24 @@ class ExampleOperation(OperationTemplate):
 
             mean_value = statistics.mean(self.numbers)
             std_dev_value = statistics.stdev(self.numbers)
-
-            self._progress = 100
-            self._status = "completed"
             self.add_log_entry(f"Mean: {mean_value}, Standard Deviation: {std_dev_value}")
-            self.add_log_entry("ExampleOperation execution completed successfully")
 
         except Exception as e:
             self.handle_error(e)
 
         await self.post_execute()
+
+    async def post_execute(self):
+        """
+        Logic to run after the main execution.
+        """
+        try:
+            self.validate()
+            self._progress = 100
+            self._status = "completed"
+            self.add_log_entry("OperationTemplate completed.")
+        except Exception as e:
+            self.handle_error(e)
 
     def validate(self):
         """
