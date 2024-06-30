@@ -64,7 +64,7 @@ class OperationManagerDialog(GUIBase):
                 operation_type=BaseOperation, name="gui_OperationManagerUpdateTask",
                 action=self._update_async, persistent=True, concurrent=True)
         self._update_operation.is_ready = True
-        dpg.set_viewport_resize_callback(self.on_resize)
+        # dpg.set_viewport_resize_callback(lambda: asyncio.create_task(self.on_resize()))
 
     def draw(self) -> None:
         """Draws the GUI elements for the operation manager dialog."""
@@ -144,6 +144,26 @@ class OperationManagerDialog(GUIBase):
 
         self.operation_items[operation.runtime_id].draw()
 
+    async def operation_preview_tile(self, file_name: str):
+        """
+        Creates a preview tile for the operation.
+
+        Args:
+            file_name (str): The name of the file.
+        """
+        self._logger.debug(f"Creating operation preview tile for file: {file_name}")
+        dpg.add_child_window(width=self.TILE_WIDTH, height=self.TILE_HEIGHT, parent=self._parent,
+                             tag=f"preview_tile_{file_name}")
+
+        from research_analytics_suite.operation_manager.operations.core.workspace import load_from_disk
+        operation_dict = await load_from_disk(file_path=file_name, operation_group=None, with_instance=False)
+
+        from research_analytics_suite.gui.modules.UpdatedOperationModule import UpdatedOperationModule
+        preview_tile = UpdatedOperationModule(operation_dict=operation_dict, width=self.TILE_WIDTH,
+                                              height=self.TILE_HEIGHT, parent=f"preview_tile_{file_name}")
+        await preview_tile.initialize_gui()
+        preview_tile.draw()
+
     def load_operation(self, sender: str, data: dict) -> None:
         """Loads operations from a file."""
         if dpg.does_item_exist("selected_file"):
@@ -174,12 +194,13 @@ class OperationManagerDialog(GUIBase):
             data (dict): The data associated with the event.
         """
         _file_path = data["file_path_name"]
+        print(_file_path)
         if not _file_path:
             self._logger.error(Exception("No file selected."), self)
             return
 
-        self._logger.info(f"Loading operation from file: {_file_path}")
         self._logger.debug(f"Loading operation from file: {_file_path}")
+        await self.operation_preview_tile(_file_path)
 
         loaded_operations = {}
         try:
@@ -198,7 +219,7 @@ class OperationManagerDialog(GUIBase):
         #     self._logger.error(e, self)
         #     return
 
-        await self.refresh_display()
+        # await self.refresh_display()
         self._logger.debug("Display refreshed after loading operations.")
 
     async def on_resize(self, sender: str, data: dict) -> None:

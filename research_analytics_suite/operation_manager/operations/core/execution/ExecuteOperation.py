@@ -76,7 +76,6 @@ async def run_operations(operation, operations):
     elif tasks:
         for task in tasks:
             await task
-            operation.add_log_entry(f"[RESULT] {operation.result_variable_id}")
 
 
 async def execute_action(operation):

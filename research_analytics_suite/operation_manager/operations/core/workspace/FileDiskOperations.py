@@ -15,16 +15,19 @@ Status: Prototype
 
 import os
 import json
+from typing import Optional
+
 import aiofiles
 
 
-async def load_from_disk(file_path: str, operation_group: dict):
+async def load_from_disk(file_path: str, operation_group: Optional[dict], with_instance=True) :
     """
     Load a BaseOperation object from disk.
 
     Args:
         file_path (str): The path to the file to load.
         operation_group (dict[str, BaseOperation]): The group of operations to which the loaded operation belongs.
+        with_instance (bool, optional): Whether to populate parent argument with an initialized BaseOperation instance.
 
     Returns:
         BaseOperation: The loaded operation.
@@ -44,10 +47,11 @@ async def load_from_disk(file_path: str, operation_group: dict):
         if not isinstance(state, dict):
             raise TypeError("Loaded data must be a dictionary")
 
-        operation = await from_dict(data=state, file_dir=os.path.dirname(file_path))
+        operation = await from_dict(data=state, file_dir=os.path.dirname(file_path), with_instance=with_instance)
 
-        if operation.runtime_id not in operation_group.keys():
+        if operation_group is not None and operation.runtime_id not in operation_group.keys():
             operation_group[operation.runtime_id] = operation
+
         return operation
 
 
@@ -136,7 +140,7 @@ def construct_file_path(base_dir, operation_ref):
     return os.path.join(base_dir, file_name)
 
 
-async def from_dict(data: dict, file_dir, parent_operation=None):
+async def from_dict(data: dict, file_dir, parent_operation=None, with_instance=True):
     """
     Create a BaseOperation instance from a dictionary.
 
@@ -144,9 +148,33 @@ async def from_dict(data: dict, file_dir, parent_operation=None):
         data (dict): The dictionary containing the operation data.
         file_dir: The directory where the operation file is located.
         parent_operation (BaseOperation, optional): The parent operation. Defaults to None.
+        with_instance (bool, optional): Whether to populate parent argument with an initialized BaseOperation instance.
 
     Returns:
         BaseOperation: The created operation instance.
+    """
+    data_metadata = await populate_operation_args(data=data, file_dir=file_dir, parent_operation=parent_operation,
+                                                  with_instance=with_instance)
+
+    if with_instance:
+        from research_analytics_suite.operation_manager.operations.core import BaseOperation
+        operation = BaseOperation()
+        operation.temp_kwargs = data_metadata
+        await operation.initialize_operation()
+        return operation
+
+    return data_metadata
+
+
+async def populate_operation_args(data, file_dir, parent_operation=None, with_instance=True) -> dict:
+    """
+    Populate the arguments of an operation.
+
+    Args:
+        data (dict): The operation data.
+        file_dir: The directory where the operation file is located.
+        parent_operation (BaseOperation, optional): The parent operation
+        with_instance (bool, optional): Whether to populate parent argument with an initialized BaseOperation instance.
     """
     data_metadata = data.copy()
 
@@ -169,7 +197,6 @@ async def from_dict(data: dict, file_dir, parent_operation=None):
                     data_metadata['persistent'] = op_file_data.get('persistent')
                     data_metadata['is_cpu_bound'] = op_file_data.get('is_cpu_bound')
                     data_metadata['concurrent'] = op_file_data.get('concurrent')
-                    data_metadata['result_variable_id'] = op_file_data.get('result_variable_id')
             except Exception as e:
                 raise e
 
@@ -180,20 +207,17 @@ async def from_dict(data: dict, file_dir, parent_operation=None):
         data_metadata['parent_operation'] = parent_operation
 
     if isinstance(data_metadata.get('parent_operation'), dict):
-        try:
-            data_metadata['parent_operation'] = await from_dict(
-                data=data_metadata.get('parent_operation'),
-                file_dir=file_dir
-            )
-        except Exception as e:
-            raise e
+        if with_instance:
+            try:
+                data_metadata['parent_operation'] = await from_dict(
+                    data=data_metadata.get('parent_operation'),
+                    file_dir=file_dir
+                )
+            except Exception as e:
+                raise e
+        else:
+            data_metadata['parent_operation'] = data_metadata.get('parent_operation')
     else:
         data_metadata['parent_operation'] = parent_operation
 
-    from research_analytics_suite.operation_manager.operations.core import BaseOperation
-    operation = BaseOperation()
-    operation.temp_kwargs = data_metadata
-    await operation.initialize_operation()
-
-    return operation
-
+    return data_metadata

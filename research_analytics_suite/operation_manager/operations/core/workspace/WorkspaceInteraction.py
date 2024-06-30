@@ -46,7 +46,6 @@ def pack_for_save(operation) -> dict:
         'dependencies': operation.dependencies if operation.dependencies else None,
         'parent_operation': pack_as_local_reference(operation.parent_operation) if operation.parent_operation else None,
         'child_operations': _child_operations if _child_operations else None,
-        'result_variable_id': operation.result_variable_id,
     }
 
 
