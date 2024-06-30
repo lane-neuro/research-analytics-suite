@@ -42,5 +42,5 @@ class TaskCounter:
             str: The new task name with a unique identifier.
         """
         self.counter += 1
-        self._logger.info(f"TaskCounter.new_task: [NEW] [{self.counter}]{name}")
+        self._logger.debug(f"TaskCounter.new_task: [NEW] [{self.counter}]{name}")
         return f"[{self.counter}]{name}"

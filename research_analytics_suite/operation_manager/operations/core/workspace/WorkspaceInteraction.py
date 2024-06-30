@@ -23,8 +23,11 @@ def pack_as_local_reference(operation) -> dict:
     """Provide a reference to the unique_id, name, and version of the operation."""
     return {
         'unique_id': operation.unique_id,
+        'author': operation.author,
+        'github': operation.github,
         'version': operation.version,
         'name': operation.name,
+        'description': operation.description,
     }
 
 
@@ -39,6 +42,10 @@ def pack_for_save(operation) -> dict:
         'unique_id': operation.unique_id,
         'version': operation.version,
         'name': operation.name,
+        'author': operation.author,
+        'github': operation.github,
+        'email': operation.email,
+        'description': operation.description,
         'action': operation.action,
         'persistent': operation.persistent,
         'concurrent': operation.concurrent,
@@ -64,18 +71,19 @@ async def save_operation_in_workspace(operation, overwrite: bool = False):
                 f"{operation.config.WORKSPACE_OPERATIONS_DIR}")
     os.makedirs(dir_path, exist_ok=True)
 
-    name = f"{operation.name}_{operation.short_id}"
-    if operation.version > 0:
-        name = f"{name}_{operation.short_id}-{operation.version}"
+    name = f"{stripped_state['github']}_{stripped_state['name']}_{stripped_state['version']}"
 
-    if operation.version == 0 and os.path.exists(f"{dir_path}/{name}{file_ext}"):
+    if os.path.exists(os.path.join(dir_path, f"{name}{file_ext}")):
         if not overwrite:
-            operation._version = 1
+            appended_version = 1
             while True:
-                name = f"{operation.name}_{operation.short_id}-{operation.version}"
+                name = (f"{stripped_state['github']}_{stripped_state['name']}_"
+                        f"{stripped_state['version']}-{appended_version}")
                 if not os.path.exists(f"{dir_path}/{name}{file_ext}"):
+                    operation.version = f"{operation.version}-{appended_version}"
+                    stripped_state['version'] = f"{operation.version}"
                     break
-                operation.version += 1
+                appended_version += 1
 
     file_path = f"{dir_path}/{name}{file_ext}"
 

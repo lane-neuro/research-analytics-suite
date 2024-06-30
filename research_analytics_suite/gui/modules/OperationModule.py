@@ -45,14 +45,14 @@ class OperationModule(GUIBase):
         self._child_ops_parent = None
         self._log_container_id = None
 
-        self._concurrent_id = f"concurrent_{self._unique_id}"
-        self._progress_id = f"progress_{self._unique_id}"
-        self._result_id = f"result_{self._unique_id}"
-        self._log_id = f"log_{self._unique_id}"
-        self._persistent_id = f"persistent_{self._unique_id}"
-        self._cpu_bound_id = f"cpu_bound_{self._unique_id}"
-        self._parent_id = f"parent_{self._unique_id}"
-        self._left_panel_id = f"left_panel_{self._unique_id}"
+        self._concurrent_id = f"concurrent_{self._operation_id}"
+        self._progress_id = f"progress_{self._operation_id}"
+        self._result_id = f"result_{self._operation_id}"
+        self._log_id = f"log_{self._operation_id}"
+        self._persistent_id = f"persistent_{self._operation_id}"
+        self._cpu_bound_id = f"cpu_bound_{self._operation_id}"
+        self._parent_id = f"parent_{self._operation_id}"
+        self._left_panel_id = f"left_panel_{self._operation_id}"
 
     @property
     def operation(self) -> 'BaseOperation':
@@ -77,31 +77,31 @@ class OperationModule(GUIBase):
         with dpg.group(parent=self._parent, tag=self._parent_id, horizontal=True,
                        height=max(int(self._height * 0.3), 120)):
             with dpg.child_window(border=False, width=int(self._width * 0.5), parent=self._parent_id,
-                                  tag=f"description_{self._unique_id}"):
-                left_aligned_input_field(label="Unique ID", tag=f"unique_id_{self._unique_id}",
-                                         parent=f"description_{self._unique_id}",
+                                  tag=f"description_{self._operation_id}"):
+                left_aligned_input_field(label="Unique ID", tag=f"unique_id_{self._operation_id}",
+                                         parent=f"description_{self._operation_id}",
                                          value=self._operation.unique_id, readonly=True)
-                left_aligned_input_field(label="Runtime ID", tag=f"runtime_id_{self._unique_id}",
-                                         parent=f"description_{self._unique_id}",
+                left_aligned_input_field(label="Runtime ID", tag=f"runtime_id_{self._operation_id}",
+                                         parent=f"description_{self._operation_id}",
                                          value=self._operation.runtime_id, readonly=True)
                 dpg.add_separator()
-                left_aligned_input_field(label="Name", value=self._operation.name, tag=f"name_{self._unique_id}",
-                                         parent=f"description_{self._unique_id}")
+                left_aligned_input_field(label="Name", value=self._operation.name, tag=f"name_{self._operation_id}",
+                                         parent=f"description_{self._operation_id}")
 
                 left_aligned_input_field(label="Action", value=f"{self._operation.action}", multiline=True,
-                                         tag=f"action_{self._unique_id}", parent=f"description_{self._unique_id}",
+                                         tag=f"action_{self._operation_id}", parent=f"description_{self._operation_id}",
                                          readonly=False)
 
-            with dpg.child_window(border=True, width=-1, parent=self._parent_id, tag=f"parameters_{self._unique_id}"):
+            with dpg.child_window(border=True, width=-1, parent=self._parent_id, tag=f"parameters_{self._operation_id}"):
                 dpg.add_checkbox(label="Continuous/Loop", tag=self._persistent_id,
                                  default_value=self._operation.persistent,
-                                 parent=f"parameters_{self._unique_id}")
+                                 parent=f"parameters_{self._operation_id}")
                 dpg.add_checkbox(label="CPU Bound", tag=self._cpu_bound_id,
                                  default_value=self._operation.is_cpu_bound,
-                                 parent=f"parameters_{self._unique_id}")
+                                 parent=f"parameters_{self._operation_id}")
                 dpg.add_checkbox(label="Parallel Execution", tag=self._concurrent_id,
                                  default_value=self._operation.concurrent,
-                                 parent=f"parameters_{self._unique_id}")
+                                 parent=f"parameters_{self._operation_id}")
 
         with dpg.group(parent=self._parent, horizontal=True, tag=self._left_panel_id,
                        height=max(int(self._height * 0.6), 100)):
@@ -125,20 +125,20 @@ class OperationModule(GUIBase):
                                user_data=self._operation, width=-1)
 
             with dpg.child_window(height=-1, width=-1, border=True):
-                self._child_ops_parent = f"child_ops_{self._unique_id}"
-                with dpg.group(tag=f"container_{self._unique_id}", width=-1):
+                self._child_ops_parent = f"child_ops_{self._operation_id}"
+                with dpg.group(tag=f"container_{self._operation_id}", width=-1):
                     if self._operation.parent_operation is not None:
-                        left_aligned_button(label="Open Parent Operation", tag=f"open_parent_{self._unique_id}",
-                                            parent=f"container_{self._unique_id}", callback=self._open_parent_operation,
+                        left_aligned_button(label="Open Parent Operation", tag=f"open_parent_{self._operation_id}",
+                                            parent=f"container_{self._operation_id}", callback=self._open_parent_operation,
                                             enabled=True, text=self._operation.parent_operation.name)
                         dpg.add_separator()
 
                     dpg.add_text("Child Operations")
-                    with dpg.group(tag=self._child_ops_parent, parent=f"container_{self._unique_id}"):
+                    with dpg.group(tag=self._child_ops_parent, parent=f"container_{self._operation_id}"):
                         if self._operation.child_operations.values() is not None:
                             for child_op in self._operation.child_operations.values():
                                 with dpg.group(parent=self._child_ops_parent,
-                                               tag=f"{child_op.runtime_id}_{self._unique_id}"):
+                                               tag=f"{child_op.runtime_id}_{self._operation_id}"):
                                     dpg.add_input_text(label="Child Operation Name", default_value=child_op.name,
                                                        readonly=True)
                                     dpg.add_input_text(label="Status", default_value=child_op.status, readonly=True)
@@ -149,8 +149,8 @@ class OperationModule(GUIBase):
                     create_operation_module = CreateOperationModule(width=700,
                                                                     height=400,
                                                                     parent_operation=self._operation,
-                                                                    parent=f"container_{self._unique_id}")
-                    create_operation_module.draw_button(parent=f"container_{self._unique_id}",
+                                                                    parent=f"container_{self._operation_id}")
+                    create_operation_module.draw_button(parent=f"container_{self._operation_id}",
                                                         label="Add Child Operation")
 
     def dict_to_listbox_items(self, dictionary) -> list[str]:

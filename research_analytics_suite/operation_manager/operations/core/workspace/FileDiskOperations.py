@@ -20,7 +20,7 @@ from typing import Optional
 import aiofiles
 
 
-async def load_from_disk(file_path: str, operation_group: Optional[dict], with_instance=True) :
+async def load_from_disk(file_path: str, operation_group: Optional[dict], with_instance=True):
     """
     Load a BaseOperation object from disk.
 
@@ -134,9 +134,9 @@ def construct_file_path(base_dir, operation_ref):
         str: The constructed file path.
     """
     name = operation_ref['name']
-    short_id = operation_ref['unique_id'][:4]
+    github = operation_ref['github']
     version = operation_ref['version']
-    file_name = f"{name}_{short_id}.json" if version == 0 else f"{name}_{short_id}-{version}.json"
+    file_name = f"{github}_{name}_{version}.json"
     return os.path.join(base_dir, file_name)
 
 
@@ -179,9 +179,7 @@ async def populate_operation_args(data, file_dir, parent_operation=None, with_in
     data_metadata = data.copy()
 
     if 'action' not in data_metadata.keys():
-        operation_file = f"{data_metadata.get('name')}_{data_metadata.get('unique_id')[:4]}"
-        if 'version' in data_metadata and data_metadata.get('version') != 0:
-            operation_file += f"-{data_metadata.get('version')}"
+        operation_file = f"{data_metadata.get('github')}_{data_metadata.get('name')}_{data_metadata.get('version')}"
         operation_file += ".json"
         operation_file = os.path.join(file_dir, operation_file)
 
@@ -191,12 +189,20 @@ async def populate_operation_args(data, file_dir, parent_operation=None, with_in
                     operation_data = await f.read()
                     op_file_data = json.loads(operation_data)
 
+                    data_metadata['unique_id'] = op_file_data.get('unique_id')
+                    data_metadata['name'] = op_file_data.get('name')
+                    data_metadata['version'] = op_file_data.get('version')
+                    data_metadata['author'] = op_file_data.get('author')
+                    data_metadata['github'] = op_file_data.get('github')
+                    data_metadata['email'] = op_file_data.get('email')
+                    data_metadata['description'] = op_file_data.get('description')
                     data_metadata['action'] = op_file_data.get('action')
-                    data_metadata['dependencies'] = op_file_data.get('dependencies')
-                    data_metadata['child_operations'] = op_file_data.get('child_operations')
                     data_metadata['persistent'] = op_file_data.get('persistent')
                     data_metadata['is_cpu_bound'] = op_file_data.get('is_cpu_bound')
                     data_metadata['concurrent'] = op_file_data.get('concurrent')
+                    data_metadata['dependencies'] = op_file_data.get('dependencies')
+                    data_metadata['child_operations'] = op_file_data.get('child_operations')
+
             except Exception as e:
                 raise e
 
@@ -219,5 +225,25 @@ async def populate_operation_args(data, file_dir, parent_operation=None, with_in
             data_metadata['parent_operation'] = data_metadata.get('parent_operation')
     else:
         data_metadata['parent_operation'] = parent_operation
+
+    if data_metadata.get('child_operations') is not None:
+        if isinstance(data_metadata.get('child_operations'), list):
+            children = data_metadata.get('child_operations')
+            data_metadata['child_operations'] = []
+            for child in children:
+                if isinstance(child, dict):
+                    if with_instance:
+                        try:
+                            child_op = await from_dict(
+                                data=child,
+                                file_dir=file_dir
+                            )
+                            data_metadata['child_operations'].append(child_op)
+                        except Exception as e:
+                            raise e
+                    else:
+                        data_metadata['child_operations'].append(child)
+                else:
+                    data_metadata['child_operations'].append(child)
 
     return data_metadata

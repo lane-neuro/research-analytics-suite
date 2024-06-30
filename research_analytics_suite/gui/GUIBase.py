@@ -18,7 +18,7 @@ class GUIBase(ABC):
         self._parent = parent
         self._width = width
         self._height = height
-        self._unique_id = str(uuid.uuid4())
+        self._operation_id = str(uuid.uuid4())
         self._runtime_id = str(uuid.uuid4())
         self._update_operation = None
 
@@ -60,7 +60,7 @@ class GUIBase(ABC):
 
     @property
     def unique_id(self) -> str:
-        return self._unique_id
+        return self._operation_id
 
     @property
     def runtime_id(self) -> str:

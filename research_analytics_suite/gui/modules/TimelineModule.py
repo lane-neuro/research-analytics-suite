@@ -28,14 +28,14 @@ class TimelineModule(GUIBase):
         self._operation_elements = {}
 
     async def initialize_gui(self) -> None:
-        dpg.add_child_window(tag=self._unique_id, border=True, width=self.width, parent=self._parent)
+        dpg.add_child_window(tag=self._operation_id, border=True, width=self.width, parent=self._parent)
         self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_TimelineUpdateTask",
                 action=self._update_async, persistent=True, concurrent=True)
         self._update_operation.is_ready = True
 
     async def _update_async(self) -> None:
-        while not dpg.does_item_exist(f"print_sequencer_{self._unique_id}"):
+        while not dpg.does_item_exist(f"print_sequencer_{self._operation_id}"):
             await asyncio.sleep(0.1)
 
         while True:
@@ -44,7 +44,7 @@ class TimelineModule(GUIBase):
 
     def draw(self) -> None:
         dpg.add_button(label="Print Sequencer", callback=self._operation_sequencer.print_sequencer,
-                       parent=self._unique_id, tag=f"print_sequencer_{self._unique_id}")
+                       parent=self._operation_id, tag=f"print_sequencer_{self._operation_id}")
 
     async def update_operation_element(self, operation: BaseOperation, layer_index: int, idx: int) -> None:
         operation_id = f"operation_{operation.name}_{idx}_{layer_index}"
@@ -52,7 +52,7 @@ class TimelineModule(GUIBase):
         if operation_id in self._operation_elements:
             dpg.set_value(self._operation_elements[operation_id]['text'], f"Operation {idx + 1}: {operation.name}")
         else:
-            with dpg.group(horizontal=True, parent=self._unique_id):
+            with dpg.group(horizontal=True, parent=self._operation_id):
                 text_tag = dpg.add_text(f"Operation {idx + 1}: {operation.name}", tag=operation_id)
                 #dpg.add_button(label="Drag", callback=lambda: self.set_dragging_operation(operation, operation_id))
                 #dpg.add_button(label="Drop Here", callback=lambda: self.reorder_operations(layer_index, operation, idx))

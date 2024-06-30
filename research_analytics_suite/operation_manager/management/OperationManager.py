@@ -49,9 +49,10 @@ class OperationManager:
         if operation is None:
             self._logger.error(Exception("Attempted to add a None operation to the sequencer."), self)
             raise
-        self._logger.info(f"Adding initialized operation to sequencer: {operation.name} with ID: {operation.unique_id}")
+        self._logger.debug(f"Adding initialized operation to sequencer: {operation.name} "
+                          f"with rID: {operation.runtime_id}")
         await self.sequencer.add_operation_to_sequencer(operation)
-        self._logger.info(f"Operation {operation.name} added to sequencer.")
+        self._logger.debug(f"Operation {operation.name} added to sequencer.")
         operation.add_log_entry(f"[SEQ] {operation.name}")
         return operation
 
@@ -68,14 +69,14 @@ class OperationManager:
             Operation: The created operation.
         """
         try:
-            self._logger.info(f"Creating operation of type: {operation_type.__name__}")
+            self._logger.debug(f"Creating operation of type: {operation_type.__name__}")
             operation = operation_type(*args, **kwargs)
             await operation.initialize_operation()
-            self._logger.info(f"Initialized operation: {operation.name} with ID: {operation.unique_id}")
+            self._logger.debug(f"Initialized operation: {operation.name} with ID: {operation.runtime_id}")
 
             if operation.parent_operation is not None:
                 await operation.parent_operation.add_child_operation(operation)
-                self._logger.info(f"Added operation {operation.name} as child of {operation.parent_operation.name}")
+                self._logger.debug(f"Added operation {operation.name} as child of {operation.parent_operation.name}")
 
             return await self.add_initialized_operation(operation)
         except Exception as e:

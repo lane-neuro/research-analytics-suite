@@ -56,17 +56,13 @@ class BaseOperation(ABC):
 
     Brief Attribute Overview:
             (refer to property methods and docstrings for more details)
-        _lock (asyncio.Lock): A lock to ensure thread safety, primarily for initializing operations.
-        _GENERATED_ID (uuid.UUID): A unique ID generated for the operation.
-        initialized (bool): Whether the operation has been initialized.
-        workspace (Workspace): The workspace instance.
-        logger (CustomLogger): The logger instance.
-        config (Config): The configuration instance.
-        operation_control (OperationControl): The operation control instance.
-        gui_module (Any): The GUI module attached to the operation.
-        name (str): The name of the operation.
         unique_id (str): The unique ID of the operation.
-        version (int): The version of the operation.
+        version (str): The version of the operation.
+        name (str): The name of the operation.
+        author (str): The author of the operation.
+        github (str): The GitHub username of the operation author.
+        email (str): The email of the operation author.
+        description (str): The description of the operation.
         action (callable): The action to be executed by the operation.
         persistent (bool): Whether the operation should run indefinitely.
         is_cpu_bound (bool): Whether the operation is CPU-bound.
@@ -107,9 +103,13 @@ class BaseOperation(ABC):
             self._pause_event = None
             self._gui_module = None
 
-            self._name = None
             self._unique_id = None
             self._version = 0
+            self._name = None
+            self._author = None
+            self._github = None
+            self._email = None
+            self._description = None
             self._action = None
             self._action_callable = None
             self._persistent = None
@@ -165,10 +165,12 @@ class BaseOperation(ABC):
 
                     self._gui_module = None
 
+                    self._version = self.temp_kwargs.get('version', "0.0.1")
                     self._name = self.temp_kwargs.get('name', "[missing name]")
-
-                    self._unique_id = self.temp_kwargs.get('unique_id', f"{uuid.uuid4()}")
-                    self._version = self.temp_kwargs.get('version', 0)
+                    self._author = self.temp_kwargs.get('author', "[missing author]")
+                    self._github = self.temp_kwargs.get('github', "[missing github]")
+                    self._email = self.temp_kwargs.get('email', "[missing email]")
+                    self._description = self.temp_kwargs.get('description', "[missing description]")
                     self._action = self.temp_kwargs.get('action')
                     self._action_callable = None
                     self._persistent = self.temp_kwargs.get('persistent', False)
@@ -182,6 +184,10 @@ class BaseOperation(ABC):
                     self._task = None
                     self._progress = 0
                     self._is_ready = False
+
+                    self._unique_id = self.temp_kwargs.get('unique_id', None)
+                    if self._unique_id is None:
+                        self._unique_id = f"{self._github}_{self._name}_{self._version}"
 
                     self._dependencies: dict[BaseOperation.unique_id, 'BaseOperation'] = self.temp_kwargs.get(
                         'dependencies', dict[BaseOperation.unique_id, 'BaseOperation']())
@@ -474,24 +480,9 @@ class BaseOperation(ABC):
         return await from_dict(data, file_dir, parent_operation)
 
     @property
-    def workspace(self):
-        """Gets the workspace instance."""
-        return self._workspace
-
-    @property
-    def logger(self):
-        """Gets the logger instance."""
-        return self._logger
-
-    @property
     def config(self):
         """Gets the configuration instance."""
         return self._config
-
-    @property
-    def operation_control(self):
-        """Gets the operation control instance."""
-        return self._operation_control
 
     @property
     def pause_event(self):
@@ -516,12 +507,19 @@ class BaseOperation(ABC):
     @property
     def runtime_id(self) -> str:
         """Gets the runtime ID of the operation."""
-        return f"{self.short_id}_{self._GENERATED_ID}"
+        return f"{self._GENERATED_ID}"
 
     @property
-    def version(self) -> int:
-        """Gets the file index of the operation."""
+    def version(self):
+        """Gets the version of the operation."""
         return self._version
+
+    @version.setter
+    def version(self, value: str):
+        """Sets the version of the operation."""
+        if not isinstance(value, str):
+            self.handle_error("\'version\' property must be a string")
+        self._version = value
 
     @property
     def name(self) -> str:
@@ -534,6 +532,64 @@ class BaseOperation(ABC):
         if not isinstance(value, str):
             self.handle_error("\'name\' property must be a string")
         self._name = value
+
+    @property
+    def author(self) -> str:
+        """Gets the author of the operation."""
+        return self._author
+
+    @author.setter
+    def author(self, value: str):
+        """Sets the author of the operation."""
+        if not isinstance(value, str):
+            self.handle_error("\'author\' property must be a string")
+        self._author = value
+
+    @property
+    def github(self) -> str:
+        """Gets the GitHub username of the operation author."""
+        return self._github
+
+    @github.setter
+    def github(self, value: str):
+        """Sets the GitHub username of the operation author."""
+        if not isinstance(value, str):
+            self.handle_error("\'github\' property must be a string")
+
+        if value.startswith("@"):
+            value = value[1:]
+
+        self._github = value
+
+    @property
+    def email(self) -> str:
+        """Gets the email of the operation author."""
+        return self._email
+
+    @email.setter
+    def email(self, value: str):
+        """Sets the email of the operation author."""
+        if not isinstance(value, str):
+            self.handle_error("\'email\' property must be a string")
+
+        # Ensure email is in the correct format
+        if "@" not in value or "." not in value or len(value) < 5:
+            self.handle_error("\'email\' property must be in the format")
+            self._email = "[unknown_email]"
+        else:
+            self._email = value
+
+    @property
+    def description(self) -> str:
+        """Gets the description of the operation."""
+        return self._description
+
+    @description.setter
+    def description(self, value: str):
+        """Sets the description of the operation."""
+        if not isinstance(value, str):
+            self.handle_error("\'description\' property must be a string")
+        self._description = value
 
     @property
     def action(self):
@@ -549,7 +605,7 @@ class BaseOperation(ABC):
     def action(self, value):
         """Sets the action to be executed by the operation."""
         self._action = value
-        self._action_callable = None  # Reset _action_callable when action is set
+        self._action_callable = None
 
     @property
     def action_callable(self) -> callable:
@@ -596,6 +652,7 @@ class BaseOperation(ABC):
         valid_statuses = ["idle", "started", "waiting", "running", "paused", "stopped", "completed", "error"]
         if value not in valid_statuses:
             self.handle_error(f"Invalid status: {value}")
+            return
         self._status = value
 
     @property
@@ -606,6 +663,9 @@ class BaseOperation(ABC):
     @task.setter
     def task(self, value: asyncio.Task):
         """Sets the task associated with the operation."""
+        if not isinstance(value, asyncio.Task):
+            self.handle_error("\'task\' property must be an asyncio.Task")
+            return
         self._task = value
 
     @property
@@ -680,10 +740,12 @@ class BaseOperation(ABC):
             self._is_ready = False
             return
 
-        self._is_ready = True
         for child in self._child_operations.values():
             if not child.is_complete and not child.concurrent:
                 self._is_ready = False
+                return
+
+        self._is_ready = True
 
     @property
     def is_running(self) -> bool:
