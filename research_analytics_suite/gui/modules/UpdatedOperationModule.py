@@ -35,7 +35,7 @@ class UpdatedOperationModule(GUIBase):
 
         self._operation_info = operation_dict
 
-        self._version = self._operation_info.get("version", "1")
+        self._version = self._operation_info.get("version", "0.0.1")
         self._name = self._operation_info.get("name", "[unknown_name]")
         self._author = self._operation_info.get("author", "[unknown_author]")
         self._github = self._operation_info.get("github", "[unknown_github]")
@@ -66,54 +66,62 @@ class UpdatedOperationModule(GUIBase):
         pass
 
     def draw(self):
-        with dpg.group(tag=self._parent_id, parent=self._parent):
+        with dpg.child_window(tag=self._parent_id, parent=self._parent, width=self.width, height=self.height):
             # Upper Region
-            with dpg.group(tag=f"upper_{self._runtime_id}", parent=self._parent_id):
-                with dpg.group(horizontal=True, tag=f"basic_{self._runtime_id}", parent=f"upper_{self._runtime_id}"):
-                    with dpg.group():
-                        dpg.add_text(default_value=self._version, parent=f"basic_{self._runtime_id}")
-                    with dpg.group():
-                        dpg.add_input_text(default_value=self._name, parent=f"basic_{self._runtime_id}")
+            with dpg.group(tag=f"upper_{self._runtime_id}", parent=self._parent_id, width=-1):
+                with dpg.group(horizontal=True, tag=f"basic_{self._runtime_id}",
+                               parent=f"upper_{self._runtime_id}", horizontal_spacing=20, width=-1):
+                    dpg.add_text(default_value=f"v{self._version}", indent=10)
+                    dpg.add_input_text(default_value=self._name)
 
-                with dpg.group(label="Details", horizontal=True, tag=f"details_{self._runtime_id}",
-                               parent=f"upper_{self._runtime_id}"):
-                    with dpg.group(parent=f"details_{self._runtime_id}"):
-                        dpg.add_text(default_value=self._author)
-                    with dpg.group(parent=f"details_{self._runtime_id}"):
-                        dpg.add_input_text(default_value=self._github)
-                        dpg.add_input_text(default_value=self._email)
+                with dpg.child_window(label="Details",
+                                      parent=f"upper_{self._runtime_id}", border=True, width=-1, height=65,
+                                      no_scrollbar=True):
+                    with dpg.group(horizontal=True, width=-1, horizontal_spacing=20, height=-1,
+                                   tag=f"details_{self._runtime_id}"):
+                        with dpg.group(parent=f"details_{self._runtime_id}", width=100, height=-1):
+                            dpg.add_text(default_value=self._author, indent=10)
+                        with dpg.group(parent=f"details_{self._runtime_id}", width=100, height=-1):
+                            dpg.add_input_text(default_value=self._github)
+                            dpg.add_input_text(default_value=self._email)
 
-                with dpg.group(horizontal=True, tag=f"more_details_{self._runtime_id}",
-                               parent=f"upper_{self._runtime_id}"):
-                    with dpg.group(label="Description", tag=f"description_{self._runtime_id}"):
-                        dpg.add_input_text(default_value=self._description, multiline=True)
-                    with dpg.group(label="Output Type", tag=f"output_{self._runtime_id}"):
-                        dpg.add_listbox(items=["Type1", "Type2", "Type3"])
+                with dpg.child_window(label="More Details", height=146, width=-1, no_scrollbar=True,
+                                      parent=f"upper_{self._runtime_id}", border=True):
+                    with dpg.group(horizontal=True, tag=f"more_details_{self._runtime_id}",
+                                   horizontal_spacing=20):
+                        with dpg.group(label="Description", tag=f"description_{self._runtime_id}",
+                                       width=225):
+                            dpg.add_text(default_value="Description", indent=10)
+                            dpg.add_input_text(default_value=self._description, multiline=True, width=-1, height=74)
+                        with dpg.group(label="Output Types", tag=f"output_{self._runtime_id}", width=-1, height=124):
+                            dpg.add_text(default_value="Output Types", indent=10)
+                            dpg.add_listbox(items=["Type1", "Type2", "Type3", "Type4"], num_items=3,
+                                            width=-1)
+                    dpg.add_separator(label="Options")
 
-                with dpg.group(horizontal=True, tag=f"options_{self._runtime_id}",
-                               parent=f"upper_{self._runtime_id}"):
-                    with dpg.group():
-                        dpg.add_checkbox(label="Loop", default_value=False)
-                    with dpg.group():
+                    with dpg.group(horizontal=True, tag=f"options_{self._runtime_id}", horizontal_spacing=65):
+                        dpg.add_checkbox(label="Loop", default_value=False, indent=25)
                         dpg.add_checkbox(label="CPU", default_value=False)
-                    with dpg.group():
                         dpg.add_checkbox(label="Parallel", default_value=False)
 
             # Middle Region
             with dpg.group(horizontal=True, tag=f"middle_{self._runtime_id}",
-                           parent=self._parent_id):
-                with dpg.group(label="Dependencies"):
-                    dpg.add_listbox(label="Values Required List", items=['test', 'test2', 'test3'], num_items=6)
+                           parent=self._parent_id, height=120, horizontal_spacing=5):
+                with dpg.child_window(label="Dependencies", no_scrollbar=True, width=125,
+                                      border=True, parent=f"middle_{self._runtime_id}"):
+                    dpg.add_text(default_value="Values Required", indent=10)
+                    dpg.add_listbox(items=['test', 'test2', 'test3'], num_items=3, width=-1)
                     # dpg.add_button(label="Add Value", callback=self.add_value)
 
-                with dpg.group(label="Child Operations"):
-                    dpg.add_listbox(items=[], num_items=6)
+                with dpg.child_window(label="Child Operations", no_scrollbar=True, border=True):
+                    dpg.add_text(default_value="Child Operations", indent=10)
+                    dpg.add_listbox(items=["Child 1", "2", "3", "4"], num_items=3, width=-1)
                     # dpg.add_button("Add Operation", callback=self.add_child_operation)
 
             # Lower Region
             with dpg.group(tag=f"action_{self._runtime_id}", parent=self._parent_id):
-                dpg.add_text("Action")
-                dpg.add_input_text(default_value="##Code Block", multiline=True)
+                dpg.add_text(default_value="Action", indent=10)
+                dpg.add_input_text(default_value=self._action, multiline=True, width=-1, height=-1)
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         """Resizes the GUI."""
