@@ -23,6 +23,7 @@ def pack_as_local_reference(operation) -> dict:
     """Provide a reference to the unique_id, name, and version of the operation."""
     return {
         'unique_id': operation.unique_id,
+        'category_id': operation.category_id,
         'author': operation.author,
         'github': operation.github,
         'version': operation.version,
@@ -40,6 +41,7 @@ def pack_for_save(operation) -> dict:
 
     return {
         'unique_id': operation.unique_id,
+        'category_id': operation.category_id,
         'version': operation.version,
         'name': operation.name,
         'author': operation.author,

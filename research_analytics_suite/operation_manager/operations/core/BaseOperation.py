@@ -15,7 +15,7 @@ Status: Prototype
 import asyncio
 import os.path
 import uuid
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Tuple, final
 
 from research_analytics_suite.utils.Config import Config
@@ -58,6 +58,7 @@ class BaseOperation(ABC):
             (refer to property methods and docstrings for more details)
         unique_id (str): The unique ID of the operation.
         version (str): The version of the operation.
+        category_id (str): The category ID of the operation.
         name (str): The name of the operation.
         author (str): The author of the operation.
         github (str): The GitHub username of the operation author.
@@ -104,6 +105,7 @@ class BaseOperation(ABC):
             self._gui_module = None
 
             self._unique_id = None
+            self._category_id = None
             self._version = 0
             self._name = None
             self._author = None
@@ -167,6 +169,7 @@ class BaseOperation(ABC):
 
                     self._version = self.temp_kwargs.get('version', "0.0.1")
                     self._name = self.temp_kwargs.get('name', "[missing name]")
+                    self._category_id = self.temp_kwargs.get('category_id', "[missing category]")
                     self._author = self.temp_kwargs.get('author', "[missing author]")
                     self._github = self.temp_kwargs.get('github', "[missing github]")
                     self._email = self.temp_kwargs.get('email', "[missing email]")
@@ -520,6 +523,11 @@ class BaseOperation(ABC):
         if not isinstance(value, str):
             self.handle_error("\'version\' property must be a string")
         self._version = value
+
+    @property
+    def category_id(self):
+        """Gets the category ID of the operation."""
+        return self._category_id
 
     @property
     def name(self) -> str:

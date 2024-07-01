@@ -14,6 +14,8 @@ from typing import Tuple, Optional, Any
 
 import aiofiles
 from collections import defaultdict
+
+from research_analytics_suite.operation_library import LibraryManifest
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.memory.DataCache import DataCache
 from research_analytics_suite.data_engine.engine.DataEngineOptimized import DataEngineOptimized
@@ -43,6 +45,7 @@ class Workspace:
         if not hasattr(self, '_initialized'):
             self._logger = CustomLogger()
             self._config = Config()
+            self._library_manifest = LibraryManifest()
             self._memory_manager = MemoryManager()
             self._data_cache = DataCache()
 
@@ -66,6 +69,7 @@ class Workspace:
                 if not self._initialized:
                     if config:
                         self._config = config
+                    await self._library_manifest.initialize()
                     self._data_engines = dict()
                     self._dependencies = defaultdict(list)
 
@@ -406,6 +410,16 @@ class Workspace:
             self._logger.info(f"Memory restored from {file_path}")
         except Exception as e:
             self._logger.error(Exception(f"Failed to restore memory bank: {e}"), self)
+
+    async def update_manifest(self):
+        """
+        Updates the manifest of the workspace.
+        """
+        try:
+            # Logic to update the manifest
+            pass
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to update manifest: {e}"), self)
 
 
 def remove_non_serializable(obj):

@@ -83,9 +83,14 @@ class OperationLifecycleManager:
             operation = self.sequencer.get_head_operation_from_chain(operation_list)
             await self.operation_manager.pause_operation(operation)
 
+    async def update_manifest(self):
+        """Updates the operation manifest."""
+        await self.operation_manager.update_manifest()
+
     async def exec_loop(self):
         """Executes the main loop of the operations manager."""
-        tasks = [self.system_operation_checker.check_system_operations(),
+        tasks = [self.update_manifest(),
+                 self.system_operation_checker.check_system_operations(),
                  self.start_all_operations(),
                  self.operation_executor.execute_ready_operations(),
                  self.task_monitor.handle_tasks()]
