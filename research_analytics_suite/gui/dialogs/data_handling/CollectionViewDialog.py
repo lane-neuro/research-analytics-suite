@@ -121,8 +121,8 @@ class CollectionViewDialog(GUIBase):
                     dpg.add_text(collection.name, parent=collection_tag)
                     if collection.list_slots():
                         for slot in collection.list_slots():
-                            from research_analytics_suite.gui import SlotPreview
-                            slot_preview = SlotPreview(parent=collection_tag, slot=slot, width=200, height=100)
+                            from research_analytics_suite.gui import MemorySlotPreview
+                            slot_preview = MemorySlotPreview(parent=collection_tag, slot=slot, width=200, height=100)
                             slot_preview.draw()
 
     def search(self, sender, data):

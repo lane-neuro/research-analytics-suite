@@ -1,9 +1,9 @@
 """
-OperationModule
+UpdatedOperationModule
 
-This module defines the OperationModule class, which is responsible for managing operations and their GUI representation
-within the research analytics suite. It handles the initialization, execution, stopping, pausing, resuming, and
-resetting of operations and updates the GUI accordingly.
+This module defines the UpdatedOperationModule class, which is responsible for managing operations and their GUI
+representation within the research analytics suite. It handles the initialization, execution, stopping, pausing,
+resuming, and resetting of operations and updates the GUI accordingly.
 
 Author: Lane
 Copyright: Lane
@@ -23,7 +23,7 @@ class UpdatedOperationModule(GUIBase):
 
     def __init__(self, operation_dict: dict, width: int, height: int, parent: str):
         """
-        Initializes the OperationModule with the specified operation, width, height, and parent.
+        Initializes the UpdatedOperationModule with the specified operation, width, height, and parent.
 
         Args:
             operation_dict (dict): The dictionary containing the operation information.
@@ -51,12 +51,7 @@ class UpdatedOperationModule(GUIBase):
 
         self._child_ops_parent = None
         self._values_required_parent = None
-
-        self._concurrent_id = f"concurrent_{self._runtime_id}"
-        self._persistent_id = f"persistent_{self._runtime_id}"
-        self._cpu_bound_id = f"cpu_bound_{self._runtime_id}"
         self._parent_id = f"parent_{self._runtime_id}"
-        self._left_panel_id = f"left_panel_{self._runtime_id}"
 
     async def initialize_gui(self) -> None:
         """Initializes resources and adds the update operation."""

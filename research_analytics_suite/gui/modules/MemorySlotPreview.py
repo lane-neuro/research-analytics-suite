@@ -1,19 +1,19 @@
 """
-SlotPreview Module
+MemorySlotPreview Module
 
-This module defines the SlotPreview class, which is responsible for managing the GUI representation of individual slots.
+This module defines the MemorySlotPreview class, which is responsible for managing the GUI representation of individual slots.
 """
 import uuid
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 
 
-class SlotPreview:
+class MemorySlotPreview:
     """A class to manage the GUI representation of individual slots."""
 
     def __init__(self, parent, slot: MemorySlot, width: int, height: int):
         """
-        Initializes the SlotPreview with the given slot.
+        Initializes the MemorySlotPreview with the given slot.
 
         Args:
             parent (str): The parent GUI element ID.

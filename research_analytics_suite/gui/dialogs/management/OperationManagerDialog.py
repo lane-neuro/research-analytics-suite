@@ -144,7 +144,7 @@ class OperationManagerDialog(GUIBase):
 
         self.operation_items[operation.runtime_id].draw()
 
-    async def operation_preview_tile(self, file_name: str):
+    async def operation_context_view(self, file_name: str):
         """
         Creates a preview tile for the operation.
 
@@ -157,8 +157,26 @@ class OperationManagerDialog(GUIBase):
         operation_dict = await load_from_disk(file_path=file_name, operation_group=None, with_instance=False)
 
         from research_analytics_suite.gui.modules.UpdatedOperationModule import UpdatedOperationModule
-        preview_tile = UpdatedOperationModule(operation_dict=operation_dict, width=self.TILE_WIDTH,
-                                              height=self.TILE_HEIGHT, parent=self._parent)
+        operation_view = UpdatedOperationModule(operation_dict=operation_dict, width=self.TILE_WIDTH,
+                                                height=self.TILE_HEIGHT, parent=self._parent)
+        await operation_view.initialize_gui()
+        operation_view.draw()
+
+    async def operation_preview_tile(self, file_name: str):
+        """
+        Creates a preview tile for the operation.
+
+        Args:
+            file_name (str): The name of the file.
+        """
+        self._logger.debug(f"Creating operation preview tile for file: {file_name}")
+
+        from research_analytics_suite.operation_manager.operations.core.workspace import load_from_disk
+        operation_dict = await load_from_disk(file_path=file_name, operation_group=None, with_instance=False)
+
+        from research_analytics_suite.gui.modules.OperationSlotPreview import OperationSlotPreview
+        preview_tile = OperationSlotPreview(operation_dict=operation_dict, width=300,
+                                            height=40, parent=self._parent)
         await preview_tile.initialize_gui()
         preview_tile.draw()
 
@@ -198,6 +216,7 @@ class OperationManagerDialog(GUIBase):
 
         self._logger.debug(f"Loading operation from file: {_file_path}")
         await self.operation_preview_tile(_file_path)
+        await self.operation_context_view(_file_path)
 
         loaded_operations = {}
         try:
