@@ -15,7 +15,7 @@ from typing import Tuple, Optional, Any
 import aiofiles
 from collections import defaultdict
 
-from research_analytics_suite.operation_library import LibraryManifest
+from research_analytics_suite.library_manifest import LibraryManifest
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.memory.DataCache import DataCache
 from research_analytics_suite.data_engine.engine.DataEngineOptimized import DataEngineOptimized
@@ -219,6 +219,7 @@ class Workspace:
                 data_engine = await UnifiedDataEngine.load_engine(engine_dir, engine_id)
                 self.add_data_engine(data_engine)
 
+            await self._library_manifest.load_user_library()
             await self.restore_memory_manager(os.path.join(workspace_path, 'user_variables.db'))
             self._logger.info(f"Workspace loaded from {workspace_path}")
             return self
@@ -416,7 +417,6 @@ class Workspace:
         Updates the manifest of the workspace.
         """
         try:
-            # Logic to update the manifest
             pass
         except Exception as e:
             self._logger.error(Exception(f"Failed to update manifest: {e}"), self)

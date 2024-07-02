@@ -4,9 +4,9 @@ Version:        0.0.1
 Description:    A basic implementation of an operation that calculates the mean and standard deviation of a list of
                 numbers.
 
-Author:         Example Author
-GitHub:         @example_author
-Email:          example@author.com
+Author:         Lane
+GitHub:         @lane-neuro
+Email:          justlane@uw.edu
 
 ---
 Part of the Research Analytics Suite (RAS)
@@ -15,7 +15,6 @@ License:        BSD 3-Clause License
 Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         Example
 """
-
 import statistics
 from typing import Any, List
 
@@ -62,13 +61,22 @@ class ExampleOperation(BaseOperation):
         execute: Execute the operation's logic.
     """
 
+    category_id: int = 1
+    version: str = "0.0.1"
     name: str = "ExampleOperation"
+    author: str = "Lane"
+    github: str = "lane-neuro"
+    email: str = "justlane@uw.edu"
+    description: str = ("A basic implementation of an operation that calculates the mean and standard deviation "
+                        "of a list of numbers.")
+    action: str = "Calculates the mean and standard deviation of a list of numbers."
     persistent: bool = False
     is_cpu_bound: bool = False
     concurrent: bool = False
-    required_parent: None
-    required_children: None
-    required_dependencies: None
+    dependencies: []
+    parent_operation: None
+    child_operations: None
+    unique_id: str = f"{author}_{name}_{version}"
 
     def __init__(self, numbers: List[float], *args: Any, **kwargs: Any):
         """
@@ -81,11 +89,21 @@ class ExampleOperation(BaseOperation):
         """
         # Update kwargs with attributes
         kwargs.update({
+            'unique_id': self.unique_id,
+            'category_id': self.category_id,
+            'version': self.version,
             'name': self.name,
+            'author': self.author,
+            'github': self.github,
+            'email': self.email,
+            'description': self.description,
             'action': self.execute,
             'persistent': self.persistent,
             'is_cpu_bound': self.is_cpu_bound,
-            'concurrent': self.concurrent
+            'concurrent': self.concurrent,
+            'dependencies': self.dependencies,
+            'parent_operation': self.parent_operation,
+            'child_operations': self.child_operations,
         })
 
         # Don't forget to initialize any custom attributes/input parameters
