@@ -80,16 +80,14 @@ class ResourceMonitorOperation(BaseOperation):
             await asyncio.sleep(.01)
 
     def get_cpu_formatted(self) -> str:
-        return (f"Total CPU Usage: {round(self.cpu_usage, 3)}% [{psutil.cpu_count()} cores]"
-                f"({round(self.cpu_usage / psutil.cpu_count(), 3)}%/core)\n"
-                f"RAS: {round(self.process.cpu_percent(), 3)}% "
-                f"({round(self.process.cpu_percent() / psutil.cpu_count(), 3)}%/core)")
+        return (f"Total CPU Usage:\t{round(self.cpu_usage, 2)}%\t[{psutil.cpu_count()} cores]\n"
+                f"RAS:\t{round(self.process.cpu_percent(), 2)}%")
 
     def get_memory_formatted(self) -> str:
-        return (f"Total Memory Usage: {self.total_memory_usage}%\n"
-                f"RAS: {round(self.process.memory_percent(), 3)}% "
-                f"({round(self.process_memory_usage, 3)} GB / "
-                f"{round(psutil.virtual_memory().total / (1024 ** 3), 3)} GB)")
+        return (f"Total Memory Usage:\t{self.total_memory_usage}%\n"
+                f"RAS:\t{round(self.process.memory_percent(), 2)}% "
+                f"({round(self.process_memory_usage, 2)} GB\t/\t"
+                f"{round(psutil.virtual_memory().total / (1024 ** 3), 2)} GB)")
 
     def output_memory_usage(self) -> List[str]:
         return [self.profiler.print_stats('calls'),

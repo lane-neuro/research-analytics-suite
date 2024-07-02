@@ -39,6 +39,7 @@ class OperationSlotPreview(GUIBase):
         self._author = self._operation_info["author"]
         self._github = self._operation_info["github"]
         self._description = self._operation_info["description"]
+        self._action = self._operation_info["action"]
         self._output_type = None  # self._operation_info["output_type"]
         self._dependencies = self._operation_info["dependencies"]
         if self._dependencies is None:
@@ -55,38 +56,38 @@ class OperationSlotPreview(GUIBase):
 
     def draw(self):
         with dpg.child_window(tag=self._parent_id, parent=self._parent, width=self.width, height=self.height,
-                              no_scrollbar=True, no_scroll_with_mouse=True):
-            with dpg.tooltip(parent=self._parent_id, tag=f"tooltip_{self.runtime_id}"):
+                              no_scrollbar=True, no_scroll_with_mouse=True, border=False):
+            with dpg.tooltip(parent=self._parent_id, tag=f"tooltip_{self.runtime_id}", ):
                 from research_analytics_suite.gui.modules.UpdatedOperationModule import UpdatedOperationModule
                 operation_view = UpdatedOperationModule(operation_dict=self._operation_info, width=400,
-                                                        height=600, parent=f"tooltip_{self.runtime_id}")
+                                                        height=500, parent=f"tooltip_{self.runtime_id}")
                 operation_view.draw()
 
             with dpg.group(tag=f"slot_preview_{self.runtime_id}", parent=self._parent_id,
                            horizontal=True, horizontal_spacing=10):
-                dpg.add_button(label="[+]", width=25, height=25, parent=f"slot_preview_{self.runtime_id}",
+                dpg.add_button(label="+", width=25, height=25, parent=f"slot_preview_{self.runtime_id}",
                                callback=lambda: print("Add new operation slot"), indent=5)
                 dpg.add_text(default_value=f"{self._name}", parent=f"slot_preview_{self.runtime_id}")
 
-                with dpg.child_window(height=40, width=75, no_scrollbar=True, pos=(self.width - 150, 0)):
-                    deps = self._operation_info['dependencies'] if 'dependencies' in self._operation_info else []
-                    if deps is []:
-                        dpg.add_text("-")
-                    elif iter(deps):
-                        for item in deps:
-                            dpg.add_text(item)
-                    else:
-                        dpg.add_text("-")
-
-                with dpg.child_window(height=40, width=75, no_scrollbar=True, pos=(self.width - 75, 0)):
-                    outs = self._operation_info['output_type'] if 'output_type' in self._operation_info else []
-                    if outs is []:
-                        dpg.add_text("-")
-                    elif iter(outs):
-                        for item in outs:
-                            dpg.add_text(item)
-                    else:
-                        dpg.add_text("-")
+                # with dpg.child_window(height=30, width=55, no_scrollbar=True, pos=(self.width - 115, 5)):
+                #     deps = self._operation_info['dependencies'] if 'dependencies' in self._operation_info else []
+                #     if deps is []:
+                #         dpg.add_text("-")
+                #     elif iter(deps):
+                #         for item in deps:
+                #             dpg.add_text(item)
+                #     else:
+                #         dpg.add_text("-")
+                #
+                # with dpg.child_window(height=30, width=55, no_scrollbar=True, pos=(self.width - 61, 5)):
+                #     outs = self._operation_info['output_type'] if 'output_type' in self._operation_info else []
+                #     if outs is []:
+                #         dpg.add_text("-")
+                #     elif iter(outs):
+                #         for item in outs:
+                #             dpg.add_text(item)
+                #     else:
+                #         dpg.add_text("-")
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         """Resizes the GUI."""

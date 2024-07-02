@@ -68,11 +68,9 @@ class ResourceMonitorDialog(GUIBase):
             await asyncio.sleep(self.SLEEP_DURATION)
 
     def draw(self) -> None:
-        with dpg.group(horizontal=True, parent=self._parent):
-            with dpg.child_window(tag="cpu_container", border=True, width=275):
-                dpg.add_text("CPU Usage: 0%", tag="cpu_text")
-            with dpg.child_window(tag="memory_container", border=True):
-                dpg.add_text("Memory Usage: 0%", tag="memory_text")
+        with dpg.group(horizontal=False, parent=self._parent):
+            dpg.add_text("CPU Usage: 0%", tag="cpu_text", bullet=True)
+            dpg.add_text("Memory Usage: 0%", tag="memory_text", bullet=True)
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         pass

@@ -156,32 +156,32 @@ class GuiLauncher:
 
         with dpg.window(label="Research Analytics Suite", tag="main_window",
                         width=dpg.get_viewport_width(), height=dpg.get_viewport_height()):
-            with dpg.group(horizontal=True, tag="main_pane", height=dpg.get_viewport_height() - 300):
+            with dpg.group(horizontal=True, tag="upper_pane_group", height=dpg.get_viewport_height() - 300,
+                           horizontal_spacing=5, parent="main_window"):
                 with dpg.child_window(tag="left_pane", width=180):
                     await self.setup_navigation_menu()
 
-                with dpg.child_window(tag="middle_pane", width=int(dpg.get_viewport_width() * 0.50)):
+                with dpg.child_window(tag="middle_pane", width=int(dpg.get_viewport_width() - 480)):
                     await self.setup_panes()
 
-                with dpg.child_window(tag="right_pane", width=-1):
+                with dpg.child_window(tag="right_pane", width=250):
                     await self.setup_library_pane()
 
-            with dpg.child_window(tag="bottom_pane", parent="main_window", width=-1):
-                with dpg.group(horizontal=True, tag="bottom_pane_group"):
+            with dpg.group(horizontal=True, tag="bottom_pane_group", horizontal_spacing=5, parent="main_window",
+                           height=240):
+                with dpg.child_window(tag="bottom_left_pane", width=180, height=-1, border=False):
                     await self.setup_workspace_pane()
 
+                with dpg.child_window(tag="bottom_middle_pane", height=-1, width=int(dpg.get_viewport_width() - 480),
+                                      border=False):
                     await self.setup_timeline_module()
 
-                    with dpg.child_window(tag="resource_monitor_pane", width=-1,
-                                          pos=(dpg.get_viewport_width() - 640, 8)):
-                        dpg.add_text("Resource Monitor")
-                        with dpg.group(horizontal=True, tag="resource_monitor_group"):
-                            self._resource_monitor_dialog = ResourceMonitorDialog(width=-1, height=-1,
-                                                                                  parent="resource_monitor_group")
-                            await self._resource_monitor_dialog.initialize_gui()
-                            self._resource_monitor_dialog.draw()
+                with dpg.child_window(tag="bottom_right_pane", width=250, height=-1, border=True):
+                    await self.setup_resource_monitor()
 
         dpg.set_primary_window("main_window", True)
+        dpg.set_viewport_resize_callback(self.adjust_main_window)
+        self.adjust_main_window()
 
         while dpg.is_dearpygui_running():
             dpg.render_dearpygui_frame()
@@ -193,44 +193,44 @@ class GuiLauncher:
 
     async def setup_panes(self) -> None:
         """Sets up asynchronous panes."""
-        with dpg.child_window(tag="planning_pane", parent="middle_pane", show=True):
+        with dpg.child_window(tag="planning_pane", parent="middle_pane", show=True, border=False):
             self._planning_dialog = PlanningDialog(width=-1, height=-1, parent="planning_pane")
             await self._planning_dialog.initialize_gui()
             self._planning_dialog.draw()
 
-        with dpg.child_window(tag="data_collection_pane", parent="middle_pane", show=False):
+        with dpg.child_window(tag="data_collection_pane", parent="middle_pane", show=False, border=False):
             await self.setup_data_collection_pane()
             self._collection_view_dialog.draw()
 
-        with dpg.child_window(tag="analyze_data_pane", parent="middle_pane", show=False):
-            self._analyze_data_dialog = AnalyzeDataDialog(width=800, height=600, parent="analyze_data_pane")
+        with dpg.child_window(tag="analyze_data_pane", parent="middle_pane", show=False, border=False):
+            self._analyze_data_dialog = AnalyzeDataDialog(width=-1, height=-1, parent="analyze_data_pane")
             await self._analyze_data_dialog.initialize_gui()
             self._analyze_data_dialog.draw()
 
-        with dpg.child_window(tag="visualize_data_pane", parent="middle_pane", show=False):
+        with dpg.child_window(tag="visualize_data_pane", parent="middle_pane", show=False, border=False):
             self._visualize_data_dialog = VisualizeDataDialog(width=-1, height=-1, parent="visualize_data_pane")
             await self._visualize_data_dialog.initialize_gui()
             self._visualize_data_dialog.draw()
 
-        with dpg.child_window(tag="manage_projects_pane", parent="middle_pane", show=False):
+        with dpg.child_window(tag="manage_projects_pane", parent="middle_pane", show=False, border=False):
             self._manage_project_dialog = ProjectManagerDialog(width=-1, height=-1, parent="manage_projects_pane")
             await self._manage_project_dialog.initialize_gui()
             self._manage_project_dialog.draw()
 
-        with dpg.child_window(tag="reports_pane", parent="middle_pane", show=False):
+        with dpg.child_window(tag="reports_pane", parent="middle_pane", show=False, border=False):
             self._reports_dialog = ReportsDialog(width=-1, height=-1, parent="reports_pane")
             await self._reports_dialog.initialize_gui()
             self._reports_dialog.draw()
 
-        with dpg.child_window(tag="settings_pane", parent="middle_pane", show=False):
+        with dpg.child_window(tag="settings_pane", parent="middle_pane", show=False, border=False):
             dpg.add_text("Settings Pane")
 
-        with dpg.child_window(tag="console_log_output_pane", parent="middle_pane", show=False):
+        with dpg.child_window(tag="console_log_output_pane", parent="middle_pane", show=False, border=False):
             await self.setup_console_log_viewer_pane()
 
     async def setup_library_pane(self) -> None:
         """Sets up the library pane."""
-        with dpg.child_window(tag="library_pane", width=-1, height=-1, parent="right_pane"):
+        with dpg.child_window(tag="library_pane", width=-1, height=-1, parent="right_pane", border=False):
             self._library_pane = LibraryPane(width=-1, height=-1, parent="library_pane")
             await self._library_pane.initialize_gui()
             self._library_pane.draw()
@@ -248,17 +248,14 @@ class GuiLauncher:
 
     async def setup_workspace_pane(self) -> None:
         """Sets up the workspace pane."""
-        with dpg.group(parent="bottom_pane_group", horizontal=True, tag="workspace_group"):
-            self._workspace_dialog = WorkspaceModule(height=-1,
-                                                     width=int(dpg.get_viewport_width() * 0.5),
-                                                     parent="bottom_pane_group")
-            await self._workspace_dialog.initialize_gui()
-            self._workspace_dialog.draw()
+        self._workspace_dialog = WorkspaceModule(height=-1, width=-1, parent="bottom_left_pane")
+        await self._workspace_dialog.initialize_gui()
+        self._workspace_dialog.draw()
 
     async def setup_data_collection_pane(self) -> None:
         """Sets up the data collection pane."""
         with dpg.group(parent="data_collection_pane"):
-            self._collection_view_dialog = CollectionViewDialog(width=800, height=600, parent="data_collection_pane")
+            self._collection_view_dialog = CollectionViewDialog(width=-1, height=-1, parent="data_collection_pane")
             dpg.add_text("Data Collection Tools")
             await self._collection_view_dialog.initialize_gui()
 
@@ -270,7 +267,40 @@ class GuiLauncher:
 
     async def setup_timeline_module(self) -> None:
         """Sets up the timeline module."""
-        self._timeline_dialog = TimelineModule(width=800, height=-1, parent="bottom_pane_group",
+        self._timeline_dialog = TimelineModule(width=-1, height=-1, parent="bottom_middle_pane",
                                                operation_sequencer=self._operation_control.sequencer)
         await self._timeline_dialog.initialize_gui()
         self._timeline_dialog.draw()
+
+    async def setup_resource_monitor(self) -> None:
+        """Sets up the resource monitor dialog."""
+        dpg.add_text("Resource Monitor")
+        dpg.add_separator()
+        with dpg.group(horizontal=True, tag="resource_monitor_group"):
+            self._resource_monitor_dialog = ResourceMonitorDialog(width=-1, height=-1,
+                                                                  parent="resource_monitor_group")
+            await self._resource_monitor_dialog.initialize_gui()
+            self._resource_monitor_dialog.draw()
+
+    def adjust_main_window(self):
+        """
+        Adjusts the width & height of the primary window containers.
+        """
+        parent_width = dpg.get_item_configuration("main_window")["width"]
+        parent_height = dpg.get_item_configuration("main_window")["height"]
+
+        top_left_width = dpg.get_item_configuration("left_pane")["width"]
+        top_right_width = dpg.get_item_configuration("right_pane")["width"]
+        top_middle_width = parent_width - (top_left_width + top_right_width + 25)
+
+        bottom_left_width = dpg.get_item_configuration("bottom_left_pane")["width"]
+        bottom_right_width = dpg.get_item_configuration("bottom_right_pane")["width"]
+        bottom_middle_width = parent_width - (bottom_left_width + bottom_right_width + 25)
+
+        bottom_height = dpg.get_item_configuration("bottom_pane_group")["height"]
+        top_middle_height = parent_height - (bottom_height + 20)
+
+        dpg.configure_item("middle_pane", width=top_middle_width)
+        dpg.configure_item("upper_pane_group", height=top_middle_height)
+        dpg.configure_item("bottom_middle_pane", width=bottom_middle_width)
+        dpg.configure_item("bottom_pane_group", height=bottom_height)

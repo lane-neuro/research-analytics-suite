@@ -72,9 +72,10 @@ class LibraryManifest:
         category_id = op_attributes.category_id
 
         if category_id in self._categories.keys():
-            self._categories[category_id].register_operation(op_attributes)
+            if op_attributes.unique_id not in self._categories[category_id].operations:
+                self._categories[category_id].register_operation(op_attributes)
         else:
-            category = Category(category_id, "None")
+            category = Category(category_id, "Uncategorized Operations")
             self._categories[category_id] = category
             category.register_operation(op_attributes)
 

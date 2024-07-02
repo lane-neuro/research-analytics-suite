@@ -61,7 +61,8 @@ class UpdatedOperationModule(GUIBase):
         pass
 
     def draw(self):
-        with dpg.child_window(tag=self._parent_id, parent=self._parent, width=self.width, height=self.height):
+        with dpg.child_window(tag=self._parent_id, parent=self._parent, width=self.width, height=self.height,
+                              border=False):
             # Upper Region
             with dpg.group(tag=f"upper_{self._runtime_id}", parent=self._parent_id, width=-1):
                 with dpg.group(horizontal=True, tag=f"basic_{self._runtime_id}",
