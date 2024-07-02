@@ -34,13 +34,15 @@ class OperationSlotPreview(GUIBase):
 
         self._operation_info = operation_dict
 
-        self._version = self._operation_info.get("version", "0.0.1")
-        self._name = self._operation_info.get("name", "[unknown_name]")
-        self._author = self._operation_info.get("author", "[unknown_author]")
-        self._github = self._operation_info.get("github", "[unknown_github]")
-        self._description = self._operation_info.get("description", "[No description provided]")
-        self._output_type = self._operation_info.get("output_type", None)
-        self._dependencies = self._operation_info.get("dependencies", [])
+        self._version = self._operation_info["version"]
+        self._name = self._operation_info["name"]
+        self._author = self._operation_info["author"]
+        self._github = self._operation_info["github"]
+        self._description = self._operation_info["description"]
+        self._output_type = None  # self._operation_info["output_type"]
+        self._dependencies = self._operation_info["dependencies"]
+        if self._dependencies is None:
+            self._dependencies = []
 
         self._parent_id = f"parent_{self._runtime_id}"
 
@@ -67,15 +69,21 @@ class OperationSlotPreview(GUIBase):
                 dpg.add_text(default_value=f"{self._name}", parent=f"slot_preview_{self.runtime_id}")
 
                 with dpg.child_window(height=40, width=75, no_scrollbar=True, pos=(self.width - 150, 0)):
-                    if self._dependencies:
-                        for item in self._operation_info.get("dependencies", []):
+                    deps = self._operation_info['dependencies'] if 'dependencies' in self._operation_info else []
+                    if deps is []:
+                        dpg.add_text("-")
+                    elif iter(deps):
+                        for item in deps:
                             dpg.add_text(item)
                     else:
                         dpg.add_text("-")
 
                 with dpg.child_window(height=40, width=75, no_scrollbar=True, pos=(self.width - 75, 0)):
-                    if self._output_type:
-                        for item in self._operation_info.get("output_type", []):
+                    outs = self._operation_info['output_type'] if 'output_type' in self._operation_info else []
+                    if outs is []:
+                        dpg.add_text("-")
+                    elif iter(outs):
+                        for item in outs:
                             dpg.add_text(item)
                     else:
                         dpg.add_text("-")

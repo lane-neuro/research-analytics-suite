@@ -19,7 +19,6 @@ import pkgutil
 import importlib
 from research_analytics_suite.library_manifest.utils import check_verified
 from research_analytics_suite.library_manifest.Category import Category
-from research_analytics_suite.library_manifest.CategoryID import CategoryID
 
 
 class LibraryManifest:
@@ -65,6 +64,9 @@ class LibraryManifest:
                 if not self._initialized:
                     await self.build_base_library()
                     self._initialized = True
+
+    def get_library(self) -> dict:
+        return self._library
 
     def add_operation_from_attributes(self, op_attributes):
         category_id = op_attributes.category_id
@@ -134,10 +136,21 @@ class LibraryManifest:
             await _op_attributes.from_disk(_op)
             self.add_operation_from_attributes(_op_attributes)
 
-    async def maintain_library(self):
-        # Logic to maintain the library by checking for new operations
-        # and updating the library accordingly
-        pass
+    def get_categories(self):
+        """
+        Returns the categories of the library.
+
+        Returns:
+            dict: A dictionary containing the categories of the library.
+        """
+        return self._categories.items()
+
+    async def update_user_manifest(self):
+        """
+        Updates the user manifest.
+        """
+        # TODO: Improve this method to update the user manifest, rather than just reloading it every time.
+        await self.load_user_library()
 
     @staticmethod
     def __load_module_attributes(module_name):

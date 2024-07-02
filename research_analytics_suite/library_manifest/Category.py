@@ -84,4 +84,6 @@ class Category:
         self._operations.append(operation)
 
     def get_operations(self):
+        if self._operations is None:
+            return []
         return self._operations

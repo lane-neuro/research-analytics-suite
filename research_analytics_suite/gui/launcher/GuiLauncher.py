@@ -20,10 +20,11 @@ import os
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
 from research_analytics_suite.data_engine.Workspace import Workspace
+from research_analytics_suite.gui.dialogs.management.LibraryPane import LibraryPane
 from research_analytics_suite.gui.dialogs.management.ResourceMonitorDialog import ResourceMonitorDialog
 from research_analytics_suite.gui.dialogs.data_handling.CollectionViewDialog import CollectionViewDialog
 from research_analytics_suite.gui.dialogs.management.ConsoleDialog import ConsoleDialog
-from research_analytics_suite.gui.dialogs.management.OperationManagerDialog import OperationManagerDialog
+# from research_analytics_suite.gui.dialogs.management.OperationManagerDialog import OperationManagerDialog
 from research_analytics_suite.gui.dialogs.settings.SettingsDialog import SettingsDialog
 from research_analytics_suite.gui.modules.TimelineModule import TimelineModule
 from research_analytics_suite.gui.modules.WorkspaceModule import WorkspaceModule
@@ -56,7 +57,7 @@ class GuiLauncher:
         self._real_time_data_dialog = None
         self._settings_dialog = None
         self._console_dialog = None
-        self._operation_window = None
+        self._library_pane = None
         self._workspace_dialog = None
         self._collection_view_dialog = None
         self._visualize_data_dialog = None
@@ -163,7 +164,7 @@ class GuiLauncher:
                     await self.setup_panes()
 
                 with dpg.child_window(tag="right_pane", width=-1):
-                    await self.setup_operation_pane()
+                    await self.setup_library_pane()
 
             with dpg.child_window(tag="bottom_pane", parent="main_window", width=-1):
                 with dpg.group(horizontal=True, tag="bottom_pane_group"):
@@ -227,12 +228,12 @@ class GuiLauncher:
         with dpg.child_window(tag="console_log_output_pane", parent="middle_pane", show=False):
             await self.setup_console_log_viewer_pane()
 
-    async def setup_operation_pane(self) -> None:
-        """Sets up the operation pane."""
-        self._operation_window = OperationManagerDialog(width=dpg.get_item_width("right_pane"), height=-1,
-                                                        parent="right_pane")
-        await self._operation_window.initialize_gui()
-        self._operation_window.draw()
+    async def setup_library_pane(self) -> None:
+        """Sets up the library pane."""
+        with dpg.child_window(tag="library_pane", width=-1, height=-1, parent="right_pane"):
+            self._library_pane = LibraryPane(width=-1, height=-1, parent="library_pane")
+            await self._library_pane.initialize_gui()
+            self._library_pane.draw()
 
     async def setup_console_log_viewer_pane(self) -> None:
         """Sets up the console/log viewer."""

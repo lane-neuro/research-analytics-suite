@@ -412,12 +412,12 @@ class Workspace:
         except Exception as e:
             self._logger.error(Exception(f"Failed to restore memory bank: {e}"), self)
 
-    async def update_manifest(self):
+    async def update_user_manifest(self):
         """
         Updates the manifest of the workspace.
         """
         try:
-            pass
+            await self._library_manifest.update_user_manifest()
         except Exception as e:
             self._logger.error(Exception(f"Failed to update manifest: {e}"), self)
 

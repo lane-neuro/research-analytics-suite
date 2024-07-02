@@ -73,9 +73,9 @@ class ExampleOperation(BaseOperation):
     persistent: bool = False
     is_cpu_bound: bool = False
     concurrent: bool = False
-    dependencies: []
-    parent_operation: None
-    child_operations: None
+    dependencies: list = []
+    parent_operation: BaseOperation = None
+    child_operations: list = []
     unique_id: str = f"{author}_{name}_{version}"
 
     def __init__(self, numbers: List[float], *args: Any, **kwargs: Any):
