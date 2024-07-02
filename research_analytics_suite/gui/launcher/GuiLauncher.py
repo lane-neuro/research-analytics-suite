@@ -67,6 +67,8 @@ class GuiLauncher:
         self._planning_dialog = None
         self._analyze_data_dialog = None
 
+        self._splitter_height = 150
+
     async def setup_navigation_menu(self) -> None:
         """Sets up the navigation menu on the left pane."""
         with dpg.group(parent="left_pane"):
@@ -156,7 +158,8 @@ class GuiLauncher:
 
         with dpg.window(label="Research Analytics Suite", tag="main_window",
                         width=dpg.get_viewport_width(), height=dpg.get_viewport_height()):
-            with dpg.group(horizontal=True, tag="upper_pane_group", height=dpg.get_viewport_height() - 300,
+            with dpg.group(horizontal=True, tag="upper_pane_group",
+                           height=dpg.get_viewport_height() - self._splitter_height - 25,
                            horizontal_spacing=5, parent="main_window"):
                 with dpg.child_window(tag="left_pane", width=180):
                     await self.setup_navigation_menu()
@@ -168,13 +171,15 @@ class GuiLauncher:
                     await self.setup_library_pane()
 
             with dpg.group(horizontal=True, tag="bottom_pane_group", horizontal_spacing=5, parent="main_window",
-                           height=240):
+                           height=150):
                 with dpg.child_window(tag="bottom_left_pane", width=180, height=-1, border=False):
                     await self.setup_workspace_pane()
 
                 with dpg.child_window(tag="bottom_middle_pane", height=-1, width=int(dpg.get_viewport_width() - 480),
                                       border=False):
                     await self.setup_timeline_module()
+                    dpg.add_button(label="^^^", callback=self.splitter_callback,
+                                   tag="splitter_resize", before="print_sequencer_module")
 
                 with dpg.child_window(tag="bottom_right_pane", width=250, height=-1, border=True):
                     await self.setup_resource_monitor()
@@ -283,9 +288,8 @@ class GuiLauncher:
             self._resource_monitor_dialog.draw()
 
     def adjust_main_window(self):
-        """
-        Adjusts the width & height of the primary window containers.
-        """
+        dpg.configure_item("bottom_pane_group", height=self._splitter_height)
+
         parent_width = dpg.get_item_configuration("main_window")["width"]
         parent_height = dpg.get_item_configuration("main_window")["height"]
 
@@ -303,4 +307,16 @@ class GuiLauncher:
         dpg.configure_item("middle_pane", width=top_middle_width)
         dpg.configure_item("upper_pane_group", height=top_middle_height)
         dpg.configure_item("bottom_middle_pane", width=bottom_middle_width)
-        dpg.configure_item("bottom_pane_group", height=bottom_height)
+
+        from research_analytics_suite.gui import center_in_container
+        center_in_container("bottom_middle_pane", "splitter_resize")
+
+    def splitter_callback(self):
+        if self._splitter_height == 150:
+            self._splitter_height = 300
+            dpg.configure_item("splitter_resize", label="vvv")
+        else:
+            self._splitter_height = 150
+            dpg.configure_item("splitter_resize", label="^^^")
+
+        self.adjust_main_window()

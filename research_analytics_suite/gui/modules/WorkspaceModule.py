@@ -42,7 +42,6 @@ class WorkspaceModule(GUIBase):
                                    width=-1)
                 dpg.add_button(label="Save Workspace", callback=lambda: asyncio.create_task(self.save_workspace()))
                 dpg.add_button(label="Load Workspace", callback=lambda: asyncio.create_task(self.load_workspace()))
-                dpg.add_separator()
 
     async def save_workspace(self) -> None:
         """Saves the current workspace."""
