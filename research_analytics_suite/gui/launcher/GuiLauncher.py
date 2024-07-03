@@ -150,7 +150,7 @@ class GuiLauncher:
                             large_icon="gui/assets/images/logo_extra_large_dark.ico",
                             small_icon="gui/assets/images/logo_large_icon_dark.ico")
         dpg.setup_dearpygui()
-        await self.apply_theme()  # Apply theme after setup
+        await self.apply_theme()
         # dpg.show_metrics()
 
         dpg.show_viewport()

@@ -75,7 +75,7 @@ class ExampleOperation(BaseOperation):
     dependencies: list = []
     parent_operation: BaseOperation = None
     child_operations: list = []
-    unique_id: str = f"{author}_{name}_{version}"
+    unique_id: str = f"{github}_{name}_{version}"
 
     def __init__(self, numbers: List[float], *args: Any, **kwargs: Any):
         """

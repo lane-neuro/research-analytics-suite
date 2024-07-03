@@ -98,7 +98,7 @@ class OperationTemplate(BaseOperation):
     async def pre_execute(self):
         """
         Logic to run before the main execution.
-            This optional method is an example; not required.
+            This optional method is an example; not required by BaseOperation.
         """
         pass
 
