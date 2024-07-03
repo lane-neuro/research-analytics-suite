@@ -808,7 +808,7 @@ class BaseOperation(ABC):
             self._logger.error(message, self)
         else:
             self.operation_logs.insert(0, message)
-            self._logger.info(f"[{self._name}] {message}")
+            self._logger.debug(f"[{self._name}] {message}")
 
     def handle_error(self, e):
         """

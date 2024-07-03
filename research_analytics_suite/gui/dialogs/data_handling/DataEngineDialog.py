@@ -61,7 +61,7 @@ class DataEngineDialog:
         """
         result = self._data_engine.perform_operation("operation_name")
         dpg.set_value("data_engine_status", f"Operation executed: {result}")
-        self._logger.info(f"Operation executed: {result}")
+        self._logger.debug(f"Operation executed: {result}")
 
     def _show_results(self, sender, app_data, user_data):
         """
@@ -87,7 +87,7 @@ class DataEngineDialog:
         """
         variables = self._data_engine.get_variable_names()
         dpg.configure_item("variables_list", items=variables)
-        self._logger.info("Variables list refreshed")
+        self._logger.debug("Variables list refreshed")
 
     def _select_variable(self, sender, app_data, user_data):
         """
@@ -101,7 +101,7 @@ class DataEngineDialog:
         variable_name = app_data
         variable_value = self._data_engine.get_variable_value(variable_name)
         dpg.set_value("variable_value_input", variable_value)
-        self._logger.info(f"Selected variable: {variable_name} with value {variable_value}")
+        self._logger.debug(f"Selected variable: {variable_name} with value {variable_value}")
 
     def _update_variable(self, sender, app_data, user_data):
         """

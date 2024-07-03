@@ -48,7 +48,7 @@ class MemoryManager:
                     await self._data_cache.initialize()
                     self.memory_slot_collections = {}
                     await self.initialize_default_collection()
-                    self._logger.info("MemoryManager initialized.")
+                    self._logger.debug("MemoryManager initialized.")
                     self._initialized = True
 
     async def initialize_default_collection(self):
@@ -76,17 +76,17 @@ class MemoryManager:
         if collection.name == "Primary":
             if self.default_collection:
                 self.default_collection.add_slots(collection.slots)
-                self._logger.info(f"Merged new collection with default collection: {collection.display_name}")
+                self._logger.debug(f"Merged new collection with default collection: {collection.display_name}")
                 return
             else:
                 self.default_collection = collection
                 self.memory_slot_collections[collection.collection_id] = collection
-                self._logger.info(f"Set new collection as default collection: {collection.display_name}")
+                self._logger.debug(f"Set new collection as default collection: {collection.display_name}")
         else:
             # Check if collection_id already exists within one of the existing collection slots
             for r_id, props in self.memory_slot_collections.items():
                 if props.collection_id == collection.collection_id:
-                    self._logger.info(f"Collection with ID {collection.collection_id} already exists, "
+                    self._logger.debug(f"Collection with ID {collection.collection_id} already exists, "
                                       f"importing existing memory slots as new slots.")
                     self.memory_slot_collections[r_id].add_slots(collection.slots)
                     return
@@ -137,14 +137,14 @@ class MemoryManager:
         """
         if collection_id == self.default_collection.collection_id:
             self.default_collection = None
-            self._logger.info(f"Removed default collection with ID: {collection_id}")
+            self._logger.debug(f"Removed default collection with ID: {collection_id}")
             await self.initialize_default_collection()
         elif collection_id in self.memory_slot_collections:
             del self.memory_slot_collections[collection_id]
             self._data_cache.set(collection_id, None)  # Remove from cache
-            self._logger.info(f"Removed MemorySlotCollection with ID: {collection_id}")
+            self._logger.debug(f"Removed MemorySlotCollection with ID: {collection_id}")
         else:
-            self._logger.info(f"No collection found with ID: {collection_id}")
+            self._logger.error(Exception(f"No collection found with ID: {collection_id}"), self)
 
     async def list_collections(self) -> dict:
         """

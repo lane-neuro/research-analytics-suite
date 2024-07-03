@@ -250,7 +250,7 @@ class UnifiedDataEngine:
         else:
             raise ValueError(f"Unsupported data type: {data_type}")
 
-        self._logger.info("Data saved")
+        self._logger.debug("Data saved")
 
     async def save_engine(self, instance_path):
         engine_path = os.path.join(instance_path, self._config.ENGINE_DIR, self.engine_id)
@@ -259,7 +259,7 @@ class UnifiedDataEngine:
         os.makedirs(data_path, exist_ok=True)
         data_file_path = os.path.join(data_path, f"{self.data_name}.joblib")
 
-        self._logger.info(f"Saving engine to {engine_path}")
+        self._logger.debug(f"Saving engine to {engine_path}")
 
         # Save data
         async with aiofiles.open(data_file_path, 'w') as data_file:
@@ -279,7 +279,7 @@ class UnifiedDataEngine:
         async with aiofiles.open(os.path.join(f"{engine_path}", 'engine_state.joblib'), 'w') as state_file:
             await state_file.write(json.dumps(engine_state, indent=4))
 
-        self._logger.info(f"Engine saved to {instance_path}")
+        self._logger.debug(f"Engine saved to {instance_path}")
 
     @staticmethod
     async def load_engine(instance_path, engine_id):

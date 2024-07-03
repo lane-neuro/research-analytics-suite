@@ -66,7 +66,6 @@ async def RASLauncher():
     # If -c flag is present, but -o flag is not, set the open_workspace path to the directory of the config path
     # If neither are present, create a new workspace
     if _args.open_workspace is None and _args.config is None:
-        _logger.info('New Workspace Parameters Detected - Creating New Workspace')
         try:
             # Create the directory if it doesn't exist
             try:
@@ -84,7 +83,7 @@ async def RASLauncher():
                 try:
                     os.makedirs(_workspace_path, exist_ok=False)
                 except FileExistsError:
-                    _logger.info(f"Workspace with name '{_args.name}' already exists in directory "
+                    _logger.debug(f"Workspace with name '{_args.name}' already exists in directory "
                                  f"'{_args.directory}'... Finding next available workspace name...")
 
                     # Find the next available workspace name
@@ -161,8 +160,6 @@ async def RASLauncher():
             _logger.error(e)
         finally:
             _launch_tasks.append(_gui_launcher.setup_main_window())
-
-    _logger.info("Launching RAS")
 
     # Run the event loop
     try:

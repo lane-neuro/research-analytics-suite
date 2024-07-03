@@ -72,7 +72,7 @@ class Workspace:
                     self._data_engines = dict()
                     self._dependencies = defaultdict(list)
 
-                    self._logger.info("Workspace initialized successfully")
+                    self._logger.debug("Workspace initialized successfully")
                     self._initialized = True
 
     def add_data_engine(self, data_engine):
@@ -83,7 +83,7 @@ class Workspace:
             data_engine (DataEngineOptimized): The data engine to add.
         """
         self._data_engines[data_engine.runtime_id] = data_engine
-        self._logger.info(f"Data engine '{self._data_engines[data_engine.runtime_id].short_id}' added to workspace")
+        self._logger.debug(f"Data engine '{self._data_engines[data_engine.runtime_id].short_id}' added to workspace")
 
     def remove_data_engine(self, name):
         """
@@ -101,7 +101,7 @@ class Workspace:
             if name in deps:
                 deps.remove(name)
 
-        self._logger.info(f"Data engine '{name}' removed from workspace")
+        self._logger.debug(f"Data engine '{name}' removed from workspace")
 
     def get_data_engine(self, name):
         """

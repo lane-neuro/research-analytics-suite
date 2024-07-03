@@ -21,7 +21,7 @@ class SQLiteStorage(BaseStorage):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._logger.info(f"[SQLite] Class initialized. Path: {self.db_path}")
+        self._logger.debug(f"[SQLite] Class initialized. Path: {self.db_path}")
 
     async def setup(self):
         """
@@ -36,7 +36,7 @@ class SQLiteStorage(BaseStorage):
                     )
                 """)
                 await conn.commit()
-            self._logger.info(f"[SQLite] Database setup complete. Path: {self.db_path}")
+            self._logger.debug(f"[SQLite] Database setup complete. Path: {self.db_path}")
         except Exception as e:
             self._logger.error(Exception(f"Error setting up SQLite database: {e}"), self)
 

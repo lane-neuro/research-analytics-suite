@@ -60,7 +60,7 @@ class CustomLogger:
                     self._logger.addHandler(handler)
                     self._logger.addFilter(self._log_message)
 
-                    self.info(f"[{self._logger.name}] CustomLogger initialized")
+                    self.debug(f"[{self._logger.name}] CustomLogger initialized")
                     self._initialized = True
 
     def _log_message(self, record: logging.LogRecord) -> bool:

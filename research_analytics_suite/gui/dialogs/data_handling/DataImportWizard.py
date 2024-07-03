@@ -79,7 +79,7 @@ class DataImportWizard(GUIBase):
         file_path = dpg.get_value("selected_file_text").replace("Selected File: ", "")
         # data_preview = self._data_engine.preview_data(file_path)
         # dpg.set_value("data_preview_text", f"Data Preview:\n{data_preview}")
-        self._logger.info(f"Previewing data from: {file_path}")
+        self._logger.debug(f"Previewing data from: {file_path}")
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         pass

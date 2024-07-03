@@ -49,7 +49,7 @@ class TaskMonitor:
                         if isinstance(operation, BaseOperation) and operation.is_complete:
                             output = await operation.get_results_from_memory()
                             operation.add_log_entry(f"handle_tasks: [OUTPUT] {output}")
-                            self._logger.info(f"handle_tasks: [DONE] {task.get_name()}")
+                            self._logger.debug(f"handle_tasks: [DONE] {task.get_name()}")
                     else:
                         self._logger.error(Exception(
                             f"handle_tasks: [ERROR] No operations found for task {task.get_name()}"), self)

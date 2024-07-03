@@ -72,7 +72,7 @@ class OperationControl:
         if not self._initialized:
             async with OperationControl._lock:
                 if not self._initialized:
-                    self._logger.info("OperationControl.initialize: Initializing OperationControl.")
+                    self._logger.debug("OperationControl.initialize: Initializing OperationControl.")
 
                     from research_analytics_suite.data_engine.Workspace import Workspace
                     self.workspace = Workspace()
@@ -98,7 +98,7 @@ class OperationControl:
                                                                        task_monitor=self.task_monitor,
                                                                        system_op_checker=self.system_op_checker)
                     self._initialized = True
-                    self._logger.info("OperationControl.initialize: OperationControl initialized.")
+                    self._logger.debug("OperationControl.initialize: OperationControl initialized.")
 
     async def start(self):
         """Starts the operations handler."""
