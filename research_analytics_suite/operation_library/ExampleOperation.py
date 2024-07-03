@@ -69,7 +69,6 @@ class ExampleOperation(BaseOperation):
     email: str = "justlane@uw.edu"
     description: str = ("A basic implementation of an operation that calculates the mean and standard deviation "
                         "of a list of numbers.")
-    action: str = "Calculates the mean and standard deviation of a list of numbers."
     persistent: bool = False
     is_cpu_bound: bool = False
     concurrent: bool = False
