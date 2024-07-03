@@ -99,6 +99,11 @@ class LibraryPane(GUIBase):
         with dpg.child_window(label="Operation Library", width=self._width,
                               height=self._height, border=False) as child_window:
             self._child_window_id = child_window
+            with dpg.child_window(parent=child_window, border=True, width=-1, height=40):
+                with dpg.group(horizontal=True, horizontal_spacing=10):
+                    dpg.add_button(label="New Category", callback=self._add_category, width=100)
+                    dpg.add_button(label="New Operation", callback=self._new_operation, width=-1)
+            dpg.add_spacer()
 
     async def operation_preview_tile(self, operation_info, parent) -> None:
         """
@@ -120,3 +125,15 @@ class LibraryPane(GUIBase):
                                             height=self.TILE_HEIGHT, parent=parent)
         await preview_tile.initialize_gui()
         preview_tile.draw()
+
+    def _add_category(self) -> None:
+        """Adds a new category to the library."""
+        self._library_manifest.add_category(category_id=10, category_name="New Category")
+
+    def _new_operation(self) -> None:
+        """Adds a new operation to the library."""
+        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+            OperationAttributes
+        op_attributes = OperationAttributes()
+
+        # self._library_manifest.add_operation_from_attributes(op_attributes)

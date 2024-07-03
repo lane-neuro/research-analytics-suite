@@ -10,6 +10,7 @@ import asyncio
 import os.path
 
 from research_analytics_suite.data_engine import MemoryManager
+from research_analytics_suite.library_manifest import LibraryManifest
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.Workspace import Workspace
 from research_analytics_suite.gui.launcher.GuiLauncher import GuiLauncher
@@ -48,6 +49,10 @@ async def RASLauncher():
     # Initialize OperationControl singleton class
     _operation_control = OperationControl()
     await _operation_control.initialize()
+
+    # Initialize LibraryManifest singleton class
+    _library_manifest = LibraryManifest()
+    await _library_manifest.initialize()
 
     # Initialize Workspace singleton class
     _workspace = Workspace()

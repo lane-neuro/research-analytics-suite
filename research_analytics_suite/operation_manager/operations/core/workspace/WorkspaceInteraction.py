@@ -69,7 +69,7 @@ async def save_operation_in_workspace(operation, overwrite: bool = False):
     file_ext = f".json"
     stripped_state = pack_for_save(operation)
 
-    dir_path = (f"{operation.config.BASE_DIR}/{operation.config.WORKSPACE_NAME}/"
+    dir_path = (f"{operation.config.BASE_DIR}/workspaces/{operation.config.WORKSPACE_NAME}/"
                 f"{operation.config.WORKSPACE_OPERATIONS_DIR}")
     os.makedirs(dir_path, exist_ok=True)
 

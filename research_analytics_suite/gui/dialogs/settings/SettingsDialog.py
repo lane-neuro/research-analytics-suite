@@ -28,7 +28,7 @@ class SettingsDialog(GUIBase):
         if dpg.does_item_exist("settings_dialog"):
             dpg.delete_item("settings_dialog")
 
-        self._config = await self._config.reload_from_file(os.path.join(self._config.BASE_DIR,
+        self._config = await self._config.reload_from_file(os.path.join(self._config.BASE_DIR, 'workspaces',
                                                            self._config.WORKSPACE_NAME))
 
     async def _update_async(self) -> None:

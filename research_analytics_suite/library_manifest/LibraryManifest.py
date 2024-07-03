@@ -49,6 +49,11 @@ class LibraryManifest:
             from research_analytics_suite.utils import CustomLogger
             self._logger = CustomLogger()
 
+            from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
+            self._operation_control = OperationControl()
+
+            self._update_operation = None
+
             self._categories = {}
             self._library = {}
             self._initialized = False
@@ -63,20 +68,35 @@ class LibraryManifest:
             async with LibraryManifest._lock:
                 if not self._initialized:
                     await self.build_base_library()
+
+                    from research_analytics_suite.operation_manager import BaseOperation
+                    self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
+                        operation_type=BaseOperation, name="sys_LibraryUpdateTask",
+                        action=self._update_user_manifest, persistent=True, concurrent=True)
+                    self._update_operation.is_ready = True
+
                     self._initialized = True
 
     def get_library(self) -> dict:
         return self._library
+
+    def add_category(self, category_id, category_name):
+        if category_id in self._categories.keys():
+            return
+
+        self._categories[category_id] = Category(category_id, category_name)
 
     def add_operation_from_attributes(self, op_attributes):
         category_id = op_attributes.category_id
 
         if category_id in self._categories.keys():
             if op_attributes.unique_id not in self._categories[category_id].operations:
+                self._library[category_id]['operations'].append(op_attributes)
                 self._categories[category_id].register_operation(op_attributes)
         else:
             category = Category(category_id, "Uncategorized Operations")
             self._categories[category_id] = category
+            self._library[category_id]['operations'].append(op_attributes)
             category.register_operation(op_attributes)
 
     def is_verified(self, category_id):
@@ -122,13 +142,17 @@ class LibraryManifest:
 
     async def load_user_library(self):
         # Called when a workspace is loaded, rebuilds the user library
-        _local_operation_dir = os.path.normpath(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
-                                                             self._config.WORKSPACE_OPERATIONS_DIR))
-        if not os.path.exists(_local_operation_dir):
+        _user_dir = os.path.normpath(os.path.join(self._config.BASE_DIR, 'operations'))
+        _local_operation_dir = os.path.normpath(os.path.join(
+            self._config.BASE_DIR, 'workspaces', self._config.WORKSPACE_NAME,
+            self._config.WORKSPACE_OPERATIONS_DIR))
+        if not os.path.exists(_local_operation_dir) or not os.path.exists(_user_dir):
             return []
 
         operation_files = [os.path.join(_local_operation_dir, f) for f in os.listdir(_local_operation_dir)
                            if f.endswith('.json')]
+        operation_files += [os.path.join(_user_dir, f) for f in os.listdir(_user_dir) if f.endswith('.json')]
+
         for _op in operation_files:
             from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
                 OperationAttributes
@@ -146,12 +170,17 @@ class LibraryManifest:
         """
         return self._categories.items()
 
-    async def update_user_manifest(self):
+    async def _update_user_manifest(self):
         """
         Updates the user manifest.
         """
-        # TODO: Improve this method to update the user manifest, rather than just reloading it every time.
-        await self.load_user_library()
+        while not self._initialized:
+            await asyncio.sleep(0.1)
+
+        while True:
+            # TODO: Improve this method to update the user manifest, rather than just reloading it every time.
+            await self.load_user_library()
+            await asyncio.sleep(0.1)
 
     @staticmethod
     def __load_module_attributes(module_name):

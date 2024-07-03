@@ -85,8 +85,7 @@ class OperationLifecycleManager:
 
     async def exec_loop(self):
         """Executes the main loop of the operations manager."""
-        tasks = [self.operation_manager.update_manifest(),
-                 self.system_operation_checker.check_system_operations(),
+        tasks = [self.system_operation_checker.check_system_operations(),
                  self.start_all_operations(),
                  self.operation_executor.execute_ready_operations(),
                  self.task_monitor.handle_tasks()]

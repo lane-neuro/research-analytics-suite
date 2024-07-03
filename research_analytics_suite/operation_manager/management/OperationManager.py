@@ -122,7 +122,3 @@ class OperationManager:
             operation (BaseOperation): The operation to stop.
         """
         await operation.stop()
-
-    async def update_manifest(self) -> None:
-        """Updates the operation manifest."""
-        await self.op_control.workspace.update_user_manifest()

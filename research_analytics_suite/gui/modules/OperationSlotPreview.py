@@ -59,7 +59,7 @@ class OperationSlotPreview(GUIBase):
                               no_scrollbar=True, no_scroll_with_mouse=True, border=False):
             with dpg.tooltip(parent=self._parent_id, tag=f"tooltip_{self.runtime_id}", ):
                 from research_analytics_suite.gui.modules.UpdatedOperationModule import UpdatedOperationModule
-                operation_view = UpdatedOperationModule(operation_dict=self._operation_info, width=400,
+                operation_view = UpdatedOperationModule(operation_dict=self._operation_info, width=300,
                                                         height=500, parent=f"tooltip_{self.runtime_id}")
                 operation_view.draw()
 
