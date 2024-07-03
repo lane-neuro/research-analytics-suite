@@ -28,7 +28,7 @@
 
 <div>
   <p align="left">
-    The <strong>Research Analytics Suite (RAS)</strong>, developed within Gire Lab at the University of Washington, is a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse sources. RAS is designed to be free and accessible, addressing financial and accessibility barriers in scientific research.
+    The <strong>Research Analytics Suite (RAS)</strong>, developed by <a href="#contact">Lane</a> within Gire Lab at the University of Washington, is a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse sources. RAS is designed to be free and accessible, addressing financial and accessibility barriers in scientific research.
     <br /><br />
     <b>Please note: RAS is currently under active development and is not yet ready for general use. This repository is intended for demonstration purposes and to showcase the project's structure and features.</b>
     <br /><br />
@@ -313,14 +313,14 @@ Distributed under the BSD 3-Clause License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-### Lane
-Neurobiological Researcher
+### Lane (B.S.)
+Neurobiological Research Technician
 <br /><i>Gire Lab, University of Washington</i>
 <br />email: [justlane@uw.edu](mailto:justlane@uw.edu)
 <br /><a href="https://linkedin.com/in/lane14"><img align="center" height="25" src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555"></a>
 <br />
 <br />
-### David H. Gire, Ph.D.
+### Dr. David H. Gire (Ph.D.)
 Associate Professor, Principal Investigator
 <br /><i>Gire Lab, University of Washington</i>
 <br />email: [dhgire@uw.edu](mailto:dhgire@uw.edu)
