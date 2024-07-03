@@ -24,6 +24,7 @@ class Category:
         category_id (int): The unique identifier of the category.
         name (str): The name of the category.
         operations (list): A list to store the operations of the category.
+        subcategories (dict): A dictionary to store subcategories.
     """
     _instances = dict()
     _lock = asyncio.Lock()
@@ -37,17 +38,11 @@ class Category:
         return instance
 
     def __init__(self, category_id, name):
-        """
-        Initializes the Category with the given parameters.
-
-        Args:
-            category_id (int): The unique identifier of the category.
-            name (str): The name of the category.
-        """
         if not hasattr(self, '_initialized'):
             self._category_id = category_id
             self._name = name
             self._operations = []
+            self._subcategories = {}
             self._initialized = False
 
     def __repr__(self):
@@ -58,11 +53,6 @@ class Category:
         return f"{_info}\n{_ops}"
 
     async def initialize(self):
-        """
-        Initializes the Category.
-
-        This method is called asynchronously to initialize the Category.
-        """
         if not self._initialized:
             async with Category._lock:
                 if not self._initialized:
@@ -80,8 +70,15 @@ class Category:
     def operations(self):
         return self._operations
 
+    @property
+    def subcategories(self):
+        return self._subcategories
+
     def register_operation(self, operation):
         self._operations.append(operation)
+
+    def add_subcategory(self, subcategory):
+        self._subcategories[subcategory.category_id] = subcategory
 
     def get_operations(self):
         if self._operations is None:

@@ -61,7 +61,7 @@ class ExampleOperation(BaseOperation):
         execute: Execute the operation's logic.
     """
 
-    category_id: int = 1
+    category_id: int = 101
     version: str = "0.0.1"
     name: str = "ExampleOperation"
     author: str = "Lane"

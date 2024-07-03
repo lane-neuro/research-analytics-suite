@@ -167,7 +167,7 @@ class GuiLauncher:
                 with dpg.child_window(tag="middle_pane", width=int(dpg.get_viewport_width() - 480)):
                     await self.setup_panes()
 
-                with dpg.child_window(tag="right_pane", width=250):
+                with dpg.child_window(tag="right_pane", width=250, border=False):
                     await self.setup_library_pane()
 
             with dpg.group(horizontal=True, tag="bottom_pane_group", horizontal_spacing=5, parent="main_window",

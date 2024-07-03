@@ -93,6 +93,8 @@ class OperationAttributes:
 
                     self._initialized = True
 
+                    del self._temp_kwargs
+
     async def from_disk(self, file_path: str):
         """
         Loads the OperationAttributes from disk.

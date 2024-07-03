@@ -23,21 +23,13 @@ class LibraryPane(GUIBase):
     _lock = asyncio.Lock()
 
     SLEEP_DURATION = 0.05
-    TILE_WIDTH = 250  # Fixed width for each preview tile
-    TILE_HEIGHT = 30  # Fixed height for each preview tile
+    TILE_WIDTH = 250
+    TILE_HEIGHT = 30
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         ...
 
     def __init__(self, width: int, height: int, parent):
-        """
-        Initializes the LibraryPane with the given operation control, logger, and container width.
-
-        Args:
-            width (int): Initial width of the container.
-            height (int): Initial height of the container.
-            parent: Parent container
-        """
         super().__init__(width, height, parent)
 
         from research_analytics_suite.library_manifest import LibraryManifest
@@ -50,90 +42,82 @@ class LibraryPane(GUIBase):
         self._operation_control = OperationControl()
 
         self._child_window_id = None
-        self._categories = []
-        self._cell_ids = []
+        self._categories = {}
+        self._cell_ids = set()
 
     async def initialize_gui(self) -> None:
-        """Initializes the GUI elements for the operation library dialog."""
         self._logger.debug("Initializing the operation library dialog.")
-
         self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
             operation_type=BaseOperation, name="gui_LibraryUpdateTask", action=self._update_async,
             persistent=True, concurrent=True)
         self._update_operation.is_ready = True
-
         self._logger.debug("Operation library dialog initialized.")
 
     async def _update_async(self) -> None:
-        """Asynchronously updates the cells within the child window."""
         while True:
             await asyncio.sleep(self.SLEEP_DURATION)
-
             async with self._lock:
                 if self._library_manifest:
                     for _id, _category in self._library_manifest.get_categories():
-                        if _category not in self._categories:
-                            self._categories.append(_category)
+                        if _id not in self._categories:
+                            self._categories[_id] = _category
+                            await self._create_category_node(_category, self._child_window_id)
 
-                            # Create a new category dropdown
-                            dpg.add_tree_node(label=_category.name, parent=self._child_window_id, tag=_category.name,
-                                              default_open=True)
-
-                        if _category.operations is not []:
-                            for operation in _category.operations:
-                                u_id = None
-                                from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
-                                    OperationAttributes
-                                if isinstance(operation, dict):
-                                    u_id = operation['unique_id']
-                                elif isinstance(operation, OperationAttributes):
-                                    u_id = operation.unique_id
-
-                                if u_id not in self._cell_ids:
-                                    await self.operation_preview_tile(operation_info=operation,
-                                                                      parent=_category.name)
-                                    self._cell_ids.append(u_id)
+    async def _create_category_node(self, category, parent):
+        """Recursively creates category tree nodes."""
+        unique_tag = f"{category.name}_{category.category_id}"
+        if unique_tag not in self._categories:
+            self._categories[unique_tag] = category
+            with dpg.tree_node(label=category.name, parent=parent, tag=unique_tag, default_open=False):
+                for subcategory in category.subcategories.values():
+                    await self._create_category_node(subcategory, unique_tag)
+                for operation in category.operations:
+                    await self._create_operation_tile(operation, unique_tag)
+            if not category.subcategories:
+                dpg.add_separator(parent=parent)
 
     def draw(self) -> None:
-        """Sets up the container for the operation manager dialog."""
-        with dpg.child_window(label="Operation Library", width=self._width,
-                              height=self._height, border=False) as child_window:
-            self._child_window_id = child_window
-            with dpg.child_window(parent=child_window, border=True, width=-1, height=40):
+        with dpg.child_window(label="Operation Library",
+                              width=self._width, height=self._height, border=False) as child_window:
+            with dpg.child_window(parent=child_window, border=False, width=-1, height=30):
                 with dpg.group(horizontal=True, horizontal_spacing=10):
                     dpg.add_button(label="New Category", callback=self._add_category, width=100)
                     dpg.add_button(label="New Operation", callback=self._new_operation, width=-1)
-            dpg.add_spacer()
 
-    async def operation_preview_tile(self, operation_info, parent) -> None:
-        """
-        Creates a preview tile for the operation.
+                from research_analytics_suite.gui import left_aligned_input_field
+                left_aligned_input_field(label="Search", tag="operation_search", width=-1,
+                                         callback=self._search_operations, parent=child_window, value="")
+                dpg.add_spacer(width=5, parent=child_window)
 
-        Args:
-            operation_info (dict): Information about the operation.
-            parent: The parent GUI element ID.
-        """
-        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
-            OperationAttributes
+            with dpg.child_window(parent=child_window, border=True, width=-1, height=-1, tag="library_view",
+                                  horizontal_scrollbar=True):
+                self._child_window_id = "library_view"
+
+    async def _create_operation_tile(self, operation_info, parent):
+        """Creates a preview tile for the operation."""
+        u_id = None
+        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
         if isinstance(operation_info, OperationAttributes):
+            u_id = operation_info.unique_id
             operation_info = operation_info.export_attributes()
+        elif isinstance(operation_info, dict):
+            u_id = operation_info['unique_id']
 
-        self._logger.debug(f"Creating operation preview tile for: {operation_info['name']}")
-
-        from research_analytics_suite.gui.modules.OperationSlotPreview import OperationSlotPreview
-        preview_tile = OperationSlotPreview(operation_dict=operation_info, width=self.TILE_WIDTH,
-                                            height=self.TILE_HEIGHT, parent=parent)
-        await preview_tile.initialize_gui()
-        preview_tile.draw()
+        if u_id not in self._cell_ids:
+            self._cell_ids.add(u_id)
+            from research_analytics_suite.gui.modules.OperationSlotPreview import OperationSlotPreview
+            preview_tile = OperationSlotPreview(operation_dict=operation_info, width=self.TILE_WIDTH,
+                                                height=self.TILE_HEIGHT, parent=parent)
+            await preview_tile.initialize_gui()
+            preview_tile.draw()
 
     def _add_category(self) -> None:
-        """Adds a new category to the library."""
         self._library_manifest.add_category(category_id=10, category_name="New Category")
 
     def _new_operation(self) -> None:
-        """Adds a new operation to the library."""
-        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
-            OperationAttributes
+        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
         op_attributes = OperationAttributes()
-
         # self._library_manifest.add_operation_from_attributes(op_attributes)
+
+    def _search_operations(self) -> None:
+        pass
