@@ -54,7 +54,7 @@ def pack_for_save(operation) -> dict:
         'is_cpu_bound': operation.is_cpu_bound,
         'dependencies': operation.dependencies if operation.dependencies else None,
         'parent_operation': pack_as_local_reference(operation.parent_operation) if operation.parent_operation else None,
-        'child_operations': _child_operations if _child_operations else None,
+        'inheritance': _child_operations if _child_operations else None,
     }
 
 

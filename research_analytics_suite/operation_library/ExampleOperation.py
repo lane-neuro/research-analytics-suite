@@ -103,7 +103,7 @@ class ExampleOperation(BaseOperation):
             'concurrent': self.concurrent,
             'dependencies': self.dependencies,
             'parent_operation': self.parent_operation,
-            'child_operations': self.child_operations,
+            'inheritance': self.child_operations,
         })
 
         # Don't forget to initialize any custom attributes/input parameters

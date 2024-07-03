@@ -202,7 +202,7 @@ class LibraryManifest:
             'is_cpu_bound': _cls.is_cpu_bound,
             'dependencies': _cls.dependencies,
             'parent_operation': _cls.parent_operation,
-            'child_operations': _cls.child_operations,
+            'inheritance': _cls.child_operations,
         }
 
     def _populate_verified_operations(self):

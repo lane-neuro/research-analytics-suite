@@ -23,9 +23,9 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
 from .execution import execute_operation, execute_child_operations, action_serialized
 from .progress import update_progress
-from .child_operations import (add_child_operation, link_child_operation, remove_child_operation,
-                               start_child_operations, pause_child_operations, resume_child_operations,
-                               stop_child_operations, reset_child_operations)
+from .inheritance import (add_child_operation, link_child_operation, remove_child_operation,
+                          start_child_operations, pause_child_operations, resume_child_operations,
+                          stop_child_operations, reset_child_operations)
 from .workspace import save_operation_in_workspace, load_from_disk, load_operation_group, from_dict
 from research_analytics_suite.operation_manager.operations.core.memory import MemoryInput, MemoryOutput
 
@@ -74,7 +74,7 @@ class BaseOperation(ABC):
         is_ready (bool): Whether the operation is ready to be executed.
         dependencies (dict[str, BaseOperation]): The dependencies of the operation.
         parent_operation (BaseOperation): The parent operation.
-        child_operations (dict[str, BaseOperation]): The child operations.
+        inheritance (dict[str, BaseOperation]): The child operations.
         operation_logs (List[str]): The logs of the operation.
         memory_inputs (MemoryInput): Memory input slots associated with the operation.
         memory_outputs (MemoryOutput): Memory output slots associated with the operation.

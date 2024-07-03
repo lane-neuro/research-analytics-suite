@@ -201,7 +201,7 @@ async def populate_operation_args(data, file_dir, parent_operation=None, with_in
                     data_metadata['is_cpu_bound'] = op_file_data.get('is_cpu_bound')
                     data_metadata['concurrent'] = op_file_data.get('concurrent')
                     data_metadata['dependencies'] = op_file_data.get('dependencies')
-                    data_metadata['child_operations'] = op_file_data.get('child_operations')
+                    data_metadata['inheritance'] = op_file_data.get('inheritance')
 
             except Exception as e:
                 raise e
@@ -226,10 +226,10 @@ async def populate_operation_args(data, file_dir, parent_operation=None, with_in
     else:
         data_metadata['parent_operation'] = parent_operation
 
-    if data_metadata.get('child_operations') is not None:
-        if isinstance(data_metadata.get('child_operations'), list):
-            children = data_metadata.get('child_operations')
-            data_metadata['child_operations'] = []
+    if data_metadata.get('inheritance') is not None:
+        if isinstance(data_metadata.get('inheritance'), list):
+            children = data_metadata.get('inheritance')
+            data_metadata['inheritance'] = []
             for child in children:
                 if isinstance(child, dict):
                     if with_instance:
@@ -238,12 +238,12 @@ async def populate_operation_args(data, file_dir, parent_operation=None, with_in
                                 data=child,
                                 file_dir=file_dir
                             )
-                            data_metadata['child_operations'].append(child_op)
+                            data_metadata['inheritance'].append(child_op)
                         except Exception as e:
                             raise e
                     else:
-                        data_metadata['child_operations'].append(child)
+                        data_metadata['inheritance'].append(child)
                 else:
-                    data_metadata['child_operations'].append(child)
+                    data_metadata['inheritance'].append(child)
 
     return data_metadata

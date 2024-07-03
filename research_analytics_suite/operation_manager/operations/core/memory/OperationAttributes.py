@@ -89,7 +89,7 @@ class OperationAttributes:
                     self._is_cpu_bound = self._temp_kwargs.get('is_cpu_bound', None)
                     self._dependencies = self._temp_kwargs.get('dependencies', None)
                     self._parent_operation = self._temp_kwargs.get('parent_operation', None)
-                    self._child_operations = self._temp_kwargs.get('child_operations', None)
+                    self._child_operations = self._temp_kwargs.get('inheritance', None)
 
                     self._initialized = True
 
@@ -120,7 +120,7 @@ class OperationAttributes:
             self._is_cpu_bound = attributes.get('is_cpu_bound', None)
             self._dependencies = attributes.get('dependencies', None)
             self._parent_operation = attributes.get('parent_operation', None)
-            self._child_operations = attributes.get('child_operations', None)
+            self._child_operations = attributes.get('inheritance', None)
 
     def export_attributes(self) -> dict:
         return {
@@ -138,7 +138,7 @@ class OperationAttributes:
             'is_cpu_bound': self._is_cpu_bound,
             'dependencies': self._dependencies,
             'parent_operation': self._parent_operation,
-            'child_operations': self._child_operations,
+            'inheritance': self._child_operations,
         }
 
     @property
