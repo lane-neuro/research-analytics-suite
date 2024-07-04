@@ -44,4 +44,6 @@ def main():
 
 
 if __name__ == '__main__':
+    sys.argv = ['__main__.py',
+                '-o', 'default_workspace']
     main()

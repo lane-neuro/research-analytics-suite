@@ -84,7 +84,7 @@ async def RASLauncher():
                     os.makedirs(_workspace_path, exist_ok=False)
                 except FileExistsError:
                     _logger.debug(f"Workspace with name '{_args.name}' already exists in directory "
-                                 f"'{_args.directory}'... Finding next available workspace name...")
+                                  f"'{_args.directory}'... Finding next available workspace name...")
 
                     # Find the next available workspace name
                     i = 1
