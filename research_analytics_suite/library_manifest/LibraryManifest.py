@@ -177,7 +177,7 @@ class LibraryManifest:
             'github': _cls.github,
             'email': _cls.email,
             'description': _cls.description,
-            'action': action_serialized(_cls.execute),  # Use action_serialized here
+            'action': action_serialized(_cls.execute),
             'is_loop': _cls.is_loop,
             'parallel': _cls.parallel,
             'is_cpu_bound': _cls.is_cpu_bound,
