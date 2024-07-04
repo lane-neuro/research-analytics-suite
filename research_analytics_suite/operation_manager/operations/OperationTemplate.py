@@ -43,7 +43,7 @@ class OperationTemplate(BaseOperation):
         unique_id (str): The unique ID of the operation.
         action: The action to be executed by the operation.
         required_inputs (Optional[dict[str, type]): Required inputs for the operation.
-        output_parameters (Optional[dict[str, type]]): Output parameters of the operation.
+        # output_parameters (Optional[dict[str, type]]): Output parameters of the operation.
         parent_operation (Optional[Type[BaseOperation]]): Parent operation.
         inheritance (Optional[Dict[str, Type[BaseOperation]]]): Required child operations.
         is_loop (bool): Whether the operation should run in a loop.
