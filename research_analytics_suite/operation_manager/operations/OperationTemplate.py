@@ -17,8 +17,7 @@ License:        BSD 3-Clause License
 Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         Template
 """
-from typing import Any, Dict, Optional, Type
-
+from typing import Any, Optional, Type
 from research_analytics_suite.operation_manager import BaseOperation
 
 
@@ -26,38 +25,16 @@ class OperationTemplate(BaseOperation):
     """
     [OperationTemplate class extends the BaseOperation class to provide a basic template for creating new operations.
         To create a new operation, follow these steps:
-            1. Define the operation-specific attributes and methods.
-            2. Override the `execute` method to implement the operation's logic.
-            3. Add any additional methods required for the operation.]
+        1. Define the operation-specific attributes and methods.
+        2. Override the `execute` method to implement the operation's logic.
+        3. Add any additional methods required for the operation.]
 
     Refer to ExampleOperation.py for an example of a concrete implementation of an operation.
 
     Attributes:
-        name (str): The name of the operation.
-        version (str): The version of the operation.
-        description (str): The description of the operation.
-        category_id (int): The category ID of the operation.
-        author (str): The author of the operation.
-        github (str): The GitHub username of the author.
-        email (str): The email address of the author.
-        unique_id (str): The unique ID of the operation.
-        action: The action to be executed by the operation.
-        required_inputs (Optional[dict[str, type]): Required inputs for the operation.
-        # output_parameters (Optional[dict[str, type]]): Output parameters of the operation.
-        parent_operation (Optional[Type[BaseOperation]]): Parent operation.
-        inheritance (Optional[Dict[str, Type[BaseOperation]]]): Required child operations.
-        is_loop (bool): Whether the operation should run in a loop.
-        is_cpu_bound (bool): Whether the operation is CPU-bound.
-        parallel (bool): Whether inherited/child operations should run in parallel or sequentially.
         custom_attribute: [Example of a custom attribute.]
 
     Methods:
-        __init__: Initialize the operation.
-        initialize_operation: Initialize any resources or setup required for the operation.
-        execute: Execute the operation's logic.
-        pre_execute: Logic to run before the main execution.
-        post_execute: Logic to run after the main execution.
-        validate: Validate inputs and outputs of the operation.
         [custom_method]: [Example of a custom method.]
     """
 
@@ -78,7 +55,7 @@ class OperationTemplate(BaseOperation):
     is_cpu_bound: bool = False
     parallel: bool = False
 
-    def __init__(self, custom_attribute: Optional[Any], *args: Any, **kwargs: Any):
+    def __init__(self, custom_attribute: Optional[Any], *args, **kwargs):
         """
         Initialize the operation instance. Update kwargs with preset attributes and call the parent class constructor.
 

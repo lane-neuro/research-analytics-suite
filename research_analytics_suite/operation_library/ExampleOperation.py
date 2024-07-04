@@ -16,69 +16,37 @@ Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         Example
 """
 import statistics
-from typing import Any, List
+from typing import List
 from research_analytics_suite.operation_manager import BaseOperation
 from research_analytics_suite.operation_manager.operations.core.execution import action_serialized
 
 
 class ExampleOperation(BaseOperation):
     """
-    ExampleOperation class extends the BaseOperation class to provide a concrete implementation of an operation.
-    This operation calculates the mean and standard deviation of a list of numbers provided as input.
-
-    Example Usage (in a script):
-    ```python
-        # Create an instance of the operation with a list of numbers
-        numbers = [1, 2, 3, 4, 5]
-        operation = ExampleOperation(numbers)
-
-        # Initialize the operation
-        await operation.initialize_operation()
-
-        # Execute the operation
-        await operation.execute()
-
-        # Retrieve the result (dictionary) from memory outputs
-        result = await operation.get_results_from_memory()
-    ```
-
-    Example Usage (within RAS):
-    ```python
-        # Create an instance of the operation with a list of numbers
-        numbers = [1, 2, 3, 4, 5]
-        operation = ExampleOperation(numbers)
-
-        # Add the operation to the operation manager
-        await operation_manager.add_operation(operation)
-    ```
+    A basic implementation of an operation that calculates the mean and standard deviation of a list of numbers.
 
     Attributes:
         numbers (List[float]): The list of numbers to analyze.
-
-    Methods:
-        __init__: Initialize the operation with the list of numbers.
-        initialize_operation: Initialize any resources or setup required for the operation.
-        execute: Execute the operation's logic.
     """
 
-    name: str = "ExampleOperation"
-    version: str = "0.0.1"
+    name: str = "ExampleOperation"                      # Name of the operation
+    version: str = "0.0.1"                              # Version of the operation
     description: str = ("A basic implementation of an operation that calculates the mean and standard deviation "
-                        "of a list of numbers.")
-    category_id: int = 101
-    author: str = "Lane"
-    github: str = "lane-neuro"
-    email: str = "justlane@uw.edu"
-    unique_id: str = f"{github}_{name}_{version}"
+                        "of a list of numbers.")        # Description of the operation
+    category_id: int = -1                               # Category ID for the operation
+    author: str = "Lane"                                # Author of the operation
+    github: str = "lane-neuro"                          # GitHub username of the author
+    email: str = "justlane@uw.edu"                      # Email address of the author
+    unique_id: str = f"{github}_{name}_{version}"       # Unique ID for the operation
     required_inputs: dict = {}                          # dict[str, type] of required input parameters
     # output_parameters: dict = {}                       # dict[str, type] of output parameters
-    parent_operation: 'BaseOperation' = None
+    parent_operation: 'BaseOperation' = None            # Parent operation class
     inheritance: list = []                              # list of unique IDs of child operations
-    is_loop: bool = False
-    is_cpu_bound: bool = False
-    parallel: bool = False
+    is_loop: bool = False                               # Flag to indicate if the operation is a loop
+    is_cpu_bound: bool = False                          # Flag to indicate if the operation is CPU-bound
+    parallel: bool = False                              # Flag to indicate if the operation can run in parallel
 
-    def __init__(self, numbers: List[float], *args: Any, **kwargs: Any):
+    def __init__(self, numbers: List[float], *args, **kwargs):
         """
         Initialize the operation with the list of numbers.
 
