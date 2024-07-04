@@ -45,7 +45,7 @@ class VisualizeDataDialog(GUIBase):
 
     def draw(self):
         """Draws the GUI elements for the Data Visualization section."""
-        with dpg.group(parent=self._parent):
+        with dpg.group(parent=self._parent, tag=self._runtime_id):
             dpg.add_text("Data Visualization Tools")
             dpg.add_separator()
 
@@ -56,6 +56,8 @@ class VisualizeDataDialog(GUIBase):
                 dpg.add_button(label="Time Series Analysis", callback=self.show_time_series_analysis)
                 dpg.add_button(label="Interactive Dashboards", callback=self.show_interactive_dashboards)
                 dpg.add_button(label="Custom Visualizations", callback=self.show_custom_visualizations)
+
+            dpg.add_child_window(width=-1, height=-1, border=True, tag="visualize_space", parent=self._runtime_id)
 
     def show_charts_graphs(self, sender, app_data, user_data):
         """Displays the Charts and Graphs section."""

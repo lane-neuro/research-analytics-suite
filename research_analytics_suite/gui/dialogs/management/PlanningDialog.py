@@ -31,16 +31,17 @@ class PlanningDialog(GUIBase):
             height (int): The height of the dialog.
         """
         super().__init__(width, height, parent)
+        self._plan_space = None
 
     async def initialize_gui(self) -> None:
-        pass
+        ...
 
     async def _update_async(self) -> None:
-        pass
+        ...
 
     def draw(self):
         """Draws the GUI elements for the Planning section."""
-        with dpg.group(parent=self._parent):
+        with dpg.group(parent=self._parent, tag=self._runtime_id):
             dpg.add_text("Planning Tools")
             dpg.add_separator()
 
@@ -49,6 +50,8 @@ class PlanningDialog(GUIBase):
                 dpg.add_button(label="Objectives", callback=self.show_objectives)
                 dpg.add_button(label="Timeline", callback=self.show_timeline)
                 dpg.add_button(label="Resources", callback=self.show_resources)
+
+            dpg.add_child_window(width=-1, height=-1, border=True, tag="plan_space", parent=self._runtime_id)
 
     def show_project_overview(self, sender, app_data, user_data):
         """Displays the Project Overview section."""

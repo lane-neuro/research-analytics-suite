@@ -40,7 +40,7 @@ class ReportsDialog(GUIBase):
 
     def draw(self):
         """Draws the GUI elements for the Reports section."""
-        with dpg.group(parent=self._parent):
+        with dpg.group(parent=self._parent, tag=self._runtime_id):
             dpg.add_text("Reports")
             dpg.add_separator()
 
@@ -51,6 +51,8 @@ class ReportsDialog(GUIBase):
                 dpg.add_button(label="Summary Reports", callback=self.show_summary_reports)
                 dpg.add_button(label="Detailed Reports", callback=self.show_detailed_reports)
                 dpg.add_button(label="Custom Reports", callback=self.show_custom_reports)
+
+            dpg.add_child_window(width=-1, height=-1, border=True, tag="reports_space", parent=self._runtime_id)
 
     def show_generate_reports(self, sender, app_data, user_data):
         """Displays the Generate Reports section."""

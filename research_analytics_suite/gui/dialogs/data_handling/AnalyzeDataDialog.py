@@ -39,7 +39,7 @@ class AnalyzeDataDialog(GUIBase):
 
     def draw(self):
         """Draws the GUI elements for the Data Analysis section."""
-        with dpg.group(parent=self._parent):
+        with dpg.group(parent=self._parent, tag=self._runtime_id):
             dpg.add_text("Data Analysis Tools")
             dpg.add_separator()
 
@@ -50,6 +50,8 @@ class AnalyzeDataDialog(GUIBase):
                 dpg.add_button(label="Machine Learning Models", callback=self.show_machine_learning)
                 dpg.add_button(label="Hypothesis Testing", callback=self.show_hypothesis_testing)
                 dpg.add_button(label="Data Aggregation", callback=self.show_data_aggregation)
+
+            dpg.add_child_window(width=-1, height=-1, border=True, tag="analyze_space", parent=self._runtime_id)
 
     def show_data_cleaning(self, sender, app_data, user_data):
         """Displays the Data Cleaning section."""

@@ -154,9 +154,6 @@ class LibraryManifest:
             self.add_operation_from_attributes(_op_attributes)
 
     def get_categories(self):
-        for _id, _category in self._categories.items():
-            if _category.operations:
-                yield _id, _category
         return self._categories.items()
 
     async def _update_user_manifest(self):

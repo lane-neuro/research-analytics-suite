@@ -20,11 +20,11 @@ import os
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
 from research_analytics_suite.data_engine.Workspace import Workspace
+from research_analytics_suite.gui.NodeEditorManager import NodeEditorManager
 from research_analytics_suite.gui.dialogs.management.LibraryPane import LibraryPane
 from research_analytics_suite.gui.dialogs.management.ResourceMonitorDialog import ResourceMonitorDialog
 from research_analytics_suite.gui.dialogs.data_handling.CollectionViewDialog import CollectionViewDialog
 from research_analytics_suite.gui.dialogs.management.ConsoleDialog import ConsoleDialog
-# from research_analytics_suite.gui.dialogs.management.OperationManagerDialog import OperationManagerDialog
 from research_analytics_suite.gui.dialogs.settings.SettingsDialog import SettingsDialog
 from research_analytics_suite.gui.modules.TimelineModule import TimelineModule
 from research_analytics_suite.gui.modules.WorkspaceModule import WorkspaceModule
@@ -49,6 +49,7 @@ class GuiLauncher:
         self._logger = CustomLogger()
         self._operation_control = OperationControl()
         self._workspace = Workspace()
+        self._node_manager = NodeEditorManager()
 
         self._timeline_dialog = None
         self._visualization_dialog = None
@@ -145,6 +146,8 @@ class GuiLauncher:
 
     async def setup_main_window(self) -> None:
         """Sets up the main window of the GUI and runs the event loop."""
+        await self._node_manager.initialize()
+
         dpg.create_context()
         dpg.create_viewport(title='Research Analytics Suite - Main Window', width=1366, height=768,
                             large_icon="gui/assets/images/logo_extra_large_dark.ico",
@@ -202,6 +205,7 @@ class GuiLauncher:
             self._planning_dialog = PlanningDialog(width=-1, height=-1, parent="planning_pane")
             await self._planning_dialog.initialize_gui()
             self._planning_dialog.draw()
+            self._node_manager.add_editor(editor_id="planning_editor", width=-1, height=-1, parent="plan_space")
 
         with dpg.child_window(tag="data_collection_pane", parent="middle_pane", show=False, border=False):
             await self.setup_data_collection_pane()
@@ -211,11 +215,15 @@ class GuiLauncher:
             self._analyze_data_dialog = AnalyzeDataDialog(width=-1, height=-1, parent="analyze_data_pane")
             await self._analyze_data_dialog.initialize_gui()
             self._analyze_data_dialog.draw()
+            self._node_manager.add_editor(editor_id="analyze_data_editor", width=-1, height=-1,
+                                          parent="analyze_space")
 
         with dpg.child_window(tag="visualize_data_pane", parent="middle_pane", show=False, border=False):
             self._visualize_data_dialog = VisualizeDataDialog(width=-1, height=-1, parent="visualize_data_pane")
             await self._visualize_data_dialog.initialize_gui()
             self._visualize_data_dialog.draw()
+            self._node_manager.add_editor(editor_id="visualize_data_editor", width=-1, height=-1,
+                                          parent="visualize_space")
 
         with dpg.child_window(tag="manage_projects_pane", parent="middle_pane", show=False, border=False):
             self._manage_project_dialog = ProjectManagerDialog(width=-1, height=-1, parent="manage_projects_pane")
@@ -226,6 +234,7 @@ class GuiLauncher:
             self._reports_dialog = ReportsDialog(width=-1, height=-1, parent="reports_pane")
             await self._reports_dialog.initialize_gui()
             self._reports_dialog.draw()
+            self._node_manager.add_editor(editor_id="reports_editor", width=-1, height=-1, parent="reports_space")
 
         with dpg.child_window(tag="settings_pane", parent="middle_pane", show=False, border=False):
             dpg.add_text("Settings Pane")
