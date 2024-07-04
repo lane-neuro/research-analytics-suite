@@ -1,21 +1,21 @@
 """
-Operation: [Operation Name]
-Version: [0.0.1]
-Description: [A template class to help developers create their own Operation classes by extending BaseOperation.
-             This template provides a starting point for creating new operations with the necessary attributes
-             and methods. Developers can customize the operation by adding their own logic and attributes
-             as needed. Replace any '[placeholders]' with the actual values for the operation.]
+Operation:      [Operation Name]
+Version:        [0.0.1]
+Description:    [A template class to help developers create their own Operation classes by extending BaseOperation.
+                This template provides a starting point for creating new operations with the necessary attributes
+                and methods. Developers can customize the operation by adding their own logic and attributes
+                as needed. Replace any '[placeholders]' with the actual values for the operation.]
 
-Author: [Your Name]
-GitHub: [Your GitHub Username] (optional)
-Email: [Your Email Address] (optional)
+Author:         [Your Name]
+GitHub:         [Your GitHub Username] (optional)
+Email:          [Your Email Address] (optional)
 
 ---
 Part of the Research Analytics Suite
     https://github.com/lane-neuro/research-analytics-suite
-License: BSD 3-Clause License
-Maintainer: Lane
-Status: Template
+License:        BSD 3-Clause License
+Maintainer:     Lane
+Status:         Template
 """
 from typing import Any, Dict, Optional, Type
 
