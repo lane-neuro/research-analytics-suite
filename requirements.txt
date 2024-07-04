@@ -22,4 +22,9 @@ dask>=2024.5.0
 aiofiles>=22.1.0
 aiosqlite>=0.18.0
 pyserial>=3.5
-torch
+pytorch>=2.2.0
+scipy>=1.13.1
+pymongo>=4.8.0
+statsmodels>=0.14.2
+tensorflow>=2.8.0
+keras>=3.4.1

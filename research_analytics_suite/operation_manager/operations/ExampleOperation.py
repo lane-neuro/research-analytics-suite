@@ -27,6 +27,10 @@ class ExampleOperation(BaseOperation):
 
     Attributes:
         numbers (List[float]): The list of numbers to analyze.
+
+    Returns:
+        mean_value (float): The mean of the numbers.
+        std_dev_value (float): The standard deviation of the numbers.
     """
 
     name: str = "ExampleOperation"                      # Name of the operation

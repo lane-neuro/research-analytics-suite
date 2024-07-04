@@ -1,3 +1,3 @@
 __all__ = ['ExampleOperation']
 
-from .ExampleOperation import ExampleOperation
+from research_analytics_suite.operation_manager.operations.ExampleOperation import ExampleOperation

@@ -12,7 +12,7 @@ Part of the Research Analytics Suite
     https://github.com/lane-neuro/research-analytics-suite
 License:        BSD 3-Clause License
 Maintainer:     Lane (GitHub: @lane-neuro)
-Status:         Example
+Status:         In Progress
 """
 from typing import List, Optional, Type
 from research_analytics_suite.operation_manager import BaseOperation
@@ -24,6 +24,9 @@ class SumCalculation(BaseOperation):
 
     Attributes:
         numbers (List[float]): The list of numbers to calculate the sum.
+
+    Returns:
+        sum_value (float): The sum of the list of numbers.
     """
     name = "SumCalculation"
     version = "0.0.1"

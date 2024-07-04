@@ -1,7 +1,7 @@
 """
-Operation:      StandardDeviationCalculation
+Operation:      BasicArithmeticOperations
 Version:        0.0.1
-Description:    Calculate the standard deviation of a list of numbers.
+Description:    Perform basic arithmetic operations on data.
 
 Author:         Lane
 GitHub:         lane-neuro
@@ -18,22 +18,21 @@ from typing import List, Optional, Type
 from research_analytics_suite.operation_manager import BaseOperation
 
 
-class StandardDeviationCalculation(BaseOperation):
+class BasicArithmeticOperations(BaseOperation):
     """
-    Calculate the standard deviation of a list of numbers.
+    Perform basic arithmetic operations on data.
 
     Attributes:
-        numbers (List[float]): The list of numbers to calculate the standard deviation.
+        numbers (List[float]): The list of numbers to perform arithmetic operations on.
 
     Returns:
-        mean_value (float): The mean of the list of numbers.
-        variance (float): The variance of the list of numbers.
-        std_dev_value (float): The standard deviation of the list of numbers.
+        total (float): The sum of the numbers.
+        average (float): The average of the numbers.
     """
-    name = "StandardDeviationCalculation"
+    name = "BasicArithmeticOperations"
     version = "0.0.1"
-    description = "Calculate the standard deviation of a list of numbers."
-    category_id = 101
+    description = "Perform basic arithmetic operations on data."
+    category_id = 1102
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
@@ -50,7 +49,7 @@ class StandardDeviationCalculation(BaseOperation):
         Initialize the operation with the list of numbers.
 
         Args:
-            numbers (List[float]): The list of numbers to calculate the standard deviation.
+            numbers (List[float]): The list of numbers to perform arithmetic operations on.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
@@ -65,9 +64,8 @@ class StandardDeviationCalculation(BaseOperation):
 
     async def execute(self):
         """
-        Execute the operation's logic: calculate the standard deviation of the list of numbers.
+        Execute the operation's logic: perform basic arithmetic operations on the numbers.
         """
-        mean_value = sum(self.numbers) / len(self.numbers)
-        variance = sum((x - mean_value) ** 2 for x in self.numbers) / len(self.numbers)
-        std_dev_value = variance ** 0.5
-        print(f"Standard Deviation: {std_dev_value}")
+        total = sum(self.numbers)
+        average = total / len(self.numbers)
+        print(f"Total: {total}, Average: {average}")

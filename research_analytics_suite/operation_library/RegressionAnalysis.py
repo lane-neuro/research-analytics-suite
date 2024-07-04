@@ -1,7 +1,7 @@
 """
-Operation:      ModeCalculation
+Operation:      RegressionAnalysis
 Version:        0.0.1
-Description:    Calculate the mode of a list of categories.
+Description:    Perform regression analysis on a dataset.
 
 Author:         Lane
 GitHub:         lane-neuro
@@ -14,46 +14,50 @@ License:        BSD 3-Clause License
 Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         In Progress
 """
-from typing import List, Optional, Type
-from statistics import mode
+import statsmodels.api as sm
+from typing import Optional, Type
 from research_analytics_suite.operation_manager import BaseOperation
 
 
-class ModeCalculation(BaseOperation):
+class RegressionAnalysis(BaseOperation):
     """
-    Calculate the mode of a list of categories.
+    Perform regression analysis on a dataset.
 
     Attributes:
-        categories (List[str]): The list of categories to calculate the mode.
+        y (list): The dependent variable.
+        x (list): The independent variables.
 
     Returns:
-        mode_value (str): The mode of the list of categories.
+        x_with_const (list): The independent variables with a constant added.
+        model (statsmodels.regression.linear_model.RegressionResultsWrapper): The regression model.
     """
-    name = "ModeCalculation"
+    name = "RegressionAnalysis"
     version = "0.0.1"
-    description = "Calculate the mode of a list of categories."
-    category_id = 201
+    description = "Perform regression analysis on a dataset."
+    category_id = 1202
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
     unique_id = f"{github}_{name}_{version}"
-    required_inputs = {"categories": list}
+    required_inputs = {"y": list, "x": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
     is_loop = False
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, categories: List[str], *args, **kwargs):
+    def __init__(self, y: list, x: list, *args, **kwargs):
         """
-        Initialize the operation with the list of categories.
+        Initialize the operation with the dependent and independent variables.
 
         Args:
-            categories (List[str]): The list of categories to calculate the mode.
+            y (list): The dependent variable.
+            x (list): The independent variables.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.categories = categories
+        self.y = y
+        self.x = x
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -64,7 +68,8 @@ class ModeCalculation(BaseOperation):
 
     async def execute(self):
         """
-        Execute the operation's logic: calculate the mode of the list of categories.
+        Execute the operation's logic: perform regression analysis on the dataset.
         """
-        mode_value = mode(self.categories)
-        print(f"Mode: {mode_value}")
+        x_with_const = sm.add_constant(self.x)
+        model = sm.OLS(self.y, x_with_const).fit()
+        print(model.summary())

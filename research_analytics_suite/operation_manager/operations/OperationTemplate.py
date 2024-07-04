@@ -36,6 +36,9 @@ class OperationTemplate(BaseOperation):
 
     Methods:
         [custom_method]: [Example of a custom method.]
+
+    Returns:
+        [variable_name] ([type]) - [Description of the variable returned by the operation.]
     """
 
     # Preset attributes to be defined by the operation creator

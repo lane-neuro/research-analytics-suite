@@ -1,7 +1,7 @@
 """
-Operation:      ModeCalculation
+Operation:      ChiSquareTest
 Version:        0.0.1
-Description:    Calculate the mode of a list of categories.
+Description:    Perform a chi-square test for independence.
 
 Author:         Lane
 GitHub:         lane-neuro
@@ -15,45 +15,48 @@ Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         In Progress
 """
 from typing import List, Optional, Type
-from statistics import mode
+from scipy import stats
 from research_analytics_suite.operation_manager import BaseOperation
 
 
-class ModeCalculation(BaseOperation):
+class ChiSquareTest(BaseOperation):
     """
-    Calculate the mode of a list of categories.
+    Perform a chi-square test for independence.
 
     Attributes:
-        categories (List[str]): The list of categories to calculate the mode.
+        observed (List[List[int]]): The observed frequencies.
 
     Returns:
-        mode_value (str): The mode of the list of categories.
+        chi2_stat (float): The chi-square statistic.
+        p_value (float): The p-value.
+        dof (int): The degrees of freedom.
+        expected (List[List[float]]): The expected frequencies.
     """
-    name = "ModeCalculation"
+    name = "ChiSquareTest"
     version = "0.0.1"
-    description = "Calculate the mode of a list of categories."
-    category_id = 201
+    description = "Perform a chi-square test for independence."
+    category_id = 801
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
     unique_id = f"{github}_{name}_{version}"
-    required_inputs = {"categories": list}
+    required_inputs = {"observed": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
     is_loop = False
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, categories: List[str], *args, **kwargs):
+    def __init__(self, observed: List[List[int]], *args, **kwargs):
         """
-        Initialize the operation with the list of categories.
+        Initialize the operation with the observed frequencies.
 
         Args:
-            categories (List[str]): The list of categories to calculate the mode.
+            observed (List[List[int]]): The observed frequencies.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.categories = categories
+        self.observed = observed
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -64,7 +67,7 @@ class ModeCalculation(BaseOperation):
 
     async def execute(self):
         """
-        Execute the operation's logic: calculate the mode of the list of categories.
+        Execute the operation's logic: perform the chi-square test for independence.
         """
-        mode_value = mode(self.categories)
-        print(f"Mode: {mode_value}")
+        chi2_stat, p_value, dof, expected = stats.chi2_contingency(self.observed)
+        print(f"Chi-Square Statistic: {chi2_stat}, P-Value: {p_value}")

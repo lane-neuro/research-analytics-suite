@@ -1,7 +1,7 @@
 """
-Operation:      ModeCalculation
+Operation:      Tokenization
 Version:        0.0.1
-Description:    Calculate the mode of a list of categories.
+Description:    Tokenize a text into words or sentences.
 
 Author:         Lane
 GitHub:         lane-neuro
@@ -14,46 +14,45 @@ License:        BSD 3-Clause License
 Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         In Progress
 """
-from typing import List, Optional, Type
-from statistics import mode
+from typing import Optional, Type
 from research_analytics_suite.operation_manager import BaseOperation
 
 
-class ModeCalculation(BaseOperation):
+class Tokenization(BaseOperation):
     """
-    Calculate the mode of a list of categories.
+    Tokenize a text into words or sentences.
 
     Attributes:
-        categories (List[str]): The list of categories to calculate the mode.
+        text (str): The text to tokenize.
 
     Returns:
-        mode_value (str): The mode of the list of categories.
+        tokens (List[str]): The list of tokens.
     """
-    name = "ModeCalculation"
+    name = "Tokenization"
     version = "0.0.1"
-    description = "Calculate the mode of a list of categories."
-    category_id = 201
+    description = "Tokenize a text into words or sentences."
+    category_id = 301
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
     unique_id = f"{github}_{name}_{version}"
-    required_inputs = {"categories": list}
+    required_inputs = {"text": str}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
     is_loop = False
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, categories: List[str], *args, **kwargs):
+    def __init__(self, text: str, *args, **kwargs):
         """
-        Initialize the operation with the list of categories.
+        Initialize the operation with the text.
 
         Args:
-            categories (List[str]): The list of categories to calculate the mode.
+            text (str): The text to tokenize.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.categories = categories
+        self.text = text
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -64,7 +63,7 @@ class ModeCalculation(BaseOperation):
 
     async def execute(self):
         """
-        Execute the operation's logic: calculate the mode of the list of categories.
+        Execute the operation's logic: tokenize the text into words.
         """
-        mode_value = mode(self.categories)
-        print(f"Mode: {mode_value}")
+        tokens = self.text.split()
+        print(f"Tokens: {tokens}")

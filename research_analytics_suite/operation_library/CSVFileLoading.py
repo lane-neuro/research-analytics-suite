@@ -1,7 +1,7 @@
 """
-Operation:      ModeCalculation
+Operation:      CSVFileLoading
 Version:        0.0.1
-Description:    Calculate the mode of a list of categories.
+Description:    Load data from a CSV file.
 
 Author:         Lane
 GitHub:         lane-neuro
@@ -14,46 +14,46 @@ License:        BSD 3-Clause License
 Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         In Progress
 """
-from typing import List, Optional, Type
-from statistics import mode
+import pandas as pd
+from typing import Optional, Type
 from research_analytics_suite.operation_manager import BaseOperation
 
 
-class ModeCalculation(BaseOperation):
+class CSVFileLoading(BaseOperation):
     """
-    Calculate the mode of a list of categories.
+    Load data from a CSV file.
 
     Attributes:
-        categories (List[str]): The list of categories to calculate the mode.
+        file_path (str): The path to the CSV file.
 
     Returns:
-        mode_value (str): The mode of the list of categories.
+        data (pd.DataFrame): The data loaded from the CSV file.
     """
-    name = "ModeCalculation"
+    name = "CSVFileLoading"
     version = "0.0.1"
-    description = "Calculate the mode of a list of categories."
-    category_id = 201
+    description = "Load data from a CSV file."
+    category_id = 1101
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
     unique_id = f"{github}_{name}_{version}"
-    required_inputs = {"categories": list}
+    required_inputs = {"file_path": str}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
     is_loop = False
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, categories: List[str], *args, **kwargs):
+    def __init__(self, file_path: str, *args, **kwargs):
         """
-        Initialize the operation with the list of categories.
+        Initialize the operation with the file path.
 
         Args:
-            categories (List[str]): The list of categories to calculate the mode.
+            file_path (str): The path to the CSV file.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.categories = categories
+        self.file_path = file_path
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -64,7 +64,7 @@ class ModeCalculation(BaseOperation):
 
     async def execute(self):
         """
-        Execute the operation's logic: calculate the mode of the list of categories.
+        Execute the operation's logic: load data from the CSV file.
         """
-        mode_value = mode(self.categories)
-        print(f"Mode: {mode_value}")
+        data = pd.read_csv(self.file_path)
+        print(f"Loaded data: {data.head()}")

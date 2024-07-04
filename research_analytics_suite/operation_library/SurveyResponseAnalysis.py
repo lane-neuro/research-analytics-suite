@@ -1,7 +1,7 @@
 """
-Operation:      ModeCalculation
+Operation:      SurveyResponseAnalysis
 Version:        0.0.1
-Description:    Calculate the mode of a list of categories.
+Description:    Analyze survey responses.
 
 Author:         Lane
 GitHub:         lane-neuro
@@ -15,45 +15,44 @@ Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         In Progress
 """
 from typing import List, Optional, Type
-from statistics import mode
 from research_analytics_suite.operation_manager import BaseOperation
 
 
-class ModeCalculation(BaseOperation):
+class SurveyResponseAnalysis(BaseOperation):
     """
-    Calculate the mode of a list of categories.
+    Analyze survey responses.
 
     Attributes:
-        categories (List[str]): The list of categories to calculate the mode.
+        responses (List[dict]): The survey responses to analyze.
 
     Returns:
-        mode_value (str): The mode of the list of categories.
+        None
     """
-    name = "ModeCalculation"
+    name = "SurveyResponseAnalysis"
     version = "0.0.1"
-    description = "Calculate the mode of a list of categories."
-    category_id = 201
+    description = "Analyze survey responses."
+    category_id = 901
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
     unique_id = f"{github}_{name}_{version}"
-    required_inputs = {"categories": list}
+    required_inputs = {"responses": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
     is_loop = False
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, categories: List[str], *args, **kwargs):
+    def __init__(self, responses: List[dict], *args, **kwargs):
         """
-        Initialize the operation with the list of categories.
+        Initialize the operation with the survey responses.
 
         Args:
-            categories (List[str]): The list of categories to calculate the mode.
+            responses (List[dict]): The survey responses to analyze.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.categories = categories
+        self.responses = responses
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -64,7 +63,7 @@ class ModeCalculation(BaseOperation):
 
     async def execute(self):
         """
-        Execute the operation's logic: calculate the mode of the list of categories.
+        Execute the operation's logic: analyze the survey responses.
         """
-        mode_value = mode(self.categories)
-        print(f"Mode: {mode_value}")
+        # Placeholder for survey response analysis logic
+        print(f"Analyzing {len(self.responses)} responses")

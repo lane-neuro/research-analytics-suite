@@ -12,7 +12,7 @@ Part of the Research Analytics Suite
     https://github.com/lane-neuro/research-analytics-suite
 License:        BSD 3-Clause License
 Maintainer:     Lane (GitHub: @lane-neuro)
-Status:         Example
+Status:         In Progress
 """
 from typing import List, Optional, Type
 from collections import Counter
@@ -25,6 +25,9 @@ class FrequencyCount(BaseOperation):
 
     Attributes:
         categories (List[str]): The list of categories to count the frequency.
+
+    Returns:
+        frequency (Counter): The frequency of each category in the dataset.
     """
     name = "FrequencyCount"
     version = "0.0.1"

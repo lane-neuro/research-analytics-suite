@@ -1,7 +1,7 @@
 """
-Operation:      ModeCalculation
+Operation:      TimeSeriesPlotting
 Version:        0.0.1
-Description:    Calculate the mode of a list of categories.
+Description:    Plot a time series.
 
 Author:         Lane
 GitHub:         lane-neuro
@@ -14,46 +14,46 @@ License:        BSD 3-Clause License
 Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         In Progress
 """
+import matplotlib.pyplot as plt
 from typing import List, Optional, Type
-from statistics import mode
 from research_analytics_suite.operation_manager import BaseOperation
 
 
-class ModeCalculation(BaseOperation):
+class TimeSeriesPlotting(BaseOperation):
     """
-    Calculate the mode of a list of categories.
+    Plot a time series.
 
     Attributes:
-        categories (List[str]): The list of categories to calculate the mode.
+        time_series (List[float]): The time series data to plot.
 
     Returns:
-        mode_value (str): The mode of the list of categories.
+        plt: The time series plot.
     """
-    name = "ModeCalculation"
+    name = "TimeSeriesPlotting"
     version = "0.0.1"
-    description = "Calculate the mode of a list of categories."
-    category_id = 201
+    description = "Plot a time series."
+    category_id = 401
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
     unique_id = f"{github}_{name}_{version}"
-    required_inputs = {"categories": list}
+    required_inputs = {"time_series": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
     is_loop = False
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, categories: List[str], *args, **kwargs):
+    def __init__(self, time_series: List[float], *args, **kwargs):
         """
-        Initialize the operation with the list of categories.
+        Initialize the operation with the time series data.
 
         Args:
-            categories (List[str]): The list of categories to calculate the mode.
+            time_series (List[float]): The time series data to plot.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.categories = categories
+        self.time_series = time_series
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -64,7 +64,10 @@ class ModeCalculation(BaseOperation):
 
     async def execute(self):
         """
-        Execute the operation's logic: calculate the mode of the list of categories.
+        Execute the operation's logic: plot the time series data.
         """
-        mode_value = mode(self.categories)
-        print(f"Mode: {mode_value}")
+        plt.plot(self.time_series)
+        plt.title("Time Series Plot")
+        plt.xlabel("Time")
+        plt.ylabel("Value")
+        plt.show()
