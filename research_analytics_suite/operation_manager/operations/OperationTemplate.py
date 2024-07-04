@@ -14,7 +14,7 @@ Email:          [Your Email Address] (optional)
 Part of the Research Analytics Suite
     https://github.com/lane-neuro/research-analytics-suite
 License:        BSD 3-Clause License
-Maintainer:     Lane
+Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         Template
 """
 from typing import Any, Dict, Optional, Type
