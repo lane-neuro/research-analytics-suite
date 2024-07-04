@@ -15,15 +15,15 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 from research_analytics_suite.operation_manager.management.OperationSequencer import OperationSequencer
-from research_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
-from research_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
+from research_analytics_suite.operation_manager.operations.system.ConsoleOperation import ConsoleOperation
+from research_analytics_suite.operation_manager.operations.system.ResourceMonitorOperation import \
     ResourceMonitorOperation
 from research_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
 
 
 class SystemOperationChecker:
     """
-    Class to manage and check persistent operations.
+    Class to manage and check is_loop operations.
 
     This class is responsible for ensuring that necessary system operations, such as ConsoleOperation and
     ResourceMonitorOperation, are running within the research analytics suite. If these operations are not
@@ -50,7 +50,7 @@ class SystemOperationChecker:
 
     async def check_system_operations(self) -> None:
         """
-        Checks for persistent operations and adds them to the sequencer if they are not already present.
+        Checks for is_loop operations and adds them to the sequencer if they are not already present.
 
         This method ensures that a ConsoleOperation is in progress and a ResourceMonitorOperation is running. If these
         operations are not present, they are added to the operation sequencer.
@@ -60,10 +60,10 @@ class SystemOperationChecker:
                 operation_type=ConsoleOperation,
                 user_input_manager=self._operation_control.user_input_manager,
                 action=self._operation_control.user_input_manager.process_user_input,
-                prompt="", concurrent=True, persistent=True)
+                prompt="", is_loop=True, parallel=True)
             self._operation_control.console_operation_in_progress = True
 
         # Check if a ResourceMonitorOperation is already running
         if not any(isinstance(task, ResourceMonitorOperation) for task in self.task_creator.tasks):
             await self.op_manager.add_operation_if_not_exists(
-                operation_type=ResourceMonitorOperation, concurrent=True, persistent=True)
+                operation_type=ResourceMonitorOperation, is_loop=True, parallel=True)

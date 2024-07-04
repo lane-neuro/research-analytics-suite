@@ -45,13 +45,15 @@ class OperationModule(GUIBase):
         self._child_ops_parent = None
         self._log_container_id = None
 
-        self._concurrent_id = f"concurrent_{self._operation_id}"
+        self._parent_id = f"parent_{self._operation_id}"
+        self._is_loop_id = f"is_loop_{self._operation_id}"
+        self._cpu_bound_id = f"cpu_bound_{self._operation_id}"
+        self._parallel_id = f"parallel_{self._operation_id}"
+
         self._progress_id = f"progress_{self._operation_id}"
         self._result_id = f"result_{self._operation_id}"
         self._log_id = f"log_{self._operation_id}"
-        self._persistent_id = f"persistent_{self._operation_id}"
-        self._cpu_bound_id = f"cpu_bound_{self._operation_id}"
-        self._parent_id = f"parent_{self._operation_id}"
+
         self._left_panel_id = f"left_panel_{self._operation_id}"
 
     @property
@@ -64,7 +66,7 @@ class OperationModule(GUIBase):
         try:
             self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_OperationUpdateTask",
-                action=self.update_gui, persistent=True, concurrent=True)
+                action=self.update_gui, is_loop=True, parallel=True)
             self._update_operation.is_ready = True
         except Exception as e:
             self._logger.error(e, self)
@@ -93,14 +95,14 @@ class OperationModule(GUIBase):
                                          readonly=False)
 
             with dpg.child_window(border=True, width=-1, parent=self._parent_id, tag=f"parameters_{self._operation_id}"):
-                dpg.add_checkbox(label="Continuous/Loop", tag=self._persistent_id,
-                                 default_value=self._operation.persistent,
+                dpg.add_checkbox(label="Continuous/Loop", tag=self._is_loop_id,
+                                 default_value=self._operation.is_loop,
                                  parent=f"parameters_{self._operation_id}")
                 dpg.add_checkbox(label="CPU Bound", tag=self._cpu_bound_id,
                                  default_value=self._operation.is_cpu_bound,
                                  parent=f"parameters_{self._operation_id}")
-                dpg.add_checkbox(label="Parallel Execution", tag=self._concurrent_id,
-                                 default_value=self._operation.concurrent,
+                dpg.add_checkbox(label="Parallel Execution", tag=self._parallel_id,
+                                 default_value=self._operation.parallel,
                                  parent=f"parameters_{self._operation_id}")
 
         with dpg.group(parent=self._parent, horizontal=True, tag=self._left_panel_id,
@@ -135,14 +137,14 @@ class OperationModule(GUIBase):
 
                     dpg.add_text("Child Operations")
                     with dpg.group(tag=self._child_ops_parent, parent=f"container_{self._operation_id}"):
-                        if self._operation.child_operations.values() is not None:
-                            for child_op in self._operation.child_operations.values():
+                        if self._operation.inheritance.values() is not None:
+                            for child_op in self._operation.inheritance.values():
                                 with dpg.group(parent=self._child_ops_parent,
                                                tag=f"{child_op.runtime_id}_{self._operation_id}"):
                                     dpg.add_input_text(label="Child Operation Name", default_value=child_op.name,
                                                        readonly=True)
                                     dpg.add_input_text(label="Status", default_value=child_op.status, readonly=True)
-                                    dpg.add_checkbox(label="Concurrent", default_value=child_op.concurrent)
+                                    dpg.add_checkbox(label="Concurrent", default_value=child_op.parallel)
                                     dpg.add_button(label="Remove",
                                                    callback=lambda: self.remove_child_operation(child_op))
 
@@ -166,27 +168,27 @@ class OperationModule(GUIBase):
                 dpg.configure_item(self._progress_id, overlay=self._operation.progress[1].upper())
 
             if dpg.does_item_exist(self._child_ops_parent):
-                current_child_operations = len(self._operation.child_operations)
+                current_inherited_ops = len(self._operation.inheritance)
                 children = dpg.get_item_children(self._child_ops_parent, slot=1)
-                if len(children) != current_child_operations:
+                if len(children) != current_inherited_ops:
                     dpg.delete_item(self._child_ops_parent, children_only=True)
-                    for child_op in self._operation.child_operations.values():
+                    for child_op in self._operation.inheritance.values():
                         dpg.add_input_text(label="Child Operation Name", default_value=child_op.name, readonly=True,
                                            parent=self._child_ops_parent)
                         dpg.add_input_text(label="Status", default_value=child_op.status, readonly=True,
                                            parent=self._child_ops_parent)
-                        dpg.add_checkbox(label="Concurrent", default_value=child_op.concurrent,
+                        dpg.add_checkbox(label="Parallel", default_value=child_op.parallel,
                                          parent=self._child_ops_parent)
                         dpg.add_button(label="Remove", callback=lambda: self.remove_child_operation(child_op),
                                        parent=self._child_ops_parent)
                     dpg.add_button(
-                        label="Execute Child Operations",
+                        label="Execute Inherited Operations",
                         callback=self._operation.execute_child_operations,
                         width=-1, parent=self._child_ops_parent
                     )
 
-            if dpg.does_item_exist(self._persistent_id):
-                dpg.set_value(self._persistent_id, self._operation.persistent)
+            if dpg.does_item_exist(self._is_loop_id):
+                dpg.set_value(self._is_loop_id, self._operation.is_loop)
 
             if dpg.does_item_exist(self._cpu_bound_id):
                 dpg.set_value(self._cpu_bound_id, self._operation.is_cpu_bound)
@@ -204,7 +206,7 @@ class OperationModule(GUIBase):
 
     async def stop_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Stops the operation."""
-        if not self._operation.persistent:
+        if not self._operation.is_loop:
             try:
                 await self._operation.stop()
             except Exception as e:
@@ -214,7 +216,7 @@ class OperationModule(GUIBase):
 
     async def pause_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Pauses the operation."""
-        if not self._operation.persistent:
+        if not self._operation.is_loop:
             try:
                 await self._operation.pause()
             except Exception as e:
@@ -224,7 +226,7 @@ class OperationModule(GUIBase):
 
     async def resume_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Resumes the operation."""
-        if not self._operation.persistent:
+        if not self._operation.is_loop:
             try:
                 await self._operation.resume()
             except Exception as e:

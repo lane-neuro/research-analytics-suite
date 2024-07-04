@@ -225,12 +225,12 @@ The `operation_manager` package orchestrates and manages data processing operati
 - **operations**:
   - **computation**: Includes computational operations.
   - **core**: Provides core functionalities for operations.
-    - **child_operations**: Provides functionalities for managing child operations in a parent operation.
+    - **inheritance**: Provides functionalities for managing child operations in a parent operation.
     - **control**: Provides control functionalities for operations including start, pause, resume, and stop.
     - **execution**: Provides execution functionalities for operations including preparation and execution of actions.
     - **progress**: Provides functionalities for tracking and updating the progress of operations.
     - **workspace**: Provides functionalities for workspace interactions, loading, and saving operations.
-  - **persistent**: Includes common persistent (continuous) operations, such as ```ResourceMonitorOperation``` and ```ConsoleOperation```
+  - **system**: Includes common system operations, such as ```ResourceMonitorOperation``` and ```ConsoleOperation```
 - **task**: Manages all tasks associated with operations.
 
 ### GUI

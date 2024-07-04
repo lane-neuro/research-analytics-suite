@@ -23,7 +23,7 @@ async def resume_operation(operation, child_operations=False):
         try:
             operation.is_ready = True
 
-            if child_operations and operation.child_operations is not None:
+            if child_operations and operation.inheritance is not None:
                 await _resume_child_operations(operation)
             await operation.pause_event.set()
             operation.status = "running"
@@ -39,5 +39,5 @@ async def _resume_child_operations(operation):
     """
     Resume all child operations.
     """
-    tasks = [op.resume() for op in operation.child_operations.values()]
+    tasks = [op.resume() for op in operation.inheritance.values()]
     await asyncio.gather(*tasks)

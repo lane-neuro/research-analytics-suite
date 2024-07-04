@@ -11,8 +11,8 @@ async def execute_operation(operation):
     Execute the operation and all child operations.
     """
     try:
-        if operation.child_operations:
-            await execute_child_operations(operation)
+        if operation.inheritance:
+            await execute_inherited_operations(operation)
 
         await operation.validate_memory_inputs()
 
@@ -24,20 +24,20 @@ async def execute_operation(operation):
             for slot in operation.memory_outputs.slots:
                 await operation.parent_operation.add_memory_input_slot(slot)
 
-        if not operation.persistent:
+        if not operation.is_loop:
             operation.status = "completed"
             operation.add_log_entry(f"[COMPLETE]")
     except Exception as e:
         operation.handle_error(e)
 
 
-async def execute_child_operations(parent_operation):
+async def execute_inherited_operations(parent_operation):
     """
     Execute all child operations.
     """
-    if not parent_operation.dependencies:
-        if parent_operation.child_operations:
-            await run_operations(parent_operation, parent_operation.child_operations.values())
+    if not parent_operation.required_inputs:
+        if parent_operation.inheritance:
+            await run_operations(parent_operation, parent_operation.inheritance.values())
     else:
         execution_order = _determine_execution_order(parent_operation)
         await run_operations(parent_operation, execution_order)
@@ -45,18 +45,19 @@ async def execute_child_operations(parent_operation):
 
 def _determine_execution_order(parent_operation) -> List:
     """
-    Determine the execution order of child operations based on dependencies.
+    Determine the execution order of child operations based on required inputs.
 
     Returns:
         List[BaseOperation]: The execution order of child operations.
     """
+    # TODO fix this
     parent_operation.add_log_entry(f"Determining execution order")
     execution_order = []
     processed = set()
-    while len(processed) < len(parent_operation.child_operations.keys()):
-        for op in parent_operation.child_operations.values():
+    while len(processed) < len(parent_operation.inheritance.keys()):
+        for op in parent_operation.inheritance.values():
             if op.name not in processed and all(
-                    dep in processed for dep in parent_operation.dependencies.get(op.name, [])):
+                    dep in processed for dep in parent_operation.required_inputs.get(op.name, [])):
                 execution_order.append(op)
                 processed.add(op.name)
     return execution_order
@@ -71,7 +72,7 @@ async def run_operations(operation, operations):
         if op.status != "completed":
             tasks.append(execute_action(op))
 
-    if operation.concurrent and tasks:
+    if operation.parallel and tasks:
         await asyncio.gather(*tasks)
     elif tasks:
         for task in tasks:

@@ -34,14 +34,21 @@ class OperationTemplate(BaseOperation):
 
     Attributes:
         name (str): The name of the operation.
-        persistent (bool): Whether the operation should run indefinitely.
+        version (str): The version of the operation.
+        description (str): The description of the operation.
+        category_id (int): The category ID of the operation.
+        author (str): The author of the operation.
+        github (str): The GitHub username of the author.
+        email (str): The email address of the author.
+        unique_id (str): The unique ID of the operation.
+        action: The action to be executed by the operation.
+        required_inputs (Optional[dict[str, type]): Required inputs for the operation.
+        parent_operation (Optional[Type[BaseOperation]]): Parent operation.
+        inheritance (Optional[Dict[str, Type[BaseOperation]]]): Required child operations.
+        is_loop (bool): Whether the operation should run in a loop.
         is_cpu_bound (bool): Whether the operation is CPU-bound.
-        concurrent (bool): Whether child operations should run concurrently.
-        required_parent (Optional[Type[BaseOperation]]): Required parent operation type.
-        required_children (Optional[Dict[str, Type[BaseOperation]]]): Required child operations.
-        required_dependencies (Optional[Dict[str, Type[BaseOperation]]]): Required dependencies.
-    Custom Attributes:
-        [custom_attribute]: [Example of a custom attribute.]
+        parallel (bool): Whether inherited/child operations should run in parallel or sequentially.
+        custom_attribute: [Example of a custom attribute.]
 
     Methods:
         __init__: Initialize the operation.
@@ -50,20 +57,27 @@ class OperationTemplate(BaseOperation):
         pre_execute: Logic to run before the main execution.
         post_execute: Logic to run after the main execution.
         validate: Validate inputs and outputs of the operation.
-    Custom Methods:
         [custom_method]: [Example of a custom method.]
     """
 
     # Preset attributes to be defined by the operation creator
     name: str = "DefaultOperationName"
-    persistent: bool = False
+    version: str = "0.0.1"
+    description: str = "Default operation description."
+    category_id: int = 0
+    author: str = "Default Author"
+    github: str = "lane-neuro"
+    email: str = "default_author@email.com"
+    unique_id: str = f"{github}_{name}_{version}"
+    # action is set to execute() within the __init__ method by default
+    required_inputs: Optional[dict[str, type]] = None
+    parent_operation: Optional[Type[BaseOperation]] = None
+    inheritance: Optional[Dict[str, Type[BaseOperation]]] = None
+    is_loop: bool = False
     is_cpu_bound: bool = False
-    concurrent: bool = False
-    required_parent: Optional[Type[BaseOperation]] = None
-    required_children: Optional[Dict[str, Type[BaseOperation]]] = None
-    required_dependencies: Optional[Dict[str, Type[BaseOperation]]] = None
+    parallel: bool = False
 
-    def __init__(self, template_attribute: Optional[Any], *args: Any, **kwargs: Any):
+    def __init__(self, custom_attribute: Optional[Any], *args: Any, **kwargs: Any):
         """
         Initialize the operation instance. Update kwargs with preset attributes and call the parent class constructor.
 
@@ -71,23 +85,32 @@ class OperationTemplate(BaseOperation):
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
+        self.action = self.execute   # Default action is execute()
+
         # Update kwargs with preset attributes
         kwargs.update({
             'name': self.name,
-            'action': self.execute,
-            'persistent': self.persistent,
+            'version': self.version,
+            'description': self.description,
+            'category_id': self.category_id,
+            'author': self.author,
+            'github': self.github,
+            'email': self.email,
+            'unique_id': self.unique_id,
+            'action': self.action,
+            'required_inputs': self.required_inputs,
+            'parent_operation': self.parent_operation,
+            'inheritance': self.inheritance,
+            'is_loop': self.is_loop,
             'is_cpu_bound': self.is_cpu_bound,
-            'concurrent': self.concurrent
+            'parallel': self.parallel
         })
-        self._required_parent = self.required_parent
-        self._required_children = self.required_children
-        self._required_dependencies = self.required_dependencies
 
         # Call the parent class constructor
         super().__init__(*args, **kwargs)
 
         # Custom attributes
-        self._template_attribute = template_attribute
+        self._custom_attribute = custom_attribute
 
     async def initialize_operation(self):
         """
@@ -109,7 +132,7 @@ class OperationTemplate(BaseOperation):
         await self.pre_execute()
 
         # Example: Print the template attribute
-        print(f"Template attribute: {self._template_attribute}")
+        print(f"custom_attribute: {self._custom_attribute}")
 
         await self.post_execute()
 

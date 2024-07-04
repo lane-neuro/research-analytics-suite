@@ -13,5 +13,5 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from .ExecuteOperation import execute_operation, run_operations, execute_action, execute_child_operations
+from .ExecuteOperation import execute_operation, run_operations, execute_action, execute_inherited_operations
 from .PrepareAction import prepare_action_for_exec, action_serialized

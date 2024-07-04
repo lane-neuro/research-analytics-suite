@@ -19,7 +19,7 @@ import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import (
+from research_analytics_suite.operation_manager.operations.system.ResourceMonitorOperation import (
     ResourceMonitorOperation)
 
 
@@ -52,7 +52,7 @@ class ResourceMonitorDialog(GUIBase):
         """Initializes the resource monitor by adding the update operation."""
         self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_ResourceUpdateTask",
-                action=self._update_async, persistent=True, concurrent=True)
+                action=self._update_async, is_loop=True, parallel=True)
         self._update_operation.is_ready = True
 
     async def _update_async(self) -> None:

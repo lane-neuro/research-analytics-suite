@@ -49,7 +49,7 @@ class LibraryPane(GUIBase):
         self._logger.debug("Initializing the operation library dialog.")
         self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
             operation_type=BaseOperation, name="gui_LibraryUpdateTask", action=self._update_async,
-            persistent=True, concurrent=True)
+            is_loop=True, parallel=True)
         self._update_operation.is_ready = True
         self._logger.debug("Operation library dialog initialized.")
 

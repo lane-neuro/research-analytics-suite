@@ -32,7 +32,7 @@ class TimelineModule(GUIBase):
 
         self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_TimelineUpdateTask",
-                action=self._update_async, persistent=True, concurrent=True)
+                action=self._update_async, is_loop=True, parallel=True)
         self._update_operation.is_ready = True
 
     async def _update_async(self) -> None:

@@ -20,7 +20,7 @@ import importlib
 from research_analytics_suite.library_manifest.CategoryID import CategoryID
 from research_analytics_suite.library_manifest.utils import check_verified
 from research_analytics_suite.library_manifest.Category import Category
-
+from research_analytics_suite.operation_manager.operations.core.execution import action_serialized
 
 class LibraryManifest:
     _instance = None
@@ -56,7 +56,7 @@ class LibraryManifest:
                     from research_analytics_suite.operation_manager import BaseOperation
                     self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                         operation_type=BaseOperation, name="sys_LibraryUpdateTask",
-                        action=self._update_user_manifest, persistent=True, concurrent=True)
+                        action=self._update_user_manifest, is_loop=True, parallel=True)
                     self._update_operation.is_ready = True
                     self._initialized = True
 
@@ -64,24 +64,23 @@ class LibraryManifest:
         return self._library
 
     def add_category(self, category_id, category_name):
-        if category_id in self._categories.keys():
-            return
-        self._categories[category_id] = Category(category_id, category_name)
+        if category_id not in self._categories:
+            self._categories[category_id] = Category(category_id, category_name)
 
     def add_operation_from_attributes(self, op_attributes):
         category_id = op_attributes.category_id
-        if category_id in self._categories.keys():
-            if op_attributes.unique_id not in self._categories[category_id].operations:
-                self._library[category_id]['operations'].append(op_attributes)
+        if category_id in self._categories:
+            if op_attributes.unique_id not in [op.unique_id for op in self._categories[category_id].operations]:
+                self._library.setdefault(category_id, {'operations': []})['operations'].append(op_attributes)
                 self._categories[category_id].register_operation(op_attributes)
         else:
             category = Category(category_id, "Uncategorized Operations")
             self._categories[category_id] = category
-            self._library[category_id]['operations'].append(op_attributes)
+            self._library.setdefault(category_id, {'operations': []})['operations'].append(op_attributes)
             category.register_operation(op_attributes)
 
     def is_verified(self, category_id):
-        category = self._categories.get(category_id, None)
+        category = self._categories.get(category_id)
         if category:
             return check_verified(category.name)
         return False
@@ -165,8 +164,7 @@ class LibraryManifest:
             await self.load_user_library()
             await asyncio.sleep(0.1)
 
-    @staticmethod
-    def __load_module_attributes(module_name):
+    def __load_module_attributes(self, module_name):
         module = importlib.import_module(f'operation_library.{module_name}')
         _cls = getattr(module, module_name)
 
@@ -179,21 +177,22 @@ class LibraryManifest:
             'github': _cls.github,
             'email': _cls.email,
             'description': _cls.description,
-            'action': _cls.action,
-            'persistent': _cls.persistent,
-            'concurrent': _cls.concurrent,
+            'action': action_serialized(_cls.execute),  # Use action_serialized here
+            'is_loop': _cls.is_loop,
+            'parallel': _cls.parallel,
             'is_cpu_bound': _cls.is_cpu_bound,
-            'dependencies': _cls.dependencies,
+            'required_inputs': _cls.required_inputs,
             'parent_operation': _cls.parent_operation,
-            'inheritance': _cls.child_operations,
+            'inheritance': _cls.inheritance,
         }
 
     def _populate_verified_operations(self):
         package = importlib.import_module('operation_library')
         for _, module_name, _ in pkgutil.iter_modules(package.__path__):
             module_attributes = self.__load_module_attributes(module_name)
+            self._logger.debug(f"Loaded module attributes: {module_attributes}")  # Use logger instead of print
             category_id = module_attributes['category_id']
-            category = self._categories.get(category_id, None)
+            category = self._categories.get(category_id, Category(category_id, "Uncategorized Operations"))
             if category:
                 category.register_operation(module_attributes)
             else:

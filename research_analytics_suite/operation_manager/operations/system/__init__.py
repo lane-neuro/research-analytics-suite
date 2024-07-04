@@ -1,4 +1,4 @@
-# operation_manager/operations/persistent/__init__.py
+# operation_manager/operations/is_loop/__init__.py
 
 from .ConsoleOperation import ConsoleOperation
 from .ResourceMonitorOperation import ResourceMonitorOperation

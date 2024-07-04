@@ -14,7 +14,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.operation_manager.operations.persistent.ConsoleOperation import ConsoleOperation
+from research_analytics_suite.operation_manager.operations.system.ConsoleOperation import ConsoleOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -58,7 +58,7 @@ class TaskMonitor:
                 finally:
                     if operation:
                         self.task_creator.tasks.remove(task)
-                        if not operation.persistent:
+                        if not operation.is_loop:
                             self.sequencer.remove_operation_from_sequencer(operation)
 
                         if isinstance(operation, ConsoleOperation):

@@ -34,17 +34,16 @@ class OperationSlotPreview(GUIBase):
 
         self._operation_info = operation_dict
 
-        self._version = self._operation_info["version"]
         self._name = self._operation_info["name"]
+        self._version = self._operation_info["version"]
+        self._description = self._operation_info["description"]
         self._author = self._operation_info["author"]
         self._github = self._operation_info["github"]
-        self._description = self._operation_info["description"]
         self._action = self._operation_info["action"]
         self._output_type = None  # self._operation_info["output_type"]
-        self._dependencies = self._operation_info["dependencies"]
-        if self._dependencies is None:
-            self._dependencies = []
-
+        self._required_inputs = self._operation_info["required_inputs"]
+        if self._required_inputs is None:
+            self._required_inputs = []
         self._parent_id = f"parent_{self._runtime_id}"
 
     async def initialize_gui(self) -> None:

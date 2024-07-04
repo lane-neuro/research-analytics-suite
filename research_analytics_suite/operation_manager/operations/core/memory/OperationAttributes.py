@@ -28,40 +28,40 @@ class OperationAttributes:
         Initializes the OperationAttributes with the given parameters.
 
         Args:
-            unique_id (str): The unique identifier of the operation.
-            category_id (str): The unique identifier of the category.
-            version (str): The version of the operation.
             name (str): The name of the operation.
+            version (str): The version of the operation.
+            description (str): The description of the operation.
+            category_id (str): The unique identifier of the category.
             author (str): The author of the operation.
             github (str): The GitHub repository of the operation.
             email (str): The email of the author of the operation.
-            description (str): The description of the operation.
+            unique_id (str): The unique identifier of the operation.
             action (str): The action of the operation.
-            persistent (bool): The persistent status of the operation.
-            concurrent (bool): The concurrent status of the operation.
-            is_cpu_bound (bool): The CPU bound status of the operation.
-            dependencies (list): The dependencies of the operation.
+            required_inputs (dict): The required inputs of the operation.
             parent_operation (OperationAttributes): The parent operation of the operation.
-            child_operations (list): The child operations of the operation.
+            inheritance (list): The child operations of the operation.
+            is_loop (bool): The is_loop status of the operation.
+            is_cpu_bound (bool): The CPU bound status of the operation.
+            parallel (bool): The parallel status of the operation.
         """
         if not hasattr(self, '_initialized'):
             self._temp_kwargs = kwargs
 
-            self._unique_id = None
-            self._category_id = None
-            self._version = None
             self._name = None
+            self._version = None
+            self._description = None
+            self._category_id = None
             self._author = None
             self._github = None
             self._email = None
-            self._description = None
+            self._unique_id = None
             self._action = None
-            self._persistent = None
-            self._concurrent = None
-            self._is_cpu_bound = None
-            self._dependencies = None
+            self._required_inputs = None
             self._parent_operation = None
-            self._child_operations = None
+            self._inheritance = None
+            self._is_loop = None
+            self._is_cpu_bound = None
+            self._parallel = None
 
             self._initialized = False
 
@@ -75,21 +75,21 @@ class OperationAttributes:
             async with OperationAttributes._lock:
                 if not self._initialized:
 
-                    self._unique_id = self._temp_kwargs.get('unique_id', None)
-                    self._category_id = self._temp_kwargs.get('category_id', None)
-                    self._version = self._temp_kwargs.get('version', None)
-                    self._name = self._temp_kwargs.get('name', None)
-                    self._author = self._temp_kwargs.get('author', None)
-                    self._github = self._temp_kwargs.get('github', None)
-                    self._email = self._temp_kwargs.get('email', None)
-                    self._description = self._temp_kwargs.get('description', None)
-                    self._action = self._temp_kwargs.get('action', None)
-                    self._persistent = self._temp_kwargs.get('persistent', None)
-                    self._concurrent = self._temp_kwargs.get('concurrent', None)
-                    self._is_cpu_bound = self._temp_kwargs.get('is_cpu_bound', None)
-                    self._dependencies = self._temp_kwargs.get('dependencies', None)
-                    self._parent_operation = self._temp_kwargs.get('parent_operation', None)
-                    self._child_operations = self._temp_kwargs.get('inheritance', None)
+                    self._name = self._temp_kwargs.get('name')
+                    self._version = self._temp_kwargs.get('version')
+                    self._description = self._temp_kwargs.get('description')
+                    self._category_id = self._temp_kwargs.get('category_id')
+                    self._author = self._temp_kwargs.get('author')
+                    self._github = self._temp_kwargs.get('github')
+                    self._email = self._temp_kwargs.get('email')
+                    self._unique_id = self._temp_kwargs.get('unique_id')
+                    self._action = self._temp_kwargs.get('action')
+                    self._required_inputs = self._temp_kwargs.get('required_inputs')
+                    self._parent_operation = self._temp_kwargs.get('parent_operation')
+                    self._inheritance = self._temp_kwargs.get('inheritance')
+                    self._is_loop = self._temp_kwargs.get('is_loop')
+                    self._is_cpu_bound = self._temp_kwargs.get('is_cpu_bound')
+                    self._parallel = self._temp_kwargs.get('parallel')
 
                     self._initialized = True
 
@@ -108,56 +108,56 @@ class OperationAttributes:
             if attributes is None:
                 return
 
-            self._unique_id = attributes.get('unique_id', None)
-            self._category_id = attributes.get('category_id', None)
-            self._version = attributes.get('version', None)
-            self._name = attributes.get('name', None)
-            self._author = attributes.get('author', None)
-            self._github = attributes.get('github', None)
-            self._email = attributes.get('email', None)
-            self._description = attributes.get('description', None)
-            self._action = attributes.get('action', None)
-            self._persistent = attributes.get('persistent', None)
-            self._concurrent = attributes.get('concurrent', None)
-            self._is_cpu_bound = attributes.get('is_cpu_bound', None)
-            self._dependencies = attributes.get('dependencies', None)
-            self._parent_operation = attributes.get('parent_operation', None)
-            self._child_operations = attributes.get('inheritance', None)
+            self._name = attributes.get('name')
+            self._version = attributes.get('version')
+            self._description = attributes.get('description')
+            self._category_id = attributes.get('category_id')
+            self._author = attributes.get('author')
+            self._github = attributes.get('github')
+            self._email = attributes.get('email')
+            self._unique_id = attributes.get('unique_id')
+            self._action = attributes.get('action')
+            self._required_inputs = attributes.get('required_inputs')
+            self._parent_operation = attributes.get('parent_operation')
+            self._inheritance = attributes.get('inheritance')
+            self._is_loop = attributes.get('is_loop')
+            self._is_cpu_bound = attributes.get('is_cpu_bound')
+            self._parallel = attributes.get('parallel')
 
     def export_attributes(self) -> dict:
         return {
-            'unique_id': self._unique_id,
-            'category_id': self._category_id,
-            'version': self._version,
             'name': self._name,
+            'version': self._version,
+            'description': self._description,
+            'category_id': self._category_id,
             'author': self._author,
             'github': self._github,
             'email': self._email,
-            'description': self._description,
+            'unique_id': self._unique_id,
             'action': self._action,
-            'persistent': self._persistent,
-            'concurrent': self._concurrent,
-            'is_cpu_bound': self._is_cpu_bound,
-            'dependencies': self._dependencies,
+            'required_inputs': self._required_inputs,
             'parent_operation': self._parent_operation,
-            'inheritance': self._child_operations,
+            'inheritance': self._inheritance,
+            'is_loop': self._is_loop,
+            'is_cpu_bound': self._is_cpu_bound,
+            'parallel': self._parallel,
         }
 
     @property
-    def unique_id(self):
-        return self._unique_id
-
-    @property
-    def category_id(self):
-        return self._category_id
+    def name(self):
+        return self._name
 
     @property
     def version(self):
         return self._version
 
     @property
-    def name(self):
-        return self._name
+    def description(self):
+        return self._description
+
+    @property
+    def category_id(self):
+        return self._category_id
 
     @property
     def author(self):
@@ -172,33 +172,33 @@ class OperationAttributes:
         return self._email
 
     @property
-    def description(self):
-        return self._description
+    def unique_id(self):
+        return self._unique_id
 
     @property
     def action(self):
         return self._action
 
     @property
-    def persistent(self):
-        return self._persistent
-
-    @property
-    def concurrent(self):
-        return self._concurrent
-
-    @property
-    def is_cpu_bound(self):
-        return self._is_cpu_bound
-
-    @property
-    def dependencies(self):
-        return self._dependencies
+    def required_inputs(self):
+        return self._required_inputs
 
     @property
     def parent_operation(self):
         return self._parent_operation
 
     @property
-    def child_operations(self):
-        return self._child_operations
+    def inheritance(self):
+        return self._inheritance
+
+    @property
+    def is_loop(self):
+        return self._is_loop
+
+    @property
+    def is_cpu_bound(self):
+        return self._is_cpu_bound
+
+    @property
+    def parallel(self):
+        return self._parallel

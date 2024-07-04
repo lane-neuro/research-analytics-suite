@@ -23,7 +23,7 @@ async def stop_operation(operation, child_operations=False):
         try:
             operation.is_ready = False
 
-            if child_operations and operation.child_operations is not None:
+            if child_operations and operation.inheritance is not None:
                 await _stop_child_operations(operation)
             operation.task.cancel()
             operation.status = "stopped"
@@ -39,5 +39,5 @@ async def _stop_child_operations(operation):
     """
     Stop all child operations.
     """
-    tasks = [op.stop() for op in operation.child_operations.values()]
+    tasks = [op.stop() for op in operation.inheritance.values()]
     await asyncio.gather(*tasks)

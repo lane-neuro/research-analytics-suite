@@ -17,15 +17,15 @@ Status:         Example
 """
 import statistics
 from typing import Any, List
-
 from research_analytics_suite.operation_manager import BaseOperation
+from research_analytics_suite.operation_manager.operations.core.execution import action_serialized
 
 
 class ExampleOperation(BaseOperation):
     """
     ExampleOperation class extends the BaseOperation class to provide a concrete implementation of an operation.
     This operation calculates the mean and standard deviation of a list of numbers provided as input.
-    
+
     Example Usage (in a script):
     ```python
         # Create an instance of the operation with a list of numbers
@@ -61,21 +61,21 @@ class ExampleOperation(BaseOperation):
         execute: Execute the operation's logic.
     """
 
-    category_id: int = 101
-    version: str = "0.0.1"
     name: str = "ExampleOperation"
+    version: str = "0.0.1"
+    description: str = ("A basic implementation of an operation that calculates the mean and standard deviation "
+                        "of a list of numbers.")
+    category_id: int = 101
     author: str = "Lane"
     github: str = "lane-neuro"
     email: str = "justlane@uw.edu"
-    description: str = ("A basic implementation of an operation that calculates the mean and standard deviation "
-                        "of a list of numbers.")
-    persistent: bool = False
-    is_cpu_bound: bool = False
-    concurrent: bool = False
-    dependencies: list = []
-    parent_operation: BaseOperation = None
-    child_operations: list = []
     unique_id: str = f"{github}_{name}_{version}"
+    required_inputs: dict = {}
+    parent_operation: 'BaseOperation' = None
+    inheritance: list = []
+    is_loop: bool = False
+    is_cpu_bound: bool = False
+    parallel: bool = False
 
     def __init__(self, numbers: List[float], *args: Any, **kwargs: Any):
         """
@@ -88,21 +88,20 @@ class ExampleOperation(BaseOperation):
         """
         # Update kwargs with attributes
         kwargs.update({
-            'unique_id': self.unique_id,
-            'category_id': self.category_id,
-            'version': self.version,
             'name': self.name,
+            'version': self.version,
+            'description': self.description,
+            'category_id': self.category_id,
             'author': self.author,
             'github': self.github,
             'email': self.email,
-            'description': self.description,
-            'action': self.execute,
-            'persistent': self.persistent,
-            'is_cpu_bound': self.is_cpu_bound,
-            'concurrent': self.concurrent,
-            'dependencies': self.dependencies,
+            'unique_id': self.unique_id,
+            'required_inputs': self.required_inputs,
             'parent_operation': self.parent_operation,
-            'inheritance': self.child_operations,
+            'inheritance': self.inheritance,
+            'is_loop': self.is_loop,
+            'is_cpu_bound': self.is_cpu_bound,
+            'parallel': self.parallel,
         })
 
         # Don't forget to initialize any custom attributes/input parameters
@@ -110,6 +109,9 @@ class ExampleOperation(BaseOperation):
 
         # Call the parent class constructor
         super().__init__(*args, **kwargs)
+
+        # Serialize the action for execution
+        self.action = action_serialized(self.execute)
 
     async def initialize_operation(self):
         """
@@ -154,7 +156,7 @@ class ExampleOperation(BaseOperation):
             self.validate()
             self._progress = 100
             self._status = "completed"
-            self.add_log_entry("OperationTemplate completed.")
+            self.add_log_entry("ExampleOperation completed.")
         except Exception as e:
             self.handle_error(e)
 

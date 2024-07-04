@@ -16,15 +16,13 @@ import asyncio
 import os
 
 
-async def add_child_operation(operation, child_operation, dependencies: dict = None):
+async def add_child_operation(operation, child_operation):
     """
     Add a child operation to the current operation.
 
     Args:
         operation: The parent operation.
         child_operation: The child operation to be added.
-        dependencies (dict, optional): List of operation names that the child operation depends on.
-                                        Defaults to None.
     """
     from research_analytics_suite.operation_manager.operations.core import BaseOperation
 
@@ -38,48 +36,37 @@ async def add_child_operation(operation, child_operation, dependencies: dict = N
         operation.handle_error("operation must be an instance of BaseOperation")
         return
 
-    if dependencies is not None:
-        operation.dependencies[child_operation.unique_id] = dependencies.get(child_operation.unique_id)
-
     if not isinstance(child_operation.parent_operation, BaseOperation):
         child_operation.parent_operation = operation
 
-    if operation.child_operations is None:
-        operation._child_operations = dict()
-    if child_operation.runtime_id not in operation.child_operations.keys():
-        operation.child_operations[child_operation.runtime_id] = child_operation
+    if operation.inheritance is None:
+        operation._inheritance = dict()
+    if child_operation.runtime_id not in operation.inheritance.keys():
+        operation.inheritance[child_operation.runtime_id] = child_operation
 
     operation.add_log_entry(f"[CHILD] (added) {child_operation.name}")
 
 
-async def link_child_operation(operation, child_operation, dependencies: dict = None):
+async def link_child_operation(operation, child_operation):
     """
     Link a child operation to the current operation.
 
     Args:
         operation: The parent operation.
         child_operation: The child operation to be linked.
-        dependencies (dict, optional): The dependencies of the child operation. Defaults to None.
     """
     from research_analytics_suite.operation_manager.operations.core import BaseOperation
     if not isinstance(child_operation, BaseOperation):
         operation.handle_error("operation must be an instance of BaseOperation")
         return False
 
-    if not isinstance(dependencies, dict):
-        dependencies = dict()
-
-    if child_operation.runtime_id not in operation.child_operations.keys():
-        if operation.child_operations is None:
-            operation.child_operations = dict()
-        operation.child_operations[child_operation.runtime_id] = child_operation
+    if child_operation.runtime_id not in operation.inheritance.keys():
+        if operation.inheritance is None:
+            operation.inheritance = dict()
+        operation.inheritance[child_operation.runtime_id] = child_operation
     else:
         operation.add_log_entry(f"[CHILD] (runtime_id already exists) {child_operation.name} - doing nothing")
         return True
-
-    if operation.dependencies is not None:
-        if child_operation.unique_id not in operation.dependencies and dependencies.get(child_operation.unique_id):
-            operation.dependencies[child_operation.unique_id] = dependencies.get(child_operation.unique_id)
 
     child_operation.parent_operation = operation
     operation.add_log_entry(f"[CHILD] (linked) {child_operation.name}")
@@ -101,9 +88,7 @@ async def remove_child_operation(operation, child_operation):
         return
 
     child_operation.parent_operation = None
-    del operation.child_operations[child_operation.runtime_id]
-    if child_operation.unique_id in operation.dependencies.keys():
-        del operation.dependencies[child_operation.unique_id]
+    del operation.inheritance[child_operation.runtime_id]
     operation.add_log_entry(f"[CHILD] (removed) {child_operation.name}")
 
 
@@ -114,8 +99,8 @@ async def start_child_operations(operation):
     Args:
         operation: The parent operation.
     """
-    tasks = [op.start() for op in operation.child_operations.values()]
-    if operation.concurrent:
+    tasks = [op.start() for op in operation.inheritance.values()]
+    if operation.parallel:
         await asyncio.gather(*tasks)
     else:
         for task in tasks:
@@ -129,7 +114,7 @@ async def pause_child_operations(operation):
     Args:
         operation: The parent operation.
     """
-    tasks = [op.pause(True) for op in operation.child_operations.values()]
+    tasks = [op.pause(True) for op in operation.inheritance.values()]
     await asyncio.gather(*tasks)
 
 
@@ -140,7 +125,7 @@ async def resume_child_operations(operation):
     Args:
         operation: The parent operation.
     """
-    tasks = [op.resume() for op in operation.child_operations.values()]
+    tasks = [op.resume() for op in operation.inheritance.values()]
     await asyncio.gather(*tasks)
 
 
@@ -151,7 +136,7 @@ async def stop_child_operations(operation):
     Args:
         operation: The parent operation.
     """
-    tasks = [op.stop() for op in operation.child_operations.values()]
+    tasks = [op.stop() for op in operation.inheritance.values()]
     await asyncio.gather(*tasks)
 
 
@@ -162,5 +147,5 @@ async def reset_child_operations(operation):
     Args:
         operation: The parent operation.
     """
-    tasks = [op.reset() for op in operation.child_operations.values()]
+    tasks = [op.reset() for op in operation.inheritance.values()]
     await asyncio.gather(*tasks)

@@ -94,9 +94,9 @@ async def load_operation_group(file_path: str, operation_group: dict, iterate_ch
                         operation.parent_operation = op
                         break
 
-        if operation.child_operations and iterate_child_operations:
-            if isinstance(operation.child_operations, list):
-                children = operation.child_operations
+        if operation.inheritance and iterate_child_operations:
+            if isinstance(operation.inheritance, list):
+                children = operation.inheritance
                 for child in children:
                     if isinstance(child, dict):
                         child_id = child['unique_id']
@@ -133,8 +133,8 @@ def construct_file_path(base_dir, operation_ref):
     Returns:
         str: The constructed file path.
     """
-    name = operation_ref['name']
     github = operation_ref['github']
+    name = operation_ref['name']
     version = operation_ref['version']
     file_name = f"{github}_{name}_{version}.json"
     return os.path.join(base_dir, file_name)
@@ -189,19 +189,21 @@ async def populate_operation_args(data, file_dir, parent_operation=None, with_in
                     operation_data = await f.read()
                     op_file_data = json.loads(operation_data)
 
-                    data_metadata['unique_id'] = op_file_data.get('unique_id')
                     data_metadata['name'] = op_file_data.get('name')
                     data_metadata['version'] = op_file_data.get('version')
+                    data_metadata['description'] = op_file_data.get('description')
+                    data_metadata['category_id'] = op_file_data.get('category_id')
                     data_metadata['author'] = op_file_data.get('author')
                     data_metadata['github'] = op_file_data.get('github')
                     data_metadata['email'] = op_file_data.get('email')
-                    data_metadata['description'] = op_file_data.get('description')
+                    data_metadata['unique_id'] = op_file_data.get('unique_id')
                     data_metadata['action'] = op_file_data.get('action')
-                    data_metadata['persistent'] = op_file_data.get('persistent')
-                    data_metadata['is_cpu_bound'] = op_file_data.get('is_cpu_bound')
-                    data_metadata['concurrent'] = op_file_data.get('concurrent')
-                    data_metadata['dependencies'] = op_file_data.get('dependencies')
+                    data_metadata['required_inputs'] = op_file_data.get('required_inputs')
+                    data_metadata['parent_operation'] = op_file_data.get('parent_operation')
                     data_metadata['inheritance'] = op_file_data.get('inheritance')
+                    data_metadata['is_loop'] = op_file_data.get('is_loop')
+                    data_metadata['is_cpu_bound'] = op_file_data.get('is_cpu_bound')
+                    data_metadata['parallel'] = op_file_data.get('parallel')
 
             except Exception as e:
                 raise e

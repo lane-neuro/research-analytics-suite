@@ -15,9 +15,9 @@ class CreateOperationModule(GUIBase):
 
         self._new_op_name = f"new_op_name_{self._operation_id}"
         self._new_op_action = f"new_op_action_{self._operation_id}"
-        self._new_op_persistent = f"new_op_persistent_{self._operation_id}"
+        self._new_op_is_loop = f"new_op_is_loop_{self._operation_id}"
         self._new_op_cpu_bound = f"new_op_cpu_bound_{self._operation_id}"
-        self._new_op_concurrent = f"new_op_concurrent_{self._operation_id}"
+        self._new_op_parallel = f"new_op_parallel_{self._operation_id}"
 
     async def initialize_gui(self) -> None:
         pass
@@ -34,9 +34,9 @@ class CreateOperationModule(GUIBase):
                         width=self.width, height=self.height):
             dpg.add_input_text(label="Operation Name", tag=self._new_op_name)
             dpg.add_input_text(label="Action", tag=self._new_op_action, multiline=True)
-            dpg.add_checkbox(label="Persistent", tag=self._new_op_persistent)
+            dpg.add_checkbox(label="Is Loop", tag=self._new_op_is_loop)
             dpg.add_checkbox(label="CPU Bound", tag=self._new_op_cpu_bound)
-            dpg.add_checkbox(label="Concurrent", tag=self._new_op_concurrent)
+            dpg.add_checkbox(label="Parallel", tag=self._new_op_parallel)
             dpg.add_button(label="Create", callback=self.create_operation_from_dialog)
             dpg.add_button(label="Cancel", callback=lambda: dpg.hide_item(f"new_{self._operation_id}"))
 
@@ -50,13 +50,13 @@ class CreateOperationModule(GUIBase):
         try:
             name = dpg.get_value(self._new_op_name)
             action = dpg.get_value(self._new_op_action)
-            persistent = dpg.get_value(self._new_op_persistent)
+            is_loop = dpg.get_value(self._new_op_is_loop)
             is_cpu_bound = dpg.get_value(self._new_op_cpu_bound)
-            concurrent = dpg.get_value(self._new_op_concurrent)
+            parallel = dpg.get_value(self._new_op_parallel)
 
             await self._operation_control.operation_manager.add_operation_with_parameters(
-                operation_type=BaseOperation, name=name, action=action, persistent=persistent,
-                is_cpu_bound=is_cpu_bound, concurrent=concurrent, parent_operation=self._parent_operation
+                operation_type=BaseOperation, name=name, action=action, is_loop=is_loop,
+                is_cpu_bound=is_cpu_bound, parallel=parallel, parent_operation=self._parent_operation
             )
             dpg.hide_item(f"new_{self._operation_id}")
             dpg.delete_item(f"new_{self._operation_id}")

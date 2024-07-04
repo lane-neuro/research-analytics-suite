@@ -18,10 +18,8 @@ import uuid
 from abc import ABC
 from typing import Tuple, final
 
-from research_analytics_suite.utils.Config import Config
-from research_analytics_suite.utils.CustomLogger import CustomLogger
 from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
-from .execution import execute_operation, execute_child_operations, action_serialized
+from .execution import execute_operation, execute_inherited_operations, action_serialized
 from .progress import update_progress
 from .inheritance import (add_child_operation, link_child_operation, remove_child_operation,
                           start_child_operations, pause_child_operations, resume_child_operations,
@@ -56,28 +54,28 @@ class BaseOperation(ABC):
 
     Brief Attribute Overview:
             (refer to property methods and docstrings for more details)
-        unique_id (str): The unique ID of the operation.
-        version (str): The version of the operation.
-        category_id (str): The category ID of the operation.
         name (str): The name of the operation.
+        version (str): The version of the operation.
+        description (str): The description of the operation.
+        category_id (int): The category ID of the operation.
         author (str): The author of the operation.
         github (str): The GitHub username of the operation author.
         email (str): The email of the operation author.
-        description (str): The description of the operation.
+        unique_id (str): The unique ID of the operation.
         action (callable): The action to be executed by the operation.
-        persistent (bool): Whether the operation should run indefinitely.
-        is_cpu_bound (bool): Whether the operation is CPU-bound.
-        concurrent (bool): Whether child operations should run concurrently.
-        status (str): The status of the operation.
         task (asyncio.Task): The task associated with the operation.
-        progress (int): The progress of the operation.
-        is_ready (bool): Whether the operation is ready to be executed.
-        dependencies (dict[str, BaseOperation]): The dependencies of the operation.
-        parent_operation (BaseOperation): The parent operation.
-        inheritance (dict[str, BaseOperation]): The child operations.
-        operation_logs (List[str]): The logs of the operation.
+        required_inputs (dict): The input requirements of the operation (e.g., memory slots required).
         memory_inputs (MemoryInput): Memory input slots associated with the operation.
         memory_outputs (MemoryOutput): Memory output slots associated with the operation.
+        parent_operation (BaseOperation): The parent operation.
+        inheritance (dict[str, BaseOperation]): The child operations.
+        is_loop (bool): Whether the operation should run as a loop.
+        is_cpu_bound (bool): Whether the operation is CPU-bound.
+        parallel (bool): Whether child operations should run in parallel or sequentially.
+        is_ready (bool): Whether the operation is ready to be executed.
+        status (str): The status of the operation.
+        progress (int): The progress of the operation.
+        operation_logs (List[str]): The logs of the operation.
     """
     _lock = asyncio.Lock()
     _GENERATED_ID = None
@@ -104,36 +102,36 @@ class BaseOperation(ABC):
             self._pause_event = None
             self._gui_module = None
 
-            self._unique_id = None
-            self._category_id = None
-            self._version = 0
             self._name = None
+            self._version = None
+            self._description = None
+            self._category_id = None
             self._author = None
             self._github = None
             self._email = None
-            self._description = None
+
+            self._unique_id = None
             self._action = None
-            self._action_callable = None
-            self._persistent = None
-            self._is_cpu_bound = None
-            self._concurrent = None
-
-            self._status = None
             self._task = None
-            self._progress = None
-            self._is_ready = None
 
-            self._dependencies: dict[BaseOperation.unique_id, 'BaseOperation'] = (
-                dict[BaseOperation.unique_id, 'BaseOperation']()
-            )
-            self._parent_operation = None
-            self._child_operations: dict[BaseOperation.runtime_id, 'BaseOperation'] = (
-                dict[BaseOperation.runtime_id, 'BaseOperation']()
-            )
-            self.operation_logs = []
+            self._action_callable = None
 
+            self._required_inputs: dict[str, type] = {}
             self.memory_inputs = None
             self.memory_outputs = None
+
+            self._parent_operation = None
+            self._inheritance: dict[BaseOperation.runtime_id, 'BaseOperation'] = {}
+
+            self._is_loop = None
+            self._is_cpu_bound = None
+            self._parallel = None
+
+            self._is_ready = None
+            self._status = None
+            self._progress = None
+
+            self.operation_logs = []
 
             self._initialized = False
 
@@ -156,7 +154,10 @@ class BaseOperation(ABC):
                     from research_analytics_suite.data_engine.Workspace import Workspace
                     self._workspace = Workspace()
 
+                    from research_analytics_suite.utils.CustomLogger import CustomLogger
                     self._logger = CustomLogger()
+
+                    from research_analytics_suite.utils.Config import Config
                     self._config = Config()
 
                     from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
@@ -164,44 +165,37 @@ class BaseOperation(ABC):
 
                     self._pause_event = asyncio.Event()
                     self._pause_event.set()
-
                     self._gui_module = None
 
-                    self._version = self.temp_kwargs.get('version', "0.0.1")
                     self._name = self.temp_kwargs.get('name', "[missing name]")
-                    self._category_id = self.temp_kwargs.get('category_id', "[missing category]")
+                    self._version = self.temp_kwargs.get('version', "0.0.1")
+                    self._description = self.temp_kwargs.get('description', "[missing description]")
+                    self._category_id = self.temp_kwargs.get('category_id', 0)
                     self._author = self.temp_kwargs.get('author', "[missing author]")
                     self._github = self.temp_kwargs.get('github', "[missing github]")
                     self._email = self.temp_kwargs.get('email', "[missing email]")
-                    self._description = self.temp_kwargs.get('description', "[missing description]")
-                    self._action = self.temp_kwargs.get('action')
-                    self._action_callable = None
-                    self._persistent = self.temp_kwargs.get('persistent', False)
-                    self._is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', False)
-                    self._concurrent = self.temp_kwargs.get('concurrent', False)
-
-                    self.memory_inputs = MemoryInput(name=f"{self.name}_input")
-                    self.memory_outputs = MemoryOutput(name=f"{self.name}_output")
-
-                    self._status = "idle"
-                    self._task = None
-                    self._progress = 0
-                    self._is_ready = False
 
                     self._unique_id = self.temp_kwargs.get('unique_id', None)
                     if self._unique_id is None:
                         self._unique_id = f"{self._github}_{self._name}_{self._version}"
+                    self._action = self.temp_kwargs.get('action')
+                    self._task = None
 
-                    self._dependencies: dict[BaseOperation.unique_id, 'BaseOperation'] = self.temp_kwargs.get(
-                        'dependencies', dict[BaseOperation.unique_id, 'BaseOperation']())
+                    self._action_callable = None
 
-                    _file_dir = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
-                                             self._config.WORKSPACE_OPERATIONS_DIR)
+                    self._required_inputs: dict[str, type] = self.temp_kwargs.get(
+                        'required_inputs', dict[str, type]())
+                    self.memory_inputs = MemoryInput(name=f"{self.name}_input")
+                    self.memory_outputs = MemoryOutput(name=f"{self.name}_output")
 
-                    self._parent_operation = self.temp_kwargs.get('parent_operation')
+                    self._parent_operation = self.temp_kwargs.get('parent_operation', None)
 
-                    if self._child_operations is not None:
-                        for u_id, child in enumerate(self._child_operations):
+                    _file_dir = os.path.normpath(os.path.join(
+                        self._config.BASE_DIR, 'workspaces', self._config.WORKSPACE_NAME,
+                        self._config.WORKSPACE_OPERATIONS_DIR))
+
+                    if self._inheritance is not None:
+                        for u_id, child in enumerate(self._inheritance):
 
                             # Convert dictionary to BaseOperation instance
                             if isinstance(child, dict):
@@ -210,8 +204,16 @@ class BaseOperation(ABC):
                                                                   parent_operation=self))
 
                             # Set the parent operation of the child operation
-                            if self._child_operations[u_id].parent_operation is None:
-                                self._child_operations[u_id].parent_operation = self
+                            if self._inheritance[u_id].parent_operation is None:
+                                self._inheritance[u_id].parent_operation = self
+
+                    self._is_loop = self.temp_kwargs.get('is_loop', False)
+                    self._is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', False)
+                    self._parallel = self.temp_kwargs.get('parallel', False)
+
+                    self._is_ready = False
+                    self._status = "idle"
+                    self._progress = 0
 
                     self.operation_logs = self.temp_kwargs.get('operation_logs', [])
 
@@ -290,27 +292,24 @@ class BaseOperation(ABC):
         await update_progress(self)
 
     @final
-    async def add_child_operation(self, operation, dependencies: dict = None):
+    async def add_child_operation(self, operation):
         """
         Add a child operation to the current operation.
 
         Args:
             operation: The child operation to be added.
-            dependencies (dict, optional): List of operation names that the child operation depends on.
-                                            Defaults to None.
         """
-        await add_child_operation(self, operation, dependencies)
+        await add_child_operation(self, operation)
 
     @final
-    async def link_child_operation(self, child_operation, dependencies: dict = None):
+    async def link_child_operation(self, child_operation):
         """
         Link a child operation to the current operation.
 
         Args:
             child_operation: The child operation to be linked.
-            dependencies (dict, optional): The dependencies of the child operation. Defaults to None.
         """
-        await link_child_operation(self, child_operation, dependencies)
+        await link_child_operation(self, child_operation)
 
     @final
     async def remove_child_operation(self, operation):
@@ -356,7 +355,7 @@ class BaseOperation(ABC):
         """
         Execute all child operations.
         """
-        await execute_child_operations(self)
+        await execute_inherited_operations(self)
 
     @final
     async def add_memory_input_slot(self, memory_slot):
@@ -513,7 +512,19 @@ class BaseOperation(ABC):
         return f"{self._GENERATED_ID}"
 
     @property
-    def version(self):
+    def name(self) -> str:
+        """Gets the name of the operation."""
+        return self._name
+
+    @name.setter
+    def name(self, value: str):
+        """Sets the name of the operation."""
+        if not isinstance(value, str):
+            self.handle_error("\'name\' property must be a string")
+        self._name = value
+
+    @property
+    def version(self) -> str:
         """Gets the version of the operation."""
         return self._version
 
@@ -525,21 +536,21 @@ class BaseOperation(ABC):
         self._version = value
 
     @property
-    def category_id(self):
-        """Gets the category ID of the operation."""
-        return self._category_id
+    def description(self) -> str:
+        """Gets the description of the operation."""
+        return self._description
+
+    @description.setter
+    def description(self, value: str):
+        """Sets the description of the operation."""
+        if not isinstance(value, str):
+            self.handle_error("\'description\' property must be a string")
+        self._description = value
 
     @property
-    def name(self) -> str:
-        """Gets the name of the operation."""
-        return self._name
-
-    @name.setter
-    def name(self, value: str):
-        """Sets the name of the operation."""
-        if not isinstance(value, str):
-            self.handle_error("\'name\' property must be a string")
-        self._name = value
+    def category_id(self) -> int:
+        """Gets the category ID of the operation."""
+        return self._category_id
 
     @property
     def author(self) -> str:
@@ -588,26 +599,9 @@ class BaseOperation(ABC):
             self._email = value
 
     @property
-    def description(self) -> str:
-        """Gets the description of the operation."""
-        return self._description
-
-    @description.setter
-    def description(self, value: str):
-        """Sets the description of the operation."""
-        if not isinstance(value, str):
-            self.handle_error("\'description\' property must be a string")
-        self._description = value
-
-    @property
     def action(self):
         """Gets the action to be executed by the operation."""
         return self._action
-
-    @property
-    def action_serialized(self) -> str:
-        """Gets the serializable action to be executed by the operation."""
-        return action_serialized(self)
 
     @action.setter
     def action(self, value):
@@ -626,44 +620,6 @@ class BaseOperation(ABC):
         self._action_callable = value
 
     @property
-    def persistent(self) -> bool:
-        """Gets whether the operation should run indefinitely."""
-        return self._persistent
-
-    @persistent.setter
-    def persistent(self, value: bool):
-        """Sets whether the operation should run indefinitely."""
-        if not isinstance(value, bool):
-            self.handle_error("\'persistent\' property must be a boolean")
-        self._persistent = value
-
-    @property
-    def is_cpu_bound(self) -> bool:
-        """Gets whether the operation is CPU-bound."""
-        return self._is_cpu_bound
-
-    @is_cpu_bound.setter
-    def is_cpu_bound(self, value: bool):
-        """Sets whether the operation is CPU-bound."""
-        if not isinstance(value, bool):
-            self.handle_error("\'is_cpu_bound\' property must be a boolean")
-        self._is_cpu_bound = value
-
-    @property
-    def status(self) -> str:
-        """Gets the status of the operation."""
-        return self._status
-
-    @status.setter
-    def status(self, value: str):
-        """Sets the status of the operation."""
-        valid_statuses = ["idle", "started", "waiting", "running", "paused", "stopped", "completed", "error"]
-        if value not in valid_statuses:
-            self.handle_error(f"Invalid status: {value}")
-            return
-        self._status = value
-
-    @property
     def task(self):
         """Gets the task associated with the operation."""
         return self._task
@@ -677,26 +633,18 @@ class BaseOperation(ABC):
         self._task = value
 
     @property
-    def progress(self) -> Tuple[int, str]:
-        """Gets the progress of the operation."""
-        return self._progress, self._status
+    def required_inputs(self) -> dict[str, type]:
+        """Gets the input requirements of the operation."""
+        return self._required_inputs
 
-    @progress.setter
-    def progress(self, value: int):
-        """Sets the progress of the operation."""
-        if not isinstance(value, int):
-            self.handle_error("\'progress\' property must be an integer")
-        self._progress = value
+    @required_inputs.setter
+    def required_inputs(self, value: tuple[str, type]):
+        """Adds an input requirement to the operation."""
+        if not isinstance(value, tuple):
+            self.handle_error("\'required_inputs\' property must be a tuple[str, type]")
+            return
 
-    @property
-    def child_operations(self) -> dict[runtime_id, 'BaseOperation']:
-        """Gets the list of child operations."""
-        return self._child_operations
-
-    @property
-    def dependencies(self) -> dict[unique_id, 'BaseOperation']:
-        """Gets the dependencies of the operation."""
-        return self._dependencies
+        self._required_inputs[value[0]] = value[1]
 
     @property
     def parent_operation(self) -> 'BaseOperation':
@@ -711,26 +659,45 @@ class BaseOperation(ABC):
         self._parent_operation = value
 
     @property
-    def concurrent(self) -> bool:
-        """Gets whether child operations should run concurrently."""
-        return self._concurrent
-
-    @concurrent.setter
-    def concurrent(self, value: bool):
-        """Sets whether child operations should run concurrently."""
-        if not isinstance(value, bool):
-            self.handle_error("\'concurrent\' property must be a boolean")
-        self._concurrent = value
+    def inheritance(self) -> dict[runtime_id, 'BaseOperation']:
+        """Gets the list of child operations."""
+        return self._inheritance
 
     @property
-    def gui_module(self):
-        """Gets the GUI module attached to the operation."""
-        return self._gui_module
+    def is_loop(self) -> bool:
+        """Gets whether the operation should run in a loop."""
+        return self._is_loop
 
-    @gui_module.setter
-    def gui_module(self, value):
-        """Sets the GUI module attached to the operation."""
-        self._gui_module = value
+    @is_loop.setter
+    def is_loop(self, value: bool):
+        """Sets whether the operation should run in a loop."""
+        if not isinstance(value, bool):
+            self.handle_error("\'is_loop\' property must be a boolean")
+        self._is_loop = value
+
+    @property
+    def is_cpu_bound(self) -> bool:
+        """Gets whether the operation is CPU-bound."""
+        return self._is_cpu_bound
+
+    @is_cpu_bound.setter
+    def is_cpu_bound(self, value: bool):
+        """Sets whether the operation is CPU-bound."""
+        if not isinstance(value, bool):
+            self.handle_error("\'is_cpu_bound\' property must be a boolean")
+        self._is_cpu_bound = value
+
+    @property
+    def parallel(self) -> bool:
+        """Gets whether inherited operations should run in parallel or sequentially."""
+        return self._parallel
+
+    @parallel.setter
+    def parallel(self, value: bool):
+        """Sets whether inherited operations should run in parallel or sequentially."""
+        if not isinstance(value, bool):
+            self.handle_error("\'parallel\' property must be a boolean")
+        self._parallel = value
 
     @property
     def is_ready(self) -> bool:
@@ -748,12 +715,48 @@ class BaseOperation(ABC):
             self._is_ready = False
             return
 
-        for child in self._child_operations.values():
-            if not child.is_complete and not child.concurrent:
+        for child in self._inheritance.values():
+            if not child.is_complete and not child.parallel:
                 self._is_ready = False
                 return
 
         self._is_ready = True
+
+    @property
+    def status(self) -> str:
+        """Gets the status of the operation."""
+        return self._status
+
+    @status.setter
+    def status(self, value: str):
+        """Sets the status of the operation."""
+        valid_statuses = ["idle", "started", "waiting", "running", "paused", "stopped", "completed", "error"]
+        if value not in valid_statuses:
+            self.handle_error(f"Invalid status: {value}")
+            return
+        self._status = value
+
+    @property
+    def progress(self) -> Tuple[int, str]:
+        """Gets the progress of the operation."""
+        return self._progress, self._status
+
+    @progress.setter
+    def progress(self, value: int):
+        """Sets the progress of the operation."""
+        if not isinstance(value, int):
+            self.handle_error("\'progress\' property must be an integer")
+        self._progress = value
+
+    @property
+    def gui_module(self):
+        """Gets the GUI module attached to the operation."""
+        return self._gui_module
+
+    @gui_module.setter
+    def gui_module(self, value):
+        """Sets the GUI module attached to the operation."""
+        self._gui_module = value
 
     @property
     def is_running(self) -> bool:

@@ -39,9 +39,9 @@ class DaskOperation(BaseOperation):
         Args:
             action (callable, optional): The Dask computation to be executed by the operation.
             name (str, optional): The name of the operation. Defaults to "DaskOperation".
-            persistent (bool, optional): Whether the operation should run indefinitely. Defaults to False.
+            is_loop (bool, optional): Whether the operation should run indefinitely. Defaults to False.
             is_cpu_bound (bool, optional): Whether the operation is CPU-bound. Defaults to False.
-            concurrent (bool, optional): Whether child operations should run concurrently. Defaults to False.
+            parallel (bool, optional): Whether child operations should run in parallel. Defaults to False.
             parent_operation (BaseOperation, optional): The parent operation. Defaults to None.
             local_vars (dict, optional): Local variables for the function execution. Defaults to None.
             client (dask.distributed.Client, optional): The Dask client for managing the computation.

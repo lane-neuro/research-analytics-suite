@@ -49,7 +49,7 @@ class ConsoleOperation(BaseOperation):
         self._status = "running"
         self.add_log_entry(f"[RUN] {self._name}")
 
-        while self.concurrent and self.persistent:  # Loop until a specific user input is received
+        while self.parallel and self.is_loop:  # Loop until a specific user input is received
             try:
                 if 'ipykernel' in sys.modules:
                     # Jupyter Notebook environment

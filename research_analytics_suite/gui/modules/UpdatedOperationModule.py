@@ -17,44 +17,36 @@ Status: Prototype
 """
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.gui.GUIBase import GUIBase
-
+from research_analytics_suite.operation_manager.operations.core.execution import action_serialized
 
 class UpdatedOperationModule(GUIBase):
 
     def __init__(self, operation_dict: dict, width: int, height: int, parent: str):
-        """
-        Initializes the UpdatedOperationModule with the specified operation, width, height, and parent.
-
-        Args:
-            operation_dict (dict): The dictionary containing the operation information.
-            width (int): The width of the operation module.
-            height (int): The height of the operation module.
-            parent (str): The parent GUI element ID.
-        """
         super().__init__(width, height, parent)
 
         self._operation_info = operation_dict
 
-        self._version = self._operation_info.get("version", "0.0.1")
         self._name = self._operation_info.get("name", "[unknown_name]")
+        self._version = self._operation_info.get("version", "0.0.1")
+        self._description = self._operation_info.get("description", "[No description provided]")
+        self._category_id = self._operation_info.get("category_id", 0)
         self._author = self._operation_info.get("author", "[unknown_author]")
         self._github = self._operation_info.get("github", "[unknown_github]")
         self._email = self._operation_info.get("email", "[unknown_email]")
         self._operation_id = self._operation_info.get("unique_id", f"{self._github}_{self._name}_{self._version}")
-        self._description = self._operation_info.get("description", "[No description provided]")
-        self._action = self._operation_info.get("action", "")
-        self._output_type = self._operation_info.get("output_type", None)
-        self._is_loop = self._operation_info.get("persistent", False)
-        self._is_cpu_bound = self._operation_info.get("is_cpu_bound", False)
-        self._is_parallel = self._operation_info.get("concurrent", False)
-        self._dependencies = self._operation_info.get("dependencies", [])
+        self._action = action_serialized(self._operation_info.get("action"))
+        self._required_inputs = self._operation_info.get("required_inputs", {})
+        self._output_type = self._operation_info.get("output_type", {})
+        self._parent_operation = self._operation_info.get("parent_operation", None)
+        self._inheritance = self._operation_info.get("inheritance", [])
 
-        self._child_ops_parent = None
-        self._values_required_parent = None
+        self._is_loop = self._operation_info.get("is_loop", False)
+        self._is_cpu_bound = self._operation_info.get("is_cpu_bound", False)
+        self._is_parallel = self._operation_info.get("parallel", False)
+
         self._parent_id = f"parent_{self._runtime_id}"
 
     async def initialize_gui(self) -> None:
-        """Initializes resources and adds the update operation."""
         pass
 
     async def _update_async(self) -> None:
@@ -95,23 +87,23 @@ class UpdatedOperationModule(GUIBase):
                     dpg.add_separator(label="Options")
 
                     with dpg.group(horizontal=True, tag=f"options_{self._runtime_id}", horizontal_spacing=40):
-                        dpg.add_checkbox(label="Loop", default_value=False, indent=15)
-                        dpg.add_checkbox(label="CPU", default_value=False)
-                        dpg.add_checkbox(label="Parallel", default_value=False)
+                        dpg.add_checkbox(label="Loop", default_value=self._is_loop, indent=15)
+                        dpg.add_checkbox(label="CPU", default_value=self._is_cpu_bound)
+                        dpg.add_checkbox(label="Parallel", default_value=self._is_parallel)
 
             # Middle Region
             with dpg.group(horizontal=True, tag=f"middle_{self._runtime_id}",
                            parent=self._parent_id, height=120, horizontal_spacing=5):
-                with dpg.child_window(label="Dependencies", no_scrollbar=True, width=100,
+                with dpg.child_window(label="Required Inputs", no_scrollbar=True, width=100,
                                       border=True, parent=f"middle_{self._runtime_id}"):
-                    dpg.add_text(default_value="Input", indent=10)
-                    dpg.add_listbox(items=['test', 'test2', 'test3'], num_items=3, width=-1)
-                    # dpg.add_button(label="Add Value", callback=self.add_value)
+                    dpg.add_text(default_value="Req. Input", indent=10)
+                    req_input_list = [
+                        f"{value}" for _, value in self._required_inputs.items()] if self._required_inputs else []
+                    dpg.add_listbox(items=req_input_list, num_items=3, width=-1)
 
-                with dpg.child_window(label="Child Operations", no_scrollbar=True, border=True):
-                    dpg.add_text(default_value="Child Operations", indent=10)
-                    dpg.add_listbox(items=["Child 1", "2", "3", "4"], num_items=3, width=-1)
-                    # dpg.add_button("Add Operation", callback=self.add_child_operation)
+                with dpg.child_window(label="Inherited Ops", no_scrollbar=True, border=True):
+                    dpg.add_text(default_value="Inherited Ops", indent=10)
+                    dpg.add_listbox(items=self._inheritance, num_items=3, width=-1)
 
             # Lower Region
             with dpg.group(tag=f"action_{self._runtime_id}", parent=self._parent_id):

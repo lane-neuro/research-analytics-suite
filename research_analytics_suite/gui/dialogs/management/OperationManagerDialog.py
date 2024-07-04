@@ -62,7 +62,7 @@ class OperationManagerDialog(GUIBase):
         """Initializes the operation manager dialog by adding the update operation."""
         self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_OperationManagerUpdateTask",
-                action=self._update_async, persistent=True, concurrent=True)
+                action=self._update_async, is_loop=True, parallel=True)
         self._update_operation.is_ready = True
         # dpg.set_viewport_resize_callback(lambda: asyncio.create_task(self.on_resize()))
 

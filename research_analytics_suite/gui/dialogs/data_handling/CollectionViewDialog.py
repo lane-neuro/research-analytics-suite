@@ -35,7 +35,7 @@ class CollectionViewDialog(GUIBase):
         try:
             self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
                 operation_type=BaseOperation, name="gui_MainCollectionUpdateTask",
-                action=self._update_async, persistent=True, concurrent=True)
+                action=self._update_async, is_loop=True, parallel=True)
             self._update_operation.is_ready = True
         except Exception as e:
             self._logger.error(e, self)

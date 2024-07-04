@@ -23,20 +23,26 @@ SAFE_MODULES = {
 }
 
 
-def action_serialized(operation) -> str:
+def action_serialized(action) -> str:
     """Gets the serializable action to be executed by the operation."""
-    if isinstance(operation.action, (types.MethodType, types.FunctionType)):
-        action = inspect.getsource(operation.action)
-    elif callable(operation.action):
+    if isinstance(action, str):
+        return action
+    elif callable(action):
         try:
-            action = inspect.getsource(operation.action)
-        except OSError:
-            action = f"{operation.action}"
-    elif isinstance(operation.action, str):
-        action = operation.action
+            source = inspect.getsource(action)
+            return source
+        except (TypeError, OSError):
+            try:
+                # Attempt to get the qualified name for better clarity
+                qualname = action.__qualname__
+                module = action.__module__
+                return f"<callable {module}.{qualname}>"
+            except AttributeError:
+                return repr(action)
+    elif isinstance(action, property):
+        return f"<property object at {hex(id(action))}>"
     else:
-        action = None
-    return action
+        return repr(action)
 
 
 async def prepare_action_for_exec(operation):

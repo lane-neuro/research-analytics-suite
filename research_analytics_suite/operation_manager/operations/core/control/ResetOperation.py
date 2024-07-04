@@ -24,7 +24,7 @@ async def reset_operation(operation, child_operations=False):
             or operation.status == "paused"
             or operation.status == "completed"
             or operation.status == "error"):
-        if child_operations and operation.child_operations is not None:
+        if child_operations and operation.inheritance is not None:
             await operation.reset_child_operations()
         await operation.stop()
         await operation.start()

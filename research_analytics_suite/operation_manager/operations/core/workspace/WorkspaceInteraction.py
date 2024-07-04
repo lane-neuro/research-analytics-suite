@@ -22,39 +22,39 @@ import aiofiles
 def pack_as_local_reference(operation) -> dict:
     """Provide a reference to the unique_id, name, and version of the operation."""
     return {
-        'unique_id': operation.unique_id,
+        'name': operation.name,
+        'version': operation.version,
+        'description': operation.description,
         'category_id': operation.category_id,
         'author': operation.author,
         'github': operation.github,
-        'version': operation.version,
-        'name': operation.name,
-        'description': operation.description,
+        'unique_id': operation.unique_id,
     }
 
 
 def pack_for_save(operation) -> dict:
     """Provide a dictionary representation of the operation."""
 
-    _child_operations = None
-    if operation.child_operations is not None:
-        _child_operations = [pack_as_local_reference(child) for child in operation.child_operations.values()]
+    _inheritance = None
+    if operation.inheritance is not None:
+        _inheritance = [pack_as_local_reference(child) for child in operation.inheritance.values()]
 
     return {
-        'unique_id': operation.unique_id,
-        'category_id': operation.category_id,
-        'version': operation.version,
         'name': operation.name,
+        'version': operation.version,
+        'description': operation.description,
+        'category_id': operation.category_id,
         'author': operation.author,
         'github': operation.github,
         'email': operation.email,
-        'description': operation.description,
+        'unique_id': operation.unique_id,
         'action': operation.action,
-        'persistent': operation.persistent,
-        'concurrent': operation.concurrent,
-        'is_cpu_bound': operation.is_cpu_bound,
-        'dependencies': operation.dependencies if operation.dependencies else None,
+        'required_inputs': operation.required_inputs if operation.required_inputs else {},
         'parent_operation': pack_as_local_reference(operation.parent_operation) if operation.parent_operation else None,
-        'inheritance': _child_operations if _child_operations else None,
+        'inheritance': _inheritance if _inheritance else [],
+        'is_loop': operation.is_loop,
+        'is_cpu_bound': operation.is_cpu_bound,
+        'parallel': operation.parallel,
     }
 
 

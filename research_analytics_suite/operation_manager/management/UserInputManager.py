@@ -14,7 +14,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.operation_manager.operations.persistent.ResourceMonitorOperation import \
+from research_analytics_suite.operation_manager.operations.system.ResourceMonitorOperation import \
     ResourceMonitorOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
