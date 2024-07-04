@@ -137,7 +137,8 @@ async def RASLauncher():
         if not os.path.exists(os.path.normpath(
                 os.path.join(f"{_args.directory}", _args.open_workspace))):
             _logger.error(Exception(
-                f"Workspace folder '{_args.open_workspace}' does not exist. Creating new workspace..."))
+                f"Workspace folder '{_args.open_workspace}' does not exist. Creating new workspace..."),
+                None)
             try:
                 _workspace = await _workspace.create_workspace(_args.directory, _args.open_workspace)
             except Exception as e:

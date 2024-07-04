@@ -18,43 +18,43 @@ from enum import Enum
 
 class CategoryID(Enum):
     NUMERICAL = (1, "Numerical Data", {
-        "Basic": (101, "Basic Operations", {}),
-        "Intermediate": (102, "Intermediate Operations", {}),
-        "Advanced": (103, "Advanced Operations", {})
+        "Basic": (101, "Basic", {}),
+        "Intermediate": (102, "Intermediate", {}),
+        "Advanced": (103, "Advanced", {})
     })
 
     CATEGORICAL = (2, "Categorical Data", {
-        "Basic": (201, "Basic Operations", {}),
-        "Intermediate": (202, "Intermediate Operations", {}),
-        "Advanced": (203, "Advanced Operations", {})
+        "Basic": (201, "Basic", {}),
+        "Intermediate": (202, "Intermediate", {}),
+        "Advanced": (203, "Advanced", {})
     })
 
     TEXT = (3, "Text Data", {
-        "Basic": (301, "Basic Operations", {}),
-        "Intermediate": (302, "Intermediate Operations", {}),
-        "Advanced": (303, "Advanced Operations", {})
+        "Basic": (301, "Basic", {}),
+        "Intermediate": (302, "Intermediate", {}),
+        "Advanced": (303, "Advanced", {})
     })
 
     TIME_SERIES = (4, "Time Series Data", {
-        "Basic": (401, "Basic Operations", {}),
-        "Intermediate": (402, "Intermediate Operations", {}),
-        "Advanced": (403, "Advanced Operations", {})
+        "Basic": (401, "Basic", {}),
+        "Intermediate": (402, "Intermediate", {}),
+        "Advanced": (403, "Advanced", {})
     })
 
     BIG_DATA = (5, "Big Data", {
-        "Hadoop": (501, "Hadoop Operations", {}),
-        "Spark": (502, "Spark Operations", {})
+        "Hadoop": (501, "Hadoop", {}),
+        "Spark": (502, "Spark", {})
     })
 
     CLOUD_COMPUTING = (6, "Cloud Computing", {
-        "AWS": (601, "AWS Operations", {}),
-        "Azure": (602, "Azure Operations", {}),
-        "Google": (603, "Google Cloud Operations", {})
+        "AWS": (601, "AWS", {}),
+        "Azure": (602, "Azure", {}),
+        "Google": (603, "Google Cloud", {})
     })
 
     DATABASE = (7, "Database", {
         "SQL": (701, "SQL Queries", {}),
-        "NoSQL": (702, "NoSQL Operations", {})
+        "NoSQL": (702, "NoSQL", {})
     })
 
     HYPOTHESIS_TESTING = (8, "Hypothesis Testing", {
@@ -72,17 +72,17 @@ class CategoryID(Enum):
         "Qualitative": (1002, "Qualitative Analysis", {})
     })
 
-    BASIC_OPERATIONS = (11, "Basic Operations", {
+    BASIC_OPERATIONS = (11, "Basic", {
         "Data Loading": (1101, "Data Loading", {}),
         "Simple Calculations": (1102, "Simple Calculations", {})
     })
 
-    INTERMEDIATE_OPERATIONS = (12, "Intermediate Operations", {
+    INTERMEDIATE_OPERATIONS = (12, "Intermediate", {
         "Data Aggregation": (1201, "Data Aggregation", {}),
         "Intermediate Analysis": (1202, "Intermediate Analysis", {})
     })
 
-    ADVANCED_OPERATIONS = (13, "Advanced Operations", {
+    ADVANCED_OPERATIONS = (13, "Advanced", {
         "Machine Learning Models": (1301, "Machine Learning Models", {}),
         "Deep Learning": (1302, "Deep Learning", {})
     })

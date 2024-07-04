@@ -105,7 +105,9 @@ class CustomLogger:
             context: The context in which the error occurred.
         """
         error_info = traceback.format_exc()
-        error_message = f"An error occurred in {context}: {exception}\n{error_info}"
+        error_message = f"An error occurred in {context}: {exception}"
+        if error_info != 'NoneType: None\n':
+            error_message += f"\n{error_info}"
         self._logger.error(error_message)
 
     def warning(self, message: str) -> None:
