@@ -70,9 +70,10 @@ class ExampleOperation(BaseOperation):
     github: str = "lane-neuro"
     email: str = "justlane@uw.edu"
     unique_id: str = f"{github}_{name}_{version}"
-    required_inputs: dict = {}
+    required_inputs: dict = {}                          # dict[str, type] of required input parameters
+    # output_parameters: dict = {}                       # dict[str, type] of output parameters
     parent_operation: 'BaseOperation' = None
-    inheritance: list = []
+    inheritance: list = []                              # list of unique IDs of child operations
     is_loop: bool = False
     is_cpu_bound: bool = False
     parallel: bool = False
@@ -97,6 +98,7 @@ class ExampleOperation(BaseOperation):
             'email': self.email,
             'unique_id': self.unique_id,
             'required_inputs': self.required_inputs,
+            # 'output_parameters': self.output_parameters,
             'parent_operation': self.parent_operation,
             'inheritance': self.inheritance,
             'is_loop': self.is_loop,

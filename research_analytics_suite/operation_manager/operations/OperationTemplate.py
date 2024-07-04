@@ -43,6 +43,7 @@ class OperationTemplate(BaseOperation):
         unique_id (str): The unique ID of the operation.
         action: The action to be executed by the operation.
         required_inputs (Optional[dict[str, type]): Required inputs for the operation.
+        output_parameters (Optional[dict[str, type]]): Output parameters of the operation.
         parent_operation (Optional[Type[BaseOperation]]): Parent operation.
         inheritance (Optional[Dict[str, Type[BaseOperation]]]): Required child operations.
         is_loop (bool): Whether the operation should run in a loop.
@@ -69,10 +70,10 @@ class OperationTemplate(BaseOperation):
     github: str = "lane-neuro"
     email: str = "default_author@email.com"
     unique_id: str = f"{github}_{name}_{version}"
-    # action is set to execute() within the __init__ method by default
-    required_inputs: Optional[dict[str, type]] = None
+    required_inputs: Optional[dict[str, type]] = {}
+    # output_parameters: Optional[dict[str, type]] = {}
     parent_operation: Optional[Type[BaseOperation]] = None
-    inheritance: Optional[Dict[str, Type[BaseOperation]]] = None
+    inheritance: Optional[list] = []
     is_loop: bool = False
     is_cpu_bound: bool = False
     parallel: bool = False
@@ -98,9 +99,10 @@ class OperationTemplate(BaseOperation):
             'email': self.email,
             'unique_id': self.unique_id,
             'action': self.action,
-            'required_inputs': self.required_inputs,
+            'required_inputs': self.required_inputs,        # dict[str, type] of required input parameters
+            # 'output_parameters': self.output_parameters,   # dict[str, type] of output parameters
             'parent_operation': self.parent_operation,
-            'inheritance': self.inheritance,
+            'inheritance': self.inheritance,                # list of unique IDs of child operations
             'is_loop': self.is_loop,
             'is_cpu_bound': self.is_cpu_bound,
             'parallel': self.parallel
