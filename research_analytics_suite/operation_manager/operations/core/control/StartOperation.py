@@ -22,6 +22,7 @@ async def start_operation(operation):
     try:
         if operation.inheritance is not None:
             await start_child_operations(operation)
+        await operation.start()  # Ensure the start method is called
         operation.status = "started"
     except Exception as e:
         operation.handle_error(e)
