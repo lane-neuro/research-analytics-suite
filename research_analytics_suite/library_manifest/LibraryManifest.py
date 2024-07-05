@@ -129,9 +129,9 @@ class LibraryManifest:
             files = [f for f in os.listdir(user_dir) if f.endswith('.json')]
             for file in files:
                 from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
-                op_attributes = OperationAttributes()
+                op_attributes = OperationAttributes(
+                    await OperationAttributes.get_attributes_from_disk(os.path.join(user_dir, file)))
                 await op_attributes.initialize()
-                await op_attributes.from_disk(os.path.join(user_dir, file))
                 self.add_operation_from_attributes(op_attributes)
 
     async def load_user_library(self):
@@ -150,7 +150,7 @@ class LibraryManifest:
             from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
             _op_attributes = OperationAttributes()
             await _op_attributes.initialize()
-            await _op_attributes.from_disk(_op)
+            await _op_attributes.get_attributes_from_disk(_op)
             self.add_operation_from_attributes(_op_attributes)
 
     def get_categories(self):

@@ -14,4 +14,4 @@ Status: Prototype
 """
 
 from .WorkspaceInteraction import save_operation_in_workspace, pack_as_local_reference, pack_for_save
-from .FileDiskOperations import load_from_disk, load_operation_group, from_dict
+from .FileDiskOperations import *

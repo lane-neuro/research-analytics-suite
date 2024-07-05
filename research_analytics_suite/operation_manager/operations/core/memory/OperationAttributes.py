@@ -13,6 +13,8 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
+from typing import Optional
+from research_analytics_suite.operation_manager.operations.core.workspace import load_from_disk
 
 
 class OperationAttributes:
@@ -95,35 +97,6 @@ class OperationAttributes:
 
                     del self._temp_kwargs
 
-    async def from_disk(self, file_path: str):
-        """
-        Loads the OperationAttributes from disk.
-
-        Args:
-            file_path (str): The file path to load the OperationAttributes from.
-        """
-        async with OperationAttributes._lock:
-            from research_analytics_suite.operation_manager.operations.core.workspace import load_from_disk
-            attributes = await load_from_disk(file_path=file_path, operation_group=None, with_instance=False)
-            if attributes is None:
-                return
-
-            self._name = attributes.get('name')
-            self._version = attributes.get('version')
-            self._description = attributes.get('description')
-            self._category_id = attributes.get('category_id')
-            self._author = attributes.get('author')
-            self._github = attributes.get('github')
-            self._email = attributes.get('email')
-            self._unique_id = attributes.get('unique_id')
-            self._action = attributes.get('action')
-            self._required_inputs = attributes.get('required_inputs')
-            self._parent_operation = attributes.get('parent_operation')
-            self._inheritance = attributes.get('inheritance')
-            self._is_loop = attributes.get('is_loop')
-            self._is_cpu_bound = attributes.get('is_cpu_bound')
-            self._parallel = attributes.get('parallel')
-
     def export_attributes(self) -> dict:
         return {
             'name': self._name,
@@ -147,58 +120,137 @@ class OperationAttributes:
     def name(self):
         return self._name
 
+    @name.setter
+    def name(self, value):
+        self._name = value
+
     @property
     def version(self):
         return self._version
+
+    @version.setter
+    def version(self, value):
+        self._version = value
 
     @property
     def description(self):
         return self._description
 
+    @description.setter
+    def description(self, value):
+        self._description = value
+
     @property
     def category_id(self):
         return self._category_id
+
+    @category_id.setter
+    def category_id(self, value):
+        self._category_id = value
 
     @property
     def author(self):
         return self._author
 
+    @author.setter
+    def author(self, value):
+        self._author = value
+
     @property
     def github(self):
         return self._github
+
+    @github.setter
+    def github(self, value):
+        self._github = value
 
     @property
     def email(self):
         return self._email
 
+    @email.setter
+    def email(self, value):
+        self._email = value
+
     @property
     def unique_id(self):
         return self._unique_id
+
+    @unique_id.setter
+    def unique_id(self, value):
+        self._unique_id = value
 
     @property
     def action(self):
         return self._action
 
+    @action.setter
+    def action(self, value):
+        self._action = value
+
     @property
     def required_inputs(self):
         return self._required_inputs
+
+    @required_inputs.setter
+    def required_inputs(self, value):
+        self._required_inputs = value
 
     @property
     def parent_operation(self):
         return self._parent_operation
 
+    @parent_operation.setter
+    def parent_operation(self, value):
+        self._parent_operation = value
+
     @property
     def inheritance(self):
         return self._inheritance
+
+    @inheritance.setter
+    def inheritance(self, value):
+        self._inheritance = value
 
     @property
     def is_loop(self):
         return self._is_loop
 
+    @is_loop.setter
+    def is_loop(self, value):
+        self._is_loop = value
+
     @property
     def is_cpu_bound(self):
         return self._is_cpu_bound
 
+    @is_cpu_bound.setter
+    def is_cpu_bound(self, value):
+        self._is_cpu_bound = value
+
     @property
     def parallel(self):
         return self._parallel
+
+    @parallel.setter
+    def parallel(self, value):
+        self._parallel = value
+
+
+async def get_attributes_from_disk(file_path: str) -> Optional['OperationAttributes']:
+    """
+    Gets the attributes from the disk.
+
+    Args:
+        file_path (str): The file path to load the attributes from.
+
+    Returns:
+        OperationAttributes: The operation attributes.
+    """
+    attributes = await load_from_disk(file_path=file_path, operation_group=None, with_instance=False)
+    if attributes is None:
+        return None
+
+    _op = OperationAttributes(attributes)
+    await _op.initialize()
+    return _op
