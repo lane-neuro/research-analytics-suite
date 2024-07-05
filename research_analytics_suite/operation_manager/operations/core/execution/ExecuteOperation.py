@@ -49,7 +49,6 @@ def _determine_execution_order(parent_operation) -> List:
     Returns:
         List[BaseOperation]: The execution order of child operations.
     """
-    # TODO fix this
     parent_operation.add_log_entry(f"Determining execution order")
     execution_order = []
     processed = set()
