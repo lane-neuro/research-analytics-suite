@@ -75,14 +75,14 @@ class MachineLearning:
     async def evaluate_model(self, test_data, test_target):
         """Initialize and evaluate the machine learning model."""
 
-        from research_analytics_suite.analytics import MLEvaluationOperation
-        self.eval_operation = MLEvaluationOperation(
-            model=self.model,
-            test_data=test_data,
-            test_target=test_target
-        )
+        # from research_analytics_suite.analytics import MLEvaluationOperation
+        # self.eval_operation = MLEvaluationOperation(
+        #     model=self.model,
+        #     test_data=test_data,
+        #     test_target=test_target
+        # )
 
-        return await self._evaluate_model()
+        return None
 
     async def _evaluate_model(self):
         await self.eval_operation.start()

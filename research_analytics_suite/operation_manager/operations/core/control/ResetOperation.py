@@ -20,15 +20,19 @@ async def reset_operation(operation, child_operations=False):
     """
     operation.is_ready = False
 
-    if (operation.status == "running"
-            or operation.status == "paused"
-            or operation.status == "completed"
-            or operation.status == "error"):
-        if child_operations and operation.inheritance is not None:
-            await operation.reset_child_operations()
-        await operation.stop()
-        await operation.start()
-        operation.progress = 0
-        operation.add_log_entry(f"[RESET] {operation.name}")
-    else:
-        operation.add_log_entry(f"[RESET] {operation.name} - Already reset")
+    try:
+        if (operation.status == "running"
+                or operation.status == "paused"
+                or operation.status == "completed"
+                or operation.status == "error"):
+            if child_operations and operation.inheritance is not None:
+                await operation.reset_child_operations()
+            await operation.stop()
+            await operation.start()
+            operation.progress = 0
+            operation.add_log_entry(f"[RESET] {operation.name}")
+        else:
+            operation.add_log_entry(f"[RESET] {operation.name} - Already reset")
+    except Exception as e:
+        operation.handle_error(e)
+        operation.add_log_entry(f"[RESET] {operation.name} - Error occurred during reset")

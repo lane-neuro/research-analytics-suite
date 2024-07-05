@@ -2,7 +2,6 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor
 from typing import List
 
-from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 from .PrepareAction import prepare_action_for_exec
 
 
@@ -110,6 +109,7 @@ async def execute_action(operation):
                         slot.data = {name: (type(value), value)}
                         await operation.memory_outputs.update_slot(slot)
                 else:
+                    from research_analytics_suite.data_engine import MemorySlot
                     new_slot = MemorySlot(
                         memory_id=f'{operation.runtime_id}',
                         name=f"{name}",

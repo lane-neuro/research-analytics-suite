@@ -23,7 +23,7 @@ async def pause_operation(operation, child_operations=False):
         try:
             operation.is_ready = False
 
-            if child_operations and operation.inheritance is not None:
+            if child_operations and hasattr(operation, 'inheritance') and operation.inheritance is not None:
                 await _pause_child_operations(operation)
 
             await operation.pause_event.clear()
