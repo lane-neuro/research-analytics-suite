@@ -52,7 +52,7 @@ class MemorySlot:
         self._memory_id = memory_id
         self._name = name
         self._operation_required = operation_required
-        self._data = data
+        self._data = data or {}
         self._metadata = {}
         self._created_at = time.time()
         self._modified_at = self._created_at
@@ -73,96 +73,69 @@ class MemorySlot:
 
     @property
     def memory_id(self) -> str:
-        """Get the memory ID."""
         return self._memory_id
 
     @memory_id.setter
-    async def memory_id(self, value: str):
-        """Set the memory ID."""
+    def memory_id(self, value: str):
         if not isinstance(value, str):
             raise ValueError("memory_id must be a string")
-        async with self._lock:
-            self._memory_id = value
-            self.update_modified_time()
+        self._memory_id = value
+        self.update_modified_time()
 
     @property
     def name(self) -> str:
-        """Get the name of the memory slot."""
         return self._name
 
     @name.setter
-    async def name(self, value: str):
-        """Set the name of the memory slot."""
+    def name(self, value: str):
         if not isinstance(value, str):
             raise ValueError("name must be a string")
-        async with self._lock:
-            self._name = value
-            self.update_modified_time()
+        self._name = value
+        self.update_modified_time()
 
     @property
     def operation_required(self) -> bool:
-        """Get whether the operation requires this memory slot to function."""
         return self._operation_required
 
     @operation_required.setter
-    async def operation_required(self, value: bool):
-        """Set whether the operation requires this memory slot to function."""
+    def operation_required(self, value: bool):
         if not isinstance(value, bool):
             raise ValueError("operation_required must be a boolean")
-        async with self._lock:
-            self._operation_required = value
-            self.update_modified_time()
+        self._operation_required = value
+        self.update_modified_time()
 
     @property
     def data(self) -> Dict[str, Tuple[Type, Any]]:
-        """Get the data dictionary."""
         return self._data
 
-    @property
-    def preview_data(self) -> Dict[str, Tuple[Type, str]]:
-        """Get a data dictionary with the data value replaced by size as a formatted string."""
-        def format_size(size_in_bytes: int) -> str:
-            """Convert size from bytes to a human-readable string."""
-            for unit in ['bytes', 'KB', 'MB', 'GB', 'TB']:
-                if size_in_bytes < 1024:
-                    return f"{size_in_bytes:.2f} {unit}"
-                size_in_bytes /= 1024
-            return f"{size_in_bytes:.2f} PB"  # For completeness, although unlikely to reach PB.
-
-        return {key: (type(value), format_size(sys.getsizeof(value))) for key, (data_type, value) in self._data.items()}
-
-    @property
-    def data_length(self) -> int:
-        """Get the size of the data dictionary in bytes."""
-        return sys.getsizeof(self._data)
-
     @data.setter
-    async def data(self, value: Dict[str, Tuple[Type, Any]]):
-        """Set the data dictionary."""
-        if not isinstance(value, dict):
+    def data(self, value: Dict[str, Tuple[Type, Any]]):
+        if value is None:
+            self._data = {}
+        elif not isinstance(value, dict):
             raise ValueError("data must be a dictionary")
-        for k, (t, v) in value.items():
-            if not isinstance(k, str):
-                raise ValueError("All keys in data must be strings")
-            if not isinstance(v, t):
-                raise ValueError(f"Value for key '{k}' must be of type {t}")
-        async with self._lock:
-            self._data = dict(value.values())
-            self.update_modified_time()
+        else:
+            for k, v in value.items():
+                if not isinstance(k, str):
+                    raise ValueError("All keys in data must be strings")
+                if not isinstance(v, tuple) or len(v) != 2:
+                    raise ValueError("All values in data must be tuples of (type, value)")
+                t, v = v
+                if not isinstance(v, t):
+                    raise ValueError(f"Value for key '{k}' must be of type {t}")
+            self._data = value
+        self.update_modified_time()
 
     @property
     def metadata(self) -> dict:
-        """Get the metadata dictionary."""
         return self._metadata
 
     @metadata.setter
-    async def metadata(self, value: dict):
-        """Set the metadata dictionary."""
+    def metadata(self, value: dict):
         if not isinstance(value, dict):
             raise ValueError("metadata must be a dictionary")
-        async with self._lock:
-            self._metadata = value
-            self.update_modified_time()
+        self._metadata = value
+        self.update_modified_time()
 
     @property
     def created_at(self) -> float:
@@ -243,21 +216,15 @@ class MemorySlot:
         self._modified_at = time.time()
 
     def validate_data(self):
-        """Validate the data dictionary."""
-        try:
-            if not all(isinstance(v, tuple) for v in self._data.values()):
-                values = list(self._data.values())
-                if not values:
-                    return
-
-                _types = [type(v) for v in values[0]]
-                self._data = {k: (t, v) for k, t, v in zip(self._data.keys(), _types, values)}
-
+        if self._data is None:
+            self._data = {}
+        else:
             for k, (t, v) in self._data.items():
                 if not isinstance(k, str):
                     raise ValueError("All keys in data must be strings")
-        except Exception as e:
-            print(f"Error validating data: {e}")
+                if not isinstance(v, t):
+                    raise ValueError(f"Value for key '{k}' must be of type {t}")
+
 
     async def get_data_by_key(self, key: str) -> Any:
         """Retrieve the value associated with a specific key."""
