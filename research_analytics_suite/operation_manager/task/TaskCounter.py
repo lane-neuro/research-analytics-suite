@@ -40,7 +40,13 @@ class TaskCounter:
 
         Returns:
             str: The new task name with a unique identifier.
+
+        Raises:
+            ValueError: If the task name is empty.
         """
+        if not name:
+            raise ValueError("Task name cannot be empty.")
+
         self.counter += 1
         self._logger.debug(f"TaskCounter.new_task: [NEW] [{self.counter}]{name}")
         return f"[{self.counter}]{name}"

@@ -64,3 +64,20 @@ class TaskCreator:
         task = asyncio.create_task(coro, name=self.task_counter.new_task(name))
         self.tasks.add(task)
         return task
+
+    def cancel_task(self, task_name):
+        """
+        Cancels a task by its name.
+
+        Args:
+            task_name (str): The name of the task to cancel.
+
+        Returns:
+            bool: True if the task was found and cancelled, False otherwise.
+        """
+        for task in self.tasks:
+            if task.get_name() == task_name:
+                task.cancel()
+                self.tasks.remove(task)
+                return True
+        return False
