@@ -19,20 +19,15 @@ async def resume_operation(operation, child_operations=False):
     """
     Resume the operation and all child operations, if applicable.
     """
-    print("resume_operation called with status:", operation.status)
     if operation.status == "paused":
         try:
             operation.is_ready = True
-            print("Operation is set to ready")
 
             if child_operations and operation.inheritance is not None:
-                print("Resuming child operations")
                 await resume_child_operations(operation)
             await operation.pause_event.set()
             operation.status = "running"
-            print("Operation status set to running")
         except Exception as e:
-            print("Exception occurred:", e)
             operation.handle_error(e)
         finally:
             operation.add_log_entry(f"[RESUME] {operation.name}")
