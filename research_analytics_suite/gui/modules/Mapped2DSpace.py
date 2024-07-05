@@ -49,21 +49,43 @@ class Mapped2DSpace(GUIBase):
         # Placeholder for asynchronous update logic
         pass
 
-    def add_node(self, label, pos=(0, 0)):
+    def add_node(self, operation_dict, pos=(0, 0)):
         """
         Adds a node to the node editor.
 
         Args:
-            label (str): The label of the node.
+            operation_dict (dict): The dictionary containing the operation information.
             pos (tuple): The position of the node.
         """
         node_id = dpg.generate_uuid()
-        with dpg.node(tag=node_id, parent=self._node_editor_id, label=label, pos=pos):
+        with dpg.node(tag=node_id, parent=self._node_editor_id, label=operation_dict["name"], pos=pos):
             input_id = dpg.generate_uuid()
             output_id = dpg.generate_uuid()
-            dpg.add_node_attribute(tag=input_id, attribute_type=dpg.mvNode_Attr_Input)
-            dpg.add_node_attribute(tag=output_id, attribute_type=dpg.mvNode_Attr_Output)
+
+            from research_analytics_suite.gui.modules.UpdatedOperationModule import UpdatedOperationModule
+            _operation_module = None
+
+            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static, tag=f"{node_id}_name"):
+                with dpg.group(tag=f"{node_id}_name_group"):
+                    _operation_module = UpdatedOperationModule(operation_dict, 200, 500,
+                                                               node_id)
+                    _operation_module.draw_upper_region(parent=f"{node_id}_name_group", width=200)
+
+            with dpg.node_attribute(tag=f"{node_id}_details", attribute_type=dpg.mvNode_Attr_Output):
+                with dpg.group(tag=f"{node_id}_details_group"):
+                    _operation_module.draw_details_region(parent=f"{node_id}_details_group", width=200)
+
+            with dpg.node_attribute(tag=f"{node_id}_middle", attribute_type=dpg.mvNode_Attr_Input):
+                with dpg.group(tag=f"{node_id}_middle_group"):
+                    _operation_module.draw_middle_region(parent=f"{node_id}_middle_group", width=200)
+
+            with dpg.node_attribute(tag=f"{node_id}_lower", attribute_type=dpg.mvNode_Attr_Static):
+                with dpg.group(tag=f"{node_id}_lower_group", width=260):
+                    _operation_module.draw_lower_region(parent=f"{node_id}_lower_group", width=200)
+
         self._nodes.append((node_id, input_id, output_id))
+        return node_id, input_id, output_id
+
 
     def link_nodes(self, output_attr, input_attr):
         """

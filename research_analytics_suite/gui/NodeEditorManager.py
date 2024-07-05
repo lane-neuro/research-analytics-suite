@@ -69,6 +69,11 @@ class NodeEditorManager:
         self._editors[editor_id] = editor
         editor.draw()
 
+    def get_editor(self, editor_id):
+        if editor_id not in self._editors or self._editors.get(editor_id) is None:
+            return None
+        return self._editors.get(editor_id)
+
     def add_cross_editor_link(self, output_attr, input_attr, editor_id_from, editor_id_to):
         self._cross_editor_links.append((output_attr, input_attr, editor_id_from, editor_id_to))
 

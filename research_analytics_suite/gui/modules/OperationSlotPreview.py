@@ -32,6 +32,9 @@ class OperationSlotPreview(GUIBase):
         """
         super().__init__(width, height, parent)
 
+        from research_analytics_suite.gui.NodeEditorManager import NodeEditorManager
+        self._node_manager = NodeEditorManager()
+
         self._operation_info = operation_dict
 
         self._name = self._operation_info["name"]
@@ -56,16 +59,17 @@ class OperationSlotPreview(GUIBase):
     def draw(self):
         with dpg.child_window(tag=self._parent_id, parent=self._parent, width=self.width, height=self.height,
                               no_scrollbar=True, no_scroll_with_mouse=True, border=False):
-            with dpg.tooltip(parent=self._parent_id, tag=f"tooltip_{self.runtime_id}", ):
+            with dpg.tooltip(parent=self._parent_id, tag=f"tooltip_{self.runtime_id}"):
                 from research_analytics_suite.gui.modules.UpdatedOperationModule import UpdatedOperationModule
-                operation_view = UpdatedOperationModule(operation_dict=self._operation_info, width=300,
-                                                        height=500, parent=f"tooltip_{self.runtime_id}")
+                operation_view = UpdatedOperationModule(operation_dict=self._operation_info, width=200,
+                                                        height=100, parent=f"tooltip_{self.runtime_id}")
                 operation_view.draw()
 
             with dpg.group(tag=f"slot_preview_{self.runtime_id}", parent=self._parent_id,
                            horizontal=True, horizontal_spacing=10):
                 dpg.add_button(label="+", width=25, height=25, parent=f"slot_preview_{self.runtime_id}",
-                               callback=lambda: print("Add new operation slot"), indent=5)
+                               callback=lambda: self._node_manager.editors["planning_editor"].add_node(
+                                   self._operation_info), indent=5)
                 dpg.add_text(default_value=f"{self._name}", parent=f"slot_preview_{self.runtime_id}")
 
                 # with dpg.child_window(height=30, width=55, no_scrollbar=True, pos=(self.width - 115, 5)):
