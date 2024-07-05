@@ -184,12 +184,12 @@ async def test_resume_all_tasks(task_monitor, task_creator):
     task1 = MagicMock()
     task1.get_name.return_value = "Task1"
     task1.done.return_value = False
-    task1.get_coro.return_value = dummy_coro()
+    task1.get_coro.return_value = await dummy_coro()
 
     task2 = MagicMock()
     task2.get_name.return_value = "Task2"
     task2.done.return_value = False
-    task2.get_coro.return_value = dummy_coro()
+    task2.get_coro.return_value = await dummy_coro()
 
     task_creator.tasks = {task1, task2}
 
