@@ -24,7 +24,7 @@ async def stop_operation(operation, child_operations=False):
             operation.is_ready = False
 
             if child_operations and operation.inheritance is not None:
-                await _stop_child_operations(operation)
+                await stop_child_operations(operation)
             operation.task.cancel()
             operation.status = "stopped"
         except Exception as e:
@@ -35,7 +35,7 @@ async def stop_operation(operation, child_operations=False):
         operation.add_log_entry(f"[STOP] {operation.name} - Already stopped")
 
 
-async def _stop_child_operations(operation):
+async def stop_child_operations(operation):
     """
     Stop all child operations.
     """

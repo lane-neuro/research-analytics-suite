@@ -24,7 +24,7 @@ async def pause_operation(operation, child_operations=False):
             operation.is_ready = False
 
             if child_operations and hasattr(operation, 'inheritance') and operation.inheritance is not None:
-                await _pause_child_operations(operation)
+                await pause_child_operations(operation)
 
             await operation.pause_event.clear()
             operation.status = "paused"
@@ -36,7 +36,7 @@ async def pause_operation(operation, child_operations=False):
         operation.add_log_entry(f"[PAUSE] {operation.name} - Already paused")
 
 
-async def _pause_child_operations(operation):
+async def pause_child_operations(operation):
     """
     Pause all child operations.
     """

@@ -21,16 +21,18 @@ async def start_operation(operation):
     """
     try:
         if operation.inheritance is not None:
-            await _start_child_operations(operation)
+            await start_child_operations(operation)
         operation.status = "started"
     except Exception as e:
         operation.handle_error(e)
 
 
-async def _start_child_operations(operation):
+async def start_child_operations(operation):
     """
     Start all child operations.
     """
+    if operation.inheritance is None:
+        return
     tasks = [op.start() for op in operation.inheritance.values()]
     if operation.parallel:
         await asyncio.gather(*tasks)

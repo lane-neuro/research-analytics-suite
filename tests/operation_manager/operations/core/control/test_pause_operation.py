@@ -26,7 +26,7 @@ async def test_pause_operation_running_with_child_operations():
     operation.pause_event.clear = AsyncMock()
 
     with patch('research_analytics_suite.operation_manager.operations.core.control.PauseOperation'
-               '._pause_child_operations', new=AsyncMock()) as mock_pause_children:
+               '.pause_child_operations', new=AsyncMock()) as mock_pause_children:
         await pause_operation(operation, child_operations=True)
 
         mock_pause_children.assert_awaited_once()
@@ -91,7 +91,7 @@ async def test_pause_operation_no_child_operations_flag():
     operation.pause_event.clear = AsyncMock()
 
     with patch('research_analytics_suite.operation_manager.operations.core.control.PauseOperation'
-               '._pause_child_operations', new=AsyncMock()) as mock_pause_children:
+               '.pause_child_operations', new=AsyncMock()) as mock_pause_children:
         await pause_operation(operation, child_operations=False)
 
         mock_pause_children.assert_not_awaited()
