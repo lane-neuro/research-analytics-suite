@@ -184,7 +184,7 @@ class CollectionViewDialog(GUIBase):
     async def update_variables_in_gui(self, collection_id, slot):
         """Updates the variables in a memory slot in the GUI."""
         slot_group_tag = f"slot_group_{collection_id}_{slot.memory_id}"
-        for key, (data_type, value) in slot.preview_data.items():
+        for key, (data_type, value) in slot.data.items():
             var_tag = f"var_{collection_id}_{slot.memory_id}_{key}"
             if not dpg.does_item_exist(var_tag):
                 dpg.add_text(f"{key}: {value} ({data_type.__name__})", tag=var_tag, parent=slot_group_tag)

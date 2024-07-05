@@ -9,7 +9,7 @@ Author: Lane
 import asyncio
 import os.path
 
-from research_analytics_suite.data_engine import MemoryManager
+from research_analytics_suite.data_engine.memory import MemoryManager
 from research_analytics_suite.library_manifest import LibraryManifest
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.Workspace import Workspace

@@ -20,7 +20,7 @@ async def start_operation(operation):
     Start the operation and all child operations.
     """
     try:
-        if operation.inheritance is not None:
+        if operation.inheritance is not None and operation.inheritance != {}:
             await start_child_operations(operation)
         await operation.start()  # Ensure the start method is called
         operation.status = "started"
