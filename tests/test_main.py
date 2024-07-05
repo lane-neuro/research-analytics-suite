@@ -1,7 +1,4 @@
-# test_main.py
-
 import pytest
-import asyncio
 from unittest import mock
 import sys
 
