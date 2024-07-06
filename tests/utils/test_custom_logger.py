@@ -1,6 +1,7 @@
 import asyncio
 import pytest
 import logging
+import os
 
 import pytest_asyncio
 
@@ -28,9 +29,13 @@ class TestCustomLogger:
         self.debug_handler.setFormatter(formatter)
         self.logger._logger.addHandler(self.debug_handler)
 
+        # Set log level based on environment variable
+        log_level = os.getenv('PYTHON_LOG_LEVEL', 'DEBUG').upper()
+        self.logger._logger.setLevel(getattr(logging, log_level))
+
     async def test_initialize_logger(self):
         assert self.logger._logger is not None
-        assert self.logger._logger.level == logging.DEBUG  # Logger level is INFO
+        assert self.logger._logger.level == logging.DEBUG
         assert len(self.logger._logger.handlers) > 0
         assert isinstance(self.logger._logger.handlers[0], logging.StreamHandler)
         assert self.logger._initialized

@@ -50,7 +50,7 @@ class CustomLogger:
             async with CustomLogger._lock:
                 if not self._initialized:
                     self._logger = logging.getLogger('RAS')
-                    self._logger.setLevel(logging.DEBUG)  # Set logger to INFO to prevent spamming
+                    self._logger.setLevel(logging.INFO)  # Default logger level is INFO
 
                     self.log_message_queue = asyncio.Queue()
                     handler = logging.StreamHandler()
