@@ -28,3 +28,4 @@ pymongo>=4.8.0
 statsmodels>=0.14.2
 tensorflow>=2.8.0
 keras>=3.4.1
+nest-asyncio>=1.6.0
