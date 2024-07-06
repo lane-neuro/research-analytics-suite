@@ -11,7 +11,7 @@ Author: Lane
 import asyncio
 import logging
 import traceback
-from typing import List
+from typing import List, Union
 
 
 class CustomLogger:
@@ -50,12 +50,14 @@ class CustomLogger:
             async with CustomLogger._lock:
                 if not self._initialized:
                     self._logger = logging.getLogger('RAS')
-                    self._logger.setLevel(logging.INFO)
+                    self._logger.setLevel(logging.DEBUG)  # Set logger to INFO to prevent spamming
+
                     self.log_message_queue = asyncio.Queue()
                     handler = logging.StreamHandler()
-                    formatter = logging.Formatter('[(%(asctime)s) %(name)s - %(levelname)s]: %(message)s',
-                                                  datefmt='%Y-%m-%d %H:%M:%S')
-
+                    formatter = logging.Formatter(
+                        '[(%(asctime)s) %(name)s - %(levelname)s]: %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S'
+                    )
                     handler.setFormatter(formatter)
                     self._logger.addHandler(handler)
                     self._logger.addFilter(self._log_message)
@@ -74,7 +76,7 @@ class CustomLogger:
         self.log_message_queue.put_nowait(message)
         return True  # Allow the log record to be logged
 
-    def info(self, message) -> None:
+    def info(self, message: Union[str, List[str]]) -> None:
         """
         Logs an info message.
 
@@ -96,7 +98,7 @@ class CustomLogger:
         """
         self._logger.debug(message)
 
-    def error(self, exception, context=None):
+    def error(self, exception: Exception, context: str = None) -> None:
         """
         Logs an error message.
 
