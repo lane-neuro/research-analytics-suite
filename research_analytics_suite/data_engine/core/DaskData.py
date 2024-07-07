@@ -55,14 +55,11 @@ class DaskData(BaseData):
         Args:
             data: The data point.
         """
-        dataframe = None
-
         if isinstance(data, dd.DataFrame):
-            dataframe = data
+            self.dask_dataframe = data
         elif isinstance(data, pd.DataFrame):
-            dataframe = dd.from_pandas(data, npartitions=4)
-
-        return dataframe
+            self.dask_dataframe = dd.from_pandas(data, npartitions=4)
+        return self.dask_dataframe
 
     def compute(self):
         """
