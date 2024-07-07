@@ -30,10 +30,10 @@ class MemoryOutput(MemorySlotCollection):
             aggregated_results.update(slot.data)
         return aggregated_results
 
-    def postprocess_data(self):
+    def postprocess_data(self):         # pragma: no cover
         """Postprocess all output data."""
         pass
 
-    async def validate_results(self):
+    async def validate_results(self):   # pragma: no cover
         """Validate all output results."""
         pass

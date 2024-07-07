@@ -49,6 +49,9 @@ class MemorySlot:
             the memory slot.
             file_path (str, optional): The file path for memory-mapped storage. Defaults to None.
         """
+        from research_analytics_suite.utils import CustomLogger
+        self._logger = CustomLogger()
+
         self._memory_id = memory_id
         self._name = name
         self._operation_required = operation_required
@@ -69,7 +72,8 @@ class MemorySlot:
 
     def __del__(self):
         """Destructor to close the memory-mapped file."""
-        self.close_mmap()
+        if hasattr(self, '_logger') and self._logger:
+            self.close_mmap()
 
     @property
     def memory_id(self) -> str:
@@ -156,7 +160,7 @@ class MemorySlot:
                 self._file_size = data_size
                 self.init_mmap()
         except Exception as e:
-            print(f"Error checking data size: {e}")
+            self._logger.error(e, self.__class__.__name__)
 
     def init_mmap(self):
         """Initialize the memory-mapped file."""
@@ -172,7 +176,7 @@ class MemorySlot:
 
             self.dump_data_to_mmap()
         except Exception as e:
-            print(f"Error initializing memory-mapped file: {e}")
+            self._logger.error(e, self.__class__.__name__)
 
     def dump_data_to_mmap(self):
         """Dump current data to the memory-mapped file."""
@@ -184,14 +188,14 @@ class MemorySlot:
                 self._mmapped_file[offset:offset+size] = serialized_value
                 offset += size
         except Exception as e:
-            print(f"Error dumping data to memory-mapped file: {e}")
+            self._logger.error(e, self.__class__.__name__)
 
     def serialize(self, value):
         """Serialize a value for storage in mmap."""
         try:
             return str(value).encode('utf-8')
         except Exception as e:
-            print(f"Error serializing value: {e}")
+            self._logger.error(e, self.__class__.__name__)
             return b''
 
     def deserialize(self, value, data_type):
@@ -199,7 +203,7 @@ class MemorySlot:
         try:
             return data_type(value.decode('utf-8'))
         except Exception as e:
-            print(f"Error deserializing value: {e}")
+            self._logger.error(e, self.__class__.__name__)
             return None
 
     def close_mmap(self):
@@ -209,7 +213,7 @@ class MemorySlot:
                 self._mmapped_file.close()
                 self._file.close()
         except Exception as e:
-            print(f"Error closing memory-mapped file: {e}")
+            self._logger.error(e, self.__class__.__name__)
 
     def update_modified_time(self):
         """Update the last modified timestamp."""
@@ -221,10 +225,9 @@ class MemorySlot:
         else:
             for k, (t, v) in self._data.items():
                 if not isinstance(k, str):
-                    raise ValueError("All keys in data must be strings")
+                    self._logger.error(ValueError("All keys in data must be strings"), self.__class__.__name__)
                 if not isinstance(v, t):
-                    raise ValueError(f"Value for key '{k}' must be of type {t}")
-
+                    self._logger.error(ValueError(f"Value for key '{k}' must be of type {t}"), self.__class__.__name__)
 
     async def get_data_by_key(self, key: str) -> Any:
         """Retrieve the value associated with a specific key."""
@@ -234,7 +237,8 @@ class MemorySlot:
                     return self.deserialize(self._mmapped_file[:], self._data[key][0])
                 return self._data.get(key, (None, None))[1]
             except Exception as e:
-                print(f"Error getting data by key '{key}': {e}")
+                self._logger.error(e, self.__class__.__name__)
+                return None
 
     async def get_data_type_by_key(self, key: str) -> type:
         """Retrieve the data type associated with a specific key."""
@@ -244,9 +248,9 @@ class MemorySlot:
     async def set_data_by_key(self, key: str, value: Any, data_type: Type):
         """Set the value for a specific key."""
         if not isinstance(key, str):
-            raise ValueError("Key must be a string")
+            self._logger.error(ValueError(f"Key {key} must be a string"), self.__class__.__name__)
         if not isinstance(value, data_type):
-            raise ValueError(f"value must be of type {data_type}")
+            self._logger.error(ValueError(f"Value {value} must be of type {data_type}"), self.__class__.__name__)
         async with self._lock:
             self._data[key] = (data_type, value)
             self.update_modified_time()
@@ -263,7 +267,7 @@ class MemorySlot:
                     del self._data[key]
                     self.update_modified_time()
             except Exception as e:
-                print(f"Error removing data by key '{key}': {e}")
+                self._logger.error(e, self.__class__.__name__)
 
     async def clear_data(self):
         """Clear all data in the data dictionary."""
@@ -274,7 +278,7 @@ class MemorySlot:
                 self._data.clear()
                 self.update_modified_time()
             except Exception as e:
-                print(f"Error clearing data: {e}")
+                self._logger.error(e, self.__class__.__name__)
 
     async def has_key(self, key: str) -> bool:
         """Check if a specific key exists in the data dictionary."""
@@ -283,26 +287,30 @@ class MemorySlot:
 
     def calculate_offset(self, key: str) -> int:
         """Calculate the offset for a key in the mmap file."""
-        try:
-            offset = 0
-            for k in self._data.keys():
-                if k == key:
-                    break
-                offset += len(self.serialize(self._data[k][1]))
-            return offset
-        except Exception as e:
-            print(f"Error calculating offset for key '{key}': {e}")
-            return 0
+        _offset = 0
+        for k in self._data.keys():
+            if k == key:
+                break
+            try:
+                _data_type, _value = self._data[k]
+                if self._use_mmap:
+                    _offset += len(self.serialize(_value))
+            except Exception as e:
+                self._logger.error(e, self.__class__.__name__)
+                _offset = 0
+                break
+
+        return _offset
 
     async def update_data(self, data: Dict[str, Tuple[Type, Any]]):
         """Update multiple key-value pairs in the data dictionary."""
         if not isinstance(data, dict):
-            raise ValueError("data must be a dictionary")
+            self._logger.error(ValueError("data must be a dictionary"), self.__class__.__name__)
         for k, (t, v) in data.items():
             if not isinstance(k, str):
-                raise ValueError("All keys in data must be strings")
+                self._logger.error(ValueError("All keys in data must be strings"), self.__class__.__name__)
             if not isinstance(v, t):
-                raise ValueError(f"Value for key '{k}' must be of type {t}")
+                self._logger.error(ValueError(f"Value for key '{k}' must be of type {t}"), self.__class__.__name__)
 
         async with self._lock:
             try:
@@ -313,17 +321,17 @@ class MemorySlot:
                     self._data.update(data)
                 self.update_modified_time()
             except Exception as e:
-                print(f"Error updating data: {e}")
+                self._logger.error(e, self.__class__.__name__)
 
     async def merge_data(self, data: Dict[str, Tuple[Type, Any]]):
         """Merge another dictionary into the data dictionary."""
         if not isinstance(data, dict):
-            raise ValueError("data must be a dictionary")
+            self._logger.error(ValueError("data must be a dictionary"), self.__class__.__name__)
         for k, (t, v) in data.items():
             if not isinstance(k, str):
-                raise ValueError("All keys in data must be strings")
+                self._logger.error(ValueError("All keys in data must be strings"), self.__class__.__name__)
             if not isinstance(v, t):
-                raise ValueError(f"Value for key '{k}' must be of type {t}")
+                self._logger.error(ValueError(f"Value for key '{k}' must be of type {t}"), self.__class__.__name__)
 
         async with self._lock:
             try:
@@ -334,7 +342,7 @@ class MemorySlot:
                     self._data = {**self._data, **data}
                 self.update_modified_time()
             except Exception as e:
-                print(f"Error merging data: {e}")
+                self._logger.error(e, self.__class__.__name__)
 
     async def data_keys(self) -> list:
         """Return a list of keys in the data dictionary."""
@@ -342,7 +350,7 @@ class MemorySlot:
             try:
                 return list(self._data.keys())
             except Exception as e:
-                print(f"Error getting data keys: {e}")
+                self._logger.error(e, self.__class__.__name__)
 
     async def data_values(self) -> list:
         """Return a list of values in the data dictionary."""
@@ -352,7 +360,7 @@ class MemorySlot:
                     return [self.deserialize(self._mmapped_file[:], data_type) for data_type, _ in self._data.values()]
                 return [v for _, v in self._data.values()]
             except Exception as e:
-                print(f"Error getting data values: {e}")
+                self._logger.error(e, self.__class__.__name__)
 
     async def data_items(self) -> list:
         """Return a list of key-value pairs in the data dictionary."""
@@ -362,7 +370,7 @@ class MemorySlot:
                     return [(k, self.deserialize(self._mmapped_file[:], data_type)) for k, (data_type, _) in self._data.items()]
                 return list(self._data.items())
             except Exception as e:
-                print(f"Error getting data items: {e}")
+                self._logger.error(e, self.__class__.__name__)
 
     async def to_dict(self) -> dict:
         """Convert the MemorySlot instance to a dictionary."""
@@ -385,7 +393,7 @@ class MemorySlot:
                     'modified_at': self._modified_at
                 }
             except Exception as e:
-                print(f"Error converting to dictionary: {e}")
+                self._logger.error(e, self.__class__.__name__)
 
     @staticmethod
     async def load_from_disk(data: dict) -> 'MemorySlot':
@@ -413,4 +421,4 @@ class MemorySlot:
             slot._modified_at = data.get('modified_at', slot._created_at)
             return slot
         except Exception as e:
-            print(f"Error loading from dictionary: {e}")
+            raise ValueError(f"Error loading MemorySlot from disk: {e}")

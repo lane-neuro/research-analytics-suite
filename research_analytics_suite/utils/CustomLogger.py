@@ -98,7 +98,7 @@ class CustomLogger:
         """
         self._logger.debug(message)
 
-    def error(self, exception: Exception, context: str = None) -> None:
+    def error(self, exception: Exception, context: str = None):
         """
         Logs an error message.
 
