@@ -41,7 +41,7 @@ class AnalogInput(BaseInput):
         """
         return self.read_function()
 
-    def close(self):
+    def close(self):    # pragma: no cover
         """
         Placeholder for closing any resources, if necessary.
         """
