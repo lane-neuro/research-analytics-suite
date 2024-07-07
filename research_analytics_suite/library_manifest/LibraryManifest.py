@@ -57,11 +57,6 @@ class LibraryManifest:
         if category_id in self._categories:
             self._categories[category_id].register_operation(operation_attributes)
 
-    def is_verified(self, category_id):
-        if category_id in self._categories:
-            return check_verified(category_id)
-        return False
-
     async def build_base_library(self):
         def add_categories(parent_id, parent_name, subcategories):
             for sub_key, sub_data in subcategories.items():
