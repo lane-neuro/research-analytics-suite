@@ -3,6 +3,8 @@ import pytest_asyncio
 from unittest import mock
 from research_analytics_suite.library_manifest.LibraryManifest import LibraryManifest
 
+
+@pytest.mark.asyncio
 class TestLibraryManifest:
 
     @pytest_asyncio.fixture(autouse=True)

@@ -89,7 +89,7 @@ class LibraryManifest:
 
         for category_id, category in self._categories.items():
             operations = []
-            for operation in category.operations:
+            for operation in category.operations or []:
                 if operation == {}:
                     continue
 
