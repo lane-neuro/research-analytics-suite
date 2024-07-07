@@ -17,10 +17,9 @@ import asyncio
 
 async def update_progress(operation):
     """
-    Update the progress of the operation.
+    Update the progress of the operation. A basic timer for now.
     """
     while not operation.is_complete:
         if operation.status == "running":
-            await operation.pause_event.wait()
             operation.progress += 1
         await asyncio.sleep(1)
