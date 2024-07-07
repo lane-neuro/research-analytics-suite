@@ -49,11 +49,11 @@ class OperationSlotPreview(GUIBase):
             self._required_inputs = []
         self._parent_id = f"parent_{self._runtime_id}"
 
-    async def initialize_gui(self) -> None:
+    async def initialize_gui(self) -> None:  # pragma: no cover
         """Initializes resources and adds the update operation."""
         pass
 
-    async def _update_async(self) -> None:
+    async def _update_async(self) -> None:  # pragma: no cover
         pass
 
     def draw(self):
