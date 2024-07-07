@@ -93,4 +93,3 @@ class TestLibraryManifest:
                         # Verify that the operation was added to the library
                         assert 9999 in self.library_manifest._categories
                         assert len(self.library_manifest._categories[9999].operations) > 0
-                        

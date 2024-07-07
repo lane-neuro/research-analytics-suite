@@ -83,3 +83,16 @@ async def test_resume_child_operations():
 
     child_operation_1.resume.assert_awaited_once()
     child_operation_2.resume.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_resume_child_operations_inheritance_none():
+    parent_operation = MagicMock()
+    parent_operation.inheritance = None
+
+    from research_analytics_suite.operation_manager.operations.core.control.ResumeOperation import \
+        resume_child_operations
+    await resume_child_operations(parent_operation)
+
+    # Ensure no exceptions and nothing is called
+    assert parent_operation.inheritance is None
