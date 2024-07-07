@@ -2,13 +2,9 @@ import asyncio
 import os
 import importlib
 import pkgutil
-import inspect
 from research_analytics_suite.library_manifest.Category import Category
 from research_analytics_suite.library_manifest.CategoryID import CategoryID
 from research_analytics_suite.library_manifest.utils import check_verified
-from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
-    get_attributes_from_disk, OperationAttributes, get_attributes_from_operation, get_attributes_from_module, \
-    get_attributes_from_dict
 
 
 class LibraryManifest:
@@ -97,6 +93,7 @@ class LibraryManifest:
                 if operation == {}:
                     continue
 
+                from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
                 if isinstance(operation, OperationAttributes):
                     operations.append(operation.export_attributes())
                 elif isinstance(operation, dict) and operation != {}:
@@ -118,6 +115,7 @@ class LibraryManifest:
                 self._logger.debug(f"Importing module: {module_name}")
                 module = importlib.import_module(f'operation_library.{module_name}').__dict__.get(module_name)
 
+                from research_analytics_suite.operation_manager.operations.core.memory import get_attributes_from_module
                 self.add_operation_from_attributes(await get_attributes_from_module(module))
         except ModuleNotFoundError:
             self._logger.error(Exception("operation_library module not found"))
@@ -139,6 +137,7 @@ class LibraryManifest:
 
         for _op in operation_files:
             self._logger.debug(f"Loading operation from file: {_op}")
+            from research_analytics_suite.operation_manager.operations.core.memory import get_attributes_from_disk
             self.add_operation_from_attributes(await get_attributes_from_disk(_op))
         self._logger.debug("Completed load_user_library")
 

@@ -3,7 +3,6 @@
 import pytest
 import asyncio
 
-from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
 
 @pytest.fixture
 def event_loop():
@@ -11,22 +10,25 @@ def event_loop():
     yield loop
     loop.close()
 
+
 class TestOperationAttributes:
 
     @pytest.fixture(autouse=True)
     def setup_method(self):
+        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+            OperationAttributes
         self.op_attr = OperationAttributes(
             name='TestOperation',
             version='1.0',
             description='Test description',
             category_id=123,
             author='TestAuthor',
-            github='https://github.com/test/repo',
+            github='test-author',
             email='test@example.com',
             action='test_action',
             required_inputs={'input1': 'str'},
             parent_operation=None,
-            inheritance=[],
+            inheritance=['inheritance1', 'inheritance2'],
             is_loop=False,
             is_cpu_bound=False,
             parallel=True
@@ -47,13 +49,13 @@ class TestOperationAttributes:
         assert attributes['description'] == 'Test description'
         assert attributes['category_id'] == 123
         assert attributes['author'] == 'TestAuthor'
-        assert attributes['github'] == 'https://github.com/test/repo'
+        assert attributes['github'] == 'test-author'
         assert attributes['email'] == 'test@example.com'
-        assert attributes['unique_id'] == 'https://github.com/test/repo_TestOperation_1.0'
+        assert attributes['unique_id'] == 'test-author_TestOperation_1.0'
         assert attributes['action'] == 'test_action'
         assert attributes['required_inputs'] == {'input1': str}
         assert attributes['parent_operation'] is None
-        assert attributes['inheritance'] == []
+        assert attributes['inheritance'] == ['inheritance1', 'inheritance2']
         assert not attributes['is_loop']
         assert not attributes['is_cpu_bound']
         assert attributes['parallel']
@@ -67,19 +69,21 @@ class TestOperationAttributes:
         assert attributes['description'] == 'Test description'
         assert attributes['category_id'] == 123
         assert attributes['author'] == 'TestAuthor'
-        assert attributes['github'] == 'https://github.com/test/repo'
+        assert attributes['github'] == 'test-author'
         assert attributes['email'] == 'test@example.com'
-        assert attributes['unique_id'] == 'https://github.com/test/repo_TestOperation_1.0'
+        assert attributes['unique_id'] == 'test-author_TestOperation_1.0'
         assert attributes['action'] == 'test_action'
         assert attributes['required_inputs'] == {'input1': str}
         assert attributes['parent_operation'] is None
-        assert attributes['inheritance'] == []
+        assert attributes['inheritance'] == ['inheritance1', 'inheritance2']
         assert not attributes['is_loop']
         assert not attributes['is_cpu_bound']
         assert attributes['parallel']
 
     @pytest.mark.asyncio
     async def test_invalid_data_types(self):
+        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+            OperationAttributes
         op_attr_invalid = OperationAttributes(
             name=123,
             version=1.0,
@@ -119,6 +123,8 @@ class TestOperationAttributes:
 
     @pytest.mark.asyncio
     async def test_edge_case_empty_fields(self):
+        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+            OperationAttributes
         op_attr_empty = OperationAttributes(
             name='',
             version='',
@@ -147,7 +153,7 @@ class TestOperationAttributes:
         assert attributes['github'] == '[no-github]'
         assert attributes['email'] == '[no-email]'
         assert attributes['unique_id'] == '[no-github]_[no-name]_0.0.1'
-        assert attributes['action'] == None
+        assert attributes['action'] is None
         assert attributes['required_inputs'] == {}
         assert attributes['parent_operation'] is None
         assert attributes['inheritance'] == []
@@ -157,13 +163,15 @@ class TestOperationAttributes:
 
     @pytest.mark.asyncio
     async def test_partial_initialization(self):
+        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+            OperationAttributes
         op_attr_partial = OperationAttributes(
             name='PartialTest',
             version='1.1',
             description='Partial description',
             category_id=456,
             author='PartialAuthor',
-            github='https://github.com/partial/repo',
+            github='partial-author',
             email='partial@example.com',
             action='partial_action',
             required_inputs={'input1': 'str'},
@@ -182,9 +190,9 @@ class TestOperationAttributes:
         assert attributes['description'] == 'Partial description'
         assert attributes['category_id'] == 456
         assert attributes['author'] == 'PartialAuthor'
-        assert attributes['github'] == 'https://github.com/partial/repo'
+        assert attributes['github'] == 'partial-author'
         assert attributes['email'] == 'partial@example.com'
-        assert attributes['unique_id'] == 'https://github.com/partial/repo_PartialTest_1.1'
+        assert attributes['unique_id'] == 'partial-author_PartialTest_1.1'
         assert attributes['action'] == 'partial_action'
         assert attributes['required_inputs'] == {'input1': str}
         assert attributes['parent_operation'] is None
@@ -195,13 +203,15 @@ class TestOperationAttributes:
 
     @pytest.mark.asyncio
     async def test_missing_required_inputs(self):
+        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+            OperationAttributes
         op_attr_no_inputs = OperationAttributes(
             name='NoInputs',
             version='1.2',
             description='No inputs description',
             category_id=789,
             author='NoInputsAuthor',
-            github='https://github.com/noinputs/repo',
+            github='noinputs-author',
             email='noinputs@example.com',
             action='noinputs_action',
             required_inputs=None,
@@ -220,9 +230,9 @@ class TestOperationAttributes:
         assert attributes['description'] == 'No inputs description'
         assert attributes['category_id'] == 789
         assert attributes['author'] == 'NoInputsAuthor'
-        assert attributes['github'] == 'https://github.com/noinputs/repo'
+        assert attributes['github'] == 'noinputs-author'
         assert attributes['email'] == 'noinputs@example.com'
-        assert attributes['unique_id'] == 'https://github.com/noinputs/repo_NoInputs_1.2'
+        assert attributes['unique_id'] == 'noinputs-author_NoInputs_1.2'
         assert attributes['action'] == 'noinputs_action'
         assert attributes['required_inputs'] == {}
         assert attributes['parent_operation'] is None

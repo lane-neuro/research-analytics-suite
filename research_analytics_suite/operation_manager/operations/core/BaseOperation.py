@@ -19,13 +19,12 @@ from abc import ABC
 from typing import Tuple, final
 
 from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
-from .execution import execute_operation, execute_inherited_operations, action_serialized
+from .execution import execute_operation, execute_inherited_operations
 from .progress import update_progress
 from .inheritance import (add_child_operation, link_child_operation, remove_child_operation,
                           start_child_operations, pause_child_operations, resume_child_operations,
                           stop_child_operations, reset_child_operations)
 from .workspace import save_operation_in_workspace, load_from_disk, load_operation_group, from_dict
-from research_analytics_suite.operation_manager.operations.core.memory import MemoryInput, MemoryOutput
 
 
 class BaseOperation(ABC):
@@ -185,7 +184,9 @@ class BaseOperation(ABC):
 
                     self._required_inputs: dict[str, type] = self.temp_kwargs.get(
                         'required_inputs', dict[str, type]())
+                    from research_analytics_suite.operation_manager.operations.core.memory import MemoryInput
                     self.memory_inputs = MemoryInput(name=f"{self.name}_input")
+                    from research_analytics_suite.operation_manager.operations.core.memory import MemoryOutput
                     self.memory_outputs = MemoryOutput(name=f"{self.name}_output")
 
                     self._parent_operation = self.temp_kwargs.get('parent_operation', None)

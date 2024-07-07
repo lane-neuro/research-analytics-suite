@@ -2,11 +2,6 @@ import pytest
 import pytest_asyncio
 from unittest import mock
 from research_analytics_suite.library_manifest.LibraryManifest import LibraryManifest
-from research_analytics_suite.library_manifest.Category import Category
-from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
-from research_analytics_suite.operation_manager.operations.core.workspace.FileDiskOperations import load_from_disk
-import aiofiles
-import os
 
 class TestLibraryManifest:
 
@@ -46,6 +41,8 @@ class TestLibraryManifest:
         assert self.library_manifest._categories[9999].name == "Test Category"
 
     def test_add_operation_from_attributes(self):
+        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+            OperationAttributes
         operation_attributes = mock.MagicMock(spec=OperationAttributes)
         operation_attributes.category_id = 9999
         self.library_manifest.add_category(9999, "Test Category")

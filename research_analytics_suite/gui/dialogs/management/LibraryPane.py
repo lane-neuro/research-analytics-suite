@@ -112,7 +112,8 @@ class LibraryPane(GUIBase):
             preview_tile.draw()
 
     def _add_category(self) -> None:
-        self._library_manifest.add_category(category_id=10, category_name="New Category")
+        pass
+        # self._library_manifest.add_category(category_id=10, category_name="New Category")
 
     def _new_operation(self) -> None:
         from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
