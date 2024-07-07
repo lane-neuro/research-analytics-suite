@@ -1,17 +1,15 @@
-# tests/operation_manager/operations/core/memory/test_operation_attributes.py
+# tests/test_operation_attributes.py
+
 import pytest
 import asyncio
-from unittest.mock import patch, AsyncMock
 
 from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
-
 
 @pytest.fixture
 def event_loop():
     loop = asyncio.get_event_loop()
     yield loop
     loop.close()
-
 
 class TestOperationAttributes:
 
@@ -26,7 +24,7 @@ class TestOperationAttributes:
             github='https://github.com/test/repo',
             email='test@example.com',
             action='test_action',
-            required_inputs={'input1': 'value1'},
+            required_inputs={'input1': 'str'},
             parent_operation=None,
             inheritance=[],
             is_loop=False,
@@ -36,14 +34,29 @@ class TestOperationAttributes:
 
     @pytest.mark.asyncio
     async def test_initialization(self):
-        assert self.op_attr._name is None
-        assert self.op_attr._version is None
+        assert self.op_attr._name == 'TestOperation'
+        assert self.op_attr._version == '1.0'
         assert not self.op_attr._initialized
 
     @pytest.mark.asyncio
     async def test_export_attributes_before_initialization(self):
+        self.op_attr._initialized = False
         attributes = self.op_attr.export_attributes()
-        assert attributes['name'] == 'No name'
+        assert attributes['name'] == 'TestOperation'
+        assert attributes['version'] == '1.0'
+        assert attributes['description'] == 'Test description'
+        assert attributes['category_id'] == 123
+        assert attributes['author'] == 'TestAuthor'
+        assert attributes['github'] == 'https://github.com/test/repo'
+        assert attributes['email'] == 'test@example.com'
+        assert attributes['unique_id'] == 'https://github.com/test/repo_TestOperation_1.0'
+        assert attributes['action'] == 'test_action'
+        assert attributes['required_inputs'] == {'input1': str}
+        assert attributes['parent_operation'] is None
+        assert attributes['inheritance'] == []
+        assert not attributes['is_loop']
+        assert not attributes['is_cpu_bound']
+        assert attributes['parallel']
 
     @pytest.mark.asyncio
     async def test_export_attributes_after_initialization(self):
@@ -56,9 +69,9 @@ class TestOperationAttributes:
         assert attributes['author'] == 'TestAuthor'
         assert attributes['github'] == 'https://github.com/test/repo'
         assert attributes['email'] == 'test@example.com'
-        assert attributes['unique_id'] == f'https://github.com/test/repo_TestOperation_1.0'
+        assert attributes['unique_id'] == 'https://github.com/test/repo_TestOperation_1.0'
         assert attributes['action'] == 'test_action'
-        assert attributes['required_inputs'] == {'input1': 'value1'}
+        assert attributes['required_inputs'] == {'input1': str}
         assert attributes['parent_operation'] is None
         assert attributes['inheritance'] == []
         assert not attributes['is_loop']
@@ -68,34 +81,34 @@ class TestOperationAttributes:
     @pytest.mark.asyncio
     async def test_invalid_data_types(self):
         op_attr_invalid = OperationAttributes(
-            name=123,  # Invalid type: should be str
-            version=1.0,  # Invalid type: should be str
-            description=123,  # Invalid type: should be str
-            category_id='123',  # Invalid type: should be int
-            author=123,  # Invalid type: should be str
-            github=123,  # Invalid type: should be str
-            email=123,  # Invalid type: should be str
-            unique_id=123,  # Invalid type: should be str
-            action=None,  # Invalid type: should be any valid action type
-            required_inputs='input1',  # Invalid type: should be dict
-            parent_operation='parent',  # Invalid type: should be OperationAttributes or None
-            inheritance='inheritance',  # Invalid type: should be list
-            is_loop='False',  # Invalid type: should be bool
-            is_cpu_bound='False',  # Invalid type: should be bool
-            parallel='True'  # Invalid type: should be bool
+            name=123,
+            version=1.0,
+            description=123,
+            category_id='123',
+            author=123,
+            github=123,
+            email=123,
+            unique_id=123,
+            action=None,
+            required_inputs='input1',
+            parent_operation='parent',
+            inheritance='inheritance',
+            is_loop='False',
+            is_cpu_bound='False',
+            parallel='True'
         )
 
         await op_attr_invalid.initialize()
 
         attributes = op_attr_invalid.export_attributes()
-        assert attributes['name'] == 'No name'
+        assert attributes['name'] == '[no-name]'
         assert attributes['version'] == '0.0.1'
-        assert attributes['description'] == 'None'
+        assert attributes['description'] == '[no-description]'
         assert attributes['category_id'] == 1
-        assert attributes['author'] == 'No author'
+        assert attributes['author'] == '[no-author]'
         assert attributes['github'] == '[no-github]'
         assert attributes['email'] == '[no-email]'
-        assert attributes['unique_id'] == '[no-github]_No name_0.0.1'
+        assert attributes['unique_id'] == '[no-github]_[no-name]_0.0.1'
         assert attributes['action'] is None
         assert attributes['required_inputs'] == {}
         assert attributes['parent_operation'] is None
@@ -103,3 +116,117 @@ class TestOperationAttributes:
         assert not attributes['is_loop']
         assert not attributes['is_cpu_bound']
         assert not attributes['parallel']
+
+    @pytest.mark.asyncio
+    async def test_edge_case_empty_fields(self):
+        op_attr_empty = OperationAttributes(
+            name='',
+            version='',
+            description='',
+            category_id=0,
+            author='',
+            github='',
+            email='',
+            action='',
+            required_inputs={},
+            parent_operation=None,
+            inheritance=[],
+            is_loop=False,
+            is_cpu_bound=False,
+            parallel=False
+        )
+
+        await op_attr_empty.initialize()
+
+        attributes = op_attr_empty.export_attributes()
+        assert attributes['name'] == '[no-name]'
+        assert attributes['version'] == '0.0.1'
+        assert attributes['description'] == '[no-description]'
+        assert attributes['category_id'] == 1
+        assert attributes['author'] == '[no-author]'
+        assert attributes['github'] == '[no-github]'
+        assert attributes['email'] == '[no-email]'
+        assert attributes['unique_id'] == '[no-github]_[no-name]_0.0.1'
+        assert attributes['action'] == None
+        assert attributes['required_inputs'] == {}
+        assert attributes['parent_operation'] is None
+        assert attributes['inheritance'] == []
+        assert not attributes['is_loop']
+        assert not attributes['is_cpu_bound']
+        assert not attributes['parallel']
+
+    @pytest.mark.asyncio
+    async def test_partial_initialization(self):
+        op_attr_partial = OperationAttributes(
+            name='PartialTest',
+            version='1.1',
+            description='Partial description',
+            category_id=456,
+            author='PartialAuthor',
+            github='https://github.com/partial/repo',
+            email='partial@example.com',
+            action='partial_action',
+            required_inputs={'input1': 'str'},
+            parent_operation=None,
+            inheritance=[],
+            is_loop=True,
+            is_cpu_bound=True,
+            parallel=False
+        )
+
+        await op_attr_partial.initialize()
+
+        attributes = op_attr_partial.export_attributes()
+        assert attributes['name'] == 'PartialTest'
+        assert attributes['version'] == '1.1'
+        assert attributes['description'] == 'Partial description'
+        assert attributes['category_id'] == 456
+        assert attributes['author'] == 'PartialAuthor'
+        assert attributes['github'] == 'https://github.com/partial/repo'
+        assert attributes['email'] == 'partial@example.com'
+        assert attributes['unique_id'] == 'https://github.com/partial/repo_PartialTest_1.1'
+        assert attributes['action'] == 'partial_action'
+        assert attributes['required_inputs'] == {'input1': str}
+        assert attributes['parent_operation'] is None
+        assert attributes['inheritance'] == []
+        assert attributes['is_loop']
+        assert attributes['is_cpu_bound']
+        assert not attributes['parallel']
+
+    @pytest.mark.asyncio
+    async def test_missing_required_inputs(self):
+        op_attr_no_inputs = OperationAttributes(
+            name='NoInputs',
+            version='1.2',
+            description='No inputs description',
+            category_id=789,
+            author='NoInputsAuthor',
+            github='https://github.com/noinputs/repo',
+            email='noinputs@example.com',
+            action='noinputs_action',
+            required_inputs=None,
+            parent_operation=None,
+            inheritance=[],
+            is_loop=True,
+            is_cpu_bound=True,
+            parallel=True
+        )
+
+        await op_attr_no_inputs.initialize()
+
+        attributes = op_attr_no_inputs.export_attributes()
+        assert attributes['name'] == 'NoInputs'
+        assert attributes['version'] == '1.2'
+        assert attributes['description'] == 'No inputs description'
+        assert attributes['category_id'] == 789
+        assert attributes['author'] == 'NoInputsAuthor'
+        assert attributes['github'] == 'https://github.com/noinputs/repo'
+        assert attributes['email'] == 'noinputs@example.com'
+        assert attributes['unique_id'] == 'https://github.com/noinputs/repo_NoInputs_1.2'
+        assert attributes['action'] == 'noinputs_action'
+        assert attributes['required_inputs'] == {}
+        assert attributes['parent_operation'] is None
+        assert attributes['inheritance'] == []
+        assert attributes['is_loop']
+        assert attributes['is_cpu_bound']
+        assert attributes['parallel']

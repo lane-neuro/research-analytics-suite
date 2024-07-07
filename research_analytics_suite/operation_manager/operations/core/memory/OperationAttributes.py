@@ -16,89 +16,81 @@ import ast
 import asyncio
 import inspect
 from typing import Optional, Any
+
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
+
 from research_analytics_suite.operation_manager.operations.core.workspace import load_from_disk
 
 
 class OperationAttributes:
-    """
-    OperationAttributes class is used to temporarily store the attributes of an operation, allowing for operations
-    to be processed without the need for the operation class to be loaded. This is useful for building the library
-    manifest and reduces the need to load all operations into memory.
-    """
     _lock = asyncio.Lock()
+    _TYPES_DICT = {
+        'str': str,
+        'int': int,
+        'float': float,
+        'list': list,
+        'dict': dict,
+        'tuple': tuple,
+        'set': set,
+        'bool': bool
+    }
 
     def __init__(self, *args, **kwargs):
-        """
-        Initializes the OperationAttributes with the given parameters.
-
-        Args:
-            name (str): The name of the operation.
-            version (str): The version of the operation.
-            description (str): The description of the operation.
-            category_id (str): The unique identifier of the category.
-            author (str): The author of the operation.
-            github (str): The GitHub repository of the operation.
-            email (str): The email of the author of the operation.
-            unique_id (str): The unique identifier of the operation.
-            action (str): The action of the operation.
-            required_inputs (dict): The required inputs of the operation.
-            parent_operation (OperationAttributes): The parent operation of the operation.
-            inheritance (list): The child operations of the operation.
-            is_loop (bool): The is_loop status of the operation.
-            is_cpu_bound (bool): The CPU bound status of the operation.
-            parallel (bool): The parallel status of the operation.
-        """
         if not hasattr(self, '_initialized'):
             from research_analytics_suite.utils import CustomLogger
             self._logger = CustomLogger()
 
-            self._temp_kwargs = kwargs
-
-            self._name = None
-            self._version = None
-            self._description = None
-            self._category_id = 1
-            self._author = None
-            self._github = None
-            self._email = None
-            self._action = None
-            self._required_inputs = {}
-            self._parent_operation = None
-            self._inheritance = []
-            self._is_loop = None
-            self._is_cpu_bound = None
-            self._parallel = None
+            self._name = kwargs.get('name') or "[no-name]"
+            self._version = kwargs.get('version') or "0.0.1"
+            self._description = kwargs.get('description') or "[no-description]"
+            self._category_id = kwargs.get('category_id') or 1
+            self._author = kwargs.get('author') or "[no-author]"
+            self._github = kwargs.get('github') or "[no-github]"
+            self._email = kwargs.get('email') or "[no-email]"
+            self._action = kwargs.get('action') or None
+            self._required_inputs = self._process_required_inputs(kwargs.get('required_inputs', {}))
+            self._parent_operation = kwargs.get('parent_operation') or None
+            self._inheritance = kwargs.get('inheritance') or []
+            self._is_loop = kwargs.get('is_loop') or False
+            self._is_cpu_bound = kwargs.get('is_cpu_bound') or False
+            self._parallel = kwargs.get('parallel') or False
 
             self._initialized = False
 
-    async def initialize(self):
-        """
-        Initializes the OperationAttributes.
+    def _process_required_inputs(self, inputs):
+        if isinstance(inputs, dict):
+            processed_dict = {}
+            for k, v in inputs.items():
+                if isinstance(v, str):
+                    try:
+                        processed_dict[k] = self._TYPES_DICT[v.lower()]
+                    except KeyError:
+                        processed_dict[k] = None
+                else:
+                    processed_dict[k] = v
+            return processed_dict
+        return {}
 
-        This method is called asynchronously to initialize the OperationAttributes.
-        """
+    async def initialize(self):
         if not self._initialized:
             async with OperationAttributes._lock:
                 if not self._initialized:
-
-                    self.name = self._temp_kwargs.get('name', "No name")
-                    self.version = self._temp_kwargs.get('version', "0.0.1")
-                    self.description = self._temp_kwargs.get('description', "None")
-                    self.category_id = self._temp_kwargs.get('category_id', 1)
-                    self.author = self._temp_kwargs.get('author', "No author")
-                    self.github = self._temp_kwargs.get('github', "[no-github]")
-                    self.email = self._temp_kwargs.get('email', "[no-email]")
-                    self.action = self._temp_kwargs.get('action', "None")
-                    self.required_inputs = self._temp_kwargs.get('required_inputs', {})
-                    self.parent_operation = self._temp_kwargs.get('parent_operation', None)
-                    self.inheritance = self._temp_kwargs.get('inheritance', [])
-                    self.is_loop = self._temp_kwargs.get('is_loop', False)
-                    self.is_cpu_bound = self._temp_kwargs.get('is_cpu_bound', False)
-                    self.parallel = self._temp_kwargs.get('parallel', False)
+                    self.name = self._name
+                    self.version = self._version
+                    self.description = self._description
+                    self.category_id = self._category_id
+                    self.author = self._author
+                    self.github = self._github
+                    self.email = self._email
+                    self.action = self._action
+                    self.required_inputs = self._required_inputs
+                    self.parent_operation = self._parent_operation
+                    self.inheritance = self._inheritance
+                    self.is_loop = self._is_loop
+                    self.is_cpu_bound = self._is_cpu_bound
+                    self.parallel = self._parallel
 
                     self._initialized = True
-
-                    del self._temp_kwargs
 
     def export_attributes(self) -> dict:
         return {
@@ -121,165 +113,121 @@ class OperationAttributes:
 
     @property
     def name(self) -> str:
-        return self._name or "No name"
+        return self._name
 
     @name.setter
     def name(self, value):
-        if not isinstance(value, str):
-            value = "No name"
-
-        self._name = value
+        self._name = value if isinstance(value, str) else "[no-name]"
 
     @property
     def version(self) -> str:
-        return self._version or "0.0.1"
+        return self._version
 
     @version.setter
     def version(self, value):
-        if not isinstance(value, str):
-            value = "0.0.1"
-
-        self._version = value
+        self._version = value if isinstance(value, str) else "0.0.1"
 
     @property
     def description(self) -> str:
-        return self._description or "None"
+        return self._description
 
     @description.setter
     def description(self, value):
-        if not isinstance(value, str):
-            value = "None"
-
-        self._description = value
+        self._description = value if isinstance(value, str) else "[no-description]"
 
     @property
     def category_id(self) -> int:
-        return self._category_id or 1
+        return self._category_id
 
     @category_id.setter
     def category_id(self, value):
-        if not isinstance(value, int):
-            value = 1
-
-        self._category_id = value
+        self._category_id = value if isinstance(value, int) else 1
 
     @property
     def author(self) -> str:
-        return self._author or "No author"
+        return self._author
 
     @author.setter
     def author(self, value):
-        if not isinstance(value, str):
-            value = "No author"
-
-        self._author = value
+        self._author = value if isinstance(value, str) else "[no-author]"
 
     @property
     def github(self) -> str:
-        return self._github or "[no-github]"
+        return self._github
 
     @github.setter
     def github(self, value):
-        if not isinstance(value, str):
-            value = "[no-github]"
-        if value.startswith("@"):
+        if isinstance(value, str) and value.startswith("@"):
             value = value[1:]
-
-        self._github = value
+        self._github = value if isinstance(value, str) else "[no-github]"
 
     @property
     def email(self) -> str:
-        return self._email or "[no-email]"
+        return self._email
 
     @email.setter
     def email(self, value):
-        if not isinstance(value, str):
-            value = "[no-email]"
-
-        self._email = value
+        self._email = value if isinstance(value, str) else "[no-email]"
 
     @property
     def unique_id(self) -> str:
-        return f"{self._github}_{self._name}_{self._version}" or "[no-unique-id]"
+        return f"{self.github}_{self.name}_{self.version}"
 
     @property
     def action(self) -> Any:
-        return self._action or None
+        return self._action
 
     @action.setter
     def action(self, value):
-        if not value:
-            value = None
-
         self._action = value
 
     @property
     def required_inputs(self) -> dict:
-        return self._required_inputs or {}
+        return self._required_inputs
 
     @required_inputs.setter
     def required_inputs(self, value):
-        if not isinstance(value, dict):
-            value = {}
-
-        self._required_inputs = value
+        self._required_inputs = self._process_required_inputs(value)
 
     @property
-    def parent_operation(self) -> 'OperationAttributes' or None:
-        return self._parent_operation or None
+    def parent_operation(self) -> 'OperationAttributes' or 'BaseOperation' or None:
+        return self._parent_operation
 
     @parent_operation.setter
     def parent_operation(self, value):
-        if not isinstance(value, OperationAttributes) and value is not None:
-            value = None
-        if not value:
-            value = None
-
-        self._parent_operation = value
+        self._parent_operation = value if isinstance(value, (OperationAttributes, BaseOperation, type(None))) else None
 
     @property
     def inheritance(self) -> list:
-        return self._inheritance or []
+        return self._inheritance
 
     @inheritance.setter
     def inheritance(self, value):
-        if not isinstance(value, list) and value is not None and value != []:
-            value = []
-
-        self._inheritance = value
+        self._inheritance = value if isinstance(value, list) else []
 
     @property
     def is_loop(self) -> bool:
-        return self._is_loop or False
+        return self._is_loop
 
     @is_loop.setter
     def is_loop(self, value):
-        if not isinstance(value, bool):
-            value = False
-
-        self._is_loop = value
+        self._is_loop = value if isinstance(value, bool) else False
 
     @property
     def is_cpu_bound(self) -> bool:
-        return self._is_cpu_bound or False
+        return self._is_cpu_bound
 
     @is_cpu_bound.setter
     def is_cpu_bound(self, value):
-        if not isinstance(value, bool):
-            value = False
-
-        self._is_cpu_bound = value
+        self._is_cpu_bound = value if isinstance(value, bool) else False
 
     @property
     def parallel(self) -> bool:
-        return self._parallel or False
+        return self._parallel
 
     @parallel.setter
     def parallel(self, value):
-        if not isinstance(value, bool):
-            value = False
-
-        self._parallel = value
+        self._parallel = value if isinstance(value, bool) else False
 
 
 async def get_attributes_from_disk(file_path: str) -> Optional['OperationAttributes']:
@@ -341,13 +289,18 @@ async def get_attributes_from_module(module) -> Optional['OperationAttributes']:
                     if isinstance(target, ast.Name):
                         prop_name = target.id
 
-                        if isinstance(node.value, ast.Constant or ast.Str or ast.Num or ast.NameConstant
-                                      or ast.Name or ast.Attribute or ast.Subscript or ast.Tuple or ast.List
-                                      or ast.Dict):
-                            try:
-                                _op_props.__setattr__(prop_name, node.value.value)
-                            except AttributeError:
-                                raise AttributeError(f"Invalid attribute: {prop_name}")
+                        try:
+                            if isinstance(node.value, ast.Dict):
+                                dict_items = {translate_item(k): translate_item(v) for k, v in zip(node.value.keys, node.value.values)}
+                                _op_props.__setattr__(prop_name, dict_items)
+                            elif isinstance(node.value, ast.List):
+                                list_items = [translate_item(v) for v in node.value.elts]
+                                _op_props.__setattr__(prop_name, list_items)
+                            elif isinstance(node.value, ast.Tuple):
+                                tuple_items = tuple(translate_item(v) for v in node.value.elts)
+                                _op_props.__setattr__(prop_name, tuple_items)
+                        except AttributeError:
+                            raise AttributeError(f"Invalid attribute: {prop_name}")
 
     return _op_props
 
@@ -380,3 +333,17 @@ async def get_attributes_from_dict(attributes: dict) -> Optional['OperationAttri
     _op = OperationAttributes(**attributes)
     await _op.initialize()
     return _op
+
+
+def translate_item(_v):
+    if isinstance(_v, (ast.Constant, ast.Num, ast.Str, ast.NameConstant)):
+        return _v.value
+    elif isinstance(_v, ast.Name):
+        return _v.id
+    elif isinstance(_v, ast.Attribute):
+        return _v.attr
+    elif isinstance(_v, ast.Subscript):
+        # Handle subscript if needed, placeholder return for now
+        return _v
+    else:
+        return f"{_v}"

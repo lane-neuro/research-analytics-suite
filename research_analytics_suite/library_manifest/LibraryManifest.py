@@ -94,7 +94,7 @@ class LibraryManifest:
         for category_id, category in self._categories.items():
             operations = []
             for operation in category.operations:
-                if operation == {}:  # pragma: no cover
+                if operation == {}:
                     continue
 
                 if isinstance(operation, OperationAttributes):
@@ -112,6 +112,9 @@ class LibraryManifest:
         try:
             package = importlib.import_module('operation_library')
             for _, module_name, _ in pkgutil.iter_modules(package.__path__):
+                if module_name == '__init__':
+                    continue
+
                 self._logger.debug(f"Importing module: {module_name}")
                 module = importlib.import_module(f'operation_library.{module_name}').__dict__.get(module_name)
 
