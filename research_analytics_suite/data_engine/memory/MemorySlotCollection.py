@@ -5,6 +5,7 @@ An abstract base class representing a collection of memory slots for storing dat
 
 Author: Lane
 """
+from __future__ import annotations
 from abc import ABC
 from typing import List, Optional
 import json
@@ -123,7 +124,7 @@ class MemorySlotCollection(ABC):
         }
 
     @staticmethod
-    async def from_dict(data: dict) -> 'MemorySlotCollection':
+    async def from_dict(data: dict) -> MemorySlotCollection:
         """Initialize the collection from a dictionary."""
         _name = data.get('name', None)
         collection = MemorySlotCollection(name=_name)
@@ -137,7 +138,7 @@ class MemorySlotCollection(ABC):
         return json.dumps(self.to_dict(), indent=4)
 
     @staticmethod
-    async def from_json(data: str) -> 'MemorySlotCollection':
+    async def from_json(data: str) -> MemorySlotCollection:
         """Initialize the collection from a JSON string."""
         return await MemorySlotCollection.from_dict(json.loads(data))
 

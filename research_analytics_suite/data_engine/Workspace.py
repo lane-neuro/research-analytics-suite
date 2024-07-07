@@ -144,7 +144,7 @@ class Workspace:
             new_workspace = await self.save_current_workspace()
             return await self.load_workspace(os.path.join(f"{new_workspace}", 'config.json'))
         except Exception as e:
-            self._logger.error(Exception(f"Failed to create workspace: {e}"), self)
+            self._logger.error(e, 'Failed to create workspace')
 
     async def save_current_workspace(self) -> str:
         """
@@ -183,7 +183,7 @@ class Workspace:
             return f"{_path}"
 
         except Exception as e:
-            self._logger.error(Exception(f"Failed to save current workspace: {e}"), self)
+            self._logger.error(Exception(f"Failed to save current workspace: {e}"), 'Workspace')
 
     async def load_workspace(self, workspace_path) -> 'Workspace':
         """
@@ -224,7 +224,7 @@ class Workspace:
             return self
 
         except Exception as e:
-            self._logger.error(Exception(f"Failed to load workspace: {e}"), self)
+            self._logger.error(Exception(f"Failed to load workspace: {e}"), self.__class__.__name__)
 
     def _clear_existing_data(self):
         """
