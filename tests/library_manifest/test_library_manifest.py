@@ -13,6 +13,10 @@ class TestLibraryManifest:
 
         # Mock the Config, CustomLogger, and OperationControl
         self.library_manifest._config = mock.MagicMock()
+        self.library_manifest._config.BASE_DIR = 'mock_base_dir'
+        self.library_manifest._config.WORKSPACE_NAME = 'mock_workspace'
+        self.library_manifest._config.WORKSPACE_OPERATIONS_DIR = 'mock_operations_dir'
+
         self.library_manifest._logger = mock.MagicMock()
         self.library_manifest._operation_control = mock.MagicMock()
         self.library_manifest._operation_control.operation_manager.add_operation_with_parameters = mock.AsyncMock(
@@ -65,3 +69,28 @@ class TestLibraryManifest:
         await self.library_manifest._update_user_manifest()
         assert self.library_manifest._initialized is True
 
+    @pytest.mark.asyncio
+    async def test_load_user_library(self):
+        import json
+        mock_operation_json = json.dumps({
+            "category_id": 9999,
+            "name": "Mock Operation"
+        })
+
+        with mock.patch('os.path.exists', return_value=True):
+            with mock.patch('os.listdir', return_value=['mock_operation.json']):
+                with mock.patch('builtins.open', mock.mock_open(read_data=mock_operation_json)):
+                    from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
+                    mock_get_attributes_from_disk = mock.AsyncMock(
+                        return_value=mock.MagicMock(spec=OperationAttributes)
+                    )
+
+                    with mock.patch(
+                            'research_analytics_suite.operation_manager.operations.core.memory.get_attributes_from_disk',
+                            mock_get_attributes_from_disk):
+                        await self.library_manifest.load_user_library()
+
+                        # Verify that the operation was added to the library
+                        assert 9999 in self.library_manifest._categories
+                        assert len(self.library_manifest._categories[9999].operations) > 0
+                        
