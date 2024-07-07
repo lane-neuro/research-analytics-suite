@@ -17,14 +17,27 @@ class BaseInput:
         stop(): Stops the live data input.
         read(): Reads data from the live input.
     """
-    def start(self):
+    def __init__(self, source):
+        """Initializes the BaseInput object."""
+        self._source = source
+
+    def start(self):   # pragma: no cover
         """Starts the live data input."""
         raise NotImplementedError("Subclasses should implement this method")
 
-    def stop(self):
+    def stop(self):   # pragma: no cover
         """Stops the live data input."""
         raise NotImplementedError("Subclasses should implement this method")
 
-    def read(self):
+    def read(self):  # pragma: no cover
         """Reads data from the live input."""
         raise NotImplementedError("Subclasses should implement this method")
+
+    @property
+    def source(self):
+        """The source of the live data input."""
+        return self._source
+
+    @source.setter
+    def source(self, value):
+        self._source = value
