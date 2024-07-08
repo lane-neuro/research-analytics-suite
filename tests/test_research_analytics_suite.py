@@ -19,9 +19,9 @@ class TestResearchAnalyticsSuite:
         self.suite = ResearchAnalyticsSuite()
 
     @pytest.mark.asyncio
-    async def test_initialize_components(self):
+    async def test_component_initialization(self):
         """
-        Test the _initialize_components method.
+        Test that all components are initialized correctly.
         """
         with patch.object(self.suite._logger, 'initialize', new=AsyncMock()) as logger_initialize, \
                 patch.object(self.suite._memory_manager, 'initialize', new=AsyncMock()) as memory_initialize, \
@@ -362,3 +362,39 @@ class TestResearchAnalyticsSuite:
                 logger_error_mock.assert_called_once()
                 call_args = logger_error_mock.call_args[0]
                 assert str(call_args[0]) == 'Test Exception'
+
+    @pytest.mark.asyncio
+    async def test_create_workspace_with_custom_name(self):
+        """
+        Test that a workspace is created with a custom name.
+        """
+        self.suite._args = MagicMock()
+        self.suite._args.directory = os.path.normpath('/tmp/test_workspace')
+        self.suite._args.name = 'custom_workspace'
+        expected_workspace_path = os.path.normpath('/tmp/test_workspace/custom_workspace')
+
+        with patch('os.makedirs', new=MagicMock()) as makedirs_mock, \
+             patch.object(self.suite._workspace, 'create_workspace', new=AsyncMock()) as create_workspace_mock, \
+             patch.object(self.suite._logger, 'info', new=MagicMock()) as logger_info_mock, \
+             patch.object(self.suite, 'ensure_unique_workspace', new=AsyncMock(return_value=expected_workspace_path)) as ensure_unique_mock:
+            await self.suite.create_new_workspace()
+            makedirs_mock.assert_called_once_with(os.path.normpath('/tmp/test_workspace'), exist_ok=True)
+            ensure_unique_mock.assert_called_once_with(expected_workspace_path)
+            logger_info_mock.assert_called_once_with(f'Creating New Workspace at: {expected_workspace_path}')
+            create_workspace_mock.assert_called_once_with(os.path.normpath('/tmp/test_workspace'), 'custom_workspace')
+
+    @pytest.mark.asyncio
+    async def test_load_configuration(self):
+        """
+        Test that the configuration is loaded correctly from the provided path.
+        """
+        self.suite._args = MagicMock()
+        self.suite._args.config = os.path.normpath('/tmp/config.json')
+        self.suite._args.open_workspace = None
+
+        with patch('os.path.exists', return_value=True) as path_exists_mock, \
+             patch.object(self.suite._config, 'reload_from_file', new=AsyncMock()) as config_load_mock, \
+             patch.object(self.suite._workspace, 'load_workspace', new=AsyncMock()), \
+             patch.object(self.suite._logger, 'info', new=MagicMock()):
+            await self.suite.open_existing_workspace()
+            path_exists_mock.assert_called_once_with(os.path.normpath('/tmp'))
