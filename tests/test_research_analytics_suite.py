@@ -95,9 +95,74 @@ class TestResearchAnalyticsSuite:
             load_workspace_mock.assert_called_once_with(expected_workspace_path)
 
     @pytest.mark.asyncio
-    async def test_launch(self):
+    async def test_open_existing_workspace_not_exist(self):
         """
-        Test the _launch method.
+        Test open_existing_workspace method when workspace does not exist.
+        """
+        self.suite._args = MagicMock()
+        self.suite._args.open_workspace = 'non_existing_workspace'
+        self.suite._args.config = None
+        self.suite._args.directory = os.path.normpath('/tmp')
+
+        with patch('os.path.exists', return_value=False) as path_exists_mock, \
+             patch.object(self.suite, 'create_new_workspace', new=AsyncMock()) as create_workspace_mock, \
+             patch.object(self.suite._logger, 'error', new=MagicMock()) as logger_error_mock:
+            await self.suite.open_existing_workspace()
+            path_exists_mock.assert_called_once()
+            logger_error_mock.assert_called_once()
+            create_workspace_mock.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_setup_workspace_new(self):
+        """
+        Test the _setup_workspace method for a new workspace.
+        """
+        self.suite._args = MagicMock()
+        self.suite._args.open_workspace = None
+        self.suite._args.config = None
+
+        with patch.object(self.suite, 'create_new_workspace', new=AsyncMock()) as create_workspace_mock:
+            await self.suite._setup_workspace()
+            create_workspace_mock.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_setup_workspace_existing(self):
+        """
+        Test the _setup_workspace method for an existing workspace.
+        """
+        self.suite._args = MagicMock()
+        self.suite._args.open_workspace = 'existing_workspace'
+        self.suite._args.config = 'config.json'
+
+        with patch.object(self.suite, 'open_existing_workspace', new=AsyncMock()) as open_workspace_mock:
+            await self.suite._setup_workspace()
+            open_workspace_mock.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_launch_with_gui(self):
+        """
+        Test the _launch method with GUI enabled.
+        """
+        self.suite._args = MagicMock()
+        self.suite._args.gui = 'true'
+
+        with patch.object(self.suite, '_initialize_components', new=AsyncMock()) as init_components_mock, \
+                patch.object(self.suite, '_setup_workspace', new=AsyncMock()) as setup_workspace_mock, \
+                patch.object(self.suite._logger, 'info', new=MagicMock()) as logger_info_mock, \
+                patch.object(self.suite._workspace, 'save_current_workspace', new=AsyncMock()) as save_workspace_mock, \
+                patch('asyncio.get_event_loop', return_value=MagicMock(close=MagicMock())), \
+                patch('research_analytics_suite.gui.launcher.GuiLauncher.GuiLauncher.setup_main_window', new=AsyncMock()) as gui_mock:
+            await self.suite._launch()
+            init_components_mock.assert_called_once()
+            setup_workspace_mock.assert_called_once()
+            gui_mock.assert_called_once()
+            save_workspace_mock.assert_called_once()
+            logger_info_mock.assert_any_call('Saving Workspace...')
+
+    @pytest.mark.asyncio
+    async def test_launch_without_gui(self):
+        """
+        Test the _launch method without GUI.
         """
         self.suite._args = MagicMock()
         self.suite._args.gui = 'false'
@@ -112,3 +177,19 @@ class TestResearchAnalyticsSuite:
             setup_workspace_mock.assert_called_once()
             save_workspace_mock.assert_called_once()
             logger_info_mock.assert_any_call('Saving Workspace...')
+
+    def test_run(self):
+        """
+        Test the run method.
+        """
+        with patch.object(self.suite, '_parse_launch_args', new=MagicMock()) as parse_args_mock, \
+                patch('asyncio.run', new=MagicMock()) as asyncio_run_mock, \
+                patch('nest_asyncio.apply', new=MagicMock()) as nest_asyncio_apply_mock, \
+                patch('asyncio.get_event_loop', return_value=MagicMock(run_forever=MagicMock(), close=MagicMock())) as event_loop_mock, \
+                patch('sys.exit', new=MagicMock()) as sys_exit_mock:
+            self.suite.run()
+            parse_args_mock.assert_called_once()
+            asyncio_run_mock.assert_called_once()
+            nest_asyncio_apply_mock.assert_called_once()
+            event_loop_mock.return_value.run_forever.assert_called_once()
+            sys_exit_mock.assert_called_once()
