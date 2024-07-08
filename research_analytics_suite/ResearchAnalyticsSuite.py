@@ -55,7 +55,8 @@ class ResearchAnalyticsSuite:
 
         # GUI argument
         _parser.add_argument('-g', '--gui',
-                             help='Launches the Research Analytics Suite GUI', default='True')
+                             help='Launches the Research Analytics Suite GUI',
+                             choices=['true', 'false'], default='True')
 
         # Open workspace arguments
         _parser.add_argument('-o', '--open_workspace',
@@ -175,12 +176,12 @@ class ResearchAnalyticsSuite:
                 gui_launcher = GuiLauncher()
                 self._launch_tasks.append(gui_launcher.setup_main_window())
             except Exception as e:
-                self._logger.error(e)
+                self._logger.error(e, self.__class__.__name__)
 
         try:
             await asyncio.gather(*self._launch_tasks)
         except Exception as e:
-            self._logger.error(e)
+            self._logger.error(e, self.__class__.__name__)
         finally:
             self._logger.info("Saving Workspace...")
             await self._workspace.save_current_workspace()
@@ -214,10 +215,10 @@ class ResearchAnalyticsSuite:
             sys.exit(0)
 
 
-def main():
+def main(): # pragma: no cover
     suite = ResearchAnalyticsSuite()
     suite.run()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
