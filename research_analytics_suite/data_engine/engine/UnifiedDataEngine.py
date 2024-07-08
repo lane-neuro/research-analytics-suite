@@ -20,7 +20,6 @@ from research_analytics_suite.analytics.core.AnalyticsCore import AnalyticsCore
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.core.DaskData import DaskData
 from research_analytics_suite.data_engine.memory.DataCache import DataCache
-from research_analytics_suite.data_engine.data_streams.DataTypeDetector import DataTypeDetector
 from research_analytics_suite.data_engine.core.TorchData import TorchData
 from research_analytics_suite.data_engine.data_streams.BaseInput import BaseInput
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -219,12 +218,8 @@ class UnifiedDataEngine:
 
             return data
 
-        except FileNotFoundError:
-            self._logger.error(Exception(f"File not found: {file_path}"), self)
-            raise
         except Exception as e:
-            self._logger.error(Exception(f"Error loading data from {file_path}: {e}"), self)
-            raise
+            self._logger.error(e, self.__class__.__name__)
 
     def save_data(self, file_path):
         """
@@ -233,7 +228,8 @@ class UnifiedDataEngine:
         Args:
             file_path (str): The path to the data file.
         """
-        data_type = DataTypeDetector.detect_type(file_path)
+        from research_analytics_suite.data_engine.data_streams.DataTypeDetector import detect_by_content
+        data_type = detect_by_content(file_path)
         self._logger.info(f"Saving data to {file_path} as {data_type}")
 
         if data_type == 'csv':

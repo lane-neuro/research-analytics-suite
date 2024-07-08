@@ -1,9 +1,7 @@
 """
 DataTypeDetector Module
 
-This module defines the DataTypeDetector class, which provides methods to detect the type of data within
-a file or data input source within the research analytics suite. It supports multiple data formats
-including CSV, JSON, Excel, Parquet, Avro, and HDF5.
+This module contains functions for detecting the type of data by inspecting the content of the file.
 
 Author: Lane
 Copyright: Lane
@@ -15,77 +13,58 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import json
-
 import dask.dataframe as dd
 
 
-class DataTypeDetector:
+def detect_by_content(file_path: str) -> str:
     """
-    A class for detecting the type of data within a file or data input source.
+    Detects the type of data by inspecting the content of the file.
 
-    Methods:
-        detect_type(file_path) - Detects the type of data based on the file extension or content.
-        detect_by_content(file_path) - Detects the type of data by inspecting the content of the file.
-        read_partial_file(file_path, size) - Reads a partial content from the file.
+    Args:
+        file_path (str): The path to the data file.
+
+    Returns:
+        str: The detected data type ('csv', 'json', 'excel', 'parquet', 'avro', 'hdf5', 'unknown').
     """
-    @staticmethod
-    def detect_type(file_path):
-        """
-        Detects the type of data based on the file extension or content.
+    try:
+        content = read_partial_file(file_path, 2048)
 
-        Args:
-            file_path (str): The path to the data file.
-
-        Returns:
-            str: The detected data type ('csv', 'json', 'excel', 'parquet', 'avro', 'hdf5', 'unknown').
-        """
-        return DataTypeDetector.detect_by_content(file_path)
-
-    @staticmethod
-    def detect_by_content(file_path):
-        """
-        Detects the type of data by inspecting the content of the file.
-
-        Args:
-            file_path (str): The path to the data file.
-
-        Returns:
-            str: The detected data type ('csv', 'json', 'excel', 'parquet', 'avro', 'hdf5', 'unknown').
-        """
+        # Try detecting JSON
         try:
-            content = DataTypeDetector.read_partial_file(file_path, 2048)
+            json.loads(content)
+            return 'json'
+        except json.JSONDecodeError:
+            pass
 
-            # Try detecting JSON
+        # Try detecting CSV
+        if ',' in content or ';' in content:
             try:
-                json.loads(content)
-                return 'json'
-            except json.JSONDecodeError:
-                pass
+                dd.read_csv(file_path, blocksize=25e6).head(5)
+                return 'csv'
+            except Exception as e:
+                print(f"Error reading CSV file: {e}")
 
-            # Try detecting CSV
-            if ',' in content or ';' in content:
-                try:
-                    dd.read_csv(file_path, blocksize=25e6).head(5)
-                    return 'csv'
-                except Exception as e:
-                    print(f"Error reading CSV file: {e}")
+        # Read binary content
+        binary_content = read_partial_file(file_path, 2048, binary=True)
 
-            # Try detecting Excel
-            if content.startswith(b'\x50\x4B\x03\x04') or content.startswith(b'\xD0\xCF\x11\xE0'):
-                try:
-                    dd.read_excel(file_path, nrows=5)
-                    return 'excel'
-                except Exception as e:
-                    print(f"Error reading Excel file: {e}")
+        # Try detecting Excel
+        if binary_content.startswith(b'\x50\x4B\x03\x04') or binary_content.startswith(b'\xD0\xCF\x11\xE0'):
+            try:
+                dd.read_excel(file_path, nrows=5)
+                return 'excel'
+            except Exception as e:
+                print(f"Error reading Excel file: {e}")
 
-            # Try detecting Parquet
+        # Try detecting Parquet
+        if binary_content.startswith(b'PAR1'):
             try:
                 dd.read_parquet(file_path).head(5)
                 return 'parquet'
             except Exception as e:
                 print(f"Error reading Parquet file: {e}")
 
-            # Try detecting Avro
+        # Try detecting Avro
+        if binary_content.startswith(b'Obj\x01'):
             try:
                 import fastavro
                 with open(file_path, 'rb') as f:
@@ -95,29 +74,33 @@ class DataTypeDetector:
             except Exception as e:
                 print(f"Error reading Avro file: {e}")
 
-            # Try detecting HDF5
+        # Try detecting HDF5
+        if binary_content.startswith(b'\x89HDF\r\n\x1A\n'):
             try:
                 dd.read_hdf(file_path, '/data').head(5)
                 return 'hdf5'
             except Exception as e:
                 print(f"Error reading HDF5 file: {e}")
 
-        except Exception as e:
-            print(f"Error reading file: {e}")
+    except Exception as e:
+        print(f"Error reading file: {e}")
 
-        return 'unknown'
+    return 'unknown'
 
-    @staticmethod
-    def read_partial_file(file_path, size):
-        """
-        Reads a partial content from the file.
 
-        Args:
-            file_path (str): The path to the file.
-            size (int): The number of bytes to read.
+def read_partial_file(file_path: str, size: int, binary: bool = False) -> str or bytes:
+    """
+    Reads a partial content from the file.
 
-        Returns:
-            str: The partial content read from the file.
-        """
-        with open(file_path, 'rb') as file:
-            return file.read(size).decode('utf-8', errors='ignore')
+    Args:
+        file_path (str): The path to the file.
+        size (int): The number of bytes to read.
+        binary (bool): Whether to read the file as binary.
+
+    Returns:
+        str or bytes: The partial content read from the file.
+    """
+    mode = 'rb' if binary else 'r'
+    with open(file_path, mode, encoding=None if binary else 'utf-8') as file:
+        content = file.read(size)
+        return content
