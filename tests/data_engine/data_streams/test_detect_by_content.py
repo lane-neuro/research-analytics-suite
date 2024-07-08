@@ -1,8 +1,7 @@
-import json
-
-import fastavro
-import pandas as pd
 import pytest
+import json
+import pandas as pd
+import fastavro
 
 from research_analytics_suite.data_engine.data_streams.DataTypeDetector import detect_by_content
 
@@ -43,3 +42,8 @@ class TestDetectByContent:
 
         result = detect_by_content(str(file_path))
         assert result == expected_type
+
+    def test_detect_by_content_non_existent_file(self):
+        with pytest.raises(Exception) as exc_info:
+            detect_by_content("non_existent_file.txt")
+        assert "Error detecting data type" in str(exc_info.value)

@@ -1,5 +1,4 @@
 import pytest
-
 from research_analytics_suite.data_engine.data_streams.DataTypeDetector import read_partial_file
 
 

@@ -35,11 +35,14 @@ def read_partial_file(file_path: str, size: int, binary: bool = False) -> Union[
     try:
         with open(file_path, mode, encoding=None if binary else 'utf-8') as file:
             return file.read(size)
-    except FileNotFoundError:
+    except UnicodeDecodeError:
+        if not binary:
+            return read_partial_file(file_path, size, binary=True)
         raise
+    except FileNotFoundError:
+        raise FileNotFoundError(f"File not found: {file_path}")
     except Exception as e:
-        print(f"Error reading file: {e}")
-        return None
+        raise Exception(f"Error reading file: {e}")
 
 
 def detect_by_content(file_path: str) -> str:
@@ -53,16 +56,8 @@ def detect_by_content(file_path: str) -> str:
         str: The detected data type ('csv', 'json', 'excel', 'parquet', 'avro', 'hdf5', 'unknown').
     """
     try:
-        content = read_partial_file(file_path, 2048)
-        binary_content = None
-
-        if content:
-            if is_json(content):
-                return 'json'
-            if is_csv(content, file_path):
-                return 'csv'
-        else:
-            binary_content = read_partial_file(file_path, 2048, binary=True)
+        # Try reading as binary first
+        binary_content = read_partial_file(file_path, 2048, binary=True)
 
         if binary_content:
             if is_excel(binary_content, file_path):
@@ -74,8 +69,16 @@ def detect_by_content(file_path: str) -> str:
             if is_hdf5(binary_content, file_path):
                 return 'hdf5'
 
+        # If binary detection fails, try reading as text
+        content = read_partial_file(file_path, 2048, binary=False)
+        if content:
+            if is_json(content):
+                return 'json'
+            if is_csv(content, file_path):
+                return 'csv'
+
     except Exception as e:
-        print(f"Error reading file: {e}")
+        raise Exception(f"Error detecting data type: {e}")
 
     return 'unknown'
 
@@ -95,7 +98,7 @@ def is_csv(content: str, file_path: str) -> bool:
             df.head(5)
             return True
         except Exception as e:
-            print(f"Error reading CSV file: {e}")
+            raise Exception(f"Error reading CSV file: {e}")
     return False
 
 
@@ -105,7 +108,7 @@ def is_excel(binary_content: bytes, file_path: str) -> bool:
             pd.read_excel(file_path, nrows=5)
             return True
         except Exception as e:
-            print(f"Error reading Excel file: {e}")
+            raise Exception(f"Error reading Excel file: {e}")
     return False
 
 
@@ -116,7 +119,7 @@ def is_parquet(binary_content: bytes, file_path: str) -> bool:
             df.head(5)
             return True
         except Exception as e:
-            print(f"Error reading Parquet file: {e}")
+            raise Exception(f"Error reading Parquet file: {e}")
     return False
 
 
@@ -128,7 +131,7 @@ def is_avro(binary_content: bytes, file_path: str) -> bool:
                 _ = next(reader)
                 return True
         except Exception as e:
-            print(f"Error reading Avro file: {e}")
+            raise Exception(f"Error reading Avro file: {e}")
     return False
 
 
@@ -138,5 +141,5 @@ def is_hdf5(binary_content: bytes, file_path: str) -> bool:
             pd.read_hdf(file_path, '/data')
             return True
         except Exception as e:
-            print(f"Error reading HDF5 file: {e}")
+            raise Exception(f"Error reading HDF5 file: {e}")
     return False
