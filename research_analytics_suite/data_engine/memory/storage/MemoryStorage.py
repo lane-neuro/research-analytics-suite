@@ -21,7 +21,7 @@ class MemoryStorage(BaseStorage):
         self.collections = {}  # Store MemorySlotCollections
         self._logger.debug(f"[MemoryStorage] initialized. Backup path: {self.db_path}")
 
-    async def setup(self):
+    async def setup(self):  # pragma: no cover
         # No setup required for in-memory storage
         pass
 

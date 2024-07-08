@@ -29,14 +29,14 @@ class BaseStorage(ABC):
         self.db_path = kwargs.get('db_path', None)
 
     @abstractmethod
-    async def setup(self):
+    async def setup(self):  # pragma: no cover
         """
         Sets up the storage backend.
         """
         pass
 
     @abstractmethod
-    async def add_collection(self, collection) -> str:
+    async def add_collection(self, collection) -> str:  # pragma: no cover
         """
         Adds a new MemorySlotCollection to the storage.
 
@@ -49,7 +49,7 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    async def get_collection(self, collection_id: str):
+    async def get_collection(self, collection_id: str):     # pragma: no cover
         """
         Retrieves a MemorySlotCollection by its ID from the storage.
 
@@ -62,7 +62,7 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    async def remove_collection(self, collection_id: str):
+    async def remove_collection(self, collection_id: str):  # pragma: no cover
         """
         Removes a MemorySlotCollection by its ID from the storage.
 
@@ -72,7 +72,7 @@ class BaseStorage(ABC):
         pass
 
     @abstractmethod
-    async def list_collections(self) -> dict:
+    async def list_collections(self) -> dict:   # pragma: no cover
         """
         Lists all MemorySlotCollections from the storage.
 
