@@ -193,7 +193,7 @@ class GuiLauncher:
 
         while dpg.is_dearpygui_running():
             dpg.render_dearpygui_frame()
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.001)
 
         self._logger.debug("Shutting down GUI...")
         await self._workspace.save_current_workspace()

@@ -51,7 +51,7 @@ class ConsoleDialog(GUIBase):
             current_logs = dpg.get_value("logger_output")
             updated_logs = new_log + "\n" + current_logs
             dpg.set_value("logger_output", updated_logs)
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.001)
 
     def draw(self) -> None:
         """Draws the GUI elements for the console dialog."""

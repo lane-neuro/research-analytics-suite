@@ -26,7 +26,7 @@ from research_analytics_suite.operation_manager.operations.system.ResourceMonito
 class ResourceMonitorDialog(GUIBase):
     """A class to manage the dialog for monitoring system resources."""
 
-    SLEEP_DURATION = 0.05
+    SLEEP_DURATION = 0.001
     MAX_DATA_POINTS = 100
 
     def __init__(self, width: int, height: int, parent):
@@ -60,7 +60,7 @@ class ResourceMonitorDialog(GUIBase):
         while self._resource_monitor_operation is None:
             self._resource_monitor_operation = self._operation_control.sequencer.get_operation_by_type(
                 ResourceMonitorOperation)
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
         while True:
             dpg.set_value(value=f"{self._resource_monitor_operation.get_cpu_formatted()}", item="cpu_text")

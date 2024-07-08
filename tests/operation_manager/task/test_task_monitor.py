@@ -178,7 +178,7 @@ async def test_resume_all_tasks(task_monitor, task_creator):
     """Test the resume_all_tasks method of TaskMonitor."""
 
     async def dummy_coro():
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.001)
 
     # Mock tasks
     task1 = MagicMock()

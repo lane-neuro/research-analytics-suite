@@ -22,4 +22,4 @@ async def update_progress(operation):
     while not operation.is_complete:
         if operation.status == "running":
             operation.progress += 1
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.01)  # 100 updates per second

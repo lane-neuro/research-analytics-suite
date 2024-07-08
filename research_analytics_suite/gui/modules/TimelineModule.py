@@ -37,11 +37,11 @@ class TimelineModule(GUIBase):
 
     async def _update_async(self) -> None:
         while not dpg.does_item_exist(f"print_sequencer_module"):
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
         while True:
             await self.update_all_elements()
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
     def draw(self) -> None:
         dpg.add_button(label="Print Sequencer", callback=self._operation_sequencer.print_sequencer,

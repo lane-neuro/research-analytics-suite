@@ -76,7 +76,7 @@ class CollectionViewDialog(GUIBase):
     async def _update_async(self) -> None:
         """Updates the collection dropdown list and the GUI display of variables."""
         while not dpg.does_item_exist("data_collection_tools_group"):
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
 
         while True:
             collections = await self._workspace.list_memory_collections()
@@ -91,7 +91,7 @@ class CollectionViewDialog(GUIBase):
             if dpg.does_item_exist("collection_id_input"):
                 dpg.configure_item("collection_id_input", items=collection_items)
 
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(0.005)
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         """Resizes the GUI."""

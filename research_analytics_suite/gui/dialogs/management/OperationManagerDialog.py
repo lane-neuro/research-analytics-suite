@@ -25,7 +25,7 @@ from research_analytics_suite.operation_manager.operations.core.BaseOperation im
 class OperationManagerDialog(GUIBase):
     """A class to manage the dialog for displaying and controlling operations."""
 
-    SLEEP_DURATION = 0.05
+    SLEEP_DURATION = 0.001
     TILE_WIDTH = 400  # Fixed width for each operation tile
     TILE_HEIGHT = 600  # Fixed height for each operation tile
     TILE_PADDING = 20  # Padding between tiles

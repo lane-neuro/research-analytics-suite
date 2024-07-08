@@ -193,7 +193,7 @@ class OperationModule(GUIBase):
             if dpg.does_item_exist(self._cpu_bound_id):
                 dpg.set_value(self._cpu_bound_id, self._operation.is_cpu_bound)
 
-            await asyncio.sleep(0.05)
+            await asyncio.sleep(0.005)
 
     async def execute_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
         """Executes the operation."""

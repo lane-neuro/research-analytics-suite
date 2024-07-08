@@ -22,7 +22,7 @@ class LibraryPane(GUIBase):
     """A class to manage the dialog for displaying and controlling operations."""
     _lock = asyncio.Lock()
 
-    SLEEP_DURATION = 0.05
+    SLEEP_DURATION = 0.001
     TILE_WIDTH = 250
     TILE_HEIGHT = 30
 

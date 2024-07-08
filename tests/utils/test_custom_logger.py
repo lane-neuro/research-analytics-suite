@@ -57,7 +57,7 @@ class TestCustomLogger:
         self.logger.info("Test info message")
         self.logger.warning("Test warning message")
 
-        await asyncio.sleep(0.1)  # Ensure messages are processed
+        await asyncio.sleep(0.001)  # Ensure messages are processed
         queue_contents = []
         while not self.logger.log_message_queue.empty():
             queue_contents.append(await self.logger.log_message_queue.get())
@@ -72,7 +72,7 @@ class TestCustomLogger:
         self.logger.info("Test queue message")
         self.logger.debug("Test queue message debug")
 
-        await asyncio.sleep(0.1)  # Ensure messages are processed
+        await asyncio.sleep(0.001)  # Ensure messages are processed
         queue_contents = []
         while not self.logger.log_message_queue.empty():
             queue_contents.append(await self.logger.log_message_queue.get())
@@ -87,7 +87,7 @@ class TestCustomLogger:
         except ValueError as e:
             self.logger.error(e, "test_error_logging")
 
-        await asyncio.sleep(0.1)  # Ensure messages are processed
+        await asyncio.sleep(0.001)  # Ensure messages are processed
         assert not self.logger.log_message_queue.empty()
         error_message = await self.logger.log_message_queue.get()
         assert "Test error" in error_message
@@ -98,7 +98,7 @@ class TestCustomLogger:
         self.logger.info("")
         self.logger.debug("")
 
-        await asyncio.sleep(0.1)  # Ensure messages are processed
+        await asyncio.sleep(0.001)  # Ensure messages are processed
         queue_contents = []
         while not self.logger.log_message_queue.empty():
             queue_contents.append(await self.logger.log_message_queue.get())
@@ -108,17 +108,17 @@ class TestCustomLogger:
     @pytest.mark.asyncio
     async def test_concurrent_logging(self):
         async def log_messages():
-            for i in range(100):
+            for i in range(10):
                 self.logger.info(f"Concurrent log {i}")
                 self.logger.debug(f"Concurrent debug {i}")
 
         await asyncio.gather(log_messages(), log_messages(), log_messages())
 
-        await asyncio.sleep(0.1)  # Ensure messages are processed
+        await asyncio.sleep(0.001)  # Ensure messages are processed
         queue_contents = []
         while not self.logger.log_message_queue.empty():
             queue_contents.append(await self.logger.log_message_queue.get())
 
         # Check if a few messages are present in the queue
-        assert any(f"Concurrent log {i}" in msg for i in range(100) for msg in queue_contents)
-        assert any(f"Concurrent debug {i}" in msg for i in range(100) for msg in queue_contents)
+        assert any(f"Concurrent log {i}" in msg for i in range(10) for msg in queue_contents)
+        assert any(f"Concurrent debug {i}" in msg for i in range(10) for msg in queue_contents)

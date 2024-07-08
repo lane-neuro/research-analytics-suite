@@ -77,7 +77,7 @@ class ResourceMonitorOperation(BaseOperation):
                 self.handle_error(Exception(f"Memory usage has exceeded {self.memory_threshold}%: "
                                              f"current usage is {self.total_memory_usage}%"))
 
-            await asyncio.sleep(.01)
+            await asyncio.sleep(.001)
 
     def get_cpu_formatted(self) -> str:
         return (f"Total CPU Usage:\t{round(self.cpu_usage, 2)}%\t[{psutil.cpu_count()} cores]\n"
