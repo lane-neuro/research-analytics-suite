@@ -10,7 +10,7 @@ class MockOperation:
         self.progress = 0
 
 
-@pytest.mark.skip(reason="Takes too long to run")
+@pytest.mark.asyncio
 async def test_update_progress_increments_progress():
     operation = MockOperation()
 
@@ -29,7 +29,7 @@ async def test_update_progress_increments_progress():
     assert operation.progress >= 2
 
 
-@pytest.mark.skip(reason="Takes too long to run")
+@pytest.mark.asyncio
 async def test_update_progress_stops_when_complete():
     operation = MockOperation()
 

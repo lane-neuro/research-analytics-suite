@@ -34,7 +34,6 @@ class TestDaskData:
         }
         return pd.DataFrame(data)
 
-    @pytest.mark.skip(reason="Takes too long to run")
     def test_initialization_with_pandas_df(self, sample_pandas_df):
         """Test initialization with a pandas DataFrame."""
         dask_data = DaskData(sample_pandas_df)

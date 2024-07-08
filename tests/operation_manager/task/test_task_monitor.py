@@ -173,7 +173,7 @@ def test_pause_all_tasks(task_monitor, task_creator):
     task_monitor._logger.debug.assert_any_call("pause_all_tasks: [PAUSE] Task2")
 
 
-@pytest.mark.skip(reason="Takes too long to run")
+@pytest.mark.asyncio
 async def test_resume_all_tasks(task_monitor, task_creator):
     """Test the resume_all_tasks method of TaskMonitor."""
 
