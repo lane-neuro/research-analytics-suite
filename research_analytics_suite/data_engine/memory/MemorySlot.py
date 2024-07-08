@@ -82,7 +82,9 @@ class MemorySlot:
     @memory_id.setter
     def memory_id(self, value: str):
         if not isinstance(value, str):
-            raise ValueError("memory_id must be a string")
+            self._logger.error(ValueError("memory_id must be a string"), self.__class__.__name__)
+            return
+
         self._memory_id = value
         self.update_modified_time()
 
@@ -93,7 +95,9 @@ class MemorySlot:
     @name.setter
     def name(self, value: str):
         if not isinstance(value, str):
-            raise ValueError("name must be a string")
+            self._logger.error(ValueError("name must be a string"), self.__class__.__name__)
+            return
+
         self._name = value
         self.update_modified_time()
 
@@ -104,7 +108,9 @@ class MemorySlot:
     @operation_required.setter
     def operation_required(self, value: bool):
         if not isinstance(value, bool):
-            raise ValueError("operation_required must be a boolean")
+            self._logger.error(ValueError("operation_required must be a boolean"), self.__class__.__name__)
+            return
+
         self._operation_required = value
         self.update_modified_time()
 
@@ -116,18 +122,27 @@ class MemorySlot:
     def data(self, value: Dict[str, Tuple[Type, Any]]):
         if value is None:
             self._data = {}
+
         elif not isinstance(value, dict):
-            raise ValueError("data must be a dictionary")
-        else:
-            for k, v in value.items():
-                if not isinstance(k, str):
-                    raise ValueError("All keys in data must be strings")
-                if not isinstance(v, tuple) or len(v) != 2:
-                    raise ValueError("All values in data must be tuples of (type, value)")
-                t, v = v
-                if not isinstance(v, t):
-                    raise ValueError(f"Value for key '{k}' must be of type {t}")
-            self._data = value
+            self._logger.error(ValueError("data must be a dictionary"), self.__class__.__name__)
+            return
+
+        for k, v in value.items() or {}:
+            if not isinstance(k, str):
+                self._logger.error(ValueError("All keys in data must be strings"), self.__class__.__name__)
+                continue
+            if not isinstance(v, tuple) or len(v) != 2:
+                self._logger.error(ValueError("All values in data must be tuples of length 2"),
+                                   self.__class__.__name__)
+                continue
+
+            t, v = v
+
+            if not isinstance(v, t):
+                self._logger.error(ValueError(f"Value for key '{k}' must be of type {t}"), self.__class__.__name__)
+                continue
+
+        self._data = value
         self.update_modified_time()
 
     @property
@@ -137,7 +152,9 @@ class MemorySlot:
     @metadata.setter
     def metadata(self, value: dict):
         if not isinstance(value, dict):
-            raise ValueError("metadata must be a dictionary")
+            self._logger.error(ValueError("metadata must be a dictionary"), self.__class__.__name__)
+            return
+
         self._metadata = value
         self.update_modified_time()
 
@@ -155,10 +172,15 @@ class MemorySlot:
         """Check the data size and switch to mmap if necessary."""
         try:
             data_size = sum(sys.getsizeof(value) for _, value in self._data.values())
-            if data_size > DATA_SIZE_THRESHOLD and self._file_path:
-                self._use_mmap = True
-                self._file_size = data_size
-                self.init_mmap()
+            if data_size > DATA_SIZE_THRESHOLD:
+                if self._file_path:
+                    self._use_mmap = True
+                    self._file_size = data_size
+                    self.init_mmap()
+                else:
+                    self._logger.error(
+                        Exception("File path must be provided for memory mapping when data size exceeds threshold."),
+                        self.__class__.__name__)
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
 
@@ -166,7 +188,9 @@ class MemorySlot:
         """Initialize the memory-mapped file."""
         try:
             if not self._file_path:
-                raise ValueError("File path must be provided for memory mapping.")
+                self._logger.error(ValueError("File path must be provided for memory-mapped storage"),
+                                   self.__class__.__name__)
+                return
 
             with open(self._file_path, 'wb') as f:
                 f.write(b'\0' * self._file_size)
@@ -219,15 +243,23 @@ class MemorySlot:
         """Update the last modified timestamp."""
         self._modified_at = time.time()
 
-    def validate_data(self):
+    def validate_data(self) -> bool:
+        """Validate the data dictionary."""
+        _valid = True
         if self._data is None:
             self._data = {}
         else:
             for k, (t, v) in self._data.items():
                 if not isinstance(k, str):
                     self._logger.error(ValueError("All keys in data must be strings"), self.__class__.__name__)
+                    _valid = False
+                    break
                 if not isinstance(v, t):
                     self._logger.error(ValueError(f"Value for key '{k}' must be of type {t}"), self.__class__.__name__)
+                    _valid = False
+                    break
+
+        return _valid
 
     async def get_data_by_key(self, key: str) -> Any:
         """Retrieve the value associated with a specific key."""
@@ -248,11 +280,13 @@ class MemorySlot:
     async def set_data_by_key(self, key: str, value: Any, data_type: Type):
         """Set the value for a specific key."""
         if not isinstance(key, str):
-            self._logger.error(ValueError(f"Key {key} must be a string"), self.__class__.__name__)
+            self._logger.error(TypeError(f"Key {key} must be a string"), self.__class__.__name__)
         if not isinstance(value, data_type):
-            self._logger.error(ValueError(f"Value {value} must be of type {data_type}"), self.__class__.__name__)
+            self._logger.error(TypeError(f"Value {value} must be of type {data_type}"), self.__class__.__name__)
+
         async with self._lock:
             self._data[key] = (data_type, value)
+            self.check_data_size()  # Check data size and potentially initialize memory mapping
             self.update_modified_time()
 
     async def remove_data_by_key(self, key: str):
@@ -306,11 +340,15 @@ class MemorySlot:
         """Update multiple key-value pairs in the data dictionary."""
         if not isinstance(data, dict):
             self._logger.error(ValueError("data must be a dictionary"), self.__class__.__name__)
+            return
+
         for k, (t, v) in data.items():
             if not isinstance(k, str):
                 self._logger.error(ValueError("All keys in data must be strings"), self.__class__.__name__)
+                return
             if not isinstance(v, t):
                 self._logger.error(ValueError(f"Value for key '{k}' must be of type {t}"), self.__class__.__name__)
+                return
 
         async with self._lock:
             try:
@@ -327,11 +365,15 @@ class MemorySlot:
         """Merge another dictionary into the data dictionary."""
         if not isinstance(data, dict):
             self._logger.error(ValueError("data must be a dictionary"), self.__class__.__name__)
+            return
+
         for k, (t, v) in data.items():
             if not isinstance(k, str):
                 self._logger.error(ValueError("All keys in data must be strings"), self.__class__.__name__)
+                return
             if not isinstance(v, t):
                 self._logger.error(ValueError(f"Value for key '{k}' must be of type {t}"), self.__class__.__name__)
+                return
 
         async with self._lock:
             try:
