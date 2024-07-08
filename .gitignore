@@ -214,3 +214,8 @@ list_directory.py
 directory_structure.txt
 .DS_Store
 .idea/dataSources.xml
+research_analytics_suite/example.db
+.idea/sqldialects.xml
+example.db
+identifier.sqlite
+research_analytics_suite/example.db
