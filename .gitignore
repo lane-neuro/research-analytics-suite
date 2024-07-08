@@ -219,3 +219,4 @@ research_analytics_suite/example.db
 example.db
 identifier.sqlite
 research_analytics_suite/example.db
+tests/data_engine/memory/storage/example.db

@@ -1,3 +1,6 @@
+import json
+
+import aiosqlite
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -35,6 +38,19 @@ class TestSQLiteStorage:
         assert result == {"key": "value"}
 
     @pytest.mark.asyncio
+    async def test_add_variable_overwrite(self, storage):
+        await storage.add_variable("test_var", {"key": "value"})
+        await storage.add_variable("test_var", {"key": "new_value"})
+        result = await storage.get_variable_value("test_var")
+        assert result == {"key": "new_value"}
+
+    @pytest.mark.asyncio
+    async def test_add_variable_invalid_json(self, storage):
+        with patch('json.dumps', side_effect=json.JSONDecodeError("Expecting value", "", 0)):
+            await storage.add_variable("test_var", {"key": "value"})
+            assert storage._logger.error.called
+
+    @pytest.mark.asyncio
     async def test_get_variable_value(self, storage):
         await storage.add_variable("test_var", {"key": "value"})
         result = await storage.get_variable_value("test_var")
@@ -43,10 +59,24 @@ class TestSQLiteStorage:
         assert non_existent is None
 
     @pytest.mark.asyncio
+    async def test_get_variable_value_invalid_json(self, storage):
+        async with aiosqlite.connect(storage.db_path) as conn:
+            await conn.execute("INSERT INTO variables (name, value) VALUES (?, ?)", ("invalid_var", "invalid_json"))
+            await conn.commit()
+        result = await storage.get_variable_value("invalid_var")
+        assert result is None
+
+    @pytest.mark.asyncio
     async def test_remove_variable(self, storage):
         await storage.add_variable("test_var", {"key": "value"})
         await storage.remove_variable("test_var")
         result = await storage.get_variable_value("test_var")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_remove_nonexistent_variable(self, storage):
+        await storage.remove_variable("nonexistent_var")
+        result = await storage.get_variable_value("nonexistent_var")
         assert result is None
 
     @pytest.mark.asyncio
@@ -57,11 +87,22 @@ class TestSQLiteStorage:
         assert result == {"test_var1": {"key": "value1"}, "test_var2": {"key": "value2"}}
 
     @pytest.mark.asyncio
+    async def test_list_variables_empty(self, storage):
+        result = await storage.list_variables()
+        assert result == {}
+
+    @pytest.mark.asyncio
     async def test_update_variable(self, storage):
         await storage.add_variable("test_var", {"key": "value"})
         await storage.update_variable("test_var", {"key": "new_value"})
         result = await storage.get_variable_value("test_var")
         assert result == {"key": "new_value"}
+
+    @pytest.mark.asyncio
+    async def test_update_nonexistent_variable(self, storage):
+        await storage.update_variable("nonexistent_var", {"key": "value"})
+        result = await storage.get_variable_value("nonexistent_var")
+        assert result == {"key": "value"}
 
     @pytest.mark.asyncio
     async def test_variable_exists(self, storage):
@@ -79,9 +120,20 @@ class TestSQLiteStorage:
         assert set(result) == {"test_var1", "test_var2"}
 
     @pytest.mark.asyncio
+    async def test_get_variable_names_empty(self, storage):
+        result = await storage.get_variable_names()
+        assert result == []
+
+    @pytest.mark.asyncio
     async def test_clear_variables(self, storage):
         await storage.add_variable("test_var1", {"key": "value1"})
         await storage.add_variable("test_var2", {"key": "value2"})
+        await storage.clear_variables()
+        result = await storage.list_variables()
+        assert result == {}
+
+    @pytest.mark.asyncio
+    async def test_clear_variables_empty(self, storage):
         await storage.clear_variables()
         result = await storage.list_variables()
         assert result == {}
