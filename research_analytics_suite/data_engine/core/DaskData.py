@@ -35,6 +35,7 @@ class DaskData(BaseData):
             data: The data point.
         """
         super().__init__(data)
+        self.dask_dataframe = None
         self.dask_dataframe = self.set_dataframe(data)
 
     def apply(self, action):
