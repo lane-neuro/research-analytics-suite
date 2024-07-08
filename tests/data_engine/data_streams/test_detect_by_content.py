@@ -47,3 +47,21 @@ class TestDetectByContent:
         with pytest.raises(Exception) as exc_info:
             detect_by_content("non_existent_file.txt")
         assert "Error detecting data type" in str(exc_info.value)
+
+    def test_detect_by_content_empty_file(self, tmp_path):
+        file_path = tmp_path / "empty.txt"
+        file_path.write_text("")
+        result = detect_by_content(str(file_path))
+        assert result == "unknown"
+
+    def test_detect_by_content_corrupted_file(self, tmp_path):
+        file_path = tmp_path / "corrupted.txt"
+        file_path.write_bytes(b"\x00\x00\x00\x00")
+        result = detect_by_content(str(file_path))
+        assert result == "unknown"
+
+    def test_detect_by_content_unreadable_file(self, tmp_path):
+        file_path = tmp_path / "unreadable.txt"
+        file_path.write_bytes(b"\xff\xff\xff\xff")
+        result = detect_by_content(str(file_path))
+        assert result == "unknown"

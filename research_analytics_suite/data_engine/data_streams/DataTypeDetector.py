@@ -41,6 +41,8 @@ def read_partial_file(file_path: str, size: int, binary: bool = False) -> Union[
         raise
     except FileNotFoundError:
         raise FileNotFoundError(f"File not found: {file_path}")
+    except PermissionError:
+        raise PermissionError(f"Permission denied: {file_path}")
     except Exception as e:
         raise Exception(f"Error reading file: {e}")
 
@@ -70,12 +72,15 @@ def detect_by_content(file_path: str) -> str:
                 return 'hdf5'
 
         # If binary detection fails, try reading as text
-        content = read_partial_file(file_path, 2048, binary=False)
-        if content:
-            if is_json(content):
-                return 'json'
-            if is_csv(content, file_path):
-                return 'csv'
+        try:
+            content = read_partial_file(file_path, 2048, binary=False)
+            if content:
+                if is_json(content):
+                    return 'json'
+                if is_csv(content, file_path):
+                    return 'csv'
+        except UnicodeDecodeError:
+            pass
 
     except Exception as e:
         raise Exception(f"Error detecting data type: {e}")

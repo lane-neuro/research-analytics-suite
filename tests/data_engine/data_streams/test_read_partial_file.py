@@ -1,4 +1,6 @@
 import pytest
+import os
+from unittest import mock
 from research_analytics_suite.data_engine.data_streams.DataTypeDetector import read_partial_file
 
 
@@ -76,3 +78,23 @@ class TestReadPartialFile:
         # Test reading from a non-existent file
         with pytest.raises(FileNotFoundError):
             read_partial_file("non_existent.txt", 10)
+
+    def test_read_partial_file_permission_denied(self, tmp_path):
+        # Create a temporary file
+        file_path = tmp_path / "permission_denied.txt"
+        file_path.write_text("This file cannot be read.")
+
+        # Simulate PermissionError when opening the file
+        with mock.patch("builtins.open", side_effect=PermissionError("Permission denied")):
+            with pytest.raises(PermissionError) as exc_info:
+                read_partial_file(str(file_path), 10)
+            assert "Permission denied" in str(exc_info.value)
+
+    def test_read_partial_file_unicode_decode_error(self, tmp_path):
+        # Create a temporary file with invalid UTF-8 content
+        file_path = tmp_path / "invalid_utf8.txt"
+        file_path.write_bytes(b"\x80\x81\x82\x83")
+
+        # Test reading from a file with invalid UTF-8 content
+        result = read_partial_file(str(file_path), 10)
+        assert result == b"\x80\x81\x82\x83"
