@@ -144,7 +144,7 @@ class MemoryManager:
             self._data_cache.set(collection_id, None)  # Remove from cache
             self._logger.debug(f"Removed MemorySlotCollection with ID: {collection_id}")
         else:
-            self._logger.error(Exception(f"No collection found with ID: {collection_id}"), self)
+            self._logger.error(Exception(f"No collection found with ID: {collection_id}"), self.__class__.__name__)
 
     async def list_collections(self) -> dict:
         """
