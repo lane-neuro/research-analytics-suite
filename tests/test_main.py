@@ -31,7 +31,6 @@ def mock_get_event_loop():
         yield mock_get_event_loop
 
 
-@pytest.mark.asyncio
 def test_main(mock_apply, mock_run, mock_sys_exit, mock_get_event_loop):
     mock_event_loop = mock.Mock()
     mock_get_event_loop.return_value = mock_event_loop
@@ -46,7 +45,6 @@ def test_main(mock_apply, mock_run, mock_sys_exit, mock_get_event_loop):
     mock_sys_exit.assert_called_once_with(0)
 
 
-@pytest.mark.asyncio
 def test_main_keyboard_interrupt(mock_apply, mock_run, mock_sys_exit, mock_get_event_loop):
     mock_run.side_effect = KeyboardInterrupt
     mock_event_loop = mock.Mock()
@@ -62,7 +60,6 @@ def test_main_keyboard_interrupt(mock_apply, mock_run, mock_sys_exit, mock_get_e
     mock_sys_exit.assert_called_once_with(0)
 
 
-@pytest.mark.asyncio
 def test_main_exception(mock_apply, mock_run, mock_sys_exit, mock_get_event_loop):
     mock_run.side_effect = Exception('Test Exception')
     mock_event_loop = mock.Mock()

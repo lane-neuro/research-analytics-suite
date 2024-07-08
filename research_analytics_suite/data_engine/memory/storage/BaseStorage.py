@@ -8,9 +8,6 @@ Author: Lane
 import uuid
 from abc import ABC, abstractmethod
 
-from research_analytics_suite.utils.Config import Config
-from research_analytics_suite.utils.CustomLogger import CustomLogger
-
 
 class BaseStorage(ABC):
     """
@@ -20,7 +17,10 @@ class BaseStorage(ABC):
 
     def __init__(self, *args, **kwargs):
         self._GENERAL_MEMORY_ID = f"{uuid.uuid4()}"
+        from research_analytics_suite.utils import CustomLogger
         self._logger = CustomLogger()
+
+        from research_analytics_suite.utils.Config import Config
         self._config = Config()
 
         from research_analytics_suite.data_engine.Workspace import Workspace
