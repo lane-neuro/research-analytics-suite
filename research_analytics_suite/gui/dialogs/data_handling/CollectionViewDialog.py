@@ -246,8 +246,8 @@ class CollectionViewDialog(GUIBase):
     async def save_memory_collections(self) -> None:
         """Backups the current memory collections to disk."""
         try:
-            save_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
-                                     dpg.get_value("save_path_input"))
+            save_path = os.path.normpath(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
+                                     dpg.get_value("save_path_input")))
             await self._workspace.save_memory_manager(save_path)
             self._logger.debug(f"Memory collections saved to {save_path}")
         except Exception as e:
@@ -256,12 +256,12 @@ class CollectionViewDialog(GUIBase):
     async def restore_memory_collections(self) -> None:
         """Restores a memory collections file from disk."""
         try:
-            restore_path = os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
-                                        dpg.get_value("save_path_input"))
+            restore_path = os.path.normpath(os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
+                                        dpg.get_value("save_path_input")))
             await self._workspace.restore_memory_manager(restore_path)
             self._logger.debug(f"Memory collections restored from {restore_path}")
         except Exception as e:
-            self._logger.error(Exception(f"Failed to restore memory collections: {e}", self))
+            self._logger.error(Exception(f"Failed to restore memory collections: {e}"), self.__class__.__name__)
 
     async def update_slot_combobox(self):
         """Updates the slot combobox in the GUI."""

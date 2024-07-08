@@ -135,14 +135,14 @@ class Workspace:
         Returns:
             Workspace: The newly created workspace
         """
-        self._config.BASE_DIR = f"{workspace_directory}../"
+        self._config.BASE_DIR = os.path.normpath(os.path.join(workspace_directory, "../"))
         self._config.WORKSPACE_NAME = workspace_name
         data_engine = DataEngineOptimized()
         self.add_data_engine(data_engine=data_engine)
-        self._logger.info(f"Workspace created at {workspace_directory}")
+        self._logger.info(f"Workspace created at {os.path.normpath(workspace_directory)}")
         try:
             new_workspace = await self.save_current_workspace()
-            return await self.load_workspace(os.path.join(f"{new_workspace}", 'config.json'))
+            return await self.load_workspace(os.path.normpath(os.path.join(f"{new_workspace}", 'config.json')))
         except Exception as e:
             self._logger.error(e, 'Failed to create workspace')
 
@@ -154,36 +154,45 @@ class Workspace:
             The path to the saved workspace directory.
         """
         try:
-            os.makedirs(os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME), exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.DATA_DIR),
-                        exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.LOG_DIR),
-                        exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.WORKSPACE_DIR),
-                        exist_ok=True)
             os.makedirs(
-                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.WORKSPACE_OPERATIONS_DIR),
+                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME), exist_ok=True)
+            os.makedirs(
+                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.DATA_DIR),
                 exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.BACKUP_DIR),
-                        exist_ok=True)
-            os.makedirs(os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.ENGINE_DIR),
-                        exist_ok=True)
+            os.makedirs(
+                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.LOG_DIR),
+                exist_ok=True)
+            os.makedirs(
+                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME,
+                             self._config.WORKSPACE_DIR), exist_ok=True)
+            os.makedirs(
+                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME,
+                             self._config.WORKSPACE_OPERATIONS_DIR), exist_ok=True)
+            os.makedirs(
+                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.BACKUP_DIR),
+                exist_ok=True)
+            os.makedirs(
+                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.ENGINE_DIR),
+                exist_ok=True)
 
             for runtime_id, data_engine in self._data_engines.items():
-                engine_path = os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.ENGINE_DIR,
+                engine_path = os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME,
+                                           self._config.ENGINE_DIR,
                                            data_engine.engine_id)
                 os.makedirs(engine_path, exist_ok=True)
-                await data_engine.save_engine(os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME))
+                await data_engine.save_engine(
+                    os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME))
 
-            await self.save_memory_manager(
-                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, 'user_variables.db'))
-            config_path = os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, 'config.json')
+            await self.save_memory_manager(os.path.normpath(
+                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, 'user_variables.db')))
+            config_path = os.path.normpath(
+                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, 'config.json'))
             await self._config.save_to_file(config_path)
-            _path = os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME)
+            _path = os.path.normpath(os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME))
             return f"{_path}"
 
         except Exception as e:
-            self._logger.error(Exception(f"Failed to save current workspace: {e}"), 'Workspace')
+            self._logger.error(Exception(f"Failed to save current workspace: {e}"), self.__class__.__name__)
 
     async def load_workspace(self, workspace_path) -> 'Workspace':
         """
@@ -358,7 +367,7 @@ class Workspace:
                 raise ValueError(f"Collection with ID {collection_id} not found")
         except Exception as e:
             self._logger.error(Exception(f"Failed to remove variable '{name}' from collection '{collection_id}': {e}"),
-                               self)
+                               self.__class__.__name__)
 
     async def save_memory_manager(self, file_path):
         """
