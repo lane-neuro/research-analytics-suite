@@ -177,7 +177,7 @@ Once you have cloned the repo (see [Installation](#installation)), you will need
   ```
   Finally, run the project:
   ```sh
-  python __main__.py
+  python ResearchAnalyticsSuite.py
   ```
 <br />
 
@@ -187,9 +187,36 @@ Once you have cloned the repo (see [Installation](#installation)), you will need
     ```
     Then, run the project:
     ```sh
-    python __main__.py
+    python ResearchAnalyticsSuite.py
     ```
 <br />
+
+### Command Line Arguments
+
+You can provide the following command line arguments to customize the behavior of the Research Analytics Suite:
+
+- **`-g`, `--gui`**: Launches the Research Analytics Suite GUI (default is `'True'`).
+- **`-o`, `--open_workspace`**: Opens an existing workspace from the specified folder/directory.
+- **`-c`, `--config`**: Path to the configuration file for the workspace.
+- **`-d`, `--directory`**: Directory where workspace files will be located (default is `~/Research-Analytics-Suite/workspaces/`).
+- **`-n`, `--name`**: Name of the new workspace.
+
+#### Examples
+
+**Creating a new workspace:**
+```sh
+python ResearchAnalyticsSuite.py -d /path/to/workspaces -n my_new_workspace
+```
+* This will create a new workspace named `my_new_workspace` in the specified directory.
+<br />
+
+**Opening an existing workspace:**
+```sh
+python ResearchAnalyticsSuite.py -o /path/to/workspace
+```
+* This will open the workspace located at `/path/to/workspace`.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Installation
 1. Ensure you have Python 3.8 or later installed.

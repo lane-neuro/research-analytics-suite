@@ -39,7 +39,7 @@ class OperationControl:
             cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
 
-    def __init__(self, sleep_time: float = 0.15):
+    def __init__(self):
         """
         Initializes the OperationControl with various components.
         """
@@ -51,8 +51,6 @@ class OperationControl:
             self.sequencer = None
             self.task_creator = None
             self.task_monitor = None
-
-            self.SLEEP_TIME = sleep_time
 
             self.operation_manager = None
             self.operation_executor = None
@@ -66,7 +64,7 @@ class OperationControl:
             try:
                 self.main_loop = asyncio.get_event_loop()
             except Exception as e:
-                self._logger.error(e, self)
+                self._logger.error(e, self.__class__.__name__)
 
     async def initialize(self):
         if not self._initialized:

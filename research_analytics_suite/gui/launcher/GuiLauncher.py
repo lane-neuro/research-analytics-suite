@@ -19,7 +19,7 @@ import os
 
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
-from research_analytics_suite.data_engine.Workspace import Workspace
+from research_analytics_suite.data_engine import Workspace
 from research_analytics_suite.gui.NodeEditorManager import NodeEditorManager
 from research_analytics_suite.gui.dialogs.management.LibraryPane import LibraryPane
 from research_analytics_suite.gui.dialogs.management.ResourceMonitorDialog import ResourceMonitorDialog
@@ -28,8 +28,8 @@ from research_analytics_suite.gui.dialogs.management.ConsoleDialog import Consol
 from research_analytics_suite.gui.dialogs.settings.SettingsDialog import SettingsDialog
 from research_analytics_suite.gui.modules.TimelineModule import TimelineModule
 from research_analytics_suite.gui.modules.WorkspaceModule import WorkspaceModule
-from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
-from research_analytics_suite.utils.CustomLogger import CustomLogger
+from research_analytics_suite.operation_manager.control import OperationControl
+from research_analytics_suite.utils import CustomLogger
 from research_analytics_suite.gui.dialogs.management.PlanningDialog import PlanningDialog
 from research_analytics_suite.gui.dialogs.data_handling.AnalyzeDataDialog import AnalyzeDataDialog
 from research_analytics_suite.gui.dialogs.visualization.VisualizeDataDialog import VisualizeDataDialog
@@ -81,7 +81,7 @@ class GuiLauncher:
             dpg.add_button(label="Reports", callback=lambda: self.switch_pane("reports"))
             dpg.add_button(label="Configuration", callback=self.settings_popup)
             dpg.add_button(label="Logs", callback=lambda: self.switch_pane("console_log_output"))
-            dpg.add_button(label="Exit", callback=dpg.stop_dearpygui)
+            dpg.add_button(label="Exit", callback=lambda: dpg.stop_dearpygui())
 
     def switch_pane(self, pane_name: str) -> None:
         """
@@ -121,7 +121,7 @@ class GuiLauncher:
                     if file.endswith(".ttf"):
                         font_paths.append(os.path.join(root, file))
         else:
-            self._logger.error(Exception(f"Font directory {font_directory} does not exist."), self)
+            self._logger.error(Exception(f"Font directory {font_directory} does not exist."), self.__class__.__name__)
 
         await self.load_fonts(font_paths)
 
@@ -137,12 +137,13 @@ class GuiLauncher:
                         dpg.set_global_font_scale(1.0)
                     await asyncio.sleep(0)  # Yield control to the event loop
                 except Exception as e:
-                    self._logger.error(Exception(f"Failed to load font {font_path}: {e}"), self)
+                    self._logger.error(Exception(f"Failed to load font {font_path}: {e}"), self.__class__.__name__)
 
             if default_font is not None:
                 dpg.bind_font(default_font)
             else:
-                self._logger.error(Exception("No default font found, using DearPyGui's default font."), self)
+                self._logger.error(Exception("No default font found, using DearPyGui's default font."),
+                                   self.__class__.__name__)
 
     async def setup_main_window(self) -> None:
         """Sets up the main window of the GUI and runs the event loop."""

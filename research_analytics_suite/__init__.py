@@ -16,3 +16,5 @@ __version__ = '0.0.0.1'
 __maintainer__ = 'Lane'
 __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
+
+from .ResearchAnalyticsSuite import ResearchAnalyticsSuite
