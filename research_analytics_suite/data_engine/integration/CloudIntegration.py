@@ -23,6 +23,9 @@ class CloudIntegration:
             aws_secret_key (str): The AWS secret key.
             region_name (str): The AWS region name.
         """
+        from research_analytics_suite.utils import CustomLogger
+        self._logger = CustomLogger()
+
         self._s3_client = boto3.client(
             's3',
             aws_access_key_id=aws_access_key,
@@ -48,7 +51,7 @@ class CloudIntegration:
             self._s3_client.upload_file(file_name, bucket, object_name)
             return True
         except Exception as e:
-            print(f"Error uploading file: {e}")
+            self._logger.error(e, self.__class__.__name__)
             return False
 
     def download_file(self, bucket, object_name, file_name):
@@ -67,5 +70,5 @@ class CloudIntegration:
             self._s3_client.download_file(bucket, object_name, file_name)
             return True
         except Exception as e:
-            print(f"Error downloading file: {e}")
+            self._logger.error(e, self.__class__.__name__)
             return False
