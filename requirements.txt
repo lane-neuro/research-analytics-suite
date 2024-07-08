@@ -29,6 +29,6 @@ statsmodels>=0.14.2
 tensorflow>=2.8.0
 keras>=3.4.1
 nest-asyncio>=1.6.0
-openpyxl>=3.2.0b1
+openpyxl>=3.1.5
 fastavro>=1.9.4
 tables>=3.9.2
