@@ -1,5 +1,5 @@
 # Research Analytics Suite (RAS) - Requirements
-# platform: win-64
+# platform: win-64 | osx-64 | linux-64
 
 # This file may be used to install the required packages using:
 # $ pip install -r requirements.txt
@@ -29,3 +29,6 @@ statsmodels>=0.14.2
 tensorflow>=2.8.0
 keras>=3.4.1
 nest-asyncio>=1.6.0
+openpyxl>=3.2.0b1
+fastavro>=1.9.4
+tables>=3.9.2
