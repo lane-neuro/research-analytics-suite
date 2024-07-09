@@ -218,13 +218,13 @@ To get a local copy up and running, follow the following steps.
    <br /> 
 
    
-   * <i>Alternatively</i>, you can install the required packages globally. While this is the easier route, it is <i>typically **not recommended**</i>. 
-    <br />
-    <br />
-      If this is what you wish to do, run the following command in the terminal:
-      ```sh
-      pip install -r requirements.txt
-      ```
+* <i>Alternatively</i>, you can install the required packages globally. While this is the easier route, it is <i>typically **not recommended**</i>. 
+ <br />
+ <br />
+   If this is what you wish to do, run the following command in the terminal:
+   ```sh
+   pip install -r requirements.txt
+   ```
    <br />
 
 4. Run the project using the following command in the terminal:
