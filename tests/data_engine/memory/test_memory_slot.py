@@ -1,27 +1,24 @@
+# test_memory_slot.py
+
 import pytest
 import time
 import asyncio
-
 import pytest_asyncio
+from mmap import mmap
+from unittest.mock import patch, MagicMock
+import os
 
 from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot, DATA_SIZE_THRESHOLD
-from unittest.mock import patch, MagicMock
 
 
 @pytest_asyncio.fixture
 async def memory_slot():
     with patch('research_analytics_suite.utils.CustomLogger', autospec=True) as MockLogger:
         mock_logger_instance = MockLogger.return_value
-        mock_logger_instance.initialize = MagicMock()
-        mock_logger_instance.error = MagicMock()
-        mock_logger_instance.info = MagicMock()
-        mock_logger_instance.debug = MagicMock()
-        mock_logger_instance.warning = MagicMock()
-        mock_logger_instance.critical = MagicMock()
         return MemorySlot(memory_id="test_slot", name="Test Slot", operation_required=True, data={
             "key1": (int, 123),
             "key2": (str, "value")
-        })
+        }, file_path="test_memory.dat")
 
 
 class TestMemorySlot:
@@ -30,7 +27,10 @@ class TestMemorySlot:
     def setup_teardown(self, memory_slot):
         self.memory_slot = memory_slot
         yield
-        self.memory_slot = None
+        self.memory_slot.clear_data()
+        self.memory_slot.close_mmap()
+        if os.path.exists("test_memory.dat"):
+            os.remove("test_memory.dat")
 
     def test_memory_id(self):
         assert self.memory_slot.memory_id == "test_slot"
@@ -201,3 +201,21 @@ class TestMemorySlot:
         large_data = "x" * (DATA_SIZE_THRESHOLD + 1)
         await self.memory_slot.set_data_by_key("large_key", large_data, str)
         assert await self.memory_slot.get_data_by_key("large_key") == large_data
+
+    @pytest.mark.asyncio
+    async def test_init_mmap(self):
+        large_data = "x" * (DATA_SIZE_THRESHOLD + 1)
+        await self.memory_slot.set_data_by_key("large_key", large_data, str)
+        assert self.memory_slot._use_mmap
+        assert self.memory_slot._mmapped_file is not None
+
+    def test_serialize(self):
+        data = "test_data"
+        serialized_data = self.memory_slot.serialize(data)
+        assert serialized_data == b'test_data'
+
+    def test_deserialize(self):
+        data = "test_data"
+        serialized_data = self.memory_slot.serialize(data)
+        deserialized_data = self.memory_slot.deserialize(serialized_data, str)
+        assert deserialized_data == data

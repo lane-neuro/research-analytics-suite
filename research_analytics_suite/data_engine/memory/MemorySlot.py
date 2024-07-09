@@ -7,7 +7,6 @@ from typing import Any, Type, Tuple, Dict
 
 DATA_SIZE_THRESHOLD = 1024 * 1024  # 1 MB
 
-
 class MemorySlot:
     """
     A class representing a slot of memory for storing data associated with operations.
@@ -72,8 +71,7 @@ class MemorySlot:
 
     def __del__(self):
         """Destructor to close the memory-mapped file."""
-        if hasattr(self, '_logger') and self._logger:
-            self.close_mmap()
+        self.close_mmap()
 
     @property
     def memory_id(self) -> str:
@@ -169,9 +167,9 @@ class MemorySlot:
         return self._modified_at
 
     def check_data_size(self):
-        """Check the data size and switch to mmap if necessary."""
         try:
-            data_size = sum(sys.getsizeof(value) for _, value in self._data.values())
+            data_size = sum(sys.getsizeof(value[1]) for value in self._data.values())
+            self._file_size = data_size
             if data_size > DATA_SIZE_THRESHOLD:
                 if self._file_path:
                     self._use_mmap = True
@@ -201,15 +199,20 @@ class MemorySlot:
             self.dump_data_to_mmap()
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
+            if self._file:
+                self._file.close()
+            if self._mmapped_file:
+                self._mmapped_file.close()
 
     def dump_data_to_mmap(self):
-        """Dump current data to the memory-mapped file."""
         try:
+            self._mmapped_file[:] = b'\0' * self._file_size
+
             offset = 0
             for key, (data_type, value) in self._data.items():
                 serialized_value = self.serialize(value)
                 size = len(serialized_value)
-                self._mmapped_file[offset:offset+size] = serialized_value
+                self._mmapped_file[offset:offset + size] = serialized_value
                 offset += size
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
@@ -217,6 +220,8 @@ class MemorySlot:
     def serialize(self, value):
         """Serialize a value for storage in mmap."""
         try:
+            if isinstance(value, str):
+                return value.encode('utf-8')
             return str(value).encode('utf-8')
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
@@ -266,7 +271,9 @@ class MemorySlot:
         async with self._lock:
             try:
                 if self._use_mmap:
-                    return self.deserialize(self._mmapped_file[:], self._data[key][0])
+                    offset = self.calculate_offset(key)
+                    size = len(self.serialize(self._data[key][1]))
+                    return self.deserialize(self._mmapped_file[offset:offset + size], self._data[key][0])
                 return self._data.get(key, (None, None))[1]
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)
@@ -288,6 +295,8 @@ class MemorySlot:
             self._data[key] = (data_type, value)
             self.check_data_size()  # Check data size and potentially initialize memory mapping
             self.update_modified_time()
+            if self._use_mmap:
+                self.dump_data_to_mmap()
 
     async def remove_data_by_key(self, key: str):
         """Remove the key-value pair associated with a specific key."""
@@ -297,7 +306,7 @@ class MemorySlot:
                     if self._use_mmap:
                         offset = self.calculate_offset(key)
                         size = len(self.serialize(self._data[key][1]))
-                        self._mmapped_file[offset:offset+size] = b'\0' * size
+                        self._mmapped_file[offset:offset + size] = b'\0' * size
                     del self._data[key]
                     self.update_modified_time()
             except Exception as e:
@@ -399,7 +408,8 @@ class MemorySlot:
         async with self._lock:
             try:
                 if self._use_mmap:
-                    return [self.deserialize(self._mmapped_file[:], data_type) for data_type, _ in self._data.values()]
+                    return [self.deserialize(self._mmapped_file[self.calculate_offset(key):], data_type) for
+                            key, (data_type, _) in self._data.items()]
                 return [v for _, v in self._data.values()]
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)
@@ -409,7 +419,8 @@ class MemorySlot:
         async with self._lock:
             try:
                 if self._use_mmap:
-                    return [(k, self.deserialize(self._mmapped_file[:], data_type)) for k, (data_type, _) in self._data.items()]
+                    return [(k, self.deserialize(self._mmapped_file[self.calculate_offset(k):], data_type)) for
+                            k, (data_type, _) in self._data.items()]
                 return list(self._data.items())
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)
