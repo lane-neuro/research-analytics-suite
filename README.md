@@ -40,7 +40,8 @@
       <li><strong>Custom Functions</strong>: Allows users to create and implement custom analysis functions.</li>
       <li><strong>Future Integration</strong>: Designed for compatibility with tools like <a href="https://github.com/DeepLabCut/DeepLabCut">DeepLabCut</a>.</li>
     </ul>
-    <br /><br />
+    <br />
+    <br />
     <strong>RAS</strong> aims to foster a collaborative research community, enabling scientists and researchers to share their analytic workflows and contribute to a repository of shared knowledge, accelerating scientific discovery and innovation.
   </p>
 </div>
@@ -56,12 +57,11 @@
         <li><a href="#overall-mission">Overall Mission</a></li>
         <li><a href="#developed-with">Developed With</a></li>
       </ul>
-    <li><a href="#getting-started">Getting Started</a>
+    <li><a href="#getting-started">Getting Started</a></li>
         <ul>
             <li><a href="#prerequisites">Prerequisites</a></li>
             <li><a href="#installation">Installation</a></li>
         </ul>
-    </li>
     <li><a href="#command-line-arguments">Command Line Arguments</a></li>
       <ul>
         <li><a href="#examples">Examples</a></li>
@@ -199,7 +199,7 @@ To get a local copy up and running, follow the following steps.
    <br />
 3. Install the required packages. This can be done in one of two ways:
 
-* If you are using [Anaconda](https://www.anaconda.com/) as a virtual environment, you can use the supplied `environment.yml` file to create a new environment with all the required packages. 
+   * If you are using [Anaconda](https://www.anaconda.com/) as a virtual environment, you can use the supplied `environment.yml` file to create a new environment with all the required packages. 
    
    <br />
     
@@ -211,13 +211,13 @@ To get a local copy up and running, follow the following steps.
      ```sh
      conda activate research-analytics-suite
      ```
-  <br />
+   <br />
 
-  <p align="center"><b>OR</b></p>
-  <p align="center"><i>[the following option is typically not recommended given it installs all requirements on your global python path]</i></p> 
+   <p align="center"><b>OR</b></p>
+   <p align="center"><i>[the following option is typically not recommended given it installs all requirements on your global python path]</i></p> 
    <br /> 
 
-* <i>Alternatively</i>, you can install the required packages globally. While this is the easier route, it is <i>typically **not recommended**</i>.<br />
+   * <i>Alternatively</i>, you can install the required packages globally. While this is the easier route, it is <i>typically **not recommended**</i>.<br />
 
    <br />
 
@@ -226,41 +226,64 @@ To get a local copy up and running, follow the following steps.
      ```sh 
      pip install -r requirements.txt
      ```
-<br />
+   <br />
 
 4. Run the project using the following command in the terminal:
    - (see [Command Line Arguments](#command-line-arguments) below for customization)
    ```sh
    python ResearchAnalyticsSuite.py
    ```
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+   
+   <p align="right">(<a href="#readme-top">back to top</a>)</p>
 <br />
 
 # Command Line Arguments
 
 You can provide the following command line arguments to customize the behavior of the Research Analytics Suite:
 
-- **`-g`, `--gui`**: Launches the Research Analytics Suite GUI (default is `'True'`).
-- **`-o`, `--open_workspace`**: Opens an existing workspace from the specified folder/directory.
-- **`-c`, `--config`**: Path to the configuration file for the workspace.
-- **`-d`, `--directory`**: Directory where workspace files will be located (default is `~/Research-Analytics-Suite/workspaces/`).
-- **`-n`, `--name`**: Name of the new workspace.
+- **`-g`, `--gui`**: Launches the Research Analytics Suite GUI 
+   - default: `'true'`).
+- **`-o`, `--open_workspace`**: Opens or creates a workspace at the specified directory. 
+   - default: `'~/Research-Analytics-Suite/workspaces/default_workspace'`
 
 ## Examples
 
-* **Creating a new workspace**
+### Creating / Opening a RAS Workspace
+You can specify the workspace to open or create using the `-o` or `--open_workspace` argument.
    ```sh
-   python ResearchAnalyticsSuite.py -d /path/to/workspaces -n my_new_workspace
+   python ResearchAnalyticsSuite.py -o ~/Research-Analytics-Suite/workspaces/a_new_workspace
    ```
-   * This will create a new workspace named `my_new_workspace` in the specified directory.
-<br />
+   * This will create a new workspace at `~/Research-Analytics-Suite/workspaces/a_new_workspace` if it does not already exist. 
+   * If it does exist, it will open the existing workspace at that location.
+   * Note: The path much be to a directory, not a file. 
+     * So if you want to open a `'config.json'` file located at `~/Research-Analytics-Suite/workspaces/look_another_workspace/config.json`, you would instead use the following command:
+     ```sh
+     python ResearchAnalyticsSuite.py -o ~/Research-Analytics-Suite/workspaces/look_another_workspace
+     ```
+     * This will open the workspace configuration file located within the `~/Research-Analytics-Suite/workspaces/look_another_workspace` directory.
 
+     <br />
 
-* **Opening an existing workspace**
+### Launching RAS with the GUI
+The GUI is the default mode of operation for RAS. However, you can explicitly specify the GUI mode by using the following command:
    ```sh
-   python ResearchAnalyticsSuite.py -o /path/to/workspace
+   python ResearchAnalyticsSuite.py -g true
    ```
-   * This will open the workspace located at `/path/to/workspace`.
+   * This will launch RAS with the GUI; this essentially has the same effect as running RAS without any command-line arguments.
+   * This is the default mode of operation for RAS, providing an interactive interface for data analysis and visualization.
+
+   <br />
+
+### Launching RAS without the GUI (Command-Line Mode)
+The GUI is the default mode of operation for RAS. However, you can run RAS in command-line mode only by using the following command:
+   ```sh
+   python ResearchAnalyticsSuite.py -g false
+   ```
+   * This will launch RAS without the GUI, running in command-line mode only.
+   * This is useful for running RAS in headless mode or for scripting purposes; such as batch processing, automation, or integration with other tools.
+   
+   <br />
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

@@ -4,5 +4,4 @@ from .OperationManager import OperationManager
 from .OperationSequencer import OperationSequencer
 from .OperationStatusChecker import OperationStatusChecker
 from .SystemOperationChecker import SystemOperationChecker
-from .UserInputManager import UserInputManager
 from .OperationLifecycleManager import OperationLifecycleManager

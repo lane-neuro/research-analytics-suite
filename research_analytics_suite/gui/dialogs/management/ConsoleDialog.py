@@ -19,7 +19,7 @@ import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.operation_manager.management.UserInputManager import UserInputManager
+from research_analytics_suite.commands.UserInputManager import UserInputManager
 
 
 class ConsoleDialog(GUIBase):
