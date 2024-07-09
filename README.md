@@ -30,7 +30,7 @@
   <p align="left">
     The <strong>Research Analytics Suite (RAS)</strong>, developed by <a href="#contact">Lane</a> within Gire Lab at the University of Washington, is a comprehensive, open-source platform written in Python for aggregating and analyzing scientific data from diverse sources. RAS is designed to be free and accessible, addressing financial and accessibility barriers in scientific research.
     <br /><br />
-    <b>Please note: RAS is currently under active development and is not yet ready for general use. This repository is intended for demonstration purposes and to showcase the project's structure and features.</b>
+    <b>Please note: RAS is currently under active development and is not yet ready for public use. This repository is intended for demonstration purposes and to showcase the project's structure and features while it is being developed.</b>
     <br /><br />
     <strong>Key Features:</strong>
     <ul>
@@ -53,14 +53,19 @@
     <li><a href="#about-the-project">About The Project</a></li>
       <ul>
         <li><a href="#key-features">Key Features</a></li>
+        <li><a href="#overall-mission">Overall Mission</a></li>
         <li><a href="#developed-with">Developed With</a></li>
       </ul>
     <li><a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
+        <ul>
+            <li><a href="#prerequisites">Prerequisites</a></li>
+            <li><a href="#installation">Installation</a></li>
+        </ul>
     </li>
+    <li><a href="#command-line-arguments">Command Line Arguments</a></li>
+      <ul>
+        <li><a href="#examples">Examples</a></li>
+      </ul>
     <li><a href="#project-structure">Project Structure</a>
       <ul>
         <li><a href="#operation-manager">Operation Manager</a>
@@ -81,24 +86,34 @@
 </details>
 
 <!-- ABOUT THE PROJECT -->
-## About The Project
+# About The Project
 
 The **Research Analytics Suite (RAS)** is a cutting-edge, open-source platform developed in Python to address the diverse needs of scientific data analysis. RAS stands out by offering a comprehensive suite of tools for data aggregation, management, and analysis, derived from various input sources such as pixel-tracking technology, accelerometers, and analog voltage outputs.
 
 RAS aims to democratize access to powerful data analysis tools traditionally dominated by commercial software. By eliminating financial barriers, RAS empowers researchers, educators, and industry professionals to conduct sophisticated analyses without the associated costs.
 
-### Key Features:
-* **Data Management Engine (DME)**: A robust system for filtering and aggregating large, complex datasets from multiple sources. The DME ensures seamless integration and handling of diverse data types, facilitating comprehensive and efficient data analysis.
-* **Analytics Suite**: Offers an extensive array of tools for research data analysis, including advanced statistical methods, machine learning algorithms, and data visualization techniques. The analytics suite is designed to be both powerful and flexible, catering to the specific needs of each user.
-  * **Preloaded Functions**: A library of ready-to-use functions for common analysis tasks, enabling users to quickly apply standard methods without extensive setup.
-  * **Custom / User-Defined Functions**: Allows users to create and implement their own analysis functions, fostering innovation and customization in research workflows.
-* **Future Integration**: RAS is designed with future compatibility in mind, aiming to integrate seamlessly with other leading tools in the field, such as [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut), to expand its capabilities further.
+## Overall Mission
+* The Research Analytics Suite aspires to cultivate a collaborative research community. It envisions a platform where scientists and researchers can share their analytic workflows, collaborate on projects, and contribute to a growing repository of shared knowledge and resources. This collaborative spirit aims to accelerate scientific discovery and innovation by leveraging the collective expertise of the global research community.
+<br />
 
-In addition, RAS aspires to cultivate a collaborative research community. It envisions a platform where scientists and researchers can share their analytic workflows, collaborate on projects, and contribute to a growing repository of shared knowledge and resources. This collaborative spirit aims to accelerate scientific discovery and innovation by leveraging the collective expertise of the global research community.
 
-By providing a versatile and accessible toolset, RAS not only enhances the efficiency and effectiveness of data analysis but also fosters a culture of open collaboration and shared progress in the scientific community.
+* By providing a versatile and accessible toolset, RAS not only enhances the efficiency and effectiveness of data analysis but also fosters a culture of open collaboration and shared progress in the scientific community.
 
-### Developed With:
+## Key Features
+
+### Data Management Engine (DME) 
+* A robust system for filtering and aggregating large, complex datasets from multiple sources. The DME ensures seamless integration and handling of diverse data types, facilitating comprehensive and efficient data analysis.
+
+### Analytics Suite 
+* Offers an extensive array of tools for research data analysis, including advanced statistical methods, machine learning algorithms, and data visualization techniques. The analytics suite is designed to be both powerful and flexible, catering to the specific needs of each user.
+* **Preloaded Functions**: A library of ready-to-use functions for common analysis tasks, enabling users to quickly apply standard methods without extensive setup.
+* **Custom / User-Defined Functions**: Allows users to create and implement their own analysis functions, fostering innovation and customization in research workflows.
+
+### Future Integration
+* RAS is designed with future compatibility in mind, aiming to integrate seamlessly with other leading tools in the field, such as [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut), to expand its capabilities further.
+
+
+## Developed With
 RAS is built using a variety of powerful tools and libraries to ensure robust functionality and performance, including (but not limited to): <br />
 <div align="center">
 
@@ -156,42 +171,71 @@ RAS is built using a variety of powerful tools and libraries to ensure robust fu
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
-## Getting Started
+# Getting Started
 
-To get a local copy up and running, follow these steps.
+To get a local copy up and running, follow the following steps.
 
-### Prerequisites
-Once you have cloned the repo (see [Installation](#installation)), you will need to install the required packages. This can be done in one of two ways:
-* If you are using [Anaconda](https://www.anaconda.com/) as a virtual environment (recommended until a stand-alone executable is available), you can use the supplied `environment.yml` file to create a new environment with all the required packages. 
-    <br />
-    <br />
-    
-   To do this, run the following command in the terminal:
+## Prerequisites
+<i>An executable package of RAS will be available for each platform once the project is ready for prototyping and deployment. In the meantime...</i>
+
+* Ensure you have Python 3.8 or later installed:
+   * You can check your Python version by running the following command in the terminal:
+      ```sh
+      python --version
+      ```
+   * If not, you can download it [here](https://www.python.org/downloads/) or use [Anaconda](https://www.anaconda.com/).
+  
+## Installation
+<i>An executable package of RAS will be available for each platform once the project is ready for prototyping and deployment. In the meantime...</i>
+1. Clone the repo
    ```sh
-   conda env create -f environment.yml
-   ```  
+   git clone https://github.com/lane-neuro/research-analytics-suite.git
+   ```
+   <br />
+2. Navigate to the project directory
+   ```sh
+   cd research-analytics-suite
+   ```
+   <br />
+3. Install the required packages. This can be done in one of two ways:
 
-  Then, activate the environment:
-  ```sh
-  conda activate research-analytics-suite
-  ```
-  Finally, run the project:
-  ```sh
-  python ResearchAnalyticsSuite.py
-  ```
+* If you are using [Anaconda](https://www.anaconda.com/) as a virtual environment, you can use the supplied `environment.yml` file to create a new environment with all the required packages. 
+   
+   <br />
+    
+     To do this, run the following command in the terminal:
+     ```sh
+     conda env create -f environment.yml
+     ```
+     Then, activate the environment:
+     ```sh
+     conda activate research-analytics-suite
+     ```
+  <br />
+
+  <p align="center"><b>OR</b></p>
+  <p align="center"><i>[the following option is typically not recommended given it installs all requirements on your global python path]</i></p> 
+   <br /> 
+
+   
+   * <i>Alternatively</i>, you can install the required packages globally. While this is the easier route, it is <i>typically **not recommended**</i>. 
+    <br />
+    <br />
+      If this is what you wish to do, run the following command in the terminal:
+      ```sh
+      pip install -r requirements.txt
+      ```
+   <br />
+
+4. Run the project using the following command in the terminal:
+   - (see [Command Line Arguments](#command-line-arguments) below for customization)
+   ```sh
+   python ResearchAnalyticsSuite.py
+   ```
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 <br />
 
-* <i>Alternatively</i>, you can install the required packages globally <i>(typically not recommended)</i> using the following command:
-    ```sh
-    pip install -r requirements.txt
-    ```
-    Then, run the project:
-    ```sh
-    python ResearchAnalyticsSuite.py
-    ```
-<br />
-
-### Command Line Arguments
+# Command Line Arguments
 
 You can provide the following command line arguments to customize the behavior of the Research Analytics Suite:
 
@@ -201,47 +245,29 @@ You can provide the following command line arguments to customize the behavior o
 - **`-d`, `--directory`**: Directory where workspace files will be located (default is `~/Research-Analytics-Suite/workspaces/`).
 - **`-n`, `--name`**: Name of the new workspace.
 
-#### Examples
+## Examples
 
-**Creating a new workspace:**
-```sh
-python ResearchAnalyticsSuite.py -d /path/to/workspaces -n my_new_workspace
-```
-* This will create a new workspace named `my_new_workspace` in the specified directory.
+* **Creating a new workspace**
+   ```sh
+   python ResearchAnalyticsSuite.py -d /path/to/workspaces -n my_new_workspace
+   ```
+   * This will create a new workspace named `my_new_workspace` in the specified directory.
 <br />
 
-**Opening an existing workspace:**
-```sh
-python ResearchAnalyticsSuite.py -o /path/to/workspace
-```
-* This will open the workspace located at `/path/to/workspace`.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-### Installation
-1. Ensure you have Python 3.8 or later installed.
-   * If not, you can download it [here](https://www.python.org/downloads/) or use [Anaconda](https://www.anaconda.com/).
-   * You can check your Python version by running:
-     ```sh
-     python --version
-     ```
-   * <i>An executable package of RAS will be available once the project is ready for prototyping and deployment.</i>
-2. Clone the repo
+* **Opening an existing workspace**
    ```sh
-   git clone https://github.com/lane-neuro/research-analytics-suite.git
+   python ResearchAnalyticsSuite.py -o /path/to/workspace
    ```
-3. Navigate to the project directory
-   ```sh
-   cd research-analytics-suite
-   ```
-4. Refer to <a href="#prerequisites">Prerequisites</a> and install the required packages.
+   * This will open the workspace located at `/path/to/workspace`.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- PROJECT STRUCTURE -->
-## Project Structure
+# Project Structure
+<i>Fluid and subject to change as the project is developed further. Refer to the code for the most up-to-date information.</i>
 
-### Operation Manager
+## Operation Manager
 The `operation_manager` package orchestrates and manages data processing operations within RAS.
 - **chains**: Handles sequences of operations.
 - **control**: Manages control mechanisms.
@@ -260,7 +286,7 @@ The `operation_manager` package orchestrates and manages data processing operati
   - **system**: Includes common system operations, such as ```ResourceMonitorOperation``` and ```ConsoleOperation```
 - **task**: Manages all tasks associated with operations.
 
-### GUI
+## GUI
 The `gui` package provides graphical user interfaces for interacting with RAS.
 <br />
 
@@ -276,7 +302,7 @@ The `gui` package provides graphical user interfaces for interacting with RAS.
 - **modules**: Different GUI modules.
 - **utils**: Utility scripts for GUI components.
 
-### Data Engine
+## Data Engine
 The `data_engine` package handles the primary functionality for data processing and management within a project.
 - **core**: Core data processing modules.
 - **data_streams**: Handles live data input streams.
@@ -286,7 +312,7 @@ The `data_engine` package handles the primary functionality for data processing 
 - **variable_storage**: Manages variable storage.
   - **storage**: Different storage backends for variables.
 
-### Analytics
+## Analytics
 The `analytics` package handles the application and visualization of data transformations within a project.
 - **core**: Core analytical processing and transformations.
 - **custom_user**: Custom user-defined transformations and configurations.
@@ -303,13 +329,13 @@ The `analytics` package handles the application and visualization of data transf
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- USAGE EXAMPLES -->
-## Usage
+# Usage
 > <i>To be implemented at a later date.</i>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTRIBUTING -->
-## Contributing
+# Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. 
 
@@ -331,23 +357,23 @@ Don't forget to give the project a star! Thanks again!
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- LICENSE -->
-## License
+# License
 
 Distributed under the BSD 3-Clause License. See `LICENSE` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTACT -->
-## Contact
+# Contact
 
-### Lane (B.S.)
+## Lane (B.S.)
 Neurobiological Research Technician
 <br /><i>Gire Lab, University of Washington</i>
 <br />email: [justlane@uw.edu](mailto:justlane@uw.edu)
 <br /><a href="https://linkedin.com/in/lane14"><img align="center" height="25" src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555"></a>
 <br />
 <br />
-### Dr. David H. Gire (Ph.D.)
+## Dr. David H. Gire (Ph.D.)
 Associate Professor, Principal Investigator
 <br /><i>Gire Lab, University of Washington</i>
 <br />email: [dhgire@uw.edu](mailto:dhgire@uw.edu)
