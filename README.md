@@ -217,16 +217,16 @@ To get a local copy up and running, follow the following steps.
   <p align="center"><i>[the following option is typically not recommended given it installs all requirements on your global python path]</i></p> 
    <br /> 
 
-   
-* <i>Alternatively</i>, you can install the required packages globally. While this is the easier route, it is <i>typically **not recommended**</i>. 
- <br />
+* <i>Alternatively</i>, you can install the required packages globally. While this is the easier route, it is <i>typically **not recommended**</i>.<br />
 
-   If this is what you wish to do, run the following command in the terminal:
-      
-    ```sh 
-      pip install -r requirements.txt
-    ```
-    <br />
+   <br />
+
+     If this is what you wish to do, run the following command in the terminal:
+
+     ```sh 
+     pip install -r requirements.txt
+     ```
+<br />
 
 4. Run the project using the following command in the terminal:
    - (see [Command Line Arguments](#command-line-arguments) below for customization)
