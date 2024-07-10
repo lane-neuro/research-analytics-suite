@@ -2,7 +2,7 @@
 
 import pytest
 import inspect
-from typing import get_type_hints
+from typing import get_type_hints, Optional
 from research_analytics_suite.commands.CommandRegistry import command, temp_command_registry
 
 
@@ -55,3 +55,60 @@ class TestCommandDecorator:
             {'name': 'a', 'type': int}
         ]
         assert temp_command_registry[0]['return_type'] is None
+
+    def test_default_arguments(self):
+        @command
+        def test_func_default(a: int = 10, b: str = 'default') -> Optional[str]:
+            return None
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_default'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'b', 'type': str}
+        ]
+        assert temp_command_registry[0]['return_type'] == Optional[str]
+
+    def test_various_types(self):
+        @command
+        def test_func_various(a: int, b: float, c: bool, d: Optional[str] = None) -> list:
+            return [a, b, c, d]
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_various'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'b', 'type': float},
+            {'name': 'c', 'type': bool},
+            {'name': 'd', 'type': Optional[str]}
+        ]
+        assert temp_command_registry[0]['return_type'] == list
+
+    def test_keyword_only_arguments(self):
+        @command
+        def test_func_kw_only(a: int, *, b: str) -> dict:
+            return {'a': a, 'b': b}
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_kw_only'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'b', 'type': str}
+        ]
+        assert temp_command_registry[0]['return_type'] == dict
+
+    def test_self_handling(self):
+        class TestClass:
+            @command
+            def test_method(self, a: int, b: str) -> bool:
+                return True
+
+        instance = TestClass()
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_method'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'b', 'type': str}
+        ]
+        assert temp_command_registry[0]['return_type'] == bool
+        assert temp_command_registry[0]['is_method'] is True
