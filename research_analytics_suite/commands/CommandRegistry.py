@@ -202,11 +202,18 @@ def register_commands(cls):
             type_hints = get_type_hints(method)
             args = [{'name': param, 'type': type_hints.get(param, str)} for param in sig.parameters if param != 'self']
             return_type = type_hints.get('return', None)
-            temp_command_registry.append({
-                'func': method,
-                'name': f"{cls.__name__}.{method.__name__}",
-                'args': args,
-                'return_type': return_type,
-                'is_method': True
-            })
+
+            # Update the existing registry entry if found
+            for entry in temp_command_registry:
+                if entry['func'] == method:
+                    entry['name'] = f"{cls.__name__}.{method.__name__}"
+                    break
+            else:
+                temp_command_registry.append({
+                    'func': method,
+                    'name': f"{cls.__name__}.{method.__name__}",
+                    'args': args,
+                    'return_type': return_type,
+                    'is_method': True
+                })
     return cls
