@@ -90,4 +90,3 @@ def command(func=None):
         return wrapper
     else:
         return wrapper(func)
-

@@ -35,7 +35,6 @@ class TestUserInputManager:
 
     @pytest.mark.asyncio
     async def test_process_user_input_known_command_no_class(self):
-        # Setup the command registry mock
         self.command_registry._registry = {
             'test_command': {
                 'func': Mock(return_value='command executed'),
@@ -59,7 +58,6 @@ class TestUserInputManager:
 
     @pytest.mark.asyncio
     async def test_execute_command_with_correct_args(self):
-        # Setup the command registry mock
         self.command_registry._registry = {
             'test_command': {
                 'func': Mock(return_value='command executed'),
@@ -77,7 +75,6 @@ class TestUserInputManager:
 
     @pytest.mark.asyncio
     async def test_execute_command_with_incorrect_args(self):
-        # Setup the command registry mock
         self.command_registry._registry = {
             'test_command': {
                 'func': Mock(return_value='command executed'),
@@ -95,7 +92,6 @@ class TestUserInputManager:
 
     @pytest.mark.asyncio
     async def test_execute_command_with_exception(self):
-        # Setup the command registry mock
         self.command_registry._registry = {
             'test_command': {
                 'func': AsyncMock(side_effect=Exception('Error executing command')),
@@ -126,4 +122,3 @@ class TestUserInputManager:
         command_name, args = self.user_input_manager.parse_command('   ')
         assert command_name is None
         assert args == []
-
