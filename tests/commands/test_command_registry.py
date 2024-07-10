@@ -91,18 +91,13 @@ class TestCommandRegistry:
         result = registry.execute_command('method', 'runtime_1', 'World')
         assert result == "Hello World"
 
-    @patch('inspect.getmembers')
-    @patch('inspect.isfunction')
-    @patch('inspect.isclass')
     @patch('importlib.import_module')
-    def test_discover_commands(self, mock_import_module, mock_isclass, mock_isfunction, mock_getmembers, registry):
+    def test_discover_commands(self, mock_import_module, registry):
         # Setup mock to simulate module and command discovery
         mock_module = MagicMock()
         mock_module.__path__ = ['mocked_path']
         mock_module.__name__ = 'mocked_module'
         mock_import_module.return_value = mock_module
-        mock_isfunction.side_effect = lambda x: callable(x)
-        mock_isclass.side_effect = lambda x: isinstance(x, type)
 
         def sample_command():
             pass
@@ -111,12 +106,16 @@ class TestCommandRegistry:
             def method(self):
                 pass
 
-        mock_getmembers.side_effect = [
-            [('sample_command', sample_command)],
-            [('method', SampleClass.method)]
-        ]
+        with patch('research_analytics_suite.commands.CommandRegistry.inspect') as mock_inspect:
+            mock_inspect.getmembers.side_effect = [
+                [('sample_command', sample_command)],
+                [('method', SampleClass.method)]
+            ]
+            mock_inspect.isfunction.side_effect = lambda x: callable(x)
+            mock_inspect.isclass.side_effect = lambda x: isinstance(x, type)
 
-        registry.discover_commands('sample_package')
+            registry.discover_commands('sample_package')
 
         assert 'sample_command' in registry._registry
         assert 'method' in registry._registry
+        
