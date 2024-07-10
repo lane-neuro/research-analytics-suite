@@ -17,7 +17,6 @@ async def config():
     return config_instance
 
 
-@pytest.mark.asyncio
 class TestConfig:
 
     @pytest.mark.asyncio

@@ -23,11 +23,11 @@ async def memory_slot():
 
 class TestMemorySlot:
 
-    @pytest.fixture(autouse=True)
-    def setup_teardown(self, memory_slot):
+    @pytest_asyncio.fixture(autouse=True)
+    async def setup_teardown(self, memory_slot):
         self.memory_slot = memory_slot
         yield
-        self.memory_slot.clear_data()
+        await self.memory_slot.clear_data()
         self.memory_slot.close_mmap()
         if os.path.exists("test_memory.dat"):
             os.remove("test_memory.dat")

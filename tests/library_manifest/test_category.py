@@ -1,12 +1,10 @@
 import pytest
-import asyncio
 
 import pytest_asyncio
 
 from research_analytics_suite.library_manifest import Category
 
 
-@pytest.mark.asyncio
 class TestCategory:
     @pytest_asyncio.fixture(autouse=True)
     async def setup_class(self):

@@ -4,13 +4,6 @@ import pytest
 import asyncio
 
 
-@pytest.fixture
-def event_loop():
-    loop = asyncio.get_event_loop()
-    yield loop
-    loop.close()
-
-
 class TestOperationAttributes:
 
     @pytest.fixture(autouse=True)

@@ -1,23 +1,21 @@
 import pytest
-import pytest_asyncio
 
 from research_analytics_suite.library_manifest import CategoryID
 
 
-@pytest.mark.asyncio
 class TestCategoryID:
-    @pytest_asyncio.fixture(autouse=True)
-    async def setup_class(self):
+    @pytest.fixture(autouse=True)
+    def setup_class(self):
         self.categories = list(CategoryID)
 
-    async def test_category_ids(self):
+    def test_category_ids(self):
         expected_ids = [
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
         ]
         for category, expected_id in zip(self.categories, expected_ids):
             assert category.id == expected_id
 
-    async def test_category_names(self):
+    def test_category_names(self):
         expected_names = [
             "Numerical Data",
             "Categorical Data",
@@ -36,7 +34,7 @@ class TestCategoryID:
         for category, expected_name in zip(self.categories, expected_names):
             assert category.name == expected_name
 
-    async def test_subcategories(self):
+    def test_subcategories(self):
         numerical_subcategories = {
             "Basic": (101, "Basic", {}),
             "Intermediate": (102, "Intermediate", {}),
