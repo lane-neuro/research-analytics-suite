@@ -77,7 +77,7 @@ def command(func=None):
                 'func': f,
                 'name': f.__name__,
                 # Include the class name for methods, 2nd to last part of the qualname
-                'class_name': f.__qualname__.split('.')[-2] if is_method else None,
+                'class_name': f.__qualname__.split('.')[-2] if is_method and '.' in f.__qualname__ and f.__qualname__.count('.') > 1 else None,
                 'args': args,
                 'return_type': return_type,
                 'is_method': is_method

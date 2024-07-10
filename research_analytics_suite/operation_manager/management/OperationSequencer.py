@@ -319,4 +319,4 @@ class OperationSequencer:
         """
         Prints the sequencer in a readable format.
         """
-        print(self)
+        self._logger.info(self.__str__())

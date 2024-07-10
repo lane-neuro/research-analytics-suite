@@ -45,6 +45,9 @@ class SystemOperationChecker:
         self._operation_control = OperationControl()
         self.op_manager = self._operation_control.operation_manager
 
+        from research_analytics_suite.commands import CommandRegistry
+        self._registry = CommandRegistry()
+
         self.sequencer = sequencer
         self.task_creator = task_creator
 
@@ -57,10 +60,7 @@ class SystemOperationChecker:
         """
         if not self._operation_control.console_operation_in_progress:
             await self.op_manager.add_operation_if_not_exists(
-                operation_type=ConsoleOperation,
-                user_input_manager=self._operation_control.user_input_manager,
-                action=self._operation_control.user_input_manager.process_user_input,
-                prompt="", is_loop=True, parallel=True)
+                operation_type=ConsoleOperation, is_loop=True, parallel=True)
             self._operation_control.console_operation_in_progress = True
 
         # Check if a ResourceMonitorOperation is already running

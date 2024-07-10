@@ -17,23 +17,19 @@ Status: Prototype
 import asyncio
 import dearpygui.dearpygui as dpg
 
+from research_analytics_suite.commands.UserInputProcessor import process_user_input
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.commands.UserInputManager import UserInputManager
 
 
 class ConsoleDialog(GUIBase):
     """A class to create a console dialog for user input and operations control."""
 
-    def __init__(self, user_input_handler: UserInputManager, width: int, height: int, parent):
+    def __init__(self, width: int, height: int, parent):
         """
         Initializes the ConsoleDialog with the given user input handler, operations control, and logger.
-
-        Args:
-            user_input_handler (UserInputManager): Instance to handle user inputs.
         """
         super().__init__(width, height, parent)
-        self.user_input_handler = user_input_handler
         self.command_history = []
 
     async def initialize_gui(self) -> None:
@@ -68,7 +64,7 @@ class ConsoleDialog(GUIBase):
             app_data (dict): Additional application data.
         """
         command = dpg.get_value('input_text')
-        await self.user_input_handler.process_user_input(command)
+        self._logger.info(await process_user_input(command))
         dpg.set_value('input_text', "")  # Clear the input field
 
     def clear_logger_output(self) -> None:

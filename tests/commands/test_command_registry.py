@@ -58,7 +58,8 @@ class TestCommandRegistry:
         registry.register_instance(instance, 'runtime_1')
         assert registry._instances['runtime_1'] is instance
 
-    def test_execute_command_function(self, registry):
+    @pytest.mark.asyncio
+    async def test_execute_command_function(self, registry):
         def sample_command(arg1: int, arg2: str) -> str:
             return f"{arg1} {arg2}"
 
@@ -70,10 +71,11 @@ class TestCommandRegistry:
             'return_type': str,
             'is_method': False
         })
-        result = registry.execute_command('sample_command', None, 1, 'test')
+        result = await registry.execute_command('sample_command', None, 1, 'test')
         assert result == "1 test"
 
-    def test_execute_command_method(self, registry):
+    @pytest.mark.asyncio
+    async def test_execute_command_method(self, registry):
         class SampleClass:
             def method(self, arg: str) -> str:
                 return f"Hello {arg}"
@@ -88,7 +90,7 @@ class TestCommandRegistry:
             'return_type': str,
             'is_method': True
         })
-        result = registry.execute_command('method', 'runtime_1', 'World')
+        result = await registry.execute_command('method', 'runtime_1', 'World')
         assert result == "Hello World"
 
     @patch('importlib.import_module')

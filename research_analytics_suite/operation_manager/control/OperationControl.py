@@ -92,8 +92,6 @@ class OperationControl:
                                                                 task_creator=self.task_creator)
                     self.operation_status_checker = OperationStatusChecker(sequencer=self.sequencer)
 
-                    from research_analytics_suite.commands.UserInputManager import UserInputManager
-                    self.user_input_manager = UserInputManager()
                     self.system_op_checker = SystemOperationChecker(sequencer=self.sequencer,
                                                                     task_creator=self.task_creator)
                     self.lifecycle_manager = OperationLifecycleManager(sequencer=self.sequencer,

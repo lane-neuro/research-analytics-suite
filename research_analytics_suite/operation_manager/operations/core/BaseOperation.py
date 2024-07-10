@@ -822,7 +822,6 @@ class BaseOperation(ABC):
             e: The exception that occurred.
         """
         self._status = "error"
-        # self.add_log_entry(e)
 
     def cleanup_operation(self):
         """

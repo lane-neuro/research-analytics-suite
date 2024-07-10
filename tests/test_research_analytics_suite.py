@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 import os
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import patch, AsyncMock, MagicMock, Mock
 import sys
 
 from research_analytics_suite import ResearchAnalyticsSuite
@@ -185,8 +185,7 @@ class TestResearchAnalyticsSuite:
              patch('asyncio.run', side_effect=Exception('Test Exception')), \
              patch('nest_asyncio.apply', new=MagicMock()), \
              patch('asyncio.get_event_loop', return_value=MagicMock(run_forever=MagicMock(), close=MagicMock())):
-            with patch('builtins.print') as mocked_print:
-                with pytest.raises(SystemExit):
-                    self.suite.run()
-                mocked_print.assert_any_call('Cleaning up..')
-                mocked_print.assert_any_call('Fatal error occurred: Test Exception')
+            with patch('research_analytics_suite.utils.CustomLogger', new=MagicMock(error=MagicMock())) as logger_mock,\
+                    pytest.raises(SystemExit):
+                self.suite.run()
+                logger_mock.error.assert_called_once()

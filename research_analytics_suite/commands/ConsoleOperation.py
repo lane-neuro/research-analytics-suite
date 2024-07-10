@@ -9,6 +9,7 @@ Author: Lane
 import aioconsole
 import sys
 
+from research_analytics_suite.commands.UserInputProcessor import process_user_input
 from research_analytics_suite.operation_manager import BaseOperation
 
 
@@ -26,8 +27,10 @@ class ConsoleOperation(BaseOperation):
             prompt (str): A string that is displayed as a prompt for user input.
             user_input_manager (UserInputManager): An instance of UserInputManager to process user input.
         """
-        self._prompt = kwargs.pop("prompt", "Enter a command: ")
-        self._user_input_manager = kwargs.pop("user_input_manager")
+        from research_analytics_suite.commands import CommandRegistry
+        self._command_registry = CommandRegistry()
+
+        self._prompt = "\n\t>>\t"
         kwargs["name"] = "sys_ConsoleOperation"
 
         super().__init__(*args, **kwargs)
@@ -63,8 +66,9 @@ class ConsoleOperation(BaseOperation):
                     self._status = "stopped"
                     break
 
-                result = await self._user_input_manager.process_user_input(user_input)
-                print(result)
+                result = await process_user_input(user_input)
+                self._logger.info(result)
+
             except EOFError:
                 self.handle_error("EOFError: No input provided")
                 break

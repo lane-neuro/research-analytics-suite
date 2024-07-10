@@ -129,6 +129,7 @@ class ResearchAnalyticsSuite:
         except KeyboardInterrupt:
             print('Exiting Research Analytics Suite..')
         except Exception as e:
+            self._logger.error(Exception(f"Fatal error occurred: {e}"), self.__class__.__name__)
             print(f"Fatal error occurred: {e}")
         finally:
             print("Cleaning up..")

@@ -16,6 +16,7 @@ Status: Prototype
 import importlib
 import inspect
 import pkgutil
+from asyncio import iscoroutinefunction
 from typing import get_type_hints
 
 
@@ -86,11 +87,11 @@ class CommandRegistry:
             cmd_meta (dict): The command metadata to register.
         """
         self._registry[cmd_meta['name']] = {
-            'func': cmd_meta['func'],
-            'name': cmd_meta['name'],
-            'class_name': cmd_meta['class_name'],
-            'args': cmd_meta['args'],
-            'return_type': cmd_meta['return_type'],
+            'func': cmd_meta.get('func', None),
+            'name': cmd_meta.get('name', None),
+            'class_name': cmd_meta.get('class_name', None),
+            'args': cmd_meta.get('args', []),
+            'return_type': cmd_meta.get('return_type', None),
             'is_method': cmd_meta.get('is_method', False),  # Ensure 'is_method' is always included
             '_is_command': True
         }
@@ -141,7 +142,7 @@ class CommandRegistry:
         """
         self._instances[runtime_id] = instance
 
-    def execute_command(self, name, runtime_id=None, *args, **kwargs):
+    async def execute_command(self, name, runtime_id=None, *args, **kwargs):
         """
         Execute a registered command.
 
@@ -157,6 +158,7 @@ class CommandRegistry:
         cmd_meta = self._registry.get(name)
         if cmd_meta is None:
             self._logger.error(ValueError(f"Command '{name}' not found in the registry."), self.__class__.__name__)
+            self._logger.info(f"Command registry: {self._registry}")
             return None
 
         if cmd_meta['is_method'] and runtime_id is not None:
@@ -167,7 +169,19 @@ class CommandRegistry:
                 return None
             return cmd_meta['func'](instance, *args, **kwargs)
         else:
-            return cmd_meta['func'](*args, **kwargs)
+            # Check whether the command requires arguments
+            if len(cmd_meta['args']) != len(args):
+                self._logger.error(ValueError(f"Command '{name}' requires {len(cmd_meta['args'])} arguments, "
+                                              f"but received {len(args)}."), self.__class__.__name__)
+                return None
+            if not cmd_meta['args']:
+                if iscoroutinefunction(cmd_meta['func']):
+                    return await cmd_meta['func']()
+                return cmd_meta['func']()
+            else:
+                if iscoroutinefunction(cmd_meta['func']):
+                    return await cmd_meta['func'](*args, **kwargs)
+                return cmd_meta['func'](*args, **kwargs)
 
     @property
     def registry(self):

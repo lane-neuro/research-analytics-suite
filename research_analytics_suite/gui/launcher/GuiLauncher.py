@@ -255,9 +255,7 @@ class GuiLauncher:
         with dpg.group(parent="console_log_output_pane"):
             dpg.add_text("Console/Log Output", tag="console_log_output")
 
-        self._console_dialog = ConsoleDialog(self._operation_control.user_input_manager,
-                                             parent="console_log_output_pane",
-                                             width=-1, height=-1)
+        self._console_dialog = ConsoleDialog(parent="console_log_output_pane", width=-1, height=-1)
         await self._console_dialog.initialize_gui()
         self._console_dialog.draw()
 

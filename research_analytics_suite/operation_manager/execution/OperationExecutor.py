@@ -61,7 +61,7 @@ class OperationExecutor:
                 await operation.execute()
                 return operation.task
         except Exception as e:
-            self._logger.error(e, self)
+            self._logger.error(e, self.__class__.__name__)
 
     async def execute_ready_operations(self) -> None:
         """
@@ -99,6 +99,6 @@ class OperationExecutor:
                             )
                             operation.add_log_entry(f"[TASK] {operation.name}")
                         except Exception as e:
-                            self._logger.error(e, self)
+                            self._logger.error(e, self.__class__.__name__)
                     if isinstance(operation, ConsoleOperation):
                         self.op_control.console_operation_in_progress = True
