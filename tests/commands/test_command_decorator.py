@@ -1,9 +1,10 @@
 # test_command_decorator.py
 import asyncio
+from functools import wraps
 
 import pytest
 import inspect
-from typing import get_type_hints, Optional, List, Dict
+from typing import get_type_hints, Optional, List, Dict, Union, Callable, Any
 from research_analytics_suite.commands.CommandRegistry import command, temp_command_registry
 
 
@@ -29,6 +30,13 @@ def clear_registry():
     temp_command_registry.clear()
     yield
     temp_command_registry.clear()
+
+
+def additional_decorator(f):
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        return f(*args, **kwargs)
+    return wrapped
 
 
 class TestCommandDecorator:
@@ -264,3 +272,99 @@ class TestCommandDecorator:
         ]
         assert temp_command_registry[0]['return_type'] == str
         assert temp_command_registry[0]['is_method'] is True
+
+    def test_union_types(self):
+        @command
+        def test_func_union(a: Union[int, str], b: Optional[bool] = None) -> Union[str, None]:
+            return str(a) if b else None
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_union'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': Union[int, str]},
+            {'name': 'b', 'type': Optional[bool]}
+        ]
+        assert temp_command_registry[0]['return_type'] == Union[str, None]
+
+    def test_mixed_type_hints(self):
+        @command
+        def test_func_mixed(a: int, b: Union[str, float], func: Callable[[int], str]) -> str:
+            return func(a)
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_mixed'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'b', 'type': Union[str, float]},
+            {'name': 'func', 'type': Callable[[int], str]}
+        ]
+        assert temp_command_registry[0]['return_type'] == str
+
+    def test_multiple_decorators(self):
+        @additional_decorator
+        @command
+        def test_func_multiple_decorators(a: int, b: str) -> str:
+            return f"{a} - {b}"
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_multiple_decorators'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'b', 'type': str}
+        ]
+        assert temp_command_registry[0]['return_type'] == str
+
+    def test_missing_type_hints(self):
+        @command
+        def test_func_missing_type_hints(a, b):
+            return a + b
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_missing_type_hints'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': str},
+            {'name': 'b', 'type': str}
+        ]
+        assert temp_command_registry[0]['return_type'] is None
+
+    def test_invalid_type_hints(self):
+        with pytest.raises(TypeError):
+            @command
+            def test_func_invalid_type_hints(a: "invalid_type") -> str:
+                return str(a)
+
+    def test_no_arguments(self):
+        @command
+        def test_func_no_arguments() -> None:
+            pass
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_no_arguments'
+        assert temp_command_registry[0]['args'] == []
+        assert temp_command_registry[0]['return_type'] == type(None)
+
+    def test_untyped_arguments(self):
+        @command
+        def test_func_untyped_arguments(a, b: int) -> Any:
+            return a + b
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_untyped_arguments'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': str},
+            {'name': 'b', 'type': int}
+        ]
+        assert temp_command_registry[0]['return_type'] == Any
+
+    def test_edge_case_function_name(self):
+        @command
+        def __str__(a: int, b: int) -> str:
+            return f"{a} + {b}"
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == '__str__'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'b', 'type': int}
+        ]
+        assert temp_command_registry[0]['return_type'] == str

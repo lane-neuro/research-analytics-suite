@@ -164,7 +164,10 @@ def command(func=None):
     def wrapper(f):
         # Auto-detect arguments and return type
         sig = inspect.signature(f)
-        type_hints = get_type_hints(f)
+        try:
+            type_hints = get_type_hints(f)
+        except NameError as e:
+            raise TypeError(f"Invalid type hint in function {f.__name__}: {e}")
 
         args = [{'name': param, 'type': type_hints.get(param, str)} for param in sig.parameters if param != 'self']
         return_type = type_hints.get('return', None)
