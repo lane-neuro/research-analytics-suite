@@ -14,7 +14,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import inspect
-from typing import get_type_hints, Optional
+from typing import get_type_hints
 
 
 class CommandRegistry:
