@@ -13,7 +13,9 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+import importlib
 import inspect
+import pkgutil
 from typing import get_type_hints
 
 
@@ -100,13 +102,11 @@ class CommandRegistry:
         Args:
             package (str): The package name to discover commands in.
         """
-        import importlib
-        import pkgutil
 
         package = importlib.import_module(package)
         for loader, name, is_pkg in pkgutil.walk_packages(package.__path__, package.__name__ + '.'):
             module = importlib.import_module(name)
-            for name, obj in inspect.getmembers(module):
+            for _, obj in inspect.getmembers(module):
                 if inspect.isfunction(obj) and hasattr(obj, '_is_command'):
                     self._initialize_command({
                         'func': obj,

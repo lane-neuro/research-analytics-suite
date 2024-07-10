@@ -6,7 +6,7 @@ from research_analytics_suite.commands import CommandRegistry
 
 class TestCommandRegistry:
 
-    @pytest.fixture(scope="function")
+    @pytest.fixture(autouse=True)
     def registry(self):
         registry = CommandRegistry()
         registry._initialized = False  # Ensure it is uninitialized for each test
@@ -92,7 +92,8 @@ class TestCommandRegistry:
         assert result == "Hello World"
 
     @patch('importlib.import_module')
-    def test_discover_commands(self, mock_import_module, registry):
+    @patch('pkgutil.walk_packages')
+    def test_discover_commands(self, mock_walk_packages, mock_import_module, registry):
         # Setup mock to simulate module and command discovery
         mock_module = MagicMock()
         mock_module.__path__ = ['mocked_path']
@@ -106,16 +107,13 @@ class TestCommandRegistry:
             def method(self):
                 pass
 
-        with patch('research_analytics_suite.commands.CommandRegistry.inspect') as mock_inspect:
-            mock_inspect.getmembers.side_effect = [
-                [('sample_command', sample_command)],
-                [('method', SampleClass.method)]
-            ]
-            mock_inspect.isfunction.side_effect = lambda x: callable(x)
-            mock_inspect.isclass.side_effect = lambda x: isinstance(x, type)
+        mock_walk_packages.return_value = [(None, 'mocked_module.sample_module', False)]
+        mock_import_module.side_effect = lambda name: mock_module if name == 'mocked_module' else MagicMock(
+            sample_command=sample_command,
+            SampleClass=SampleClass
+        )
 
-            registry.discover_commands('sample_package')
+        registry.discover_commands('mocked_module')
 
         assert 'sample_command' in registry._registry
         assert 'method' in registry._registry
-        
