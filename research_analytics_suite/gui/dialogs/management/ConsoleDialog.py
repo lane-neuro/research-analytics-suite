@@ -35,8 +35,6 @@ class ConsoleDialog(GUIBase):
         super().__init__(width, height, parent)
         self.user_input_handler = user_input_handler
         self.command_history = []
-        self.command_help = {"command1": "This is command1", "command2": "This is command2"}
-        self.command_aliases = {"c1": "command1", "c2": "command2"}
 
     async def initialize_gui(self) -> None:
         self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
@@ -70,18 +68,7 @@ class ConsoleDialog(GUIBase):
             app_data (dict): Additional application data.
         """
         command = dpg.get_value('input_text')
-        if command in self.command_aliases:
-            command = self.command_aliases[command]
-        if command.startswith("help"):
-            _, command = command.split()
-            help_text = self.command_help.get(command, "No help available for this command")
-            dpg.set_value("logger_output", help_text)
-        else:
-            try:
-                await self.user_input_handler.process_user_input(command)
-                self.command_history.append(command)
-            except Exception as e:
-                self._logger.error(e, self)
+        await self.user_input_handler.process_user_input(command)
         dpg.set_value('input_text', "")  # Clear the input field
 
     def clear_logger_output(self) -> None:

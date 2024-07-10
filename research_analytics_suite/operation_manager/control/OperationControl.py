@@ -17,6 +17,7 @@ Status: Prototype
 
 import asyncio
 
+from research_analytics_suite.commands.CommandRegistry import register_commands, CommandRegistry
 from research_analytics_suite.operation_manager.execution.OperationExecutor import OperationExecutor
 from research_analytics_suite.operation_manager.management.OperationLifecycleManager import OperationLifecycleManager
 from research_analytics_suite.operation_manager.management.OperationManager import OperationManager
@@ -27,7 +28,7 @@ from research_analytics_suite.operation_manager.task.TaskCreator import TaskCrea
 from research_analytics_suite.operation_manager.task.TaskMonitor import TaskMonitor
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
-
+@register_commands
 class OperationControl:
     """A class for handling the lifecycle of Operation instances."""
     SLEEP_TIME = 0.001
@@ -45,6 +46,7 @@ class OperationControl:
         """
         if not hasattr(self, '_initialized'):
             self._logger = CustomLogger()
+            self._command_registry = None
             self.workspace = None
             self.console_operation_in_progress = False
 
@@ -70,6 +72,7 @@ class OperationControl:
         if not self._initialized:
             async with OperationControl._lock:
                 if not self._initialized:
+                    self._command_registry = CommandRegistry()
                     self._logger.debug("OperationControl.initialize: Initializing OperationControl.")
 
                     from research_analytics_suite.data_engine.Workspace import Workspace
@@ -79,6 +82,7 @@ class OperationControl:
                     self.console_operation_in_progress = False
 
                     self.sequencer = OperationSequencer()
+
                     self.task_creator = TaskCreator(sequencer=self.sequencer)
                     self.task_monitor = TaskMonitor(task_creator=self.task_creator, sequencer=self.sequencer)
 

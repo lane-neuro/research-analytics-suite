@@ -19,7 +19,7 @@ import asyncio
 
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.operation_manager.operations.system.ConsoleOperation import ConsoleOperation
+from research_analytics_suite.commands.ConsoleOperation import ConsoleOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 

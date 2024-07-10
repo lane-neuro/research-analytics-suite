@@ -2,46 +2,36 @@
 UserInputManager Module.
 
 This module defines the UserInputManager class, which processes user input from the console within the research
-analytics suite. It handles various commands such as stopping, pausing, and resuming operations, as well as displaying
-system resources, tasks, and sequencer status.
+analytics suite. It handles various commands by dynamically discovering and executing them.
 
 Author: Lane
-Copyright: Lane
-Credits: Lane
-License: BSD 3-Clause License
-Version: 0.0.0.1
-Maintainer: Lane
-Email: justlane@uw.edu
-Status: Prototype
 """
-from research_analytics_suite.operation_manager.operations.system.ResourceMonitorOperation import \
-    ResourceMonitorOperation
-from research_analytics_suite.utils.CustomLogger import CustomLogger
+import inspect
+
+from research_analytics_suite.commands import CommandRegistry
+from research_analytics_suite.commands.CommandRegistry import command
+from research_analytics_suite.operation_manager import OperationControl
+from research_analytics_suite.utils import CustomLogger
 
 
 class UserInputManager:
     """
     A class to process user input from the console.
 
-    This class processes user input and executes corresponding commands, such as stopping, pausing, resuming operations,
-    and displaying system resources, tasks, and sequencer status.
+    This class processes user input and executes corresponding commands dynamically.
     """
 
     def __init__(self):
         """
         Initializes the UserInputManager with the necessary components.
         """
-        from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
         self._operation_control = OperationControl()
-
         self._logger = CustomLogger()
+        self._command_registry = CommandRegistry()
 
     async def process_user_input(self, user_input: str) -> str:
         """
-        Processes user input from the console.
-
-        This method takes user input from the console and processes it. It can be extended to include additional
-        functionality as needed.
+        Processes user input from the console and executes corresponding commands.
 
         Args:
             user_input (str): The user input to process.
@@ -49,77 +39,129 @@ class UserInputManager:
         Returns:
             str: The response to the user input.
         """
-        if user_input == "stop":
-            await self._operation_control.operation_manager.stop_all_operations()
-            return "UserInputManager.process_user_input: Stopping all operations..."
-
-        # elif user_input == "load_data":
-        #     def load_data():
-        #         import dask.dataframe as dd
-        #         df = dd.read_csv("../sample_datasets/2024-Tariq-et-al_olfaction/8-30-2021-2-08 "
-        #                          "PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor"
-        #                          "-arenaOct3shuffle1_200000_filtered.csv")
-        #         return df.compute()
-        #
-        #     await self._operation_control.operation_manager.add_operation_with_parameters(operation_type=DaskOperation,
-        #                                                                                   action=load_data,
-        #                                                                                   name="LoadData",
-        #                                                                                   client=dask.distributed.Client())
-
-        elif user_input == "machine_learning":
-            self._logger.error(Exception("UserInputManager.process_user_input: Machine Learning not implemented."))
-            return "UserInputManager.process_user_input: Machine Learning not implemented."
-
-            # ml_operation = MachineLearning(_operation_control=self._operation_control
-            # ) result = await ml_operation.extract_data(
-            # file_path="../../../sample_datasets/2024-Tariq-et-al_olfaction/8-30-2021-2-08
-            # PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv") print(
-            # result) self._logger.info("UserInputManager.process_user_input: Attached machine learning...") data =
-            # await ml_operation.extract_data(file_path="../../sample_datasets/2024-Tariq-et-al_olfaction/8-30
-            # -2021-2-08 PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv
-            # ") train_data, test_data = ml_operation.split_data(data, 7, test_size=0.2)
-
-            # return f"UserInputManager.process_user_input: Attached machine learning..."
-
-        elif user_input == "pause":
-            await self._operation_control.operation_manager.pause_all_operations()
-            return "UserInputManager.process_user_input: Pausing all operations..."
-
-        elif user_input == "resume":
-            await self._operation_control.operation_manager.resume_all_operations()
-            return "UserInputManager.process_user_input: Resuming all operations..."
-
-        elif user_input == "resources":
-            for operation_list in self._operation_control.sequencer.sequencer:
-                operation_node = self._operation_control.sequencer.get_head_operation_from_chain(operation_list)
-                if isinstance(operation_node, ResourceMonitorOperation):
-                    self._logger.info(operation_node.output_memory_usage())
-            return "UserInputManager.process_user_input: Displaying system resources."
-
-        elif user_input == "tasks":
-            for task in self._operation_control.task_creator.tasks:
-                operation = self._operation_control.sequencer.find_operation_by_task(task)
-                if operation:
-                    self._logger.info(f"UserInputManager.process_user_input: Task: {task.get_name()} - "
-                                      f"{operation.status}")
-            return "UserInputManager.process_user_input: Displaying all tasks..."
-
-        elif user_input == "sequencer":
-            for sequencer_chain in self._operation_control.sequencer.sequencer:
-                operation = sequencer_chain.head.operation
-                self._logger.info(f"UserInputManager.process_user_input: Operation: {operation.task.get_name()} - "
-                                  f"{operation.status}")
-            return "UserInputManager.process_user_input: Displaying all operations in the sequencer..."
-
-        elif user_input == "vars":
-
-            return "UserInputManager.process_user_input: Displaying local vars..."
-
+        command_name, args = self.parse_command(user_input)
+        if command_name:
+            return await self.execute_command(command_name, args)
         else:
-            self._logger.info(f"UserInputManager.process_user_input: Executing custom operation with action: {user_input}")
+            return f"Unknown command: {user_input}"
 
-            from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-            await self._operation_control.operation_manager.add_operation_with_parameters(operation_type=BaseOperation,
-                                                                                          action=user_input, name="ConsoleCommand")
+    def parse_command(self, input_str):
+        """
+        Parses the user input into a command name and arguments.
 
-            return f"UserInputManager.process_user_input: Added custom operation with action: {user_input}"
+        Args:
+            input_str (str): The user input to parse.
+
+        Returns:
+            tuple: A tuple containing the command name and a list of arguments.
+        """
+        parts = input_str.strip().split()
+        if not parts:
+            return None, []
+        return parts[0], parts[1:]
+
+    async def execute_command(self, command_name, args):
+        """
+        Executes the specified command with the given arguments.
+
+        Args:
+            command_name (str): The name of the command to execute.
+            args (list): The arguments to pass to the command.
+
+        Returns:
+            str: The result of the command execution.
+        """
+        if command_name in self._command_registry.registry.keys():
+            try:
+                meta = self._command_registry.registry[command_name]
+                func = meta['func']
+                expected_args = meta['args']
+                if len(expected_args) == len(args):
+                    # Convert args to the expected types
+                    converted_args = []
+                    for arg, expected_arg in zip(args, expected_args):
+                        arg_type = expected_arg['type']
+                        converted_args.append(arg_type(arg))
+                    if inspect.ismethod(func) or 'self' in inspect.signature(func).parameters:
+                        result = func(self, *converted_args)  # Handle method
+                    else:
+                        result = func(*converted_args)  # Handle function
+                    if inspect.isawaitable(result):
+                        result = await result
+                    return result
+                else:
+                    return f"Error: {command_name} expects {len(expected_args)} arguments but got {len(args)}."
+            except Exception as e:
+                self._logger.error(Exception(f"Error executing command '{command_name}': {e}"), self.__class__.__name__)
+                return f"Error executing command '{command_name}': {e}"
+        else:
+            return f"Error: Unknown command '{command_name}'. Type 'help' to see available commands."
+
+    @command
+    def help(self) -> str:
+        """Displays available commands and their descriptions."""
+        commands_info = ["Available commands:"]
+        for cmd, meta in self._command_registry.registry.items():
+            args_info = ", ".join([f"{arg['name']}: {arg['type'].__name__}" for arg in meta['args']])
+            return_info = meta['return_type'].__name__ if meta['return_type'] else "None"
+            doc = meta['func'].__doc__ or "No description available."
+            commands_info.append(f"{cmd}({args_info}) -> {return_info}: {doc}")
+        return "\n".join(commands_info)
+
+
+# Register default commands
+@command
+async def stop():
+    """Stops all operations."""
+    await OperationControl().operation_manager.stop_all_operations()
+    return "Stopping all operations..."
+
+
+@command
+async def pause():
+    """Pauses all operations."""
+    await OperationControl().operation_manager.pause_all_operations()
+    return "Pausing all operations..."
+
+
+@command
+async def resume():
+    """Resumes all operations."""
+    await OperationControl().operation_manager.resume_all_operations()
+    return "Resuming all operations..."
+
+
+@command
+async def resources():
+    """Displays system resources."""
+    for operation_list in OperationControl().sequencer.sequencer:
+        operation_node = OperationControl().sequencer.get_head_operation_from_chain(operation_list)
+        from research_analytics_suite.operation_manager.operations.system import ResourceMonitorOperation
+        if isinstance(operation_node, ResourceMonitorOperation):
+            CustomLogger().info(operation_node.output_memory_usage())
+    return "Displaying system resources."
+
+
+@command
+async def tasks():
+    """Displays all tasks."""
+    for task in OperationControl().task_creator.tasks:
+        operation = OperationControl().sequencer.find_operation_by_task(task)
+        if operation:
+            CustomLogger().info(f"Task: {task.get_name()} - {operation.status}")
+    return "Displaying all tasks..."
+
+
+@command
+async def sequencer():
+    """Displays all operations in the sequencer."""
+    for sequencer_chain in OperationControl().sequencer.sequencer:
+        operation = sequencer_chain.head.operation
+        CustomLogger().info(f"Operation: {operation.task.get_name()} - {operation.status}")
+    return "Displaying all operations in the sequencer..."
+
+
+@command
+async def get_memory():
+    """Displays local vars."""
+    return "Displaying local vars..."

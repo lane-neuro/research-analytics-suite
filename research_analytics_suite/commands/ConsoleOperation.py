@@ -1,21 +1,15 @@
 """
 A module that defines the ConsoleOperation class, which is a subclass of the CustomOperation class.
 
-The ConsoleOperation class is designed to handle user-input _action from the console. It provides methods for
-displaying a prompt for user input and processing the input _action.
+The ConsoleOperation class is designed to handle user-input action from the console. It provides methods for
+displaying a prompt for user input and processing the input action.
 
 Author: Lane
-Copyright: Lane
-Credits: Lane
-License: BSD 3-Clause License
-Version: 0.0.0.1
-Maintainer: Lane
-Email: justlane@uw.edu
-Status: Prototype
 """
 import aioconsole
 import sys
-from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
+
+from research_analytics_suite.operation_manager import BaseOperation
 
 
 class ConsoleOperation(BaseOperation):
@@ -24,14 +18,13 @@ class ConsoleOperation(BaseOperation):
 
     This class provides methods for displaying a prompt for user input and processing the input data.
     """
-
     def __init__(self, *args, **kwargs):
         """
-        Initializes the ConsoleOperation with a prompt for user input and the _action to be processed.
+        Initializes the ConsoleOperation with a prompt for user input and the action to be processed.
 
         Args:
             prompt (str): A string that is displayed as a prompt for user input.
-            data (str): A formatted string to print out the _action that the operations will process.
+            user_input_manager (UserInputManager): An instance of UserInputManager to process user input.
         """
         self._prompt = kwargs.pop("prompt", "Enter a command: ")
         self._user_input_manager = kwargs.pop("user_input_manager")
@@ -59,7 +52,7 @@ class ConsoleOperation(BaseOperation):
                     # Standard terminal environment
                     user_input = await aioconsole.ainput(self._prompt)  # Read user input asynchronously
 
-                user_input = user_input.strip()  # strip newline
+                user_input = user_input.strip()  # Strip newline
 
                 if user_input == "":  # Check for empty input
                     continue
@@ -70,7 +63,8 @@ class ConsoleOperation(BaseOperation):
                     self._status = "stopped"
                     break
 
-                await self._user_input_manager.process_user_input(user_input)
+                result = await self._user_input_manager.process_user_input(user_input)
+                print(result)
             except EOFError:
                 self.handle_error("EOFError: No input provided")
                 break

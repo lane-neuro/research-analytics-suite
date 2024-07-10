@@ -92,5 +92,6 @@ class OperationLifecycleManager:
 
         try:
             await asyncio.gather(*tasks)
-        except Exception as e:
-            self._logger.error(e, self)
+        except Exception as e:  # Catch all exceptions, the main loop has critically failed and the suite must exit
+            self._logger.error(e, self.__class__.__name__)
+            raise e

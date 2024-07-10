@@ -15,7 +15,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 from research_analytics_suite.operation_manager.management.OperationSequencer import OperationSequencer
-from research_analytics_suite.operation_manager.operations.system.ConsoleOperation import ConsoleOperation
+from research_analytics_suite.commands.ConsoleOperation import ConsoleOperation
 from research_analytics_suite.operation_manager.operations.system.ResourceMonitorOperation import \
     ResourceMonitorOperation
 from research_analytics_suite.operation_manager.task.TaskCreator import TaskCreator

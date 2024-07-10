@@ -16,14 +16,16 @@ Status: Prototype
 """
 import json
 from collections import deque
-from typing import Optional, List, Dict, Type
+from typing import Optional, List, Dict
 
+from research_analytics_suite.commands.CommandRegistry import command, register_commands
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.nodes.OperationNode import OperationNode
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
+@register_commands
 class OperationSequencer:
     """
     A class to manage a sequencer of operations.
@@ -39,7 +41,7 @@ class OperationSequencer:
         self.sequencer = deque()
         self._logger = CustomLogger()
 
-    async def add_operation_to_sequencer(self, operation: 'BaseOperation'):
+    async def add_operation_to_sequencer(self, operation: BaseOperation):
         """
         Adds an operation to the sequencer.
 
@@ -169,6 +171,7 @@ class OperationSequencer:
                     return node.operation
         return None
 
+    @command
     def get_operation_by_type(self, operation_type) -> Optional['BaseOperation']:
         """
         Gets an operation of a specific type.
@@ -183,7 +186,7 @@ class OperationSequencer:
             for node in chain:
                 if isinstance(node.operation, operation_type):
                     return node.operation
-        self._logger.error(Exception(f"No operation found of type {operation_type.__name__}"), self)
+        self._logger.error(Exception(f"No operation found of type {operation_type.__name__}"), self.__class__.__name__)
         return None
 
     def find_operation_by_task(self, task) -> Optional['BaseOperation']:
@@ -200,7 +203,7 @@ class OperationSequencer:
             for node in chain:
                 if node.operation.task == task:
                     return node.operation
-        self._logger.error(Exception(f"No operation found for task {task}"), self)
+        self._logger.error(Exception(f"No operation found for task {task}"), self.__class__.__name__)
         return None
 
     def is_empty(self) -> bool:
