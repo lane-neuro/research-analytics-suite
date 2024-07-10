@@ -112,3 +112,45 @@ class TestCommandDecorator:
         ]
         assert temp_command_registry[0]['return_type'] == bool
         assert temp_command_registry[0]['is_method'] is True
+
+    def test_var_args(self):
+        @command
+        def test_func_var_args(a: int, *args: str) -> list:
+            return [a, *args]
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_var_args'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'args', 'type': str}
+        ]
+        assert temp_command_registry[0]['return_type'] == list
+
+    def test_var_kwargs(self):
+        @command
+        def test_func_var_kwargs(a: int, **kwargs: str) -> dict:
+            return {'a': a, **kwargs}
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_var_kwargs'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'kwargs', 'type': str}
+        ]
+        assert temp_command_registry[0]['return_type'] == dict
+
+    def test_combined_args(self):
+        @command
+        def test_func_combined(a: int, b: str, *args: float, c: bool = True, **kwargs: int) -> tuple:
+            return (a, b, args, c, kwargs)
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_combined'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'b', 'type': str},
+            {'name': 'args', 'type': float},
+            {'name': 'c', 'type': bool},
+            {'name': 'kwargs', 'type': int}
+        ]
+        assert temp_command_registry[0]['return_type'] == tuple
