@@ -1,9 +1,24 @@
 # test_command_decorator.py
+import asyncio
 
 import pytest
 import inspect
-from typing import get_type_hints, Optional
+from typing import get_type_hints, Optional, List, Dict
 from research_analytics_suite.commands.CommandRegistry import command, temp_command_registry
+
+
+# Define some user-defined types
+class User:
+    def __init__(self, name: str, age: int):
+        self.name = name
+        self.age = age
+
+
+class Product:
+    def __init__(self, id: int, name: str, price: float):
+        self.id = id
+        self.name = name
+        self.price = price
 
 
 @pytest.fixture(autouse=True)
@@ -154,3 +169,98 @@ class TestCommandDecorator:
             {'name': 'kwargs', 'type': int}
         ]
         assert temp_command_registry[0]['return_type'] == tuple
+
+    def test_user_defined_types(self):
+        @command
+        def test_func_user_defined(user: User, product: Product) -> str:
+            return f"{user.name} bought {product.name}"
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_user_defined'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'user', 'type': User},
+            {'name': 'product', 'type': Product}
+        ]
+        assert temp_command_registry[0]['return_type'] == str
+
+    def test_complex_nested_types(self):
+        @command
+        def test_func_nested(a: List[Dict[str, Optional[User]]]) -> List[Dict[str, Optional[User]]]:
+            return a
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_nested'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': List[Dict[str, Optional[User]]]}
+        ]
+        assert temp_command_registry[0]['return_type'] == List[Dict[str, Optional[User]]]
+
+        def test_complex_default_values(self):
+            @command
+            def test_func_complex_defaults(a: int = 1, b: List[int] = [1, 2, 3],
+                                           c: Dict[str, str] = {"key": "value"}) -> None:
+                pass
+
+            assert len(temp_command_registry) == 1
+            assert temp_command_registry[0]['name'] == 'test_func_complex_defaults'
+            assert temp_command_registry[0]['args'] == [
+                {'name': 'a', 'type': int},
+                {'name': 'b', 'type': List[int]},
+                {'name': 'c', 'type': Dict[str, str]}
+            ]
+            assert temp_command_registry[0]['return_type'] is None
+
+    def test_callable_argument(self):
+        @command
+        def test_func_callable(a: int, b: callable) -> None:
+            pass
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_callable'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'b', 'type': callable}
+        ]
+        assert temp_command_registry[0]['return_type'] == type(None)
+
+    def test_lambda_argument(self):
+        @command
+        def test_func_lambda(a: int, func: lambda x: x + 1) -> int:
+            return func(a)
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_lambda'
+        assert temp_command_registry[0]['args'][0] == {'name': 'a', 'type': int}
+        assert temp_command_registry[0]['args'][1]['name'] == 'func'
+        assert callable(temp_command_registry[0]['args'][1]['type'])
+        assert temp_command_registry[0]['return_type'] == int
+
+    def test_async_function(self):
+        @command
+        async def test_func_async(a: int, b: str) -> bool:
+            await asyncio.sleep(0.1)
+            return True
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_async'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'b', 'type': str}
+        ]
+        assert temp_command_registry[0]['return_type'] == bool
+
+    def test_async_method(self):
+        class TestClass:
+            @command
+            async def test_method_async(self, a: int) -> str:
+                await asyncio.sleep(0.1)
+                return "test"
+
+        instance = TestClass()
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_method_async'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int}
+        ]
+        assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['is_method'] is True
