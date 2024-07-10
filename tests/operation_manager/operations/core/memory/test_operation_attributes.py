@@ -34,14 +34,12 @@ class TestOperationAttributes:
             parallel=True
         )
 
-    @pytest.mark.asyncio
-    async def test_initialization(self):
+    def test_initialization(self):
         assert self.op_attr._name == 'TestOperation'
         assert self.op_attr._version == '1.0'
         assert not self.op_attr._initialized
 
-    @pytest.mark.asyncio
-    async def test_export_attributes_before_initialization(self):
+    def test_export_attributes_before_initialization(self):
         self.op_attr._initialized = False
         attributes = self.op_attr.export_attributes()
         assert attributes['name'] == 'TestOperation'

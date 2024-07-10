@@ -25,8 +25,7 @@ class TestSQLiteStorage:
             await storage.clear_variables()  # Clear variables before each test
             return storage
 
-    @pytest.mark.asyncio
-    async def test_setup(self, storage):
+    def test_setup(self, storage):
         assert storage.db_path == "example.db"
         assert storage._logger.info.called
         assert storage._logger.error.called is False

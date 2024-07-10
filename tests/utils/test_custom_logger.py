@@ -32,8 +32,7 @@ class TestCustomLogger:
         log_level = os.getenv('PYTHON_LOG_LEVEL', 'DEBUG').upper()
         self.logger._logger.setLevel(getattr(logging, log_level))
 
-    @pytest.mark.asyncio
-    async def test_initialize_logger(self):
+    def test_initialize_logger(self):
         assert self.logger._logger is not None
         assert self.logger._logger.level == logging.DEBUG
         assert len(self.logger._logger.handlers) > 0

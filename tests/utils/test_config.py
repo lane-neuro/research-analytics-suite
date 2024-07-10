@@ -26,8 +26,7 @@ class TestConfig:
         config2 = await Config().initialize()
         assert config1 is config2
 
-    @pytest.mark.asyncio
-    async def test_default_values(self, config):
+    def test_default_values(self, config):
         config_instance = config
         assert config_instance.WORKSPACE_NAME == 'default_workspace'
         assert config_instance.MEMORY_LIMIT == psutil.virtual_memory().total * 0.5

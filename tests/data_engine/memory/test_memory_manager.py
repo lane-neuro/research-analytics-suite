@@ -46,19 +46,16 @@ class TestMemoryManager:
             await memory_manager.initialize()
             return memory_manager
 
-    @pytest.mark.asyncio
-    async def test_initialize(self, memory_manager):
+    def test_initialize(self, memory_manager):
         assert memory_manager._initialized
 
-    @pytest.mark.asyncio
-    async def test_add_and_get_collection(self, memory_manager, mock_memory_slot_collection):
+    def test_add_and_get_collection(self, memory_manager, mock_memory_slot_collection):
         memory_manager.add_collection(mock_memory_slot_collection)
         memory_manager._data_cache.get.return_value = mock_memory_slot_collection
         retrieved_collection = memory_manager.get_collection(mock_memory_slot_collection.collection_id)
         assert retrieved_collection == mock_memory_slot_collection
 
-    @pytest.mark.asyncio
-    async def test_initialize_default_collection(self, memory_manager):
+    def test_initialize_default_collection(self, memory_manager):
         memory_manager.default_collection = MagicMock()
         memory_manager.default_collection.name = "Primary"
         assert memory_manager.default_collection is not None
