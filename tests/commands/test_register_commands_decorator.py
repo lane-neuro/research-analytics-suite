@@ -1,14 +1,11 @@
-import pytest
-import inspect
-from typing import get_type_hints
 from unittest.mock import patch
 
-from research_analytics_suite.commands.CommandRegistry import register_commands, command
+from research_analytics_suite.commands import register_commands, command
 
 
 class TestRegisterCommandsDecorator:
 
-    @patch('research_analytics_suite.commands.CommandRegistry.temp_command_registry', new_callable=list)
+    @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
     def test_register_single_command(self, mock_temp_command_registry):
         @register_commands
         class TestClass:
@@ -24,7 +21,7 @@ class TestRegisterCommandsDecorator:
         assert mock_temp_command_registry[0]['return_type'] == str
         assert mock_temp_command_registry[0]['is_method'] is True
 
-    @patch('research_analytics_suite.commands.CommandRegistry.temp_command_registry', new_callable=list)
+    @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
     def test_register_multiple_commands(self, mock_temp_command_registry):
         @register_commands
         class TestClass:
@@ -51,7 +48,7 @@ class TestRegisterCommandsDecorator:
         assert mock_temp_command_registry[1]['return_type'] == int
         assert mock_temp_command_registry[1]['is_method'] is True
 
-    @patch('research_analytics_suite.commands.CommandRegistry.temp_command_registry', new_callable=list)
+    @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
     def test_register_no_commands(self, mock_temp_command_registry):
         @register_commands
         class TestClass:
@@ -60,7 +57,7 @@ class TestRegisterCommandsDecorator:
 
         assert len(mock_temp_command_registry) == 0
 
-    @patch('research_analytics_suite.commands.CommandRegistry.temp_command_registry', new_callable=list)
+    @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
     def test_mixed_command_non_command_methods(self, mock_temp_command_registry):
         @register_commands
         class TestClass:

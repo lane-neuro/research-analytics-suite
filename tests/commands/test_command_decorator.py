@@ -1,11 +1,9 @@
-# test_command_decorator.py
 import asyncio
 from functools import wraps
 
 import pytest
-import inspect
-from typing import get_type_hints, Optional, List, Dict, Union, Callable, Any
-from research_analytics_suite.commands.CommandRegistry import command, temp_command_registry
+from typing import Optional, List, Dict, Union, Callable, Any
+from research_analytics_suite.commands import command, temp_command_registry
 
 
 # Define some user-defined types

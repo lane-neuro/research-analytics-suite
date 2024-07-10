@@ -5,3 +5,5 @@ Author: Lane
 """
 
 from .CommandRegistry import CommandRegistry
+from .CommandDecorators import command, register_commands
+from .CommandDecorators import temp_command_registry

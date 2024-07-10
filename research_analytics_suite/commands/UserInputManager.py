@@ -1,7 +1,6 @@
 import inspect
 
-from research_analytics_suite.commands import CommandRegistry
-from research_analytics_suite.commands.CommandRegistry import command
+from research_analytics_suite.commands import CommandRegistry, command
 from research_analytics_suite.operation_manager import OperationControl
 from research_analytics_suite.utils import CustomLogger
 

@@ -17,7 +17,7 @@ Status: Prototype
 
 import asyncio
 
-from research_analytics_suite.commands.CommandRegistry import register_commands, CommandRegistry
+from research_analytics_suite.commands import register_commands, CommandRegistry
 from research_analytics_suite.operation_manager.execution.OperationExecutor import OperationExecutor
 from research_analytics_suite.operation_manager.management.OperationLifecycleManager import OperationLifecycleManager
 from research_analytics_suite.operation_manager.management.OperationManager import OperationManager
@@ -27,6 +27,7 @@ from research_analytics_suite.operation_manager.management.SystemOperationChecke
 from research_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
 from research_analytics_suite.operation_manager.task.TaskMonitor import TaskMonitor
 from research_analytics_suite.utils.CustomLogger import CustomLogger
+
 
 @register_commands
 class OperationControl:
@@ -87,7 +88,8 @@ class OperationControl:
                     self.task_monitor = TaskMonitor(task_creator=self.task_creator, sequencer=self.sequencer)
 
                     self.operation_manager = OperationManager(sequencer=self.sequencer, task_creator=self.task_creator)
-                    self.operation_executor = OperationExecutor(sequencer=self.sequencer, task_creator=self.task_creator)
+                    self.operation_executor = OperationExecutor(sequencer=self.sequencer,
+                                                                task_creator=self.task_creator)
                     self.operation_status_checker = OperationStatusChecker(sequencer=self.sequencer)
 
                     from research_analytics_suite.commands.UserInputManager import UserInputManager
