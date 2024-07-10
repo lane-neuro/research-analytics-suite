@@ -1,23 +1,25 @@
-# test_register_commands_decorator.py
-
 import pytest
 import inspect
 from typing import get_type_hints
 
+from functools import wraps
 from research_analytics_suite.commands.CommandRegistry import temp_command_registry, register_commands, command
 
 
-@pytest.fixture(autouse=True)
-def clear_registry():
-    """
-    Fixture to clear the temporary command registry before each test.
-    """
-    temp_command_registry.clear()
-    yield
-    temp_command_registry.clear()
-
-
 class TestRegisterCommandsDecorator:
+
+    def setup_method(self, method):
+        """
+        Setup method to clear the temporary command registry before each test.
+        """
+        temp_command_registry.clear()
+
+    def teardown_method(self, method):
+        """
+        Teardown method to clear the temporary command registry after each test.
+        """
+        temp_command_registry.clear()
+
     def test_register_single_command(self):
         @register_commands
         class TestClass:
@@ -66,3 +68,21 @@ class TestRegisterCommandsDecorator:
                 pass
 
         assert len(temp_command_registry) == 0
+
+    def test_mixed_command_non_command_methods(self):
+        @register_commands
+        class TestClass:
+            @command
+            def command_method(self, a: int) -> str:
+                return "command"
+
+            def non_command_method(self):
+                pass
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'TestClass.command_method'
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int}
+        ]
+        assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['is_method'] is True

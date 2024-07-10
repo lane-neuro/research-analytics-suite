@@ -71,6 +71,7 @@ class CommandRegistry:
             'name': cmd_meta['name'],
             'args': cmd_meta['args'],
             'return_type': cmd_meta['return_type'],
+            'is_method': cmd_meta.get('is_method', False),  # Ensure 'is_method' is always included
             '_is_command': True
         }
 
@@ -160,7 +161,6 @@ def command(func=None):
 
     This decorator auto-detects the command name, argument names, types, and return type.
     """
-
     def wrapper(f):
         # Auto-detect arguments and return type
         sig = inspect.signature(f)
@@ -172,14 +172,15 @@ def command(func=None):
         args = [{'name': param, 'type': type_hints.get(param, str)} for param in sig.parameters if param != 'self']
         return_type = type_hints.get('return', None)
 
-        # Store the command metadata in the global temporary registry
-        temp_command_registry.append({
-            'func': f,
-            'name': f.__name__,
-            'args': args,
-            'return_type': return_type,
-            'is_method': 'self' in sig.parameters
-        })
+        # Check if the function is already registered to prevent duplicates
+        if not any(cmd_meta['func'] == f for cmd_meta in temp_command_registry):
+            temp_command_registry.append({
+                'func': f,
+                'name': f.__name__,
+                'args': args,
+                'return_type': return_type,
+                'is_method': 'self' in sig.parameters
+            })
 
         f._is_command = True
         return f
@@ -196,6 +197,7 @@ def register_commands(cls):
 
     This decorator auto-detects all command methods in a class and registers them.
     """
+    class_name = cls.__name__
     for method_name, method in inspect.getmembers(cls, predicate=inspect.isfunction):
         if hasattr(method, '_is_command'):
             sig = inspect.signature(method)
@@ -203,17 +205,17 @@ def register_commands(cls):
             args = [{'name': param, 'type': type_hints.get(param, str)} for param in sig.parameters if param != 'self']
             return_type = type_hints.get('return', None)
 
-            # Update the existing registry entry if found
-            for entry in temp_command_registry:
-                if entry['func'] == method:
-                    entry['name'] = f"{cls.__name__}.{method.__name__}"
-                    break
-            else:
+            # Check if the method is already registered to prevent duplicates
+            if not any(cmd_meta['func'] == method for cmd_meta in temp_command_registry):
                 temp_command_registry.append({
                     'func': method,
-                    'name': f"{cls.__name__}.{method.__name__}",
+                    'name': f"{class_name}.{method.__name__}",
                     'args': args,
                     'return_type': return_type,
                     'is_method': True
                 })
+            else:
+                for cmd_meta in temp_command_registry:
+                    if cmd_meta['func'] == method:
+                        cmd_meta['name'] = f"{class_name}.{method.__name__}"
     return cls
