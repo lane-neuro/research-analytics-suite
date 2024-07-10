@@ -41,6 +41,7 @@ class TestCommandRegistry:
         command_meta = {
             'func': sample_command,
             'name': 'sample_command',
+            'class_name': None,
             'args': [{'name': 'arg1', 'type': int}, {'name': 'arg2', 'type': str}],
             'return_type': str,
             'is_method': False
@@ -64,6 +65,7 @@ class TestCommandRegistry:
         registry._initialize_command({
             'func': sample_command,
             'name': 'sample_command',
+            'class_name': None,
             'args': [{'name': 'arg1', 'type': int}, {'name': 'arg2', 'type': str}],
             'return_type': str,
             'is_method': False
@@ -80,17 +82,18 @@ class TestCommandRegistry:
         registry.register_instance(instance, 'runtime_1')
         registry._initialize_command({
             'func': SampleClass.method,
-            'name': 'SampleClass.method',
+            'name': 'method',
+            'class_name': 'SampleClass',
             'args': [{'name': 'arg', 'type': str}],
             'return_type': str,
             'is_method': True
         })
-        result = registry.execute_command('SampleClass.method', 'runtime_1', 'World')
+        result = registry.execute_command('method', 'runtime_1', 'World')
         assert result == "Hello World"
 
-    @patch('research_analytics_suite.commands.inspect.getmembers')
-    @patch('research_analytics_suite.commands.inspect.isfunction')
-    @patch('research_analytics_suite.commands.inspect.isclass')
+    @patch('inspect.getmembers')
+    @patch('inspect.isfunction')
+    @patch('inspect.isclass')
     @patch('importlib.import_module')
     def test_discover_commands(self, mock_import_module, mock_isclass, mock_isfunction, mock_getmembers, registry):
         # Setup mock to simulate module and command discovery
@@ -116,4 +119,4 @@ class TestCommandRegistry:
         registry.discover_commands('sample_package')
 
         assert 'sample_command' in registry._registry
-        assert 'SampleClass.method' in registry._registry
+        assert 'method' in registry._registry

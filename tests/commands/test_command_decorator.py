@@ -14,8 +14,8 @@ class User:
 
 
 class Product:
-    def __init__(self, id: int, name: str, price: float):
-        self.id = id
+    def __init__(self, _id: int, name: str, price: float):
+        self.id = _id
         self.name = name
         self.price = price
 
@@ -34,6 +34,7 @@ def additional_decorator(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
         return f(*args, **kwargs)
+
     return wrapped
 
 
@@ -45,6 +46,7 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
@@ -59,6 +61,7 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_method'
+        assert temp_command_registry[0]['class_name'] == 'TestClass'
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int}
         ]
@@ -72,6 +75,7 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_no_return'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int}
         ]
@@ -84,6 +88,7 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_default'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
@@ -97,6 +102,7 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_various'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': float},
@@ -112,6 +118,7 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_kw_only'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
@@ -127,6 +134,7 @@ class TestCommandDecorator:
         instance = TestClass()
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_method'
+        assert temp_command_registry[0]['class_name'] == 'TestClass'
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
@@ -141,11 +149,13 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_var_args'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'args', 'type': str}
         ]
         assert temp_command_registry[0]['return_type'] == list
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_var_kwargs(self):
         @command
@@ -154,11 +164,13 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_var_kwargs'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'kwargs', 'type': str}
         ]
         assert temp_command_registry[0]['return_type'] == dict
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_combined_args(self):
         @command
@@ -167,6 +179,7 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_combined'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str},
@@ -175,6 +188,7 @@ class TestCommandDecorator:
             {'name': 'kwargs', 'type': int}
         ]
         assert temp_command_registry[0]['return_type'] == tuple
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_user_defined_types(self):
         @command
@@ -183,11 +197,13 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_user_defined'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'user', 'type': User},
             {'name': 'product', 'type': Product}
         ]
         assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_complex_nested_types(self):
         @command
@@ -196,25 +212,29 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_nested'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': List[Dict[str, Optional[User]]]}
         ]
         assert temp_command_registry[0]['return_type'] == List[Dict[str, Optional[User]]]
+        assert temp_command_registry[0]['is_method'] is False
 
-        def test_complex_default_values(self):
-            @command
-            def test_func_complex_defaults(a: int = 1, b: List[int] = [1, 2, 3],
-                                           c: Dict[str, str] = {"key": "value"}) -> None:
-                pass
+    def test_complex_default_values(self):
+        @command
+        def test_func_complex_defaults(a: int = 1, b: List[int] = [1, 2, 3],
+                                       c: Dict[str, str] = {"key": "value"}) -> None:
+            pass
 
-            assert len(temp_command_registry) == 1
-            assert temp_command_registry[0]['name'] == 'test_func_complex_defaults'
-            assert temp_command_registry[0]['args'] == [
-                {'name': 'a', 'type': int},
-                {'name': 'b', 'type': List[int]},
-                {'name': 'c', 'type': Dict[str, str]}
-            ]
-            assert temp_command_registry[0]['return_type'] is None
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_complex_defaults'
+        assert temp_command_registry[0]['class_name'] is None
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'b', 'type': List[int]},
+            {'name': 'c', 'type': Dict[str, str]}
+        ]
+        assert temp_command_registry[0]['return_type'] is type(None)
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_callable_argument(self):
         @command
@@ -223,11 +243,13 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_callable'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': callable}
         ]
         assert temp_command_registry[0]['return_type'] == type(None)
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_lambda_argument(self):
         @command
@@ -236,10 +258,12 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_lambda'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'][0] == {'name': 'a', 'type': int}
         assert temp_command_registry[0]['args'][1]['name'] == 'func'
         assert callable(temp_command_registry[0]['args'][1]['type'])
         assert temp_command_registry[0]['return_type'] == int
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_async_function(self):
         @command
@@ -249,11 +273,13 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_async'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
         ]
         assert temp_command_registry[0]['return_type'] == bool
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_async_method(self):
         class TestClass:
@@ -265,6 +291,7 @@ class TestCommandDecorator:
         instance = TestClass()
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_method_async'
+        assert temp_command_registry[0]['class_name'] == 'TestClass'
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int}
         ]
@@ -278,11 +305,13 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_union'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': Union[int, str]},
             {'name': 'b', 'type': Optional[bool]}
         ]
         assert temp_command_registry[0]['return_type'] == Union[str, None]
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_mixed_type_hints(self):
         @command
@@ -291,12 +320,14 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_mixed'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': Union[str, float]},
             {'name': 'func', 'type': Callable[[int], str]}
         ]
         assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_multiple_decorators(self):
         @additional_decorator
@@ -306,11 +337,13 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_multiple_decorators'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
         ]
         assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_missing_type_hints(self):
         @command
@@ -319,11 +352,13 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_missing_type_hints'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': str},
             {'name': 'b', 'type': str}
         ]
         assert temp_command_registry[0]['return_type'] is None
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_invalid_type_hints(self):
         with pytest.raises(TypeError):
@@ -338,8 +373,10 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_no_arguments'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == []
         assert temp_command_registry[0]['return_type'] == type(None)
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_untyped_arguments(self):
         @command
@@ -348,11 +385,13 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_untyped_arguments'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': str},
             {'name': 'b', 'type': int}
         ]
         assert temp_command_registry[0]['return_type'] == Any
+        assert temp_command_registry[0]['is_method'] is False
 
     def test_edge_case_function_name(self):
         @command
@@ -361,8 +400,10 @@ class TestCommandDecorator:
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == '__str__'
+        assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': int}
         ]
         assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['is_method'] is False

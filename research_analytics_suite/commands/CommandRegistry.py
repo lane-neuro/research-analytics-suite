@@ -86,6 +86,7 @@ class CommandRegistry:
         self._registry[cmd_meta['name']] = {
             'func': cmd_meta['func'],
             'name': cmd_meta['name'],
+            'class_name': cmd_meta['class_name'],
             'args': cmd_meta['args'],
             'return_type': cmd_meta['return_type'],
             'is_method': cmd_meta.get('is_method', False),  # Ensure 'is_method' is always included
@@ -110,6 +111,7 @@ class CommandRegistry:
                     self._initialize_command({
                         'func': obj,
                         'name': obj.__name__,
+                        'class_name': None,  # No class context for functions
                         'args': [{'name': param, 'type': get_type_hints(obj).get(param, str)} for param in
                                  inspect.signature(obj).parameters],
                         'return_type': get_type_hints(obj).get('return', None),
@@ -120,7 +122,8 @@ class CommandRegistry:
                         if hasattr(method, '_is_command'):
                             self._initialize_command({
                                 'func': method,
-                                'name': f"{obj.__name__}.{method.__name__}",
+                                'name': method.__name__,
+                                'class_name': obj.__name__,
                                 'args': [{'name': param, 'type': get_type_hints(method).get(param, str)} for param in
                                          inspect.signature(method).parameters if param != 'self'],
                                 'return_type': get_type_hints(method).get('return', None),
