@@ -156,12 +156,15 @@ class CommandRegistry:
         """
         cmd_meta = self._registry.get(name)
         if cmd_meta is None:
-            raise ValueError(f"Command '{name}' not found in the registry.")
+            self._logger.error(ValueError(f"Command '{name}' not found in the registry."), self.__class__.__name__)
+            return None
 
         if cmd_meta['is_method'] and runtime_id is not None:
             instance = self._instances.get(runtime_id)
             if instance is None:
-                raise ValueError(f"Instance with runtime ID '{runtime_id}' not found.")
+                self._logger.error(ValueError(f"Instance with runtime ID '{runtime_id}' not found."),
+                                   self.__class__.__name__)
+                return None
             return cmd_meta['func'](instance, *args, **kwargs)
         else:
             return cmd_meta['func'](*args, **kwargs)

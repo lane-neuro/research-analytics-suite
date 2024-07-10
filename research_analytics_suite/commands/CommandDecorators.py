@@ -27,7 +27,8 @@ def register_commands(cls):
         if hasattr(method, '_is_command'):
             sig = inspect.signature(method)
             type_hints = get_type_hints(method)
-            args = [{'name': param, 'type': type_hints.get(param, str)} for param in sig.parameters if param not in ('self', 'cls')]
+            args = [{'name': param, 'type': type_hints.get(param, str)} for param in sig.parameters if param not in
+                    ('self', 'cls')]
             return_type = type_hints.get('return', None)
 
             # Check if the method is already registered to prevent duplicates
@@ -63,7 +64,8 @@ def command(func=None):
         except NameError as e:
             raise TypeError(f"Invalid type hint in function {f.__name__}: {e}")
 
-        args = [{'name': param, 'type': type_hints.get(param, str)} for param in sig.parameters if param not in ('self', 'cls')]
+        args = [{'name': param, 'type': type_hints.get(param, str)} for param in sig.parameters if
+                param not in ('self', 'cls')]
         return_type = type_hints.get('return', None)
 
         # Determine if the function is a method or static method
