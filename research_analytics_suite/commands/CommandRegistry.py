@@ -1,5 +1,21 @@
+"""
+CommandRegistry Module
+
+This module defines the CommandRegistry class, which manages the registration and discovery of commands within the
+Research Analytics Suite. It provides methods to register commands and discover them dynamically in a given package.
+
+Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
+"""
 import inspect
 from typing import get_type_hints, Optional
+
 
 class CommandRegistry:
     """
