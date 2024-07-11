@@ -7,6 +7,7 @@ from research_analytics_suite.operation_manager.management.OperationSequencer im
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.nodes.OperationNode import OperationNode
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.operations.core.workspace import pack_as_local_reference
 
 
 @pytest.fixture
@@ -70,6 +71,71 @@ class TestOperationSequencer:
     def test_remove_operation_from_chain(self, mock_operation, mock_operation_chain):
         self.sequencer.remove_operation_from_chain(mock_operation_chain, mock_operation)
         mock_operation_chain.remove_operation.assert_called_once_with(mock_operation)
+
+    def test_remove_operation_from_sequencer_head(self, mock_operation, mock_operation_chain):
+        self.sequencer.sequencer.append(mock_operation_chain)
+        self.sequencer.remove_operation_from_sequencer(mock_operation)
+        assert not self.sequencer.sequencer
+
+    def test_remove_only_operation_from_sequencer(self, mock_operation):
+        # Create a chain with a single operation
+        operation_chain = OperationChain(mock_operation)
+        self.sequencer.sequencer.append(operation_chain)
+
+        # Mock the is_empty method to return True after removal
+        operation_chain.is_empty = MagicMock(return_value=True)
+
+        self.sequencer.remove_operation_from_sequencer(mock_operation)
+        assert len(self.sequencer.sequencer) == 0
+
+    def test_remove_operation_from_sequencer_middle(self, mock_operation):
+        # Create a chain with multiple operations
+        operation1 = mock_operation
+        operation2 = MagicMock(spec=BaseOperation)
+        operation2.name = 'Operation 2'
+        operation2.runtime_id = '5678'
+        operation2.parent_operation = operation1
+        operation2.status = 'waiting'
+        operation2.unique_id = 'op5678'
+        operation2.task = 'Task 2'
+
+        node1 = OperationNode(operation1)
+        node2 = OperationNode(operation2)
+        node1.next_node = node2
+
+        operation_chain = OperationChain(operation1)
+        operation_chain.head = node1
+
+        self.sequencer.sequencer.append(operation_chain)
+        self.sequencer.remove_operation_from_sequencer(operation2)
+        assert operation_chain.head.next_node is None
+        assert len(self.sequencer.sequencer) == 1
+
+    def test_remove_operation_from_empty_sequencer(self, mock_operation):
+        self.sequencer.remove_operation_from_sequencer(mock_operation)
+        assert self.sequencer.is_empty()
+
+    def test_remove_non_existent_operation(self, mock_operation):
+        # Create another operation that will be in the chain
+        another_operation = MagicMock(spec=BaseOperation)
+        another_operation.name = 'Another Operation'
+        another_operation.runtime_id = '5678'
+
+        # Create a mock operation chain with the other operation
+        another_node = OperationNode(another_operation)
+        operation_chain = MagicMock(spec=OperationChain)
+        operation_chain.head = another_node
+        operation_chain.contains.return_value = False
+
+        self.sequencer.sequencer.append(operation_chain)
+        self.sequencer.remove_operation_from_sequencer(mock_operation)
+        assert len(self.sequencer.sequencer) == 1
+
+    def test_remove_operation_and_check_chain_empty(self, mock_operation, mock_operation_chain):
+        mock_operation_chain.is_empty.return_value = True
+        self.sequencer.sequencer.append(mock_operation_chain)
+        self.sequencer.remove_operation_from_sequencer(mock_operation)
+        assert not self.sequencer.sequencer
 
     def test_move_operation(self, mock_operation, mock_operation_chain):
         with patch.object(self.sequencer, 'get_chain_by_operation', return_value=mock_operation_chain):
@@ -162,3 +228,35 @@ class TestOperationSequencer:
         expected_dict = self.sequencer.to_dict()
         expected_json = json.dumps(expected_dict, indent=4)
         assert result == expected_json
+
+    def test_json_default_with_base_operation(self, mock_operation):
+        result = self.sequencer._json_default(mock_operation)
+        assert result == pack_as_local_reference(mock_operation)
+
+    def test_json_default_with_operation_node(self, mock_operation):
+        node = OperationNode(mock_operation)
+        result = self.sequencer._json_default(node)
+        expected = {
+            "operation_name": mock_operation.name,
+            "operation_status": mock_operation.status,
+            "next_node": None
+        }
+        assert result == expected
+
+    def test_json_default_with_operation_chain(self, mock_operation_chain):
+        result = self.sequencer._json_default(mock_operation_chain)
+        expected = {
+            "operations": [
+                {
+                    "operation_name": mock_operation_chain.head.operation.name,
+                    "operation_status": mock_operation_chain.head.operation.status,
+                    "next_node": None
+                }
+            ]
+        }
+        assert result == expected
+
+    def test_json_default_with_other_object(self):
+        other_obj = {"key": "value"}
+        result = self.sequencer._json_default(other_obj)
+        assert result == str(other_obj)
