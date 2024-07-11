@@ -14,7 +14,10 @@ import os
 import aiofiles
 import psutil
 
+from research_analytics_suite.commands import command, register_commands
 
+
+@register_commands
 class Config:
     _instance = None
     _lock = asyncio.Lock()
@@ -74,6 +77,7 @@ class Config:
     def _initialize(self):
         self.reset_to_defaults()
 
+    @command
     def reset_to_defaults(self):
         # Workspace settings
         self.WORKSPACE_NAME = 'default_workspace'
@@ -142,6 +146,7 @@ class Config:
         # Scheduler settings
         self.SCHEDULER_INTERVAL = 'daily'  # Options: 'hourly', 'daily', 'weekly'
 
+    @command
     async def update_setting(self, key, value):
         if hasattr(self, key):
             setattr(self, key, value)
@@ -153,6 +158,7 @@ class Config:
             await self.update_setting(key, value)
         return self
 
+    @command
     async def reload_from_file(self, file_path):
         """
         Reloads the configuration settings from a JSON file.
@@ -173,6 +179,7 @@ class Config:
         async with aiofiles.open(file_path, 'r') as f:
             return await self.reload(json.loads(await f.read()))
 
+    @command
     async def save_to_file(self, file_path):
         async with aiofiles.open(file_path, 'w') as f:
             _copy = self.__dict__.copy()

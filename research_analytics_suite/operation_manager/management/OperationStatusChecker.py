@@ -14,11 +14,12 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
+@register_commands
 class OperationStatusChecker:
     """
     A class to check the status of operations.
@@ -36,6 +37,7 @@ class OperationStatusChecker:
         """
         self.sequencer = sequencer
 
+    @command
     def get_operation_status(self, operation: BaseOperation) -> str:
         """
         Returns the status of a specific operation.
@@ -48,6 +50,7 @@ class OperationStatusChecker:
         """
         return operation.status
 
+    @command
     def get_all_operations_status(self) -> dict:
         """
         Returns the status of all operations in the sequencer.

@@ -2,4 +2,4 @@
 Utility functions and common metrics.
 """
 
-from .Metrics import Metrics
+from .Metrics import calculate_metrics

@@ -16,9 +16,10 @@ Status: Prototype
 import dask.dataframe as dd
 import pandas as pd
 
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.data_engine.core.BaseData import BaseData
 
-
+@register_commands
 class DaskData(BaseData):
     """
     A class to handle data using Dask.
@@ -38,6 +39,7 @@ class DaskData(BaseData):
         self.dask_dataframe = None
         self.dask_dataframe = self.set_dataframe(data)
 
+    @command
     def apply(self, action):
         """
         Applies a function to the Dask DataFrame.
@@ -49,6 +51,7 @@ class DaskData(BaseData):
             self.dask_dataframe = self.dask_dataframe.map_partitions(action)
         return self
 
+    @command
     def set_dataframe(self, data) -> dd.DataFrame:
         """
         Sets the Dask DataFrame.
@@ -62,6 +65,7 @@ class DaskData(BaseData):
             self.dask_dataframe = dd.from_pandas(data, npartitions=4)
         return self.dask_dataframe
 
+    @command
     def compute(self):
         """
         Computes the Dask DataFrame.

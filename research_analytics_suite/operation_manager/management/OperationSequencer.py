@@ -42,6 +42,7 @@ class OperationSequencer:
         self.sequencer = deque()
         self._logger = CustomLogger()
 
+    @command
     async def add_operation_to_sequencer(self, operation: BaseOperation):
         """
         Adds an operation to the sequencer.
@@ -65,6 +66,7 @@ class OperationSequencer:
                 await operation.parent_operation.link_child_operation(operation)
                 self._logger.debug(f"Operation {operation.name} added to parent chain of {operation.parent_operation.name}.")
 
+    @command
     def insert_operation_in_chain(self, index: int, operation_chain: OperationChain, operation: BaseOperation) -> None:
         """
         Inserts an operation in a chain at a specific index.
@@ -83,6 +85,7 @@ class OperationSequencer:
                 new_node = OperationNode(operation, current_node.next_node)
                 current_node.next_node = new_node
 
+    @command
     def remove_operation_from_chain(self, operation_chain: OperationChain, operation: BaseOperation) -> None:
         """
         Removes an operation from a chain.
@@ -96,6 +99,7 @@ class OperationSequencer:
             if operation_chain.is_empty():
                 self.sequencer.remove(operation_chain)
 
+    @command
     def move_operation(self, operation: BaseOperation, new_index: int) -> None:
         """
         Moves an operation to a new index in its chain.
@@ -109,6 +113,7 @@ class OperationSequencer:
             operation_chain.remove_operation(operation)
             self.insert_operation_in_chain(new_index, operation_chain, operation)
 
+    @command
     def remove_operation_from_sequencer(self, operation: BaseOperation) -> None:
         """
         Removes an operation from the sequencer.
@@ -126,6 +131,7 @@ class OperationSequencer:
                     self.sequencer.remove(chain)
                 return
 
+    @command
     def get_head_operation_from_chain(self, operation_chain: OperationChain) -> Optional[BaseOperation]:
         """
         Gets the head operation from a chain.
@@ -140,6 +146,7 @@ class OperationSequencer:
             return operation_chain.head.operation
         return None
 
+    @command
     def get_chain_by_operation(self, operation: 'BaseOperation') -> Optional[OperationChain]:
         """
         Gets the operation chain that contains a specific operation.
@@ -155,6 +162,7 @@ class OperationSequencer:
                 return chain
         return None
 
+    @command
     def get_operation_in_chain(self, operation_chain: OperationChain, operation: BaseOperation) \
             -> Optional[BaseOperation]:
         """
@@ -191,6 +199,7 @@ class OperationSequencer:
         self._logger.error(Exception(f"No operation found of type {operation_type.__name__}"), self.__class__.__name__)
         return None
 
+    @command
     def find_operation_by_task(self, task) -> Optional[BaseOperation]:
         """
         Finds an operation by its associated task.
@@ -208,6 +217,7 @@ class OperationSequencer:
         self._logger.error(Exception(f"No operation found for task {task}"), self.__class__.__name__)
         return None
 
+    @command
     def is_empty(self) -> bool:
         """
         Checks if the sequencer is empty.
@@ -217,6 +227,7 @@ class OperationSequencer:
         """
         return len(self.sequencer) == 0
 
+    @command
     def size(self) -> int:
         """
         Gets the size of the sequencer.
@@ -226,10 +237,12 @@ class OperationSequencer:
         """
         return len(self.sequencer)
 
+    @command
     def clear(self) -> None:
         """Clears the sequencer."""
         self.sequencer.clear()
 
+    @command
     def contains(self, operation: BaseOperation) -> bool:
         """
         Checks if the sequencer contains a specific operation.
@@ -242,6 +255,7 @@ class OperationSequencer:
         """
         return any(chain.contains(operation) for chain in self.sequencer)
 
+    @command
     async def has_waiting_operations(self) -> bool:
         """
         Checks if the sequencer has any waiting operations.
@@ -262,6 +276,7 @@ class OperationSequencer:
             return None
         return self.sequencer.popleft()
 
+    @command
     def to_dict(self) -> list:
         """
         Converts the sequencer to a dictionary representation.
@@ -289,6 +304,7 @@ class OperationSequencer:
         }
         return node_dict
 
+    @command
     def to_json(self) -> str:
         """
         Converts the sequencer to a JSON string.
@@ -341,6 +357,7 @@ class OperationSequencer:
                 _sequencer_text += f"{_chain_text}\n"
         return _sequencer_text
 
+    @command
     def print_sequencer(self) -> None:
         """
         Prints the sequencer in a readable format.

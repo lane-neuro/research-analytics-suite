@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from research_analytics_suite.commands import register_commands, command
+from research_analytics_suite.commands.CommandDecorators import register_commands, command
 
 
 class TestRegisterCommandsDecorator:

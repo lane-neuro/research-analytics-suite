@@ -13,10 +13,12 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
+@register_commands
 class OperationManager:
     """
     A class to manage operations within the research analytics suite.
@@ -39,6 +41,7 @@ class OperationManager:
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
+    @command
     async def add_initialized_operation(self, operation) -> 'BaseOperation':
         """
         Adds an initialized operation to the sequencer.
@@ -47,7 +50,8 @@ class OperationManager:
             operation (BaseOperation): The initialized operation to add.
         """
         if operation is None:
-            self._logger.error(Exception("Attempted to add a None operation to the sequencer."), self)
+            self._logger.error(Exception("Attempted to add a None operation to the sequencer."),
+                               self.__class__.__name__)
             raise
         self._logger.debug(f"Adding initialized operation to sequencer: {operation.name} "
                           f"with rID: {operation.runtime_id}")
@@ -56,6 +60,7 @@ class OperationManager:
         operation.add_log_entry(f"[SEQ] {operation.name}")
         return operation
 
+    @command
     async def add_operation_with_parameters(self, operation_type, *args, **kwargs) -> 'BaseOperation':
         """
         Creates a new Operation object with the specified parameters and adds it to the sequencer.
@@ -82,6 +87,7 @@ class OperationManager:
         except Exception as e:
             self._logger.error(e, operation_type)
 
+    @command
     async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> 'BaseOperation':
         """
         Adds an operation to the sequencer if it does not already exist.
@@ -94,6 +100,7 @@ class OperationManager:
         if not self.task_creator.task_exists(operation_type):
             return await self.add_operation_with_parameters(operation_type=operation_type, *args, **kwargs)
 
+    @command
     async def resume_operation(self, operation: 'BaseOperation') -> None:
         """
         Resumes a specific operation.
@@ -104,6 +111,7 @@ class OperationManager:
         if operation.status == "paused":
             await operation.resume()
 
+    @command
     async def pause_operation(self, operation: 'BaseOperation') -> None:
         """
         Pauses a specific operation.
@@ -114,6 +122,7 @@ class OperationManager:
         if operation.status == "running":
             await operation.pause()
 
+    @command
     async def stop_operation(self, operation: 'BaseOperation') -> None:
         """
         Stops a specific operation.

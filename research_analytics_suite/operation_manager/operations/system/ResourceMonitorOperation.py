@@ -24,9 +24,11 @@ from typing import List
 
 import psutil
 
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
+@register_commands
 class ResourceMonitorOperation(BaseOperation):
 
     def __init__(self, *args, **kwargs):
@@ -79,16 +81,19 @@ class ResourceMonitorOperation(BaseOperation):
 
             await asyncio.sleep(.001)
 
+    @command
     def get_cpu_formatted(self) -> str:
         return (f"Total CPU Usage:\t{round(self.cpu_usage, 2)}%\t[{psutil.cpu_count()} cores]\n"
                 f"RAS:\t{round(self.process.cpu_percent(), 2)}%")
 
+    @command
     def get_memory_formatted(self) -> str:
         return (f"Total Memory Usage:\t{self.total_memory_usage}%\n"
                 f"RAS:\t{round(self.process.memory_percent(), 2)}% "
                 f"({round(self.process_memory_usage, 2)} GB\t/\t"
                 f"{round(psutil.virtual_memory().total / (1024 ** 3), 2)} GB)")
 
+    @command
     def output_memory_usage(self) -> List[str]:
         return [self.profiler.print_stats('calls'),
                 self.get_cpu_formatted(),

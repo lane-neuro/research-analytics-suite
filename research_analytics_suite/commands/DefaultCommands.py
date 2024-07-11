@@ -23,35 +23,20 @@ def ras_help() -> str:
     """Displays available commands and their descriptions."""
     commands_info = ["Available commands:"]
     for cmd, meta in CommandRegistry().registry.items():
-        args_info = ", ".join([f"{arg['name']}: {arg['type'].__name__}" for arg in meta['args']])
-        return_info = meta['return_type'].__name__ if meta['return_type'] else "None"
-        doc = meta['func'].__doc__ or "No description available."
+        args_info = ", ".join([f"{arg.get('name', 'None')}: {arg.get('type', any)}" for arg in meta.get('args', [])])
+        return_info = meta.get('return_type', None)
+
+        doc = meta.get('func', None)
+        if doc:
+            doc = doc.__doc__
+        else:
+            doc = "No documentation available."
+
         if args_info:
             commands_info.append(f"{cmd}({args_info}) -> {return_info}: {doc}")
         else:
             commands_info.append(f"{cmd} -> {return_info}: {doc}")
     return "\n".join(commands_info)
-
-
-@command
-async def stop():
-    """Stops all operations."""
-    await OperationControl().operation_manager.stop_all_operations()
-    return "Stopping all operations..."
-
-
-@command
-async def pause():
-    """Pauses all operations."""
-    await OperationControl().operation_manager.pause_all_operations()
-    return "Pausing all operations..."
-
-
-@command
-async def resume():
-    """Resumes all operations."""
-    await OperationControl().operation_manager.resume_all_operations()
-    return "Resuming all operations..."
 
 
 @command

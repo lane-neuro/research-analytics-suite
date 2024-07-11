@@ -18,7 +18,10 @@ from copy import deepcopy
 
 from matplotlib import pyplot as plt
 
+from research_analytics_suite.commands import command
 
+
+@command
 def display_transformations(data_in, transformations, cmap='viridis'):
     """
     Applies a series of transformations to a given dataset and visualizes the results.

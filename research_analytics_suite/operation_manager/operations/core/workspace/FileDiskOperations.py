@@ -16,10 +16,11 @@ Status: Prototype
 import os
 import json
 from typing import Optional, Union, Any
-
 import aiofiles
+from research_analytics_suite.commands import command
 
 
+@command
 async def load_from_disk(file_path: str, operation_group: Optional[dict], with_instance=True) -> Any:
     """
     Load a BaseOperation object from disk.
@@ -122,6 +123,7 @@ async def load_operation_group(file_path: str, operation_group: dict, iterate_ch
     return operation_group
 
 
+@command
 def construct_file_path(base_dir, operation_ref):
     """
     Helper method to construct file path for an operation reference.
@@ -166,6 +168,7 @@ async def from_dict(data: dict, file_dir, parent_operation=None, with_instance=T
     return data_metadata
 
 
+@command
 async def populate_operation_args(data, file_dir, parent_operation=None, with_instance=True) -> dict:
     """
     Populate the arguments of an operation.

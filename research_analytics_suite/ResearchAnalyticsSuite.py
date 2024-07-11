@@ -20,7 +20,6 @@ import os
 import sys
 import nest_asyncio
 
-from research_analytics_suite.commands import CommandRegistry
 from research_analytics_suite.utils import CustomLogger
 from research_analytics_suite.data_engine.memory import MemoryManager
 from research_analytics_suite.library_manifest import LibraryManifest
@@ -41,6 +40,7 @@ class ResearchAnalyticsSuite:
     """
 
     def __init__(self):
+        from research_analytics_suite.commands import CommandRegistry
         self._command_registry = CommandRegistry()
         self._logger = CustomLogger()
         self._memory_manager = MemoryManager()

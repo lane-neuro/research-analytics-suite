@@ -13,8 +13,10 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from research_analytics_suite.commands import register_commands, command
 
 
+@register_commands
 class TranslateTransform:
     """
     A class to apply a translation transformation to a given datapoint.
@@ -51,6 +53,7 @@ class TranslateTransform:
 
         return f"TranslateTransform, x,y = ({self.delta_x}, {self.delta_y})"
 
+    @command
     def transform(self, datapoint):
         """
         Applies the translation transformation to the given datapoint.

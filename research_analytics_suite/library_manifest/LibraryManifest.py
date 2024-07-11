@@ -2,11 +2,14 @@ import asyncio
 import os
 import importlib
 import pkgutil
+
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.library_manifest.Category import Category
 from research_analytics_suite.library_manifest.CategoryID import CategoryID
 from research_analytics_suite.library_manifest.utils import check_verified
 
 
+@register_commands
 class LibraryManifest:
     """
     The LibraryManifest class is responsible for managing the library of operations available to the user.
@@ -45,13 +48,16 @@ class LibraryManifest:
                     await self.build_base_library()
                     self._initialized = True
 
+    @command
     def get_library(self):
         return self._library
 
+    @command
     def add_category(self, category_id, name):
         category = Category(category_id, name)
         self._categories[category_id] = category
 
+    @command
     def add_operation_from_attributes(self, operation_attributes):
         category_id = operation_attributes.category_id
         if category_id in self._categories:
@@ -116,6 +122,7 @@ class LibraryManifest:
             self._logger.error(Exception("operation_library module not found"))
         self._logger.debug("Completed _populate_verified_operations")
 
+    @command
     async def load_user_library(self):
         self._logger.debug("Starting load_user_library")
         _user_dir = os.path.normpath(os.path.join(self._config.BASE_DIR, 'operations'))
@@ -136,6 +143,7 @@ class LibraryManifest:
             self.add_operation_from_attributes(await get_attributes_from_disk(_op))
         self._logger.debug("Completed load_user_library")
 
+    @command
     def get_categories(self):
         return self._categories.items()
 

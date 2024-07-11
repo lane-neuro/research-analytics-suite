@@ -9,7 +9,10 @@ Author: Lane
 
 import boto3
 
+from research_analytics_suite.commands import command, register_commands
 
+
+@register_commands
 class CloudIntegration:
     """
     A class for integrating with AWS S3.
@@ -33,6 +36,7 @@ class CloudIntegration:
             region_name=region_name
         )
 
+    @command
     def upload_file(self, file_name, bucket, object_name=None):
         """
         Uploads a file to an S3 bucket.
@@ -54,6 +58,7 @@ class CloudIntegration:
             self._logger.error(e, self.__class__.__name__)
             return False
 
+    @command
     def download_file(self, bucket, object_name, file_name):
         """
         Downloads a file from an S3 bucket.

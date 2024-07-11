@@ -3,7 +3,7 @@ from functools import wraps
 
 import pytest
 from typing import Optional, List, Dict, Union, Callable, Any
-from research_analytics_suite.commands import command, temp_command_registry
+from research_analytics_suite.commands.CommandDecorators import command, temp_command_registry
 
 
 # Define some user-defined types
@@ -233,7 +233,7 @@ class TestCommandDecorator:
             {'name': 'b', 'type': List[int]},
             {'name': 'c', 'type': Dict[str, str]}
         ]
-        assert temp_command_registry[0]['return_type'] is type(None)
+        assert temp_command_registry[0]['return_type'] is None
         assert temp_command_registry[0]['is_method'] is False
 
     def test_callable_argument(self):
@@ -248,20 +248,21 @@ class TestCommandDecorator:
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': callable}
         ]
-        assert temp_command_registry[0]['return_type'] == type(None)
+        assert temp_command_registry[0]['return_type'] is None
         assert temp_command_registry[0]['is_method'] is False
 
     def test_lambda_argument(self):
         @command
-        def test_func_lambda(a: int, func: lambda x: x + 1) -> int:
+        def test_func_lambda(a: int, func: Callable[[int], int]) -> int:
             return func(a)
 
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_func_lambda'
         assert temp_command_registry[0]['class_name'] is None
-        assert temp_command_registry[0]['args'][0] == {'name': 'a', 'type': int}
-        assert temp_command_registry[0]['args'][1]['name'] == 'func'
-        assert callable(temp_command_registry[0]['args'][1]['type'])
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'func', 'type': Callable[[int], int]}
+        ]
         assert temp_command_registry[0]['return_type'] == int
         assert temp_command_registry[0]['is_method'] is False
 
@@ -354,17 +355,24 @@ class TestCommandDecorator:
         assert temp_command_registry[0]['name'] == 'test_func_missing_type_hints'
         assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
-            {'name': 'a', 'type': str},
-            {'name': 'b', 'type': str}
+            {'name': 'a', 'type': any},
+            {'name': 'b', 'type': any}
         ]
         assert temp_command_registry[0]['return_type'] is None
         assert temp_command_registry[0]['is_method'] is False
 
     def test_invalid_type_hints(self):
-        with pytest.raises(TypeError):
-            @command
-            def test_func_invalid_type_hints(a: "invalid_type") -> str:
-                return str(a)
+        @command
+        def test_func_invalid_type_hints(a: "invalid_type") -> str:
+            return str(a)
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func_invalid_type_hints'
+        assert temp_command_registry[0]['class_name'] is None
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': 'invalid_type'}
+        ]
+        assert temp_command_registry[0]['return_type'] == str
 
     def test_no_arguments(self):
         @command
@@ -375,7 +383,7 @@ class TestCommandDecorator:
         assert temp_command_registry[0]['name'] == 'test_func_no_arguments'
         assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == []
-        assert temp_command_registry[0]['return_type'] == type(None)
+        assert temp_command_registry[0]['return_type'] is None
         assert temp_command_registry[0]['is_method'] is False
 
     def test_untyped_arguments(self):
@@ -387,7 +395,7 @@ class TestCommandDecorator:
         assert temp_command_registry[0]['name'] == 'test_func_untyped_arguments'
         assert temp_command_registry[0]['class_name'] is None
         assert temp_command_registry[0]['args'] == [
-            {'name': 'a', 'type': str},
+            {'name': 'a', 'type': any},
             {'name': 'b', 'type': int}
         ]
         assert temp_command_registry[0]['return_type'] == Any

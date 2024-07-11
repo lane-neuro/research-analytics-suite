@@ -14,10 +14,12 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.operation_manager.nodes.OperationNode import OperationNode
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
+@register_commands
 class OperationChain:
     """
     A class to manage a chain of operations.
@@ -37,6 +39,7 @@ class OperationChain:
         if isinstance(operation, BaseOperation):
             self.add_operation_to_chain(operation)
 
+    @command
     def add_operation_to_chain(self, operation: BaseOperation) -> None:
         """
         Adds an operation to the end of the chain.
@@ -52,6 +55,7 @@ class OperationChain:
                 current_node = current_node.next_node
             current_node.next_node = OperationNode(operation)
 
+    @command
     def remove_operation(self, operation: BaseOperation) -> None:
         """
         Removes an operation from the chain.
@@ -69,6 +73,7 @@ class OperationChain:
                     break
                 current_node = current_node.next_node
 
+    @command
     def is_empty(self) -> bool:
         """
         Checks if the chain is empty.
@@ -78,6 +83,7 @@ class OperationChain:
         """
         return not self.head
 
+    @command
     def count_operations(self) -> int:
         """
         Counts the number of operations in the chain.
@@ -92,6 +98,7 @@ class OperationChain:
             current_node = current_node.next_node
         return count
 
+    @command
     def contains(self, operation: 'BaseOperation') -> bool:
         """
         Checks if the chain contains a specific operation.

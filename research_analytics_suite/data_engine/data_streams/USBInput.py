@@ -14,9 +14,11 @@ Status: Prototype
 """
 import serial
 
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.data_engine.data_streams.BaseInput import BaseInput
 
 
+@register_commands
 class USBInput(BaseInput):
     """
     Class for handling live data input from a USB source.
@@ -39,6 +41,7 @@ class USBInput(BaseInput):
         self.baud_rate = baud_rate
         self.serial_connection = serial.Serial(port, baud_rate)
 
+    @command
     def read_data(self):
         """
         Reads data from the USB source.
@@ -50,6 +53,7 @@ class USBInput(BaseInput):
             return self.serial_connection.readline().decode('utf-8').strip()
         return None
 
+    @command
     def close(self):
         """
         Closes the USB connection.

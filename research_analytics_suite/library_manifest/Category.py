@@ -15,7 +15,10 @@ Status: Prototype
 """
 import asyncio
 
+from research_analytics_suite.commands import command, register_commands
 
+
+@register_commands
 class Category:
     """
     Category class is used to store the operations of a category.
@@ -74,12 +77,15 @@ class Category:
     def subcategories(self):
         return self._subcategories
 
+    @command
     def register_operation(self, operation):
         self._operations.append(operation)
 
+    @command
     def add_subcategory(self, subcategory):
         self._subcategories[subcategory.category_id] = subcategory
 
+    @command
     def get_operations(self):
         if self._operations is None:
             return []

@@ -1,8 +1,11 @@
 import json
 import aiosqlite
+
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.data_engine.memory.storage.BaseStorage import BaseStorage
 
 
+@register_commands
 class SQLiteStorage(BaseStorage):
     """
     SQLite storage implementation for user variables.
@@ -41,6 +44,7 @@ class SQLiteStorage(BaseStorage):
         except Exception as e:
             self._logger.error(f"[SQLite] Setup error: {e}", self.__class__.__name__)
 
+    @command
     async def add_variable(self, name: str, value: dict, memory_id=None):
         try:
             self._logger.info(f"[SQLite] Adding variable: {name} with value: {value}")
@@ -55,6 +59,7 @@ class SQLiteStorage(BaseStorage):
         except Exception as e:
             self._logger.error(f"[SQLite] Add variable error: {e}", self.__class__.__name__)
 
+    @command
     async def get_variable_value(self, name: str, memory_id=None):
         """
         Retrieves the value of a variable by name from the SQLite database.
@@ -74,6 +79,7 @@ class SQLiteStorage(BaseStorage):
             self._logger.error(f"[SQLite] Get variable value error: {e}", self.__class__.__name__)
             return None
 
+    @command
     async def remove_variable(self, name: str, memory_id=None):
         """
         Removes a variable by name from the SQLite database.
@@ -89,6 +95,7 @@ class SQLiteStorage(BaseStorage):
         except Exception as e:
             self._logger.error(f"[SQLite] Remove variable error: {e}", self.__class__.__name__)
 
+    @command
     async def list_variables(self, memory_id=None) -> dict:
         """
         Lists all variables from the SQLite database.
@@ -106,12 +113,14 @@ class SQLiteStorage(BaseStorage):
             self._logger.error(f"[SQLite] List variables error: {e}", self.__class__.__name__)
             return {}
 
+    @command
     async def update_variable(self, name: str, value: dict, memory_id=None):
         """
         Updates the value of an existing variable in the SQLite database.
         """
         await self.add_variable(name, value, memory_id)
 
+    @command
     async def variable_exists(self, name: str, memory_id=None) -> bool:
         """
         Checks if a variable exists in the SQLite database.
@@ -127,6 +136,7 @@ class SQLiteStorage(BaseStorage):
             self._logger.error(f"[SQLite] Variable exists check error: {e}", self.__class__.__name__)
             return False
 
+    @command
     async def get_variable_names(self, memory_id=None) -> list:
         """
         Retrieves all variable names from the SQLite database.
@@ -143,6 +153,7 @@ class SQLiteStorage(BaseStorage):
             self._logger.error(f"[SQLite] Get variable names error: {e}", self.__class__.__name__)
             return []
 
+    @command
     async def clear_variables(self, memory_id=None):
         """
         Clears all variables from the SQLite database.

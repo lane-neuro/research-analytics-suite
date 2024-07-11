@@ -12,7 +12,10 @@ Status: Prototype
 """
 import importlib
 
+from research_analytics_suite.commands import command
 
+
+@command
 def check_verified(identifier):
     try:
         importlib.import_module(f'operation_library.{identifier}')

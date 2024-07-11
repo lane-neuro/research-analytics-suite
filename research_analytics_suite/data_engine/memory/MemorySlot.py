@@ -4,9 +4,12 @@ import asyncio
 from mmap import mmap
 from typing import Any, Type, Tuple, Dict
 
+from research_analytics_suite.commands import command, register_commands
+
 DATA_SIZE_THRESHOLD = 1024 * 1024  # 1 MB
 
 
+@register_commands
 class MemorySlot:
     """
     A class representing a slot of memory for storing data associated with operations.
@@ -166,6 +169,7 @@ class MemorySlot:
         """Get the last modified timestamp."""
         return self._modified_at
 
+    @command
     def check_data_size(self):
         try:
             data_size = sum(sys.getsizeof(value[1]) for value in self._data.values())
@@ -253,6 +257,7 @@ class MemorySlot:
         """Update the last modified timestamp."""
         self._modified_at = time.time()
 
+    @command
     def validate_data(self) -> bool:
         """Validate the data dictionary."""
         _valid = True
@@ -271,6 +276,7 @@ class MemorySlot:
 
         return _valid
 
+    @command
     async def get_data_by_key(self, key: str) -> Any:
         """Retrieve the value associated with a specific key."""
         async with self._lock:
@@ -284,11 +290,13 @@ class MemorySlot:
                 self._logger.error(e, self.__class__.__name__)
                 return None
 
+    @command
     async def get_data_type_by_key(self, key: str) -> type:
         """Retrieve the data type associated with a specific key."""
         async with self._lock:
             return self._data.get(key, (None, None))[0]
 
+    @command
     async def set_data_by_key(self, key: str, value: Any, data_type: Type):
         """Set the value for a specific key."""
         if not isinstance(key, str):
@@ -303,6 +311,7 @@ class MemorySlot:
             if self._use_mmap:
                 self.dump_data_to_mmap()
 
+    @command
     async def remove_data_by_key(self, key: str):
         """Remove the key-value pair associated with a specific key."""
         async with self._lock:
@@ -317,6 +326,7 @@ class MemorySlot:
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)
 
+    @command
     async def clear_data(self):
         """Clear all data in the data dictionary."""
         async with self._lock:
@@ -328,6 +338,7 @@ class MemorySlot:
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)
 
+    @command
     async def has_key(self, key: str) -> bool:
         """Check if a specific key exists in the data dictionary."""
         async with self._lock:
@@ -350,6 +361,7 @@ class MemorySlot:
 
         return _offset
 
+    @command
     async def update_data(self, data: Dict[str, Tuple[Type, Any]]):
         """Update multiple key-value pairs in the data dictionary."""
         if not isinstance(data, dict):
@@ -375,6 +387,7 @@ class MemorySlot:
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)
 
+    @command
     async def merge_data(self, data: Dict[str, Tuple[Type, Any]]):
         """Merge another dictionary into the data dictionary."""
         if not isinstance(data, dict):
@@ -400,6 +413,7 @@ class MemorySlot:
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)
 
+    @command
     async def data_keys(self) -> list:
         """Return a list of keys in the data dictionary."""
         async with self._lock:
@@ -408,6 +422,7 @@ class MemorySlot:
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)
 
+    @command
     async def data_values(self) -> list:
         """Return a list of values in the data dictionary."""
         async with self._lock:
@@ -419,6 +434,7 @@ class MemorySlot:
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)
 
+    @command
     async def data_items(self) -> list:
         """Return a list of key-value pairs in the data dictionary."""
         async with self._lock:
@@ -430,6 +446,7 @@ class MemorySlot:
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)
 
+    @command
     async def to_dict(self) -> dict:
         """Convert the MemorySlot instance to a dictionary."""
         async with self._lock:
@@ -454,6 +471,7 @@ class MemorySlot:
                 self._logger.error(e, self.__class__.__name__)
 
     @staticmethod
+    @command
     async def load_from_disk(data: dict) -> 'MemorySlot':
         """Initialize a MemorySlot instance from a dictionary."""
         try:

@@ -12,8 +12,10 @@ import json
 import uuid
 
 from .MemorySlot import MemorySlot
+from ...commands import command, register_commands
 
 
+@register_commands
 class MemorySlotCollection(ABC):
     """
     An abstract base class representing a collection of memory slots for storing data.
@@ -66,16 +68,19 @@ class MemorySlotCollection(ABC):
             raise ValueError("name must be a string")
         self._name = value
 
+    @command
     def list_slots(self) -> Optional[list[MemorySlot]]:
         """List all memory slots."""
         if len(self.slots) > 0:
             return self.slots
         return None
 
+    @command
     def add_slot(self, slot: MemorySlot):
         """Add a memory slot to the collection."""
         self.slots.append(slot)
 
+    @command
     def new_slot_with_data(self, data: dict) -> MemorySlot:
         """Create a new memory slot from data and add it to the collection."""
         slot = MemorySlot(memory_id=str(uuid.uuid4()), data=data, operation_required=False, name="imported_data")
@@ -83,10 +88,12 @@ class MemorySlotCollection(ABC):
         self.add_slot(slot)
         return slot
 
+    @command
     async def remove_slot(self, memory_id: str):
         """Remove a memory slot from the collection by its ID."""
         self.slots = [slot for slot in self.slots if slot.memory_id != memory_id]
 
+    @command
     def get_slot(self, memory_id: str) -> Optional[MemorySlot]:
         """Retrieve a memory slot by its ID."""
         for slot in self.slots:
@@ -94,15 +101,18 @@ class MemorySlotCollection(ABC):
                 return slot
         return None
 
+    @command
     def get_slot_data(self, memory_id: str) -> Optional[dict]:
         """Retrieve the data of a memory slot by its ID."""
         slot = self.get_slot(memory_id)
         return slot.data if slot else None
 
+    @command
     async def clear_slots(self):
         """Clear all memory slots."""
         self.slots.clear()
 
+    @command
     async def update_slot(self, slot: MemorySlot):
         """Update an existing memory slot."""
         for i, s in enumerate(self.slots):
@@ -111,6 +121,7 @@ class MemorySlotCollection(ABC):
                 return
         raise ValueError(f"No slot found with memory_id: {slot.memory_id}")
 
+    @command
     async def slot_exists(self, memory_id: str) -> bool:
         """Check if a slot exists by its ID."""
         return any(slot.memory_id == memory_id for slot in self.slots)
@@ -124,6 +135,7 @@ class MemorySlotCollection(ABC):
         }
 
     @staticmethod
+    @command
     async def from_dict(data: dict) -> MemorySlotCollection:
         """Initialize the collection from a dictionary."""
         _name = data.get('name', None)
@@ -133,27 +145,33 @@ class MemorySlotCollection(ABC):
             collection.add_slot(await MemorySlot.load_from_disk(slot_data))
         return collection
 
+    @command
     def to_json(self) -> str:
         """Convert the collection to a JSON string."""
         return json.dumps(self.to_dict(), indent=4)
 
     @staticmethod
+    @command
     async def from_json(data: str) -> MemorySlotCollection:
         """Initialize the collection from a JSON string."""
         return await MemorySlotCollection.from_dict(json.loads(data))
 
+    @command
     def filter_slots(self, operation_required: bool) -> List[MemorySlot]:
         """Filter slots based on operation_required."""
         return [slot for slot in self.slots if slot.operation_required == operation_required]
 
+    @command
     def find_slots_by_name(self, name: str) -> List[MemorySlot]:
         """Find slots by name."""
         return [slot for slot in self.slots if slot.name == name]
 
+    @command
     def add_slots(self, slots: List[MemorySlot]):
         """Add multiple slots at once."""
         self.slots.extend(slots)
 
+    @command
     def remove_slots(self, memory_ids: List[str]):
         """Remove multiple slots at once by their IDs."""
         self.slots = [slot for slot in self.slots if slot.memory_id not in memory_ids]

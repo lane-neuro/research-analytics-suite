@@ -15,7 +15,10 @@ Status: Prototype
 """
 import numpy as np
 
+from research_analytics_suite.commands.CommandDecorators import command, register_commands
 
+
+@register_commands
 class JitterTransform:
     """
     A class to apply a jitter transformation to a given datapoint.
@@ -53,6 +56,7 @@ class JitterTransform:
         """
         return f"JitterTransform, jitter_strength = {self.jitter_strength}"
 
+    @command
     def transform(self, datapoint):
         """
         Applies the jitter transformation to the given datapoint.

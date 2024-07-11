@@ -4,6 +4,8 @@ import types
 from typing import Any, Callable
 import ast
 
+from research_analytics_suite.commands import command
+
 SAFE_BUILTINS = {
     'print': print,
     'range': range,
@@ -23,6 +25,7 @@ SAFE_MODULES = {
 }
 
 
+@command
 def action_serialized(action) -> str:
     """Gets the serializable action to be executed by the operation."""
     if isinstance(action, str):

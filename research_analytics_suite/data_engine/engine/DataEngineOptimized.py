@@ -9,6 +9,7 @@ Author: Lane
 """
 import psutil
 
+from research_analytics_suite.commands import register_commands, command
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.memory.DataCache import DataCache
 from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
@@ -16,6 +17,7 @@ from research_analytics_suite.data_engine.data_streams.LiveDataHandler import Li
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
+@register_commands
 class DataEngineOptimized(UnifiedDataEngine):
     """
     A class to handle larger datasets efficiently using distributed computing and advanced caching mechanisms.
@@ -40,6 +42,7 @@ class DataEngineOptimized(UnifiedDataEngine):
 
         self.live_data_handler = LiveDataHandler(data_engine=self)
 
+    @command
     def perform_operation(self, operation_name):
         """
         Performs the specified operation on the data and caches the result.
@@ -53,6 +56,7 @@ class DataEngineOptimized(UnifiedDataEngine):
         self._logger.debug("Operation performed and result cached")
         return result
 
+    @command
     def _apply_operation(self, df, operation_name):
         """
         Applies the specified operation to a partition of the data.

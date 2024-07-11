@@ -15,6 +15,7 @@ from typing import Tuple, Optional, Any
 import aiofiles
 from collections import defaultdict
 
+from research_analytics_suite.commands import register_commands, command
 from research_analytics_suite.library_manifest import LibraryManifest
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.memory.DataCache import DataCache
@@ -26,6 +27,7 @@ from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 
 
+@register_commands
 class Workspace:
     """
     A class to manage multiple data engines, allowing flexible interaction with specific datasets.
@@ -75,6 +77,7 @@ class Workspace:
                     self._logger.debug("Workspace initialized successfully")
                     self._initialized = True
 
+    @command
     def add_data_engine(self, data_engine):
         """
         Adds a data engine and its metadata to the workspace.
@@ -85,6 +88,7 @@ class Workspace:
         self._data_engines[data_engine.runtime_id] = data_engine
         self._logger.debug(f"Data engine '{self._data_engines[data_engine.runtime_id].short_id}' added to workspace")
 
+    @command
     def remove_data_engine(self, name):
         """
         Removes a data engine and its metadata from the workspace.
@@ -103,6 +107,7 @@ class Workspace:
 
         self._logger.debug(f"Data engine '{name}' removed from workspace")
 
+    @command
     def get_data_engine(self, name):
         """
         Retrieves a data engine by name.
@@ -115,6 +120,7 @@ class Workspace:
         """
         return self._data_engines.get(name, None)
 
+    @command
     def get_default_data_engine(self):
         """
         Retrieves the default data engine.
@@ -124,6 +130,7 @@ class Workspace:
         """
         return next(iter(self._data_engines.values()), None)
 
+    @command
     async def create_workspace(self, workspace_directory, workspace_name):
         """
         Creates a new workspace with the specified parameters.
@@ -144,8 +151,9 @@ class Workspace:
             new_workspace = await self.save_current_workspace()
             return await self.load_workspace(os.path.normpath(os.path.join(f"{new_workspace}", 'config.json')))
         except Exception as e:
-            self._logger.error(e, 'Failed to create workspace')
+            self._logger.error(e, self.__class__.__name__)
 
+    @command
     async def save_current_workspace(self) -> str:
         """
         Saves the current workspace to the directory specified in the configuration.
@@ -193,8 +201,10 @@ class Workspace:
 
         except Exception as e:
             self._logger.error(Exception(f"Failed to save current workspace: {e}"), self.__class__.__name__)
+            return ""
 
-    async def load_workspace(self, workspace_path) -> 'Workspace':
+    @command
+    async def load_workspace(self, workspace_path) -> 'Workspace' or None:
         """
         Loads a workspace from the specified directory.
 
@@ -206,7 +216,9 @@ class Workspace:
         """
         try:
             if not os.path.exists(workspace_path):
-                raise FileNotFoundError(f"Workspace directory not found: {workspace_path}")
+                self._logger.error(FileNotFoundError(f"Workspace directory not found: {workspace_path}"),
+                                   self.__class__.__name__)
+                return None
 
             if workspace_path.endswith('config.json'):
                 workspace_path = os.path.dirname(workspace_path)
@@ -217,7 +229,9 @@ class Workspace:
             self._config = await self._config.reload_from_file(os.path.join(workspace_path, 'config.json'))
 
             if not self._config:
-                raise ValueError(f"Failed to load configuration from {workspace_path}")
+                self._logger.error(ValueError(f"Failed to load configuration from {workspace_path}"),
+                                   self.__class__.__name__)
+                return None
 
             self.__init__()
             await self.initialize(config=self._config)
@@ -244,6 +258,7 @@ class Workspace:
         self._initialized = False
 
     # Methods to interact with MemorySlotCollections
+    @command
     def add_memory_collection(self, collection: MemorySlotCollection):
         """
         Adds a new MemorySlotCollection to the workspace.
@@ -254,9 +269,10 @@ class Workspace:
         try:
             self._memory_manager.add_collection(collection=collection)
         except Exception as e:
-            self._logger.error(Exception(f"Failed to add MemorySlotCollection: {e}"), self)
+            self._logger.error(Exception(f"Failed to add MemorySlotCollection: {e}"), self.__class__.__name__)
 
-    async def get_memory_collection(self, collection_id: str) -> MemorySlotCollection:
+    @command
+    async def get_memory_collection(self, collection_id: str) -> MemorySlotCollection or None:
         """
         Retrieves a MemorySlotCollection by its ID from the workspace.
 
@@ -269,8 +285,10 @@ class Workspace:
         try:
             return self._memory_manager.get_collection(collection_id=collection_id)
         except Exception as e:
-            self._logger.error(Exception(f"Failed to get MemorySlotCollection: {e}"), self)
+            self._logger.error(Exception(f"Failed to get MemorySlotCollection: {e}"), self.__class__.__name__)
+            return None
 
+    @command
     async def remove_memory_collection(self, collection_id: str):
         """
         Removes a MemorySlotCollection by its ID from the workspace.
@@ -281,8 +299,9 @@ class Workspace:
         try:
             await self._memory_manager.remove_collection(collection_id=collection_id)
         except Exception as e:
-            self._logger.error(Exception(f"Failed to remove MemorySlotCollection: {e}"), self)
+            self._logger.error(Exception(f"Failed to remove MemorySlotCollection: {e}"), self.__class__.__name__)
 
+    @command
     async def list_memory_collections(self) -> dict:
         """
         Lists all MemorySlotCollections in the workspace.
@@ -293,10 +312,12 @@ class Workspace:
         try:
             return await self._memory_manager.list_collections()
         except Exception as e:
-            self._logger.error(Exception(f"Failed to list MemorySlotCollections: {e}"), self)
+            self._logger.error(Exception(f"Failed to list MemorySlotCollections: {e}"), self.__class__.__name__)
+            return {}
 
+    @command
     async def add_variable_to_collection(self, collection_id: str, name: str, value: Any, data_type: type,
-                                         memory_slot_id: Optional[str] = None) -> Tuple[str, dict]:
+                                         memory_slot_id: Optional[str] = None) -> Tuple[str, dict] or None:
         collection_id = collection_id or self._memory_manager.get_default_collection_id()
         try:
             collection = self._memory_manager.get_collection(collection_id)
@@ -304,7 +325,9 @@ class Workspace:
                 if memory_slot_id:
                     slot = collection.get_slot(memory_slot_id)
                     if not slot:
-                        raise ValueError(f"MemorySlot with ID {memory_slot_id} not found")
+                        self._logger.error(ValueError(f"MemorySlot with ID {memory_slot_id} not found"),
+                                           self.__class__.__name__)
+                        return None
                 else:
                     slot = MemorySlot(memory_id=str(uuid.uuid4()), name=name, operation_required=True, data={})
                     collection.add_slot(slot)
@@ -312,10 +335,14 @@ class Workspace:
                 await slot.set_data_by_key(name, value, data_type)
                 return slot.memory_id, {name: value}
             else:
-                raise ValueError(f"Collection with ID {collection_id} not found")
+                self._logger.error(ValueError(f"Collection with ID {collection_id} not found"), self.__class__.__name__)
+                return None
         except Exception as e:
-            self._logger.error(Exception(f"Failed to add variable '{name}' to collection '{collection_id}': {e}"), self)
+            self._logger.error(Exception(f"Failed to add variable '{name}' to collection '{collection_id}': {e}"),
+                               self.__class__.__name__)
+            return None
 
+    @command
     async def get_variable_from_collection(self, collection_id: str, name: str,
                                            memory_slot_id: Optional[str] = None) -> Any:
         collection_id = collection_id or self._memory_manager.get_default_collection_id()
@@ -326,20 +353,26 @@ class Workspace:
                     slot = collection.get_slot(memory_slot_id)
                     if slot:
                         return await slot.get_data_by_key(name)
-                    raise KeyError(f"Variable '{name}' not found in MemorySlot '{memory_slot_id}'")
+                    self._logger.error(KeyError(f"Variable '{name}' not found in MemorySlot '{memory_slot_id}'"),
+                                       self.__class__.__name__)
+                    return
                 else:
                     if collection.list_slots():
                         for slot in collection.list_slots():
                             if await slot.has_key(name):
                                 return await slot.get_data_by_key(name)
                     else:
-                        raise KeyError(f"Variable '{name}' not found in collection '{collection_id}'")
+                        self._logger.error(KeyError(f"Variable '{name}' not found in collection '{collection_id}'"),
+                                           self.__class__.__name__)
+                        return
             else:
-                raise ValueError(f"Collection with ID {collection_id} not found")
+                self._logger.error(ValueError(f"Collection with ID {collection_id} not found"), self.__class__.__name__)
+                return
         except Exception as e:
             self._logger.error(Exception(f"Failed to get variable '{name}' from collection '{collection_id}': {e}"),
-                               self)
+                               self.__class__.__name__)
 
+    @command
     async def remove_variable_from_collection(self, collection_id: str, name: str,
                                               memory_slot_id: Optional[str] = None):
         collection_id = collection_id or self._memory_manager.get_default_collection_id()
@@ -351,7 +384,9 @@ class Workspace:
                     if slot:
                         await slot.remove_data_by_key(name)
                         return
-                    raise KeyError(f"Variable '{name}' not found in MemorySlot '{memory_slot_id}'")
+                    self._logger.error(KeyError(f"Variable '{name}' not found in MemorySlot '{memory_slot_id}'"),
+                                       self.__class__.__name__)
+                    return
                 else:
                     if collection.list_slots():
                         for slot in collection.list_slots():
@@ -359,16 +394,22 @@ class Workspace:
                                 await slot.remove_data_by_key(name)
                                 return
                             else:
-                                raise KeyError(f"Variable '{name}' not found in collection '{collection_id}'"
-                                               f", MemorySlot '{slot.memory_id}'")
+                                self._logger.error(KeyError(f"Variable '{name}' not found in collection "
+                                                            f"'{collection_id}', MemorySlot '{slot.memory_id}'"),
+                                                   self.__class__.__name__)
+                                return
                     else:
-                        raise KeyError(f"Variable '{name}' not found in collection '{collection_id}'")
+                        self._logger.error(KeyError(f"Variable '{name}' not found in collection '{collection_id}'"),
+                                           self.__class__.__name__)
+                        return
             else:
-                raise ValueError(f"Collection with ID {collection_id} not found")
+                self._logger.error(ValueError(f"Collection with ID {collection_id} not found"), self.__class__.__name__)
+                return
         except Exception as e:
             self._logger.error(Exception(f"Failed to remove variable '{name}' from collection '{collection_id}': {e}"),
                                self.__class__.__name__)
 
+    @command
     async def save_memory_manager(self, file_path):
         """
         Saves the user variables database to the specified file.
@@ -397,8 +438,9 @@ class Workspace:
             self._logger.info(f"Memory Management saved to {file_path}")
 
         except Exception as e:
-            self._logger.error(Exception(f"Failed to save Memory Management: {e}"), self)
+            self._logger.error(Exception(f"Failed to save Memory Management: {e}"), self.__class__.__name__)
 
+    @command
     async def restore_memory_manager(self, file_path):
         """
         Restores a serialized MemorySlotCollection object from the specified save file.
@@ -408,7 +450,9 @@ class Workspace:
         """
         try:
             if not os.path.exists(file_path):
-                raise FileNotFoundError(f"Memory bank file not found: {file_path}")
+                self._logger.error(FileNotFoundError(f"Memory bank file not found: {file_path}"),
+                                   self.__class__.__name__)
+                return
 
             async with aiofiles.open(file_path, 'r') as src:
                 collections_data = json.loads(await src.read())
@@ -418,9 +462,10 @@ class Workspace:
 
             self._logger.info(f"Memory restored from {file_path}")
         except Exception as e:
-            self._logger.error(Exception(f"Failed to restore memory bank: {e}"), self)
+            self._logger.error(Exception(f"Failed to restore memory bank: {e}"), self.__class__.__name__)
 
 
+@command
 def remove_non_serializable(obj):
     if isinstance(obj, dict):
         for v in obj.values():
@@ -438,6 +483,7 @@ def remove_non_serializable(obj):
     return obj
 
 
+@command
 def is_serializable(obj):
     try:
         json.dumps(obj, indent=4)

@@ -15,9 +15,11 @@ Status: Prototype
 import asyncio
 from typing import Any
 
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.operation_manager import BaseOperation
 
 
+@register_commands
 class OperationAttributes:
     _lock = asyncio.Lock()
     _TYPES_DICT = {
@@ -88,6 +90,7 @@ class OperationAttributes:
 
                     self._initialized = True
 
+    @command
     def export_attributes(self) -> dict:
         return {
             'name': self.name,

@@ -18,6 +18,7 @@ import uuid
 from abc import ABC
 from typing import Tuple, final
 
+from research_analytics_suite.commands import command, register_commands
 from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
 from .execution import execute_operation, execute_inherited_operations
 from .progress import update_progress
@@ -27,6 +28,7 @@ from .inheritance import (add_child_operation, link_child_operation, remove_chil
 from .workspace import save_operation_in_workspace, load_from_disk, load_operation_group, from_dict
 
 
+@register_commands
 class BaseOperation(ABC):
     """
     An Abstract Base Class that defines a common interface for all operations. The BaseOperation class provides a set
@@ -358,56 +360,67 @@ class BaseOperation(ABC):
         """
         await execute_inherited_operations(self)
 
+    @command
     @final
     async def add_memory_input_slot(self, memory_slot):
         """Add a memory input slot."""
         self.memory_inputs.add_slot(memory_slot)
 
+    @command
     @final
     async def remove_memory_input_slot(self, memory_id):
         """Remove a memory input slot by its ID."""
         await self.memory_inputs.remove_slot(memory_id)
 
+    @command
     @final
     def get_memory_input_slot(self, memory_id):
         """Get a memory input slot by its ID."""
         return self.memory_inputs.get_slot(memory_id)
 
+    @command
     @final
     def get_memory_input_slot_data(self, memory_id):
         """Get the data of a memory input slot by its ID."""
         return self.memory_inputs.get_slot_data(memory_id)
 
+    @command
     @final
     async def add_memory_output_slot(self, memory_slot):
         """Add a memory output slot."""
         self.memory_outputs.add_slot(memory_slot)
 
+    @command
     @final
     async def remove_memory_output_slot(self, memory_id):
         """Remove a memory output slot by its ID."""
         await self.memory_outputs.remove_slot(memory_id)
 
+    @command
     @final
     def get_memory_output_slot(self, memory_id):
         """Get a memory output slot by its ID."""
         return self.memory_outputs.get_slot(memory_id)
 
+    @command
     @final
     def get_memory_output_slot_data(self, memory_id):
         """Get the data of a memory output slot by its ID."""
         return self.memory_outputs.get_slot_data(memory_id)
 
+    @command
     async def validate_memory_inputs(self):
         """Validate all memory inputs."""
         if self.memory_inputs is not None:
             await self.memory_inputs.validate_inputs()
 
+    @command
     async def validate_memory_outputs(self):
         """Validate all memory outputs."""
         if self.memory_outputs is not None:
             await self.memory_outputs.validate_results()
 
+    @command
     @final
     async def get_results_from_memory(self) -> dict:
         """
@@ -418,10 +431,12 @@ class BaseOperation(ABC):
         """
         return await self.memory_outputs.aggregate_results()
 
+    @command
     async def clear_memory_inputs(self):
         """Clear all memory inputs."""
         await self.memory_inputs.clear_slots()
 
+    @command
     async def clear_memory_outputs(self):
         """Clear all memory outputs."""
         await self.memory_outputs.clear_slots()
@@ -801,6 +816,7 @@ class BaseOperation(ABC):
         except Exception as e:
             self.handle_error(e)
 
+    @command
     def add_log_entry(self, message):
         """
         Log a message to the GUI.

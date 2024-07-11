@@ -12,9 +12,11 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.data_engine.data_streams import BaseInput
 
 
+@register_commands
 class AnalogInput(BaseInput):
     """
     Class for handling live data input from an analog source.
@@ -32,6 +34,7 @@ class AnalogInput(BaseInput):
         super().__init__(source="Analog")
         self.read_function = read_function
 
+    @command
     def read_data(self):
         """
         Reads data from the analog source.

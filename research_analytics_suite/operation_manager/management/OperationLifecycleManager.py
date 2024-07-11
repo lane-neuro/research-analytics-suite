@@ -16,6 +16,7 @@ Status: Prototype
 
 import asyncio
 
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.execution.OperationExecutor import OperationExecutor
 from research_analytics_suite.operation_manager.management.OperationSequencer import OperationSequencer
@@ -23,6 +24,7 @@ from research_analytics_suite.operation_manager.task.TaskMonitor import TaskMoni
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
+@register_commands
 class OperationLifecycleManager:
     """Manages the lifecycle of operations."""
 
@@ -60,6 +62,7 @@ class OperationLifecycleManager:
                     await operation.initialize_operation()
                     await operation.start()
 
+    @command
     async def stop_all_operations(self):
         """Stops all operations in the sequencer."""
         for operation_node in self.sequencer.sequencer:

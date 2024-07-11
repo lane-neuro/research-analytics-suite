@@ -7,10 +7,12 @@ Author: Lane
 """
 from typing import Tuple
 
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.data_engine.memory.storage.BaseStorage import BaseStorage
 from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 
 
+@register_commands
 class MemoryStorage(BaseStorage):
     """
     In-memory storage implementation for memory slot collections.
@@ -25,6 +27,7 @@ class MemoryStorage(BaseStorage):
         # No setup required for in-memory storage
         pass
 
+    @command
     async def add_collection(self, collection: MemorySlotCollection):
         """
         Adds a new MemorySlotCollection to the in-memory storage.
@@ -35,6 +38,7 @@ class MemoryStorage(BaseStorage):
         self.collections[collection.collection_id] = collection
         self._logger.debug(f"[MemoryStorage] Added collection: {collection.display_name}")
 
+    @command
     async def get_collection(self, collection_id: str) -> MemorySlotCollection:
         """
         Retrieves a MemorySlotCollection by its ID from the in-memory storage.
@@ -47,6 +51,7 @@ class MemoryStorage(BaseStorage):
         """
         return self.collections.get(collection_id)
 
+    @command
     async def remove_collection(self, collection_id: str):
         """
         Removes a MemorySlotCollection by its ID from the in-memory storage.
@@ -58,6 +63,7 @@ class MemoryStorage(BaseStorage):
             del self.collections[collection_id]
             self._logger.debug(f"[MemoryStorage] Removed collection with ID: {collection_id}")
 
+    @command
     async def list_collections(self) -> dict:
         """
         Lists all MemorySlotCollections from the in-memory storage.

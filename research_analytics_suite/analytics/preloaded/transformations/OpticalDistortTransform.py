@@ -13,7 +13,10 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from research_analytics_suite.commands import register_commands, command
 
+
+@register_commands
 class OpticalDistortTransform:
     """
     A class to apply an optical distortion transformation to a given datapoint.
@@ -61,6 +64,7 @@ class OpticalDistortTransform:
         """
         return f"OpticalDistortTransform, k1 = {self.k1}"
 
+    @command
     def transform(self, datapoint):
         """
         Applies the optical distortion transformation to the given datapoint.

@@ -16,7 +16,10 @@ Status: Prototype
 
 import math
 
+from research_analytics_suite.commands import register_commands, command
 
+
+@register_commands
 class RotateTransform:
     """
     A class to apply a rotation transformation to a given datapoint.
@@ -50,6 +53,7 @@ class RotateTransform:
 
         return f"RotateTransform, theta = {self.theta}"
 
+    @command
     def transform(self, datapoint):
         """
         Applies the rotation transformation to the given datapoint.

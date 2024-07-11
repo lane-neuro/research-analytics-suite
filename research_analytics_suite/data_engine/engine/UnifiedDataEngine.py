@@ -17,6 +17,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 
 from research_analytics_suite.analytics.core.AnalyticsCore import AnalyticsCore
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.core.DaskData import DaskData
 from research_analytics_suite.data_engine.memory.DataCache import DataCache
@@ -25,6 +26,7 @@ from research_analytics_suite.data_engine.data_streams.BaseInput import BaseInpu
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
+@command
 def flatten_json(y: Dict[str, Any]) -> Dict[str, Any]:
     """
     Flattens a nested JSON dictionary.
@@ -53,6 +55,7 @@ def flatten_json(y: Dict[str, Any]) -> Dict[str, Any]:
     return out
 
 
+@register_commands
 class UnifiedDataEngine:
     """
     A class that combines functionalities from DaskData and TorchData.
@@ -147,6 +150,7 @@ class UnifiedDataEngine:
         """
         return f"{self.data_name}_{self.engine_id[:4]}"
 
+    @command
     def detect_data_row(self, file_path, data_type):
         def is_numerical(_row):
             return all(self.is_number(_cell) for _cell in _row)
@@ -178,6 +182,7 @@ class UnifiedDataEngine:
         raise ValueError(f"Unsupported data type: {data_type}")
 
     @staticmethod
+    @command
     def is_number(value):
         try:
             float(value)
@@ -185,6 +190,7 @@ class UnifiedDataEngine:
         except ValueError:
             return False
 
+    @command
     def load_data(self, file_path, return_type='dict'):
         data_type = os.path.splitext(file_path)[1][1:]
         self._logger.info(f"Loading data from {file_path} as {data_type}")
@@ -221,6 +227,7 @@ class UnifiedDataEngine:
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
 
+    @command
     def save_data(self, file_path):
         """
         Saves data to the specified file path.
@@ -248,6 +255,7 @@ class UnifiedDataEngine:
 
         self._logger.debug("Data saved")
 
+    @command
     async def save_engine(self, instance_path):
         engine_path = os.path.join(instance_path, self._config.ENGINE_DIR, self.engine_id)
         os.makedirs(engine_path, exist_ok=True)
@@ -278,6 +286,7 @@ class UnifiedDataEngine:
         self._logger.debug(f"Engine saved to {instance_path}")
 
     @staticmethod
+    @command
     async def load_engine(instance_path, engine_id):
         engine_path = os.path.join(instance_path, engine_id)
 
@@ -300,6 +309,7 @@ class UnifiedDataEngine:
         engine.data = data
         return engine
 
+    @command
     def set_backend(self, backend):
         """
         Sets the backend for the data engine.
@@ -311,6 +321,7 @@ class UnifiedDataEngine:
             raise ValueError("Backend must be either 'dask' or 'torch'")
         self.backend = backend
 
+    @command
     def apply(self, action):
         """
         Applies a function to the data.
@@ -323,6 +334,7 @@ class UnifiedDataEngine:
         elif self.backend == 'torch':
             self.torch_data = TorchData(action(self.torch_data.get_data()))
 
+    @command
     def compute(self):
         """
         Computes the result for the data.
@@ -335,6 +347,7 @@ class UnifiedDataEngine:
         elif self.backend == 'torch':
             return self.torch_data.get_data()
 
+    @command
     def get_torch_loader(self, batch_size=32, shuffle=True):
         """
         Gets a PyTorch DataLoader for the data.
@@ -351,6 +364,7 @@ class UnifiedDataEngine:
         else:
             raise RuntimeError("DataLoader is only available for 'torch' backend")
 
+    @command
     def get_pickleable_data(self):
         data = self.__dict__.copy()
         data.pop('_logger', None)
@@ -380,12 +394,14 @@ class UnifiedDataEngine:
         """
         return self.data_cache.get(key)
 
+    @command
     def clear_cache(self):
         """
         Clears all cached data.
         """
         self.data_cache.clear()
 
+    @command
     def set_live_input(self, live_input: BaseInput):
         """
         Sets the live input source.
@@ -395,6 +411,7 @@ class UnifiedDataEngine:
         """
         self.live_input_source = live_input
 
+    @command
     def read_live_data(self):
         """
         Reads data from the live input source.
@@ -406,6 +423,7 @@ class UnifiedDataEngine:
             return self.live_input_source.read_data()
         return None
 
+    @command
     def close_live_input(self):
         """
         Closes the live input source.

@@ -8,9 +8,11 @@ Author: Lane
 """
 import asyncio
 
+from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 
 
+@register_commands
 class MemoryManager:
     """
     A class to manage memory slot collections within the workspace using a specified storage backend.
@@ -61,11 +63,13 @@ class MemoryManager:
         else:
             self.default_collection = next(iter(self.memory_slot_collections.values()))
 
+    @command
     def get_default_collection_id(self) -> str:
         if not self.default_collection:
             asyncio.create_task(self.initialize_default_collection())
         return self.default_collection.collection_id
 
+    @command
     def add_collection(self, collection: MemorySlotCollection):
         """
         Adds a new MemorySlotCollection.
@@ -93,6 +97,7 @@ class MemoryManager:
 
             self.memory_slot_collections[collection.collection_id] = collection
 
+    @command
     def get_collection(self, collection_id: str) -> MemorySlotCollection:
         """
         Retrieves a MemorySlotCollection by its ID.
@@ -113,6 +118,7 @@ class MemoryManager:
             self._data_cache.set(collection_id, collection)
         return collection
 
+    @command
     def get_collection_by_display_name(self, collection_name: str) -> MemorySlotCollection:
         """
         Retrieves a MemorySlotCollection by its display name.
@@ -128,6 +134,7 @@ class MemoryManager:
                 self._data_cache.set(collection.collection_id, collection)  # Update cache to keep it fresh
                 return collection
 
+    @command
     async def remove_collection(self, collection_id: str):
         """
         Removes a MemorySlotCollection by its ID.
@@ -146,6 +153,7 @@ class MemoryManager:
         else:
             self._logger.error(Exception(f"No collection found with ID: {collection_id}"), self.__class__.__name__)
 
+    @command
     async def list_collections(self) -> dict:
         """
         Lists all MemorySlotCollections.

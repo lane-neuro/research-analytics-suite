@@ -15,7 +15,10 @@ Status: Prototype
 import asyncio
 import os
 
+from research_analytics_suite.commands import command
 
+
+@command
 async def add_child_operation(operation, child_operation):
     """
     Add a child operation to the current operation.
@@ -47,6 +50,7 @@ async def add_child_operation(operation, child_operation):
     operation.add_log_entry(f"[CHILD] (added) {child_operation.name}")
 
 
+@command
 async def link_child_operation(operation, child_operation):
     """
     Link a child operation to the current operation.
@@ -73,6 +77,7 @@ async def link_child_operation(operation, child_operation):
     return True
 
 
+@command
 async def remove_child_operation(operation, child_operation):
     """
     Remove a child operation from the current operation.

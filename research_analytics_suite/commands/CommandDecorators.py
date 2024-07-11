@@ -10,8 +10,8 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from __future__ import annotations
 import inspect
-from typing import get_type_hints
 
 temp_command_registry = []
 
@@ -26,8 +26,8 @@ def register_commands(cls):
     for method_name, method in inspect.getmembers(cls, predicate=inspect.isfunction):
         if hasattr(method, '_is_command'):
             sig = inspect.signature(method)
-            type_hints = get_type_hints(method)
-            args = [{'name': param, 'type': type_hints.get(param, str)} for param in sig.parameters if param not in
+            type_hints = method.__annotations__
+            args = [{'name': param, 'type': type_hints.get(param, any)} for param in sig.parameters if param not in
                     ('self', 'cls')]
             return_type = type_hints.get('return', None)
 
@@ -39,14 +39,14 @@ def register_commands(cls):
                     'class_name': class_name,
                     'args': args,
                     'return_type': return_type,
-                    'is_method': True if 'self' in sig.parameters or 'cls' in sig.parameters else False
+                    'is_method': 'self' in sig.parameters or 'cls' in sig.parameters
                 })
             else:
                 for cmd_meta in temp_command_registry:
                     if cmd_meta['func'] == method:
                         cmd_meta['name'] = method.__name__
                         cmd_meta['class_name'] = class_name
-                        cmd_meta['is_method'] = True if 'self' in sig.parameters or 'cls' in sig.parameters else False
+                        cmd_meta['is_method'] = 'self' in sig.parameters or 'cls' in sig.parameters
     return cls
 
 
@@ -59,12 +59,9 @@ def command(func=None):
     def wrapper(f):
         # Auto-detect arguments and return type
         sig = inspect.signature(f)
-        try:
-            type_hints = get_type_hints(f)
-        except NameError as e:
-            raise TypeError(f"Invalid type hint in function {f.__name__}: {e}")
+        type_hints = f.__annotations__
 
-        args = [{'name': param, 'type': type_hints.get(param, str)} for param in sig.parameters if
+        args = [{'name': param, 'type': type_hints.get(param, any)} for param in sig.parameters if
                 param not in ('self', 'cls')]
         return_type = type_hints.get('return', None)
 

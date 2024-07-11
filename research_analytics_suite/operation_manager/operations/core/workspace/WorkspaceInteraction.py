@@ -15,10 +15,11 @@ Status: Prototype
 
 import json
 import os
-
 import aiofiles
+from research_analytics_suite.commands import command
 
 
+@command
 def pack_as_local_reference(operation) -> dict:
     """Provide a reference to the unique_id, name, and version of the operation."""
     return {
@@ -32,6 +33,7 @@ def pack_as_local_reference(operation) -> dict:
     }
 
 
+@command
 def pack_for_save(operation) -> dict:
     """Provide a dictionary representation of the operation."""
 
@@ -58,6 +60,7 @@ def pack_for_save(operation) -> dict:
     }
 
 
+@command
 async def save_operation_in_workspace(operation, overwrite: bool = False):
     """
     Save the BaseOperation object to disk.

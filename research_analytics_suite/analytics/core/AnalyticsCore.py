@@ -14,8 +14,10 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from research_analytics_suite.commands import register_commands, command
 
 
+@register_commands
 class AnalyticsCore:
     """
     A class to apply a series of transformations to a given datapoint.
@@ -65,6 +67,7 @@ class AnalyticsCore:
         self.__dict__.update(state)
         self._logger = None
 
+    @command
     def transform(self, datapoint):
         """
         Applies all transformations to the given datapoint.
@@ -82,6 +85,7 @@ class AnalyticsCore:
             datapoint = transformation.transform(datapoint)
         return datapoint
 
+    @command
     def add_transformation(self, transformation):
         """
         Adds a transformation to the list of transformations.
