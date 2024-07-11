@@ -4,8 +4,7 @@ import pytest
 import time
 import asyncio
 import pytest_asyncio
-from mmap import mmap
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import os
 
 from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot, DATA_SIZE_THRESHOLD
@@ -219,3 +218,86 @@ class TestMemorySlot:
         serialized_data = self.memory_slot.serialize(data)
         deserialized_data = self.memory_slot.deserialize(serialized_data, str)
         assert deserialized_data == data
+
+    # Additional tests for error handling and edge cases
+
+    @pytest.mark.asyncio
+    async def test_set_data_invalid_key_type(self):
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            await self.memory_slot.set_data_by_key(123, "value", str)
+            mock_logger.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_set_data_invalid_value_type(self):
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            await self.memory_slot.set_data_by_key("key4", 123, str)
+            mock_logger.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_remove_non_existent_key(self):
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            await self.memory_slot.remove_data_by_key("non_existent_key")
+            mock_logger.assert_not_called()  # Should not call logger.error for non-existent keys
+
+    @pytest.mark.asyncio
+    async def test_merge_invalid_key_type(self):
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            await self.memory_slot.merge_data({123: (int, 123)})
+            mock_logger.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_merge_invalid_value_type(self):
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            await self.memory_slot.merge_data({"key4": (str, 123)})
+            mock_logger.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_update_invalid_key_type(self):
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            await self.memory_slot.update_data({123: (int, 123)})
+            mock_logger.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_update_invalid_value_type(self):
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            await self.memory_slot.update_data({"key4": (str, 123)})
+            mock_logger.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_data_keys_empty(self):
+        empty_memory_slot = MemorySlot(memory_id="empty_slot", name="Empty Slot", operation_required=True, data={})
+        keys = await empty_memory_slot.data_keys()
+        assert keys == []
+
+    @pytest.mark.asyncio
+    async def test_data_values_empty(self):
+        empty_memory_slot = MemorySlot(memory_id="empty_slot", name="Empty Slot", operation_required=True, data={})
+        values = await empty_memory_slot.data_values()
+        assert values == []
+
+    @pytest.mark.asyncio
+    async def test_data_items_empty(self):
+        empty_memory_slot = MemorySlot(memory_id="empty_slot", name="Empty Slot", operation_required=True, data={})
+        items = await empty_memory_slot.data_items()
+        assert items == []
+
+    def test_memory_slot_initialization_invalid_data(self):
+        with patch('research_analytics_suite.utils.CustomLogger', autospec=True) as MockLogger:
+            mock_logger_instance = MockLogger.return_value
+            invalid_data = {"key1": (int, "string_instead_of_int")}
+            memory_slot = MemorySlot(memory_id="test_slot", name="Test Slot", operation_required=True, data=invalid_data)
+            mock_logger_instance.error.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_load_from_disk_invalid_data(self):
+        with pytest.raises(ValueError):
+            data = {
+                "memory_id": "test_slot",
+                "name": "Test Slot",
+                "operation_required": True,
+                "data": {"key1": (int, "string_instead_of_int")},
+                "metadata": {},
+                "created_at": time.time(),
+                "modified_at": time.time()
+            }
+            await MemorySlot.load_from_disk(data)

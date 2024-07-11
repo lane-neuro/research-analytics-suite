@@ -1,4 +1,3 @@
-import builtins
 import sys
 import time
 import asyncio
@@ -6,6 +5,7 @@ from mmap import mmap
 from typing import Any, Type, Tuple, Dict
 
 DATA_SIZE_THRESHOLD = 1024 * 1024  # 1 MB
+
 
 class MemorySlot:
     """
