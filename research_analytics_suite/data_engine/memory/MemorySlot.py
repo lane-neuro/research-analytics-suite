@@ -222,9 +222,14 @@ class MemorySlot:
         try:
             if isinstance(value, str):
                 return value.encode('utf-8')
-            return str(value).encode('utf-8')
+            elif isinstance(value, (int, float)):
+                return str(value).encode('utf-8')
+            elif isinstance(value, bytes):
+                return value
+            else:
+                raise TypeError(f"Unsupported data type: {type(value).__name__}")
         except Exception as e:
-            self._logger.error(e, self.__class__.__name__)
+            self._logger.error(Exception(f"Serialization error for value '{value}': {e}", self.__class__.__name__))
             return b''
 
     def deserialize(self, value, data_type):

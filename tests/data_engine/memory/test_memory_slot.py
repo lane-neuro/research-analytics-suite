@@ -4,7 +4,7 @@ import pytest
 import time
 import asyncio
 import pytest_asyncio
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, call
 import os
 
 from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot, DATA_SIZE_THRESHOLD
@@ -301,3 +301,92 @@ class TestMemorySlot:
                 "modified_at": time.time()
             }
             await MemorySlot.load_from_disk(data)
+
+    def test_data_invalid_key_type(self):
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            self.memory_slot.data = {123: (int, 456)}
+            mock_logger.assert_called()
+
+    def test_data_invalid_value_type(self):
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            self.memory_slot.data = {"key3": (int, "not_an_int")}
+            mock_logger.assert_called()
+
+    def test_init_mmap_exception(self):
+        with patch.object(self.memory_slot, '_file_path', None):
+            with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+                self.memory_slot.init_mmap()
+                mock_logger.assert_called()
+
+        with patch('builtins.open', side_effect=Exception("File open error")):
+            with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+                self.memory_slot.init_mmap()
+                mock_logger.assert_called()
+
+    def test_serialize_exception(self):
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            result = self.memory_slot.serialize(object())
+            mock_logger.assert_called()
+            assert result == b''
+
+    def test_dump_data_to_mmap_exception(self):
+        with patch.object(self.memory_slot, '_mmapped_file', None):
+            with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+                self.memory_slot.dump_data_to_mmap()
+                mock_logger.assert_called()
+
+        with patch.object(self.memory_slot, '_mmapped_file', new_callable=MagicMock) as mock_mmap:
+            mock_mmap.__setitem__.side_effect = Exception("MMAP write error")
+            with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+                self.memory_slot.dump_data_to_mmap()
+                mock_logger.assert_called()
+
+    def test_deserialize_exception(self):
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            result = self.memory_slot.deserialize(b'invalid_data', int)
+            mock_logger.assert_called()
+            assert result is None
+
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            result = self.memory_slot.deserialize(b'invalid_data', 'invalid_type')
+            mock_logger.assert_called()
+            assert result is None
+
+    def test_update_modified_time_invalid_key(self):
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            self.memory_slot.data = {123: (int, 456)}
+            mock_logger.assert_called()
+
+        with patch.object(self.memory_slot._logger, 'error') as mock_logger:
+            self.memory_slot.data = {"key1": "invalid_data"}
+            mock_logger.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_get_data_type_by_key(self):
+        assert await self.memory_slot.get_data_type_by_key("key1") == int
+        assert await self.memory_slot.get_data_type_by_key("key2") == str
+
+    @pytest.mark.asyncio
+    async def test_remove_data_by_key(self):
+        await self.memory_slot.remove_data_by_key("key1")
+        assert "key1" not in self.memory_slot.data
+
+    @pytest.mark.asyncio
+    async def test_load_from_disk_else(self):
+        data = {
+            "memory_id": "test_slot",
+            "name": "Test Slot",
+            "operation_required": True,
+            "data": {"key1": (int, 123), "key2": 456},
+            "metadata": {},
+            "created_at": time.time(),
+            "modified_at": time.time()
+        }
+        slot = await MemorySlot.load_from_disk(data)
+        assert slot.data["key2"] == (int, 456)
+
+    # Test case for all valid keys
+    def test_data_all_valid_keys(self):
+        valid_data = {"key1": (int, 456), "key2": (str, "value")}
+        self.memory_slot.data = valid_data
+        assert self.memory_slot.data.items() == valid_data.items()
