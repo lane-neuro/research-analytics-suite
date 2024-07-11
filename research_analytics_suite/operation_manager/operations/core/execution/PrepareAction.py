@@ -29,7 +29,7 @@ def action_serialized(action) -> str:
         return action
     elif callable(action):
         try:
-            source = inspect.getsource(action)
+            source = inspect.getsource(action).strip()
             return source
         except (TypeError, OSError):
             try:
@@ -43,6 +43,7 @@ def action_serialized(action) -> str:
         return f"<property object at {hex(id(action))}>"
     else:
         return repr(action)
+
 
 
 async def prepare_action_for_exec(operation):
@@ -123,7 +124,7 @@ async def _execute_code_action(code: str, memory_inputs: list = None) -> Callabl
     return action
 
 
-def _execute_callable_action(t_action, memory_inputs: list = None) -> Callable[[], Any]:
+def _execute_callable_action(t_action, memory_inputs: list = None):
     """
     Execute a callable action.
 
@@ -138,8 +139,8 @@ def _execute_callable_action(t_action, memory_inputs: list = None) -> Callable[[
     def action() -> Any:
         inputs = {slot.name: slot.data for slot in memory_inputs} if memory_inputs else {}
         # Extract the actual data values from the MemorySlot tuples
-        inputs = {k: v[1] for k, v in inputs.items()}
-        _output = t_action(*inputs)
+        inputs = {k: v for k, (t, v) in inputs.items()}
+        _output = t_action(*inputs.values())
         if _output is not None:
             return _output
         return
