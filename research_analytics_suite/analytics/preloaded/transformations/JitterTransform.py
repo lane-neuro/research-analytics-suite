@@ -15,7 +15,6 @@ Status: Prototype
 """
 import numpy as np
 
-
 class JitterTransform:
     """
     A class to apply a jitter transformation to a given datapoint.
@@ -65,7 +64,13 @@ class JitterTransform:
 
         Returns:
             The transformed datapoint.
+
+        Raises:
+            TypeError: If datapoint.x or datapoint.y are not numeric.
         """
+        if not isinstance(datapoint.x, (int, float)) or not isinstance(datapoint.y, (int, float)):
+            raise TypeError("datapoint.x and datapoint.y must be numeric")
+
         datapoint.x += np.random.uniform(-self.jitter_strength, self.jitter_strength)
         datapoint.y += np.random.uniform(-self.jitter_strength, self.jitter_strength)
         return datapoint

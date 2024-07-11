@@ -1,6 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
-import numpy as np
+from unittest.mock import patch
 
 from research_analytics_suite.analytics.preloaded.transformations import JitterTransform
 
@@ -26,6 +25,32 @@ class TestJitterTransform:
                 self.y = -1e6
 
         return ExtremeDatapoint()
+
+    def test_non_numeric_datapoint_x(self):
+        # Mocking a datapoint object with a non-numeric x attribute
+        class MockDatapoint:
+            def __init__(self):
+                self.x = "not-a-number"
+                self.y = 0
+
+        datapoint = MockDatapoint()
+        jt = JitterTransform()
+
+        with pytest.raises(TypeError):
+            jt.transform(datapoint)
+
+    def test_non_numeric_datapoint_y(self):
+        # Mocking a datapoint object with a non-numeric y attribute
+        class MockDatapoint:
+            def __init__(self):
+                self.x = 0
+                self.y = "not-a-number"
+
+        datapoint = MockDatapoint()
+        jt = JitterTransform()
+
+        with pytest.raises(TypeError):
+            jt.transform(datapoint)
 
     @patch('numpy.random.uniform')
     def test_transform(self, mock_uniform, mock_datapoint):
