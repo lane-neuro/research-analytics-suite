@@ -1,10 +1,34 @@
 import importlib
-import typing
-from typing import Any, Union, Type, ForwardRef
+from typing import Any, Union, Type, Optional, List, Dict, get_type_hints, ForwardRef
 
 
-import importlib
-from typing import Any, Union, Type, ForwardRef, Optional, List, Dict
+def parse_typing_alias(alias: str, elements: str) -> Type[Any]:
+    """
+    Parses the elements inside a typing alias and returns the corresponding type.
+
+    Args:
+        alias: The alias like 'Optional', 'List', 'Dict'.
+        elements: The elements inside the brackets.
+
+    Returns:
+        type: The corresponding type.
+    """
+    typing_aliases = {
+        'Optional': Optional,
+        'List': List,
+        'Dict': Dict,
+        'Any': Any,
+    }
+
+    if alias == 'Optional':
+        return Optional[dynamic_import(elements)]
+    elif alias == 'List':
+        return List[dynamic_import(elements)]
+    elif alias == 'Dict':
+        key, value = elements.split(', ')
+        return Dict[dynamic_import(key), dynamic_import(value)]
+    else:
+        raise ValueError(f"Unknown typing alias: {alias}")
 
 
 def dynamic_import(import_string: Union[str, Type[Any]]) -> Type[Any]:
@@ -27,16 +51,45 @@ def dynamic_import(import_string: Union[str, Type[Any]]) -> Type[Any]:
         import_string = str(import_string)
 
     # Handle typing imports like Optional[str], List[int], etc.
-    try:
-        return eval(import_string, globals(), locals())
-    except (NameError, SyntaxError):
-        pass
+    typing_aliases = {
+        'Optional': Optional,
+        'List': List,
+        'Dict': Dict,
+        'Any': Any,
+    }
 
-    if '.' not in import_string:
-        if import_string not in globals():
-            return type(any)
-        return globals().get(import_string)
-    else:
-        module_path, class_name = import_string.rsplit('.', 1)
-        module = importlib.import_module(module_path)
-        return getattr(module, class_name)
+    # Check if the import string is a recognized type alias
+    for alias, _ in typing_aliases.items():
+        if import_string.startswith(f'{alias}['):
+            inner_elements = import_string[len(alias) + 1:-1]
+            return parse_typing_alias(alias, inner_elements)
+
+    # Handle standard imports and built-in types
+    try:
+        if '.' in import_string:
+            module_path, class_name = import_string.rsplit('.', 1)
+            module = importlib.import_module(module_path)
+            return getattr(module, class_name)
+        else:
+            # Check if the string corresponds to a built-in type
+            built_in_types = {
+                'int': int,
+                'float': float,
+                'str': str,
+                'bool': bool,
+                'list': list,
+                'dict': dict,
+                'set': set,
+                'tuple': tuple
+            }
+            if import_string in built_in_types:
+                return built_in_types[import_string]
+
+            # Check globals for any other types
+            if import_string in globals():
+                return globals().get(import_string)
+
+            raise ImportError(f"No module named '{import_string}'")
+
+    except (AttributeError, ImportError, NameError) as e:
+        return type(any)  # Fallback for any exception

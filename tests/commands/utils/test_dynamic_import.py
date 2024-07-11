@@ -5,6 +5,7 @@ import os
 
 from research_analytics_suite.commands.utils import dynamic_import
 
+
 class TestDynamicImport:
     @classmethod
     def setup_class(cls):
@@ -33,12 +34,11 @@ class ExampleClass:
 
     def test_import_non_existing_class(self):
         import_string = 'example_module.NonExistingClass'
-        with pytest.raises(AttributeError):
-            dynamic_import(import_string)
+        assert dynamic_import(import_string) is type(any)
 
     def test_import_invalid_string(self):
         import_string = 'invalid_module_string'
-        assert dynamic_import(import_string) == type(any)
+        assert dynamic_import(import_string) is type(any)
 
     def test_import_type_object(self):
         class DummyClass:
