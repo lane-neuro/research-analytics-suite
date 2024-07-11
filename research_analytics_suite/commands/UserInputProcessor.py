@@ -13,8 +13,6 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.commands import CommandRegistry
-from research_analytics_suite.utils import CustomLogger
 
 
 def parse_command(input_str):
@@ -33,20 +31,61 @@ def parse_command(input_str):
     return parts[0], parts[1:]
 
 
-async def process_user_input(user_input: str, runtime_id: str = None):
-    """
-    Processes user input from the console and executes corresponding commands.
+async def process_user_input(user_input, runtime_id=None):
+    from research_analytics_suite.utils import CustomLogger
+    from research_analytics_suite.commands import CommandRegistry
 
-    Args:
-        user_input (str): The user input to process.
-        runtime_id (str): The runtime ID for instance-specific commands (optional).
+    if not isinstance(user_input, str):
+        raise AttributeError("user_input must be a string")
 
-    Returns:
-        str: The response to the user input.
-    """
-    command_name, args = parse_command(user_input)
-    if command_name:
+    original_input = user_input
+    user_input = user_input.strip()
+    if not user_input:
+        CustomLogger().error(Exception(f"Error: Unknown command '{original_input}'. "
+                                       f"Type 'ras_help' to see available commands."), "UserInputProcessor")
+        return None
+
+    # Parse command and arguments
+    parts = []
+    current_part = []
+    in_quotes = False
+    quote_char = None
+
+    for char in user_input:
+        if char in ('"', "'"):
+            if in_quotes:
+                if char == quote_char:
+                    in_quotes = False
+                    parts.append(''.join(current_part))
+                    current_part = []
+                else:
+                    current_part.append(char)
+            else:
+                in_quotes = True
+                quote_char = char
+        elif char.isspace():
+            if in_quotes:
+                current_part.append(char)
+            else:
+                if current_part:
+                    parts.append(''.join(current_part))
+                    current_part = []
+        else:
+            current_part.append(char)
+
+    if current_part:
+        parts.append(''.join(current_part))
+
+    if not parts:
+        CustomLogger().error(Exception(f"Error: Unknown command '{original_input}'. "
+                                       f"Type 'ras_help' to see available commands."), "UserInputProcessor")
+        return None
+
+    command_name = parts[0]
+    args = parts[1:]
+
+    try:
         return await CommandRegistry().execute_command(name=command_name, runtime_id=runtime_id, args=args)
-    else:
-        CustomLogger().error(Exception(f"Error: Unknown command '{user_input}'. Type 'ras_help' to see "
-                                       f"available commands."), "UserInputProcessor")
+    except Exception as e:
+        CustomLogger().error(e, "UserInputProcessor")
+        raise e
