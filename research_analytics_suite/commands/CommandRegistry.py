@@ -19,6 +19,8 @@ import pkgutil
 from asyncio import iscoroutinefunction
 from typing import get_type_hints
 
+from research_analytics_suite.commands.utils import dynamic_import
+
 
 class CommandRegistry:
     """
@@ -86,11 +88,25 @@ class CommandRegistry:
         Args:
             cmd_meta (dict): The command metadata to register.
         """
+        _args = cmd_meta.get('args', [])
+        for _arg in _args or []:
+            if _arg['type'] is not any and not isinstance(_arg['type'], type):
+                _arg['type'] = _arg.get('type', any)
+                if _arg['type'] is not any and not isinstance(_arg['type'], type):
+                    # attempt to resolve forward references
+                    try:
+                        # Extract module path and class name
+                        _arg['type'] = dynamic_import(_arg['type'])
+                    except (NameError, ImportError, AttributeError) as e:
+                        self._logger.error(ValueError(f"Error resolving forward reference for {_arg['name']} in "
+                                                      f"{cmd_meta['name']}: {e}"), self.__class__.__name__)
+                        return
+
         self._registry[cmd_meta['name']] = {
             'func': cmd_meta.get('func', None),
             'name': cmd_meta.get('name', None),
             'class_name': cmd_meta.get('class_name', None),
-            'args': cmd_meta.get('args', []),
+            'args': _args,
             'return_type': cmd_meta.get('return_type', None),
             'is_method': cmd_meta.get('is_method', False),  # Ensure 'is_method' is always included
             '_is_command': True
