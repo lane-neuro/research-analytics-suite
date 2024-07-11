@@ -136,3 +136,22 @@ class TestOperationChain:
 
         operations = [node.operation for node in self.operation_chain]
         assert operations == [self.operation1, self.operation2, self.operation3]
+
+    def test_remove_operation_from_middle(self):
+        self.operation_chain.add_operation_to_chain(self.operation1)
+        self.operation_chain.add_operation_to_chain(self.operation2)
+        self.operation_chain.add_operation_to_chain(self.operation3)
+
+        self.operation_chain.remove_operation(self.operation2)
+        assert self.operation_chain.head.next_node.operation == self.operation3
+
+    def test_remove_operation_from_end(self):
+        self.operation_chain.add_operation_to_chain(self.operation1)
+        self.operation_chain.add_operation_to_chain(self.operation2)
+        self.operation_chain.add_operation_to_chain(self.operation3)
+
+        self.operation_chain.remove_operation(self.operation3)
+
+        operations = [node.operation for node in self.operation_chain]
+        assert operations == [self.operation1, self.operation2]
+        assert not self.operation_chain.contains(self.operation3)
