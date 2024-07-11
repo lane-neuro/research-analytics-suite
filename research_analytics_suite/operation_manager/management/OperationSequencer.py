@@ -16,13 +16,14 @@ Status: Prototype
 """
 import json
 from collections import deque
-from typing import Optional, List, Dict
+from typing import Optional, Any
 
 from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.nodes.OperationNode import OperationNode
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
+from research_analytics_suite.operation_manager.operations.core.workspace import pack_as_local_reference
 
 
 @register_commands
@@ -64,7 +65,7 @@ class OperationSequencer:
                 await operation.parent_operation.link_child_operation(operation)
                 self._logger.debug(f"Operation {operation.name} added to parent chain of {operation.parent_operation.name}.")
 
-    def insert_operation_in_chain(self, index: int, operation_chain: OperationChain, operation: 'BaseOperation') -> None:
+    def insert_operation_in_chain(self, index: int, operation_chain: OperationChain, operation: BaseOperation) -> None:
         """
         Inserts an operation in a chain at a specific index.
 
@@ -82,7 +83,7 @@ class OperationSequencer:
                 new_node = OperationNode(operation, current_node.next_node)
                 current_node.next_node = new_node
 
-    def remove_operation_from_chain(self, operation_chain: OperationChain, operation: 'BaseOperation') -> None:
+    def remove_operation_from_chain(self, operation_chain: OperationChain, operation: BaseOperation) -> None:
         """
         Removes an operation from a chain.
 
@@ -95,7 +96,7 @@ class OperationSequencer:
             if operation_chain.is_empty():
                 self.sequencer.remove(operation_chain)
 
-    def move_operation(self, operation: 'BaseOperation', new_index: int) -> None:
+    def move_operation(self, operation: BaseOperation, new_index: int) -> None:
         """
         Moves an operation to a new index in its chain.
 
@@ -108,7 +109,7 @@ class OperationSequencer:
             operation_chain.remove_operation(operation)
             self.insert_operation_in_chain(new_index, operation_chain, operation)
 
-    def remove_operation_from_sequencer(self, operation: 'BaseOperation') -> None:
+    def remove_operation_from_sequencer(self, operation: BaseOperation) -> None:
         """
         Removes an operation from the sequencer.
 
@@ -154,7 +155,8 @@ class OperationSequencer:
                 return chain
         return None
 
-    def get_operation_in_chain(self, operation_chain: OperationChain, operation: BaseOperation) -> Optional[BaseOperation]:
+    def get_operation_in_chain(self, operation_chain: OperationChain, operation: BaseOperation) \
+            -> Optional[BaseOperation]:
         """
         Gets a specific operation in a chain.
 
@@ -172,7 +174,7 @@ class OperationSequencer:
         return None
 
     @command
-    def get_operation_by_type(self, operation_type) -> Optional['BaseOperation']:
+    def get_operation_by_type(self, operation_type) -> Optional[BaseOperation]:
         """
         Gets an operation of a specific type.
 
@@ -189,7 +191,7 @@ class OperationSequencer:
         self._logger.error(Exception(f"No operation found of type {operation_type.__name__}"), self.__class__.__name__)
         return None
 
-    def find_operation_by_task(self, task) -> Optional['BaseOperation']:
+    def find_operation_by_task(self, task) -> Optional[BaseOperation]:
         """
         Finds an operation by its associated task.
 
@@ -228,7 +230,7 @@ class OperationSequencer:
         """Clears the sequencer."""
         self.sequencer.clear()
 
-    def contains(self, operation: 'BaseOperation') -> bool:
+    def contains(self, operation: BaseOperation) -> bool:
         """
         Checks if the sequencer contains a specific operation.
 
@@ -260,29 +262,32 @@ class OperationSequencer:
             return None
         return self.sequencer.popleft()
 
-    def to_dict(self) -> List[Dict]:
+    def to_dict(self) -> list:
         """
-        Converts the sequencer to a list of dictionaries.
+        Converts the sequencer to a dictionary representation.
 
         Returns:
-            List[Dict]: The sequencer represented as a list of dictionaries.
+            list: The sequencer represented as a list of dictionaries.
         """
-        sequencer_dict = []
-        for chain in self.sequencer:
-            chain_dict = {
-                "operations": []
-            }
-            current_node = chain.head
-            while current_node:
-                chain_dict["operations"].append({
-                    "operation_name": current_node.operation.name,
-                    "operation_id": current_node.operation.unique_id,
-                    "operation_type": type(current_node.operation),
-                    "operation_status": current_node.operation.status,
-                })
-                current_node = current_node.next_node
-            sequencer_dict.append(chain_dict)
-        return sequencer_dict
+        return [self._convert_chain_to_dict(chain) for chain in self.sequencer]
+
+    def _convert_chain_to_dict(self, chain: OperationChain) -> dict:
+        chain_dict = {
+            "operations": []
+        }
+        current_node = chain.head
+        while current_node:
+            chain_dict["operations"].append(self._convert_node_to_dict(current_node))
+            current_node = current_node.next_node
+        return chain_dict
+
+    def _convert_node_to_dict(self, node: OperationNode) -> dict:
+        node_dict = {
+            "operation_name": node.operation.name,
+            "operation_status": node.operation.status,
+            "next_node": self._convert_node_to_dict(node.next_node) if node.next_node else None
+        }
+        return node_dict
 
     def to_json(self) -> str:
         """
@@ -291,7 +296,28 @@ class OperationSequencer:
         Returns:
             str: The sequencer represented as a JSON string.
         """
-        return json.dumps(self.to_dict(), indent=4)
+        _sequencer_dict = self.to_dict()
+        if not _sequencer_dict:
+            return json.dumps({"Sequencer": "Empty"}, indent=4)
+        return json.dumps(self.to_dict(), indent=4, default=self._json_default)
+
+    def _json_default(self, obj: Any) -> Any:
+        """
+        Default JSON serializer.
+
+        Args:
+            obj (Any): The object to serialize.
+
+        Returns:
+            Any: The serialized object.
+        """
+        if isinstance(obj, BaseOperation):
+            return pack_as_local_reference(obj)
+        if isinstance(obj, OperationNode):
+            return self._convert_node_to_dict(obj)
+        if isinstance(obj, OperationChain):
+            return self._convert_chain_to_dict(obj)
+        return str(obj)  # Fallback to string conversion
 
     def __str__(self) -> str:
         """
