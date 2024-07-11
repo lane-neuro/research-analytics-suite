@@ -2,9 +2,8 @@ import typing
 import pytest
 import sys
 import os
-
+from collections import deque
 from research_analytics_suite.commands.utils import dynamic_import
-
 
 class TestDynamicImport:
     @classmethod
@@ -15,6 +14,9 @@ class TestDynamicImport:
         # Setup code if needed, like defining some classes to import dynamically
         cls.example_class_code = """
 class ExampleClass:
+    pass
+
+class CustomClass:
     pass
 """
         # Write the example class to a temporary module
@@ -70,3 +72,33 @@ class ExampleClass:
         import_string = 'int'
         imported_class = dynamic_import(import_string)
         assert imported_class == int
+
+    def test_import_nested_typing_alias(self):
+        import_string = 'List[Optional[int]]'
+        imported_class = dynamic_import(import_string)
+        assert imported_class == typing.List[typing.Optional[int]]
+
+    def test_import_union_typing_alias(self):
+        import_string = 'Union[int, str]'
+        imported_class = dynamic_import(import_string)
+        assert imported_class == typing.Union[int, str]
+
+    def test_import_tuple_typing_alias(self):
+        import_string = 'Tuple[int, str]'
+        imported_class = dynamic_import(import_string)
+        assert imported_class == typing.Tuple[int, str]
+
+    def test_import_custom_class(self):
+        import_string = 'example_module.CustomClass'
+        imported_class = dynamic_import(import_string)
+        assert imported_class.__name__ == 'CustomClass'
+
+    def test_import_builtin_collection(self):
+        import_string = 'collections.deque'
+        imported_class = dynamic_import(import_string)
+        assert imported_class == deque
+
+    def test_import_complex_typing_alias(self):
+        import_string = 'Dict[str, List[Optional[int]]]'
+        imported_class = dynamic_import(import_string)
+        assert imported_class == typing.Dict[str, typing.List[typing.Optional[int]]]

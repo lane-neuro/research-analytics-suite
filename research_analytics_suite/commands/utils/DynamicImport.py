@@ -1,5 +1,5 @@
 import importlib
-from typing import Any, Union, Type, Optional, List, Dict, get_type_hints, ForwardRef
+from typing import Any, Union, Type, Optional, List, Dict, get_type_hints, ForwardRef, Tuple
 
 
 def parse_typing_alias(alias: str, elements: str) -> Type[Any]:
@@ -7,7 +7,7 @@ def parse_typing_alias(alias: str, elements: str) -> Type[Any]:
     Parses the elements inside a typing alias and returns the corresponding type.
 
     Args:
-        alias: The alias like 'Optional', 'List', 'Dict'.
+        alias: The alias like 'Optional', 'List', 'Dict', 'Union', 'Tuple'.
         elements: The elements inside the brackets.
 
     Returns:
@@ -17,6 +17,8 @@ def parse_typing_alias(alias: str, elements: str) -> Type[Any]:
         'Optional': Optional,
         'List': List,
         'Dict': Dict,
+        'Union': Union,
+        'Tuple': Tuple,
         'Any': Any,
     }
 
@@ -27,6 +29,12 @@ def parse_typing_alias(alias: str, elements: str) -> Type[Any]:
     elif alias == 'Dict':
         key, value = elements.split(', ')
         return Dict[dynamic_import(key), dynamic_import(value)]
+    elif alias == 'Union':
+        types = [dynamic_import(element.strip()) for element in elements.split(',')]
+        return Union[tuple(types)]
+    elif alias == 'Tuple':
+        types = [dynamic_import(element.strip()) for element in elements.split(',')]
+        return Tuple[tuple(types)]
     else:
         raise ValueError(f"Unknown typing alias: {alias}")
 
@@ -55,6 +63,8 @@ def dynamic_import(import_string: Union[str, Type[Any]]) -> Type[Any]:
         'Optional': Optional,
         'List': List,
         'Dict': Dict,
+        'Union': Union,
+        'Tuple': Tuple,
         'Any': Any,
     }
 
