@@ -13,7 +13,6 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
 import numpy as np
 
 
@@ -34,7 +33,12 @@ class JitterTransform:
 
         Args:
             jitter_strength (float): The strength of the jitter transformation.
+
+        Raises:
+            ValueError: If jitter_strength is negative.
         """
+        if jitter_strength < 0:
+            raise ValueError("jitter_strength must be non-negative")
 
         self.jitter_strength = jitter_strength
 
@@ -47,7 +51,6 @@ class JitterTransform:
         Returns:
             str: A string representation of the JitterTransform object.
         """
-
         return f"JitterTransform, jitter_strength = {self.jitter_strength}"
 
     def transform(self, datapoint):
@@ -63,7 +66,6 @@ class JitterTransform:
         Returns:
             The transformed datapoint.
         """
-
         datapoint.x += np.random.uniform(-self.jitter_strength, self.jitter_strength)
         datapoint.y += np.random.uniform(-self.jitter_strength, self.jitter_strength)
         return datapoint
