@@ -66,28 +66,26 @@ async def save_operation_in_workspace(operation, overwrite: bool = False):
         operation (BaseOperation): The operation to save.
         overwrite (bool, optional): Whether to overwrite the existing operation file. Defaults to False.
     """
-    file_ext = f".json"
+    file_ext = ".json"
     stripped_state = pack_for_save(operation)
 
-    dir_path = (f"{operation.config.BASE_DIR}/workspaces/{operation.config.WORKSPACE_NAME}/"
-                f"{operation.config.WORKSPACE_OPERATIONS_DIR}")
+    dir_path = os.path.join(operation.config.BASE_DIR, "workspaces", operation.config.WORKSPACE_NAME, operation.config.WORKSPACE_OPERATIONS_DIR)
     os.makedirs(dir_path, exist_ok=True)
 
     name = f"{stripped_state['github']}_{stripped_state['name']}_{stripped_state['version']}"
 
-    if os.path.exists(os.path.join(dir_path, f"{name}{file_ext}")):
+    if os.path.exists(os.path.join(f"{dir_path}", f"{name}{file_ext}")):
         if not overwrite:
             appended_version = 1
             while True:
-                name = (f"{stripped_state['github']}_{stripped_state['name']}_"
-                        f"{stripped_state['version']}-{appended_version}")
-                if not os.path.exists(f"{dir_path}/{name}{file_ext}"):
+                name = f"{stripped_state['github']}_{stripped_state['name']}_{stripped_state['version']}-{appended_version}"
+                if not os.path.exists(os.path.join(f"{dir_path}", f"{name}{file_ext}")):
                     operation.version = f"{operation.version}-{appended_version}"
                     stripped_state['version'] = f"{operation.version}"
                     break
                 appended_version += 1
 
-    file_path = f"{dir_path}/{name}{file_ext}"
+    file_path = os.path.join(f"{dir_path}", f"{name}{file_ext}")
 
     async with aiofiles.open(file_path, 'w') as file:
         await file.write(json.dumps(stripped_state, indent=4))
