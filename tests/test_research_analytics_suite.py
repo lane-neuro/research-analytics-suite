@@ -154,7 +154,7 @@ class TestResearchAnalyticsSuite:
         Test handling of invalid workspace path.
         """
         self.suite._args = MagicMock()
-        self.suite._args.open_workspace = 'invalid_workspace_path'
+        self.suite._args.open_workspace = '../../invalid_workspace_path'
 
         with patch('os.path.exists', return_value=False) as path_exists_mock, \
                 patch.object(self.suite._logger, 'info', new=MagicMock()) as logger_info_mock, \
@@ -162,7 +162,8 @@ class TestResearchAnalyticsSuite:
                 patch.object(self.suite._workspace, 'create_workspace', new=AsyncMock()) as create_workspace_mock:
             await self.suite._setup_workspace()
             logger_info_mock.assert_called_once_with(
-                f"Workspace '{os.path.normpath('invalid_workspace_path')}' does not exist. Creating a new workspace...")
+                f"Workspace '{os.path.normpath('../../invalid_workspace_path')}' does not exist. "
+                f"Creating a new workspace...")
 
     def test_run_keyboard_interrupt(self):
         """
