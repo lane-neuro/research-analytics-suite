@@ -17,9 +17,12 @@ import importlib
 import inspect
 import pkgutil
 from asyncio import iscoroutinefunction
-from typing import get_type_hints
+from typing import get_type_hints, Optional, List, Dict
 
-from research_analytics_suite.commands.utils import dynamic_import
+import aioconsole
+from prettytable import PrettyTable
+
+from research_analytics_suite.commands.utils import dynamic_import, wrap_text
 
 
 class CommandRegistry:
@@ -39,6 +42,7 @@ class CommandRegistry:
         if not hasattr(self, '_initialized'):
             self._registry = {}
             self._instances = {}  # Dictionary to hold instances by runtime ID
+            self._categories = {}
             self._logger = None
             self._config = None
             self._operation_control = None
@@ -92,8 +96,8 @@ class CommandRegistry:
         for _arg in _args or []:
             if _arg['type'] is not any and not isinstance(_arg['type'], type):
                 _arg['type'] = _arg.get('type', any)
-                if _arg['type'] is not any and not isinstance(_arg['type'], type):
-                    # attempt to resolve forward references
+                if (_arg['type'] is not any) and not isinstance(_arg['type'], type):
+                    # Attempt to resolve forward references
                     try:
                         # Extract module path and class name
                         _arg['type'] = dynamic_import(_arg['type'])
@@ -108,18 +112,19 @@ class CommandRegistry:
             'class_name': cmd_meta.get('class_name', None),
             'args': _args,
             'return_type': cmd_meta.get('return_type', None),
-            'is_method': cmd_meta.get('is_method', False),  # Ensure 'is_method' is always included
-            '_is_command': True
+            'is_method': cmd_meta.get('is_method', False),
+            '_is_command': True,
+            'category': cmd_meta.get('category', 'Uncategorized'),
+            'description': cmd_meta.get('description', 'No description provided.')
         }
 
-    def discover_commands(self, package):
+    def discover_commands(self, package: str):
         """
         Discover and register all commands in the specified package.
 
         Args:
             package (str): The package name to discover commands in.
         """
-
         package = importlib.import_module(package)
         for loader, name, is_pkg in pkgutil.walk_packages(package.__path__, package.__name__ + '.'):
             module = importlib.import_module(name)
@@ -132,7 +137,9 @@ class CommandRegistry:
                         'args': [{'name': param, 'type': get_type_hints(obj).get(param, str)} for param in
                                  inspect.signature(obj).parameters],
                         'return_type': get_type_hints(obj).get('return', None),
-                        'is_method': False
+                        'is_method': False,
+                        'category': getattr(obj, 'category', 'Uncategorized'),
+                        'description': getattr(obj, 'description', 'No description provided.')
                     })
                 elif inspect.isclass(obj):
                     for method_name, method in inspect.getmembers(obj, predicate=inspect.isfunction):
@@ -145,7 +152,9 @@ class CommandRegistry:
                                          inspect.signature(method).parameters if param != 'self'],
                                 'return_type': get_type_hints(method).get('return', None),
                                 'is_method': True,
-                                'class': obj  # Include the class context for methods
+                                'class': obj,
+                                'category': getattr(method, 'category', 'Uncategorized'),
+                                'description': getattr(method, 'description', 'No description provided.')
                             })
 
     def register_instance(self, instance, runtime_id):
@@ -198,6 +207,113 @@ class CommandRegistry:
                 if iscoroutinefunction(cmd_meta['func']):
                     return await cmd_meta['func'](*args, **kwargs)
                 return cmd_meta['func'](*args, **kwargs)
+
+    def categorize_commands(self):
+        # Ensure commands are categorized
+        self._categories = {}
+        for cmd_name, cmd_meta in self._registry.items():
+            category = cmd_meta.get('category', 'Uncategorized')
+            if category not in self._categories:
+                self._categories[category] = []
+            self._categories[category].append((cmd_name, cmd_meta))
+
+    def search_commands(self, keyword: str) -> List[str]:
+        """
+        Search commands by keyword.
+
+        Args:
+            keyword (str): The keyword to search for.
+
+        Returns:
+            List[str]: A list of command names that match the keyword.
+        """
+        results = []
+        for cmd_name, cmd_meta in self._registry.items():
+            if keyword.lower() in cmd_name.lower() or keyword.lower() in cmd_meta['description'].lower():
+                results.append(cmd_name)
+        return results
+
+    def get_commands_by_category(self, category: str) -> Dict[str, dict]:
+        """
+        Get commands by category.
+
+        Args:
+            category (str): The category name.
+
+        Returns:
+            Dict[str, dict]: A dictionary of command names and their metadata in the specified category.
+        """
+        return dict(self._categories.get(category, []))
+
+    def get_command_details(self, command_name: str) -> Optional[dict]:
+        """
+        Get detailed information about a command.
+
+        Args:
+            command_name (str): The name of the command.
+
+        Returns:
+            Optional[dict]: The command metadata if found, else None.
+        """
+        return self._registry.get(command_name)
+
+    async def display_commands(self, page_size: int = 10):
+        """
+        Display available commands, their categories, and details with pagination.
+
+        Args:
+            page_size (int): Number of commands to display per page.
+        """
+        self.categorize_commands()  # Ensure commands are categorized before displaying
+        categories = self._categories.keys()
+
+        for category in categories:
+            self._logger.info(f"\n{'-' * 40}\nCategory: {category}\n{'-' * 40}")
+            commands = list(self.get_commands_by_category(category).items())
+            total_commands = len(commands)
+            total_pages = (total_commands + page_size - 1) // page_size
+
+            for page in range(total_pages):
+                start = page * page_size
+                end = start + page_size
+                self._logger.info(
+                    f"\nShowing commands {start + 1} to {min(end, total_commands)} of {total_commands} in category '{category}':")
+
+                table = PrettyTable()
+                table.field_names = ["Command", "Description", "Arguments", "Return Type", "Is Method"]
+                table.align["Command"] = "l"
+                table.align["Description"] = "l"
+                table.align["Arguments"] = "l"
+                table.align["Return Type"] = "l"
+                table.align["Is Method"] = "l"
+
+                for cmd_name, cmd_meta in commands[start:end]:
+                    args = cmd_meta.get('args', [])
+                    formatted_args = "\n".join(
+                        [f"{arg['name']}: {arg['type'].__name__}" for arg in args]) if args else "None"
+                    description = cmd_meta.get('description', 'No description provided.')
+
+                    wrapped_description = wrap_text(description, 50)
+                    wrapped_args = wrap_text(formatted_args, 50)
+
+                    if cmd_meta.get('return_type') is not None:
+                        if isinstance(cmd_meta.get('return_type'), type):
+                            cmd_meta['return_type'] = cmd_meta.get('return_type').__name__
+
+                    table.add_row([
+                        cmd_name,
+                        wrapped_description,
+                        wrapped_args,
+                        cmd_meta.get('return_type', 'None'),
+                        str(cmd_meta.get('is_method', 'False'))
+                    ])
+
+                self._logger.info(f'\n{table}\n')
+                self._logger.info(f"Page {page + 1} of {total_pages}")
+                self._logger.info("Press Enter to see the next page...")
+
+                if page < total_pages - 1:
+                    await aioconsole.ainput()
 
     @property
     def registry(self):

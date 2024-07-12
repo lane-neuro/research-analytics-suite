@@ -52,7 +52,6 @@ class ConsoleOperation(BaseOperation):
                     print(self._prompt)
                     user_input = input()  # Use standard input in Jupyter Notebook
                 else:
-                    # Standard terminal environment
                     user_input = await aioconsole.ainput(self._prompt)  # Read user input asynchronously
 
                 user_input = user_input.strip()  # Strip newline

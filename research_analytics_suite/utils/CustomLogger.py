@@ -10,8 +10,11 @@ Author: Lane
 
 import asyncio
 import logging
+import sys
 import traceback
 from typing import List, Union
+
+from research_analytics_suite.utils.LoggerStream import LoggerStream
 
 
 class CustomLogger:

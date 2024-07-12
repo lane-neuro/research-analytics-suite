@@ -13,6 +13,8 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+import asyncio
+
 from research_analytics_suite.commands import command, CommandRegistry
 from research_analytics_suite.operation_manager import OperationControl
 from research_analytics_suite.utils import CustomLogger
@@ -21,22 +23,7 @@ from research_analytics_suite.utils import CustomLogger
 @command
 def ras_help() -> str:
     """Displays available commands and their descriptions."""
-    commands_info = ["Available commands:"]
-    for cmd, meta in CommandRegistry().registry.items():
-        args_info = ", ".join([f"{arg.get('name', 'None')}: {arg.get('type', any)}" for arg in meta.get('args', [])])
-        return_info = meta.get('return_type', None)
-
-        doc = meta.get('func', None)
-        if doc:
-            doc = doc.__doc__
-        else:
-            doc = "No documentation available."
-
-        if args_info:
-            commands_info.append(f"{cmd}({args_info}) -> {return_info}: {doc}")
-        else:
-            commands_info.append(f"{cmd} -> {return_info}: {doc}")
-    return "\n".join(commands_info)
+    return asyncio.run(CommandRegistry().display_commands())
 
 
 @command
