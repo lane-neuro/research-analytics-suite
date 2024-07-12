@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import uuid
-from typing import Any, Optional
+from typing import Optional
 
 
 class GUIBase(ABC):
@@ -23,11 +23,11 @@ class GUIBase(ABC):
         self._update_operation = None
 
     @property
-    def parent(self) -> Optional[Any]:
+    def parent(self) -> Optional[any]:
         return self._parent
 
     @parent.setter
-    def parent(self, value: Optional[Any]) -> None:
+    def parent(self, value: Optional[any]) -> None:
         self._parent = value
 
     @property

@@ -14,9 +14,11 @@ import sys
 import traceback
 from typing import List, Union
 
+from research_analytics_suite.commands.CommandDecorators import command, register_commands
 from research_analytics_suite.utils.LoggerStream import LoggerStream
 
 
+@register_commands
 class CustomLogger:
     """
     A class to handle logging within the research analytics suite.
@@ -79,6 +81,7 @@ class CustomLogger:
         self.log_message_queue.put_nowait(message)
         return True  # Allow the log record to be logged
 
+    @command
     def info(self, message: Union[str, List[str]]) -> None:
         """
         Logs an info message.

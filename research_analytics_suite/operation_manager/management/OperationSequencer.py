@@ -16,7 +16,7 @@ Status: Prototype
 """
 import json
 from collections import deque
-from typing import Optional, Any
+from typing import Optional
 
 from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
@@ -147,7 +147,7 @@ class OperationSequencer:
         return None
 
     @command
-    def get_chain_by_operation(self, operation: 'BaseOperation') -> Optional[OperationChain]:
+    def get_chain_by_operation(self, operation: BaseOperation) -> Optional[OperationChain]:
         """
         Gets the operation chain that contains a specific operation.
 
@@ -317,7 +317,7 @@ class OperationSequencer:
             return json.dumps({"Sequencer": "Empty"}, indent=4)
         return json.dumps(self.to_dict(), indent=4, default=self._json_default)
 
-    def _json_default(self, obj: Any) -> Any:
+    def _json_default(self, obj: any) -> any:
         """
         Default JSON serializer.
 

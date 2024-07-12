@@ -16,8 +16,8 @@ Status: Prototype
 import asyncio
 import sys
 
-from research_analytics_suite.commands import command, CommandRegistry
-from research_analytics_suite.operation_manager import OperationControl
+from research_analytics_suite.commands.CommandDecorators import command
+from research_analytics_suite.commands.CommandRegistry import CommandRegistry
 from research_analytics_suite.utils import CustomLogger
 
 
@@ -55,6 +55,7 @@ def registry() -> str:
 @command
 async def resources():
     """Displays system resources."""
+    from research_analytics_suite.operation_manager import OperationControl
     for operation_list in OperationControl().sequencer.sequencer:
         operation_node = OperationControl().sequencer.get_head_operation_from_chain(operation_list)
         from research_analytics_suite.operation_manager.operations.system import ResourceMonitorOperation
@@ -66,6 +67,7 @@ async def resources():
 @command
 async def tasks():
     """Displays all tasks."""
+    from research_analytics_suite.operation_manager import OperationControl
     for task in OperationControl().task_creator.tasks:
         operation = OperationControl().sequencer.find_operation_by_task(task)
         if operation:
@@ -76,6 +78,7 @@ async def tasks():
 @command
 async def sequencer():
     """Displays all operations in the sequencer."""
+    from research_analytics_suite.operation_manager import OperationControl
     for sequencer_chain in OperationControl().sequencer.sequencer:
         operation = sequencer_chain.head.operation
         CustomLogger().info(f"Operation: {operation.task.get_name()} - {operation.status}")

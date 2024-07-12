@@ -5,6 +5,7 @@ import os
 from collections import deque
 from research_analytics_suite.commands.utils import dynamic_import
 
+
 class TestDynamicImport:
     @classmethod
     def setup_class(cls):

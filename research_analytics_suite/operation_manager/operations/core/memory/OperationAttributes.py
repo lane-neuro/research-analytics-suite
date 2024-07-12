@@ -13,7 +13,6 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
-from typing import Any
 
 from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.operation_manager import BaseOperation
@@ -173,7 +172,7 @@ class OperationAttributes:
         return f"{self.github}_{self.name}_{self.version}"
 
     @property
-    def action(self) -> Any:
+    def action(self) -> any:
         return self._action
 
     @action.setter
@@ -189,7 +188,7 @@ class OperationAttributes:
         self._required_inputs = self._process_required_inputs(value)
 
     @property
-    def parent_operation(self) -> 'OperationAttributes' or 'BaseOperation' or None:
+    def parent_operation(self) -> 'OperationAttributes' or BaseOperation or None:
         return self._parent_operation
 
     @parent_operation.setter

@@ -9,7 +9,7 @@ Author: Lane
 import json
 import os
 import uuid
-from typing import Any, Dict
+from typing import Dict
 
 import aiofiles
 import dask.dataframe as dd
@@ -27,7 +27,7 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 @command
-def flatten_json(y: Dict[str, Any]) -> Dict[str, Any]:
+def flatten_json(y: Dict[str, any]) -> Dict[str, any]:
     """
     Flattens a nested JSON dictionary.
 
@@ -39,7 +39,7 @@ def flatten_json(y: Dict[str, Any]) -> Dict[str, Any]:
     """
     out = {}
 
-    def flatten(x: Any, name: str = ''):
+    def flatten(x: any, name: str = ''):
         if isinstance(x, dict):
             for a in x:
                 flatten(x[a], name + a + '_')

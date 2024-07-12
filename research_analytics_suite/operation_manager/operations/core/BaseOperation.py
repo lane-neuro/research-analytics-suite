@@ -12,11 +12,12 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from __future__ import annotations
 import asyncio
 import os.path
 import uuid
 from abc import ABC
-from typing import Tuple, final
+from typing import Tuple, final, Optional
 
 from research_analytics_suite.commands import command, register_commands
 from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
@@ -122,7 +123,7 @@ class BaseOperation(ABC):
             self.memory_outputs = None
 
             self._parent_operation = None
-            self._inheritance: dict[BaseOperation.runtime_id, 'BaseOperation'] = {}
+            self._inheritance: dict[BaseOperation.runtime_id, BaseOperation] = {}
 
             self._is_loop = None
             self._is_cpu_bound = None
@@ -372,13 +373,11 @@ class BaseOperation(ABC):
         """Remove a memory input slot by its ID."""
         await self.memory_inputs.remove_slot(memory_id)
 
-    @command
     @final
     def get_memory_input_slot(self, memory_id):
         """Get a memory input slot by its ID."""
         return self.memory_inputs.get_slot(memory_id)
 
-    @command
     @final
     def get_memory_input_slot_data(self, memory_id):
         """Get the data of a memory input slot by its ID."""
@@ -396,13 +395,11 @@ class BaseOperation(ABC):
         """Remove a memory output slot by its ID."""
         await self.memory_outputs.remove_slot(memory_id)
 
-    @command
     @final
     def get_memory_output_slot(self, memory_id):
         """Get a memory output slot by its ID."""
         return self.memory_outputs.get_slot(memory_id)
 
-    @command
     @final
     def get_memory_output_slot_data(self, memory_id):
         """Get the data of a memory output slot by its ID."""
@@ -451,7 +448,7 @@ class BaseOperation(ABC):
         await save_operation_in_workspace(self, overwrite)
 
     @staticmethod
-    async def load_from_disk(file_path: str, operation_group: dict[str, 'BaseOperation']) -> 'BaseOperation':
+    async def load_from_disk(file_path: str, operation_group: dict[str, BaseOperation]) -> BaseOperation:
         """
         Load a BaseOperation object from disk.
 
@@ -483,7 +480,7 @@ class BaseOperation(ABC):
         return await load_operation_group(file_path, operation_group, iterate_child_operations)
 
     @staticmethod
-    async def from_dict(data: dict, file_dir, parent_operation: 'BaseOperation' = None) -> 'BaseOperation':
+    async def from_dict(data: dict, file_dir, parent_operation: BaseOperation = None) -> BaseOperation:
         """
         Create a BaseOperation instance from a dictionary.
 
@@ -663,7 +660,7 @@ class BaseOperation(ABC):
         self._required_inputs[value[0]] = value[1]
 
     @property
-    def parent_operation(self) -> 'BaseOperation':
+    def parent_operation(self) -> BaseOperation:
         """Gets the parent operation."""
         return self._parent_operation
 
@@ -675,7 +672,7 @@ class BaseOperation(ABC):
         self._parent_operation = value
 
     @property
-    def inheritance(self) -> dict[runtime_id, 'BaseOperation']:
+    def inheritance(self) -> dict[runtime_id, BaseOperation]:
         """Gets the list of child operations."""
         return self._inheritance
 
@@ -816,7 +813,6 @@ class BaseOperation(ABC):
         except Exception as e:
             self.handle_error(e)
 
-    @command
     def add_log_entry(self, message):
         """
         Log a message to the GUI.

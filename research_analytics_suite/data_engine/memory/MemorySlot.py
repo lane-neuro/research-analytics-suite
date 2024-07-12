@@ -1,8 +1,9 @@
+from __future__ import annotations
 import sys
 import time
 import asyncio
 from mmap import mmap
-from typing import Any, Type, Tuple, Dict
+from typing import Type, Tuple, Dict
 
 from research_analytics_suite.commands import command, register_commands
 
@@ -38,7 +39,7 @@ class MemorySlot:
         from_dict(data: dict) -> 'MemorySlot': Initialize a MemorySlot instance from a dictionary.
     """
 
-    def __init__(self, memory_id: str, name: str, operation_required: bool, data: Dict[str, Tuple[Type, Any]],
+    def __init__(self, memory_id: str, name: str, operation_required: bool, data: Dict[str, Tuple[type, any]],
                  file_path: str = None):
         """
         Initialize the MemorySlot instance.
@@ -116,11 +117,11 @@ class MemorySlot:
         self.update_modified_time()
 
     @property
-    def data(self) -> Dict[str, Tuple[Type, Any]]:
+    def data(self) -> Dict[str, Tuple[type, any]]:
         return self._data
 
     @data.setter
-    def data(self, value: Dict[str, Tuple[Type, Any]]):
+    def data(self, value: Dict[str, Tuple[type, any]]):
         if value is None:
             self._data = {}
 
@@ -277,7 +278,7 @@ class MemorySlot:
         return _valid
 
     @command
-    async def get_data_by_key(self, key: str) -> Any:
+    async def get_data_by_key(self, key: str) -> any:
         """Retrieve the value associated with a specific key."""
         async with self._lock:
             try:
@@ -297,7 +298,7 @@ class MemorySlot:
             return self._data.get(key, (None, None))[0]
 
     @command
-    async def set_data_by_key(self, key: str, value: Any, data_type: Type):
+    async def set_data_by_key(self, key: str, value: any, data_type: type):
         """Set the value for a specific key."""
         if not isinstance(key, str):
             self._logger.error(TypeError(f"Key {key} must be a string"), self.__class__.__name__)
@@ -362,7 +363,7 @@ class MemorySlot:
         return _offset
 
     @command
-    async def update_data(self, data: Dict[str, Tuple[Type, Any]]):
+    async def update_data(self, data: Dict[str, Tuple[type, any]]):
         """Update multiple key-value pairs in the data dictionary."""
         if not isinstance(data, dict):
             self._logger.error(ValueError("data must be a dictionary"), self.__class__.__name__)
@@ -388,7 +389,7 @@ class MemorySlot:
                 self._logger.error(e, self.__class__.__name__)
 
     @command
-    async def merge_data(self, data: Dict[str, Tuple[Type, Any]]):
+    async def merge_data(self, data: Dict[str, Tuple[type, any]]):
         """Merge another dictionary into the data dictionary."""
         if not isinstance(data, dict):
             self._logger.error(ValueError("data must be a dictionary"), self.__class__.__name__)
@@ -472,7 +473,7 @@ class MemorySlot:
 
     @staticmethod
     @command
-    async def load_from_disk(data: dict) -> 'MemorySlot':
+    async def load_from_disk(data: dict) -> MemorySlot:
         """Initialize a MemorySlot instance from a dictionary."""
         try:
             dict_data = dict()

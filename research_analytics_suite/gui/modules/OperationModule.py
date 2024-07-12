@@ -17,7 +17,6 @@ Status: Prototype
 """
 
 import asyncio
-from typing import Any
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.gui.GUIBase import GUIBase
@@ -31,7 +30,7 @@ class OperationModule(GUIBase):
     """A class to manage operations and their GUI representation."""
     MIDDLE_INDENT = 20
 
-    def __init__(self, operation: 'BaseOperation', width: int, height: int, parent):
+    def __init__(self, operation: BaseOperation, width: int, height: int, parent):
         """
         Initializes the OperationModule with the given operation, control, and logger.
 
@@ -57,7 +56,7 @@ class OperationModule(GUIBase):
         self._left_panel_id = f"left_panel_{self._operation_id}"
 
     @property
-    def operation(self) -> 'BaseOperation':
+    def operation(self) -> BaseOperation:
         """Returns the operation."""
         return self._operation
 
@@ -195,7 +194,7 @@ class OperationModule(GUIBase):
 
             await asyncio.sleep(0.005)
 
-    async def execute_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+    async def execute_operation(self, sender: any, app_data: any, user_data: any) -> None:
         """Executes the operation."""
         try:
             self._operation.is_ready = True
@@ -204,7 +203,7 @@ class OperationModule(GUIBase):
             self._operation.status = "error"
             self._operation.add_log_entry(f"Error executing operation: {e}")
 
-    async def stop_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+    async def stop_operation(self, sender: any, app_data: any, user_data: any) -> None:
         """Stops the operation."""
         if not self._operation.is_loop:
             try:
@@ -214,7 +213,7 @@ class OperationModule(GUIBase):
                 self._operation.status = "error"
                 self._operation.add_log_entry(f"Error stopping operation: {e}")
 
-    async def pause_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+    async def pause_operation(self, sender: any, app_data: any, user_data: any) -> None:
         """Pauses the operation."""
         if not self._operation.is_loop:
             try:
@@ -224,7 +223,7 @@ class OperationModule(GUIBase):
                 self._operation.status = "error"
                 self._operation.add_log_entry(f"Error pausing operation: {e}")
 
-    async def resume_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+    async def resume_operation(self, sender: any, app_data: any, user_data: any) -> None:
         """Resumes the operation."""
         if not self._operation.is_loop:
             try:
@@ -234,7 +233,7 @@ class OperationModule(GUIBase):
                 self._operation.status = "error"
                 self._operation.add_log_entry(f"Error resuming operation: {e}")
 
-    async def reset_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+    async def reset_operation(self, sender: any, app_data: any, user_data: any) -> None:
         """Resets the operation."""
         try:
             await self._operation.reset()
@@ -243,7 +242,7 @@ class OperationModule(GUIBase):
             self._operation.status = "error"
             self._operation.add_log_entry(f"Error resetting operation: {e}")
 
-    async def view_result(self, sender: Any, app_data: Any, user_data: Any) -> None:
+    async def view_result(self, sender: any, app_data: any, user_data: any) -> None:
         """Handles the event when the user clicks the 'View Result' button."""
         _result = await self._operation.get_results_from_memory()
         self._operation.add_log_entry(f"Result viewed: {_result}")
@@ -256,7 +255,7 @@ class OperationModule(GUIBase):
         """Removes a child operation from the current operation."""
         await self._operation.remove_child_operation(child_operation)
 
-    async def _open_parent_operation(self, sender: Any, app_data: Any, user_data: Any) -> None:
+    async def _open_parent_operation(self, sender: any, app_data: any, user_data: any) -> None:
         """Opens the parent operation in the GUI."""
 
         def on_ok_button(_sender, _app_data, _user_data):

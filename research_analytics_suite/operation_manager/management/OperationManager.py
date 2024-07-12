@@ -42,7 +42,7 @@ class OperationManager:
         self._logger = CustomLogger()
 
     @command
-    async def add_initialized_operation(self, operation) -> 'BaseOperation':
+    async def add_initialized_operation(self, operation) -> BaseOperation:
         """
         Adds an initialized operation to the sequencer.
 
@@ -61,7 +61,7 @@ class OperationManager:
         return operation
 
     @command
-    async def add_operation_with_parameters(self, operation_type, *args, **kwargs) -> 'BaseOperation':
+    async def add_operation_with_parameters(self, operation_type, *args, **kwargs) -> BaseOperation:
         """
         Creates a new Operation object with the specified parameters and adds it to the sequencer.
 
@@ -88,7 +88,7 @@ class OperationManager:
             self._logger.error(e, operation_type)
 
     @command
-    async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> 'BaseOperation':
+    async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> BaseOperation:
         """
         Adds an operation to the sequencer if it does not already exist.
 
@@ -101,7 +101,7 @@ class OperationManager:
             return await self.add_operation_with_parameters(operation_type=operation_type, *args, **kwargs)
 
     @command
-    async def resume_operation(self, operation: 'BaseOperation') -> None:
+    async def resume_operation(self, operation: BaseOperation) -> None:
         """
         Resumes a specific operation.
 
@@ -112,7 +112,7 @@ class OperationManager:
             await operation.resume()
 
     @command
-    async def pause_operation(self, operation: 'BaseOperation') -> None:
+    async def pause_operation(self, operation: BaseOperation) -> None:
         """
         Pauses a specific operation.
 
@@ -123,7 +123,7 @@ class OperationManager:
             await operation.pause()
 
     @command
-    async def stop_operation(self, operation: 'BaseOperation') -> None:
+    async def stop_operation(self, operation: BaseOperation) -> None:
         """
         Stops a specific operation.
 

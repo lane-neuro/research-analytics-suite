@@ -15,13 +15,14 @@ Status: Prototype
 
 import os
 import json
-from typing import Optional, Union, Any
+from typing import Optional
 import aiofiles
 from research_analytics_suite.commands import command
+from research_analytics_suite.operation_manager.operations.core import BaseOperation
 
 
 @command
-async def load_from_disk(file_path: str, operation_group: Optional[dict], with_instance=True) -> Any:
+async def load_from_disk(file_path: str, operation_group: Optional[dict], with_instance=True) -> BaseOperation:
     """
     Load a BaseOperation object from disk.
 
@@ -142,7 +143,7 @@ def construct_file_path(base_dir, operation_ref):
     return os.path.join(base_dir, file_name)
 
 
-async def from_dict(data: dict, file_dir, parent_operation=None, with_instance=True) -> Any:
+async def from_dict(data: dict, file_dir, parent_operation=None, with_instance=True) -> any:
     """
     Create a BaseOperation instance from a dictionary.
 

@@ -7,15 +7,11 @@ where different OperationModule instances can be reordered via drag-and-drop wit
 Author: Lane
 """
 import asyncio
-from typing import Optional, Any
 
 import dearpygui.dearpygui as dpg
-from uuid import uuid4
 
 from research_analytics_suite.gui.GUIBase import GUIBase
-from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
 class TimelineModule(GUIBase):

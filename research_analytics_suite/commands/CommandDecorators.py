@@ -28,7 +28,7 @@ def register_commands(cls):
             sig = inspect.signature(method)
             type_hints = method.__annotations__
             args = [{'name': param, 'type': type_hints.get(param, any)} for param in sig.parameters if param not in ('self', 'cls')]
-            return_type = type_hints.get('return', None)
+            return_type = type_hints.get('return', [])
             description = method.__doc__ if method.__doc__ else 'No description available.'
             description = ' '.join(description.split())
             if 'Args' in description:
@@ -51,6 +51,8 @@ def register_commands(cls):
                         cmd_meta['name'] = method.__name__
                         cmd_meta['description'] = description
                         cmd_meta['class_name'] = class_name
+                        cmd_meta['args'] = args
+                        cmd_meta['return_type'] = return_type
                         cmd_meta['is_method'] = 'self' in sig.parameters or 'cls' in sig.parameters
     return cls
 
@@ -67,7 +69,7 @@ def command(func=None):
         type_hints = f.__annotations__
 
         args = [{'name': param, 'type': type_hints.get(param, any)} for param in sig.parameters if param not in ('self', 'cls')]
-        return_type = type_hints.get('return', None)
+        return_type = type_hints.get('return', [])
         description = f.__doc__ if f.__doc__ else 'No description available.'
         description = ' '.join(description.split())
         if 'Args' in description:

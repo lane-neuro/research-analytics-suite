@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 import types
-from typing import Any, Callable
+from typing import Callable
 import ast
 
 from research_analytics_suite.commands import command
@@ -79,7 +79,7 @@ async def prepare_action_for_exec(operation):
         operation.handle_error(e)
 
 
-async def _execute_code_action(code: str, memory_inputs: list = None) -> Callable[[], Any]:
+async def _execute_code_action(code: str, memory_inputs: list = None) -> Callable[[], any]:
     """
     Execute a code action.
 
@@ -91,7 +91,7 @@ async def _execute_code_action(code: str, memory_inputs: list = None) -> Callabl
         callable: The action callable.
     """
 
-    async def action() -> Any:
+    async def action() -> any:
 
         # Extract the actual data values from the MemorySlot tuples
         inputs = {slot.name: await slot.get_data_by_key(slot.name) for slot in memory_inputs} if memory_inputs else {}
@@ -139,7 +139,7 @@ def _execute_callable_action(t_action, memory_inputs: list = None):
         callable: The action callable.
     """
 
-    def action() -> Any:
+    def action() -> any:
         inputs = {slot.name: slot.data for slot in memory_inputs} if memory_inputs else {}
         # Extract the actual data values from the MemorySlot tuples
         inputs = {k: v for k, (t, v) in inputs.items()}

@@ -44,7 +44,7 @@ class ExampleOperation(BaseOperation):
     unique_id: str = f"{github}_{name}_{version}"       # Unique ID for the operation
     required_inputs: dict = {}                          # dict[str, type] of required input parameters
     # output_parameters: dict = {}                       # dict[str, type] of output parameters
-    parent_operation: 'BaseOperation' = None            # Parent operation class
+    parent_operation: BaseOperation = None            # Parent operation class
     inheritance: list = []                              # list of unique IDs of child operations
     is_loop: bool = False                               # Flag to indicate if the operation is a loop
     is_cpu_bound: bool = False                          # Flag to indicate if the operation is CPU-bound

@@ -120,7 +120,7 @@ class OperationManagerDialog(GUIBase):
             self.tiles_per_row = new_tiles_per_row
             await self.refresh_display()
 
-    async def add_operation_tile(self, operation: 'BaseOperation') -> None:
+    async def add_operation_tile(self, operation: BaseOperation) -> None:
         """
         Adds a new operations tile to the GUI.
 

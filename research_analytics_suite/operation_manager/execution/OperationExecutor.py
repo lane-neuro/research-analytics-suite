@@ -46,7 +46,7 @@ class OperationExecutor:
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
-    async def execute_operation(self, operation: 'BaseOperation') -> asyncio.Task:
+    async def execute_operation(self, operation: BaseOperation) -> asyncio.Task:
         """
         Executes a single operation.
 

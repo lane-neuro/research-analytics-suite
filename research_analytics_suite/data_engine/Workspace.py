@@ -10,7 +10,7 @@ import asyncio
 import os
 import json
 import uuid
-from typing import Tuple, Optional, Any
+from typing import Tuple, Optional
 
 import aiofiles
 from collections import defaultdict
@@ -316,7 +316,7 @@ class Workspace:
             return {}
 
     @command
-    async def add_variable_to_collection(self, collection_id: str, name: str, value: Any, data_type: type,
+    async def add_variable_to_collection(self, collection_id: str, name: str, value: any, data_type: type,
                                          memory_slot_id: Optional[str] = None) -> Tuple[str, dict] or None:
         collection_id = collection_id or self._memory_manager.get_default_collection_id()
         try:
@@ -344,7 +344,7 @@ class Workspace:
 
     @command
     async def get_variable_from_collection(self, collection_id: str, name: str,
-                                           memory_slot_id: Optional[str] = None) -> Any:
+                                           memory_slot_id: Optional[str] = None) -> any:
         collection_id = collection_id or self._memory_manager.get_default_collection_id()
         try:
             collection = self._memory_manager.get_collection(collection_id)

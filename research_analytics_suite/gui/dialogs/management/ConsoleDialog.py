@@ -64,8 +64,9 @@ class ConsoleDialog(GUIBase):
             app_data (dict): Additional application data.
         """
         command = dpg.get_value('input_text')
-        self._logger.info(await process_user_input(command))
-        dpg.set_value('input_text', "")  # Clear the input field
+        _return = await process_user_input(command)
+        if _return is not None and not isinstance(_return, Exception):
+            dpg.set_value('input_text', "")
 
     def clear_logger_output(self) -> None:
         """Clears the logger output display."""

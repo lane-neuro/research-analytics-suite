@@ -79,7 +79,7 @@ class TestCommandDecorator:
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int}
         ]
-        assert temp_command_registry[0]['return_type'] is None
+        assert temp_command_registry[0]['return_type'] == []
 
     def test_default_arguments(self):
         @command
@@ -358,7 +358,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': any},
             {'name': 'b', 'type': any}
         ]
-        assert temp_command_registry[0]['return_type'] is None
+        assert temp_command_registry[0]['return_type'] == []
         assert temp_command_registry[0]['is_method'] is False
 
     def test_invalid_type_hints(self):

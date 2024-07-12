@@ -1,5 +1,4 @@
 import dearpygui.dearpygui as dpg
-from typing import Any
 
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
@@ -45,7 +44,7 @@ class CreateOperationModule(GUIBase):
         if dpg.does_item_exist(parent):
             dpg.add_button(label=label, callback=self.draw, parent=parent, width=width)
 
-    async def create_operation_from_dialog(self, sender: Any, app_data: Any, user_data: Any) -> None:
+    async def create_operation_from_dialog(self, sender: any, app_data: any, user_data: any) -> None:
         """Creates a new operation from the dialog inputs."""
         try:
             name = dpg.get_value(self._new_op_name)

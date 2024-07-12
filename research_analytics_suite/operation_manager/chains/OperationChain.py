@@ -99,7 +99,7 @@ class OperationChain:
         return count
 
     @command
-    def contains(self, operation: 'BaseOperation') -> bool:
+    def contains(self, operation: BaseOperation) -> bool:
         """
         Checks if the chain contains a specific operation.
 

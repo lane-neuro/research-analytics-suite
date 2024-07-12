@@ -17,7 +17,7 @@ License:        BSD 3-Clause License
 Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         Template
 """
-from typing import Any, Optional, Type
+from typing import Optional, Type
 from research_analytics_suite.operation_manager import BaseOperation
 
 
@@ -58,7 +58,7 @@ class OperationTemplate(BaseOperation):
     is_cpu_bound: bool = False
     parallel: bool = False
 
-    def __init__(self, custom_attribute: Optional[Any], *args, **kwargs):
+    def __init__(self, custom_attribute: Optional[any], *args, **kwargs):
         """
         Initialize the operation instance. Update kwargs with preset attributes and call the parent class constructor.
 

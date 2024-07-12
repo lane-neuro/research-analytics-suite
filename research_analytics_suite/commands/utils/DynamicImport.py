@@ -1,5 +1,6 @@
 import importlib
-from typing import Any, Union, Type, Optional, List, Dict, get_type_hints, ForwardRef, Tuple
+import re
+from typing import Any, Union, Type, Optional, List, Dict, ForwardRef, Tuple
 
 
 def parse_typing_alias(alias: str, elements: str) -> Type[Any]:
@@ -27,13 +28,17 @@ def parse_typing_alias(alias: str, elements: str) -> Type[Any]:
     elif alias == 'List':
         return List[dynamic_import(elements)]
     elif alias == 'Dict':
-        key, value = elements.split(', ')
-        return Dict[dynamic_import(key), dynamic_import(value)]
+        # Split by commas, but only at the top level
+        parts = re.split(r',\s*(?![^[]*\])', elements)
+        if len(parts) != 2:
+            raise ValueError(f"Invalid elements for Dict: {elements}")
+        key, value = parts
+        return Dict[dynamic_import(key.strip()), dynamic_import(value.strip() if isinstance(value, str) else value)]
     elif alias == 'Union':
-        types = [dynamic_import(element.strip()) for element in elements.split(',')]
+        types = [dynamic_import(element.strip()) for element in re.split(r',\s*(?![^[]*\])', elements)]
         return Union[tuple(types)]
     elif alias == 'Tuple':
-        types = [dynamic_import(element.strip()) for element in elements.split(',')]
+        types = [dynamic_import(element.strip()) for element in re.split(r',\s*(?![^[]*\])', elements)]
         return Tuple[tuple(types)]
     else:
         raise ValueError(f"Unknown typing alias: {alias}")
@@ -101,5 +106,5 @@ def dynamic_import(import_string: Union[str, Type[Any]]) -> Type[Any]:
 
             raise ImportError(f"No module named '{import_string}'")
 
-    except (AttributeError, ImportError, NameError) as e:
+    except (AttributeError, ImportError, NameError, Exception) as e:
         return type(any)  # Fallback for any exception
