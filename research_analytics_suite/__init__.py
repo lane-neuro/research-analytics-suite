@@ -33,9 +33,9 @@ def get_console_size():
         return 80, 24
 
 
-warnings.filterwarnings('ignore',
-                        message="Dask dataframe query planning is disabled because dask-expr is not installed",
-                        category=FutureWarning)
+# warnings.filterwarnings('ignore',
+#                         message="Dask dataframe query planning is disabled because dask-expr is not installed",
+#                         category=FutureWarning)
 
 
 CONSOLE_WIDTH, CONSOLE_HEIGHT = get_console_size()

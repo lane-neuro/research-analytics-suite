@@ -4,6 +4,7 @@ from typing import List, Union
 
 from research_analytics_suite.commands.CommandRegistry import CommandRegistry
 
+
 class TestCommandRegistry:
 
     @pytest.fixture(autouse=True)
@@ -209,3 +210,120 @@ class TestCommandRegistry:
         registry._initialize_command(command_meta)
         assert 'sample_command' in registry._registry
         assert registry._registry['sample_command']['return_type'] == 'SampleClass'
+
+    @pytest.mark.asyncio
+    async def test_execute_command_function(self, registry):
+        def sample_command(arg1: int, arg2: str) -> str:
+            return f"{arg1} {arg2}"
+
+        registry._initialize_command({
+            'func': sample_command,
+            'name': 'sample_command',
+            'class_name': None,
+            'args': [{'name': 'arg1', 'type': int}, {'name': 'arg2', 'type': str}],
+            'return_type': str,
+            'is_method': False
+        })
+        result = await registry.execute_command('sample_command', None, 1, 'test')
+        assert result == "1 test"
+
+    @pytest.mark.asyncio
+    async def test_execute_command_method(self, registry):
+        class SampleClass:
+            def method(self, arg: str) -> str:
+                return f"Hello {arg}"
+
+        instance = SampleClass()
+        registry.register_instance(instance, 'runtime_1')
+        registry._initialize_command({
+            'func': SampleClass.method,
+            'name': 'method',
+            'class_name': 'SampleClass',
+            'args': [{'name': 'arg', 'type': str}],
+            'return_type': str,
+            'is_method': True
+        })
+        result = await registry.execute_command('method', 'runtime_1', 'World')
+        assert result == "Hello World"
+
+    def test_next_page(self, registry):
+        registry._registry = {f'command_{i}': {} for i in range(15)}  # Add sample commands
+        registry.display_commands = MagicMock()
+        registry.next_page()
+        assert registry._current_page == 2
+
+    def test_previous_page(self, registry):
+        registry._current_page = 2
+        registry._registry = {f'command_{i}': {} for i in range(15)}  # Add sample commands
+        registry.display_commands = MagicMock()
+        registry.previous_page()
+        assert registry._current_page == 1
+
+    def test_clear_search(self, registry):
+        registry._search_keyword = 'test'
+        registry.display_commands = MagicMock()
+        registry.clear_search()
+        assert registry._search_keyword is None
+
+    def test_clear_category(self, registry):
+        registry._current_category = 'test_category'
+        registry.display_commands = MagicMock()
+        registry.clear_category()
+        assert registry._current_category is None
+
+    def test_search_commands(self, registry):
+        def sample_command():
+            pass
+
+        command_meta = {
+            'func': sample_command,
+            'name': 'sample_command',
+            'class_name': None,
+            'args': [],
+            'return_type': None,
+            'is_method': False,
+            'tags': ['test'],
+            'description': 'sample description',
+            'category': 'test_category'
+        }
+        registry._initialize_command(command_meta)
+        results = registry.search_commands('sample')
+        assert 'sample_command' in results
+
+    def test_get_commands_by_category(self, registry):
+        def sample_command():
+            pass
+
+        command_meta = {
+            'func': sample_command,
+            'name': 'sample_command',
+            'class_name': None,
+            'args': [],
+            'return_type': None,
+            'is_method': False,
+            'category': 'test_category'
+        }
+        registry._initialize_command(command_meta)
+        registry.categorize_commands()  # Ensure commands are categorized
+        results = registry.get_commands_by_category('test_category')
+        assert 'sample_command' in results
+
+    def test_display_command_details(self, registry):
+        def sample_command():
+            pass
+
+        command_meta = {
+            'func': sample_command,
+            'name': 'sample_command',
+            'class_name': None,
+            'args': [],
+            'return_type': None,
+            'is_method': False,
+            'description': 'This is a test command.',
+            'tags': ['test']
+        }
+        registry._initialize_command(command_meta)
+        with patch.object(registry._logger, 'info') as mock_logger_info:
+            registry.display_command_details('sample_command')
+            mock_logger_info.assert_any_call(f"\nCommand: sample_command")
+            mock_logger_info.assert_any_call(f"  Description:\tThis is a test command.")

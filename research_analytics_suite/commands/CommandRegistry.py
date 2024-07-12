@@ -141,7 +141,7 @@ class CommandRegistry:
             'return_type': cmd_meta.get('return_type', []),
             'is_method': cmd_meta.get('is_method', False),
             '_is_command': True,
-            'category': cmd_meta.get('category', 'Uncategorized'),
+            'category': cmd_meta.get('category', 'Uncategorized'),  # Ensure category is set
             'description': cmd_meta.get('description', 'No description provided.'),
             'tags': cmd_meta.get('tags', []),
         }
@@ -379,22 +379,11 @@ class CommandRegistry:
     def categorize_commands(self):
         # Ensure commands are categorized
         self._categories = {}
-        self._registry = add_tags_to_commands(self._registry)
-
-        tag_counter = Counter()
         for cmd_name, cmd_meta in self._registry.items():
-            tag_counter.update(cmd_meta['tags'])
-            for tag in cmd_meta['tags']:
-                if tag not in self._categories:
-                    self._categories[tag] = {}
-                self._categories[tag][cmd_name] = cmd_meta
-
-        for cmd_name, cmd_meta in self._registry.items():
-            if cmd_meta['tags'] is not None and len(cmd_meta['tags']) > 0:
-                most_common_tag = tag_counter.most_common(1)[0][0]
-                cmd_meta['category'] = most_common_tag
-            else:
-                cmd_meta['category'] = 'Uncategorized'
+            category = cmd_meta.get('category', 'Uncategorized')
+            if category not in self._categories:
+                self._categories[category] = {}
+            self._categories[category][cmd_name] = cmd_meta
 
     def search_commands(self, keyword: str) -> List[str]:
         """
@@ -409,11 +398,13 @@ class CommandRegistry:
         self._search_keyword = keyword
         results = []
         for cmd_name, cmd_meta in self._registry.items():
-            if keyword.lower() in cmd_name.lower() or keyword.lower() in cmd_meta['description'].lower()\
-                    or keyword.lower() in cmd_meta['category'].lower() or keyword.lower() in cmd_meta['tags']\
-                    or keyword.lower() in [arg['name'].lower() for arg in cmd_meta['args']]\
-                    or keyword.lower() in [arg['type'].__name__.lower() for arg in cmd_meta['args']]\
-                    or keyword.lower() in [rt.lower() for rt in cmd_meta['return_type']]:
+            if keyword.lower() in cmd_name.lower() or \
+                    keyword.lower() in cmd_meta.get('description', '').lower() or \
+                    keyword.lower() in cmd_meta.get('category', '').lower() or \
+                    keyword.lower() in cmd_meta.get('tags', '') or \
+                    keyword.lower() in [arg['name'].lower() for arg in cmd_meta.get('args', [])] or \
+                    keyword.lower() in [arg['type'].__name__.lower() for arg in cmd_meta.get('args', [])] or \
+                    keyword.lower() in [rt.lower() for rt in cmd_meta.get('return_type', [])]:
                 results.append(cmd_name)
         return results
 
