@@ -42,7 +42,7 @@ async def process_user_input(user_input, runtime_id=None):
     user_input = user_input.strip()
     if not user_input:
         CustomLogger().error(Exception(f"Error: Unknown command '{original_input}'. "
-                                       f"Type 'ras_help' to see available commands."), "UserInputProcessor")
+                                       f"Type '_help' to see available commands."), "UserInputProcessor")
         return None
 
     # Parse command and arguments
@@ -78,14 +78,14 @@ async def process_user_input(user_input, runtime_id=None):
 
     if not parts:
         CustomLogger().error(Exception(f"Error: Unknown command '{original_input}'. "
-                                       f"Type 'ras_help' to see available commands."), "UserInputProcessor")
+                                       f"Type '_help' to see available commands."), "UserInputProcessor")
         return None
 
     command_name = parts[0]
     args = parts[1:]
 
     try:
-        return await CommandRegistry().execute_command(name=command_name, runtime_id=runtime_id, args=args)
+        return await CommandRegistry().execute_command(command_name, runtime_id, *args)
     except Exception as e:
         CustomLogger().error(e, "UserInputProcessor")
         raise e

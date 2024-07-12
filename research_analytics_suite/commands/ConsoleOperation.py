@@ -65,8 +65,7 @@ class ConsoleOperation(BaseOperation):
                     self._status = "stopped"
                     break
 
-                result = await process_user_input(user_input)
-                self._logger.info(result)
+                await process_user_input(user_input)
 
             except EOFError:
                 self.handle_error("EOFError: No input provided")

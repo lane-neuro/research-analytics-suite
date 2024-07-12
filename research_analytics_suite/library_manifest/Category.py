@@ -79,7 +79,11 @@ class Category:
 
     @command
     def register_operation(self, operation):
-        self._operations.append(operation)
+        if self._operations is None:
+            self._operations = []
+
+        if operation not in self._operations:
+            self._operations.append(operation)
 
     @command
     def add_subcategory(self, subcategory):

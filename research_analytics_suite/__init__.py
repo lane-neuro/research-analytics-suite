@@ -17,4 +17,34 @@ __maintainer__ = 'Lane'
 __emails__ = 'justlane@uw.edu'
 __status__ = 'Prototype'
 
+import os
+import shutil
+import sys
+import warnings
+
 from .ResearchAnalyticsSuite import ResearchAnalyticsSuite
+
+
+def get_console_size():
+    try:
+        size = shutil.get_terminal_size()
+        return size.columns, size.lines
+    except OSError:
+        return 80, 24
+
+
+warnings.filterwarnings('ignore',
+                        message="Dask dataframe query planning is disabled because dask-expr is not installed",
+                        category=FutureWarning)
+
+
+CONSOLE_WIDTH, CONSOLE_HEIGHT = get_console_size()
+
+# Disable OneDNN optimizations for TensorFlow
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
+# Disable OneDNN optimizations for PyTorch
+os.environ['TORCH_DNNL_DISABLE_FUSE'] = '1'
+
+# Set python path for the package
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))

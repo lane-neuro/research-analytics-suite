@@ -38,7 +38,7 @@ class TestProcessUserInput:
         response = await process_user_input(user_input, runtime_id)
 
         self.mock_command_registry.execute_command.assert_called_once_with(
-            name="valid_command", runtime_id=runtime_id, args=["arg1", "arg2"]
+            "valid_command", runtime_id, "arg1", "arg2"
         )
         assert response == "Command executed successfully"
 
@@ -51,7 +51,7 @@ class TestProcessUserInput:
 
         self.mock_logger.error.assert_called_once()
         error_message = self.mock_logger.error.call_args[0][0]
-        assert str(error_message) == "Error: Unknown command ''. Type 'ras_help' to see available commands."
+        assert str(error_message) == "Error: Unknown command ''. Type '_help' to see available commands."
         assert response is None
 
     @pytest.mark.asyncio
@@ -61,7 +61,7 @@ class TestProcessUserInput:
         response = await process_user_input(user_input)
 
         self.mock_command_registry.execute_command.assert_called_once_with(
-            name="valid_command", runtime_id=None, args=["arg1"]
+            "valid_command", None, "arg1"
         )
         assert response == "Command executed successfully"
 
@@ -74,7 +74,7 @@ class TestProcessUserInput:
 
         self.mock_logger.error.assert_called_once()
         error_message = self.mock_logger.error.call_args[0][0]
-        assert str(error_message) == "Error: Unknown command '   '. Type 'ras_help' to see available commands."
+        assert str(error_message) == "Error: Unknown command '   '. Type '_help' to see available commands."
         assert response is None
 
     @pytest.mark.asyncio
@@ -87,7 +87,7 @@ class TestProcessUserInput:
         response = await process_user_input(user_input, runtime_id)
 
         self.mock_command_registry.execute_command.assert_called_once_with(
-            name="command", runtime_id=runtime_id, args=["!@#", "$%^"]
+            "command", runtime_id, "!@#", "$%^"
         )
         assert response == "Special command executed"
 
@@ -101,7 +101,7 @@ class TestProcessUserInput:
         response = await process_user_input(user_input, runtime_id)
 
         self.mock_command_registry.execute_command.assert_called_once_with(
-            name="command", runtime_id=runtime_id, args=["你好", "世界"]
+             "command", runtime_id, "你好", "世界"
         )
         assert response == "Unicode command executed"
 
@@ -115,7 +115,7 @@ class TestProcessUserInput:
         response = await process_user_input(user_input, runtime_id)
 
         self.mock_command_registry.execute_command.assert_called_once_with(
-            name="command", runtime_id=runtime_id, args=["arg1", "123"]
+            "command", runtime_id, "arg1", "123"
         )
         assert response == "Mixed command executed"
 
@@ -139,7 +139,7 @@ class TestProcessUserInput:
         response = await process_user_input(user_input, runtime_id)
 
         self.mock_command_registry.execute_command.assert_called_once_with(
-            name="noarg_command", runtime_id=runtime_id, args=[]
+            "noarg_command", runtime_id
         )
         assert response == "Command with no arguments executed"
 
@@ -153,7 +153,7 @@ class TestProcessUserInput:
         response = await process_user_input(user_input, runtime_id)
 
         self.mock_command_registry.execute_command.assert_called_once_with(
-            name="command", runtime_id=runtime_id, args=["arg with spaces", "another arg"]
+            "command", runtime_id, "arg with spaces", "another arg"
         )
         assert response == "Command with quoted arguments executed"
 
@@ -168,7 +168,7 @@ class TestProcessUserInput:
 
         expected_args = [f"arg{i}" for i in range(100)]
         self.mock_command_registry.execute_command.assert_called_once_with(
-            name="command", runtime_id=runtime_id, args=expected_args
+            "command", runtime_id, *expected_args
         )
         assert response == "Long command executed"
 

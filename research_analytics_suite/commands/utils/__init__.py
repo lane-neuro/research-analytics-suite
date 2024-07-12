@@ -1,2 +1,2 @@
 from .DynamicImport import dynamic_import
-from .wrap_text import wrap_text
+from .text_utils import wrap_text

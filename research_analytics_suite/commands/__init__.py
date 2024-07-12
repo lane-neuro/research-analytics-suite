@@ -7,4 +7,4 @@ Author: Lane
 from .CommandDecorators import temp_command_registry
 from .CommandDecorators import register_commands, command
 from .CommandRegistry import CommandRegistry
-from .DefaultCommands import ras_help, resources
+from .DefaultCommands import _help, resources, tasks, registry, _exit

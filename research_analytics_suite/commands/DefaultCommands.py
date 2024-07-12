@@ -14,6 +14,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
+import sys
 
 from research_analytics_suite.commands import command, CommandRegistry
 from research_analytics_suite.operation_manager import OperationControl
@@ -21,9 +22,34 @@ from research_analytics_suite.utils import CustomLogger
 
 
 @command
-def ras_help() -> str:
+def _help() -> str:
     """Displays available commands and their descriptions."""
-    return asyncio.run(CommandRegistry().display_commands())
+    return CommandRegistry().display_commands()
+
+
+@command
+async def _exit():
+    """Exits the Research Analytics Suite."""
+    try:
+        from research_analytics_suite.data_engine import Workspace
+        await Workspace().save_current_workspace()
+    except Exception as e:
+        CustomLogger().error(Exception(f"Error saving workspace: {e}"), 'exit')
+    finally:
+        sys.exit(0)
+
+
+@command
+async def clear():
+    """Clears the search and keyword variables."""
+    CommandRegistry().clear_search()
+    CommandRegistry().clear_category()
+
+
+@command
+def registry() -> str:
+    """Displays the command registry."""
+    return CommandRegistry().registry
 
 
 @command
