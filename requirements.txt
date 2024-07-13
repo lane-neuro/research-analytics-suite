@@ -20,8 +20,6 @@ importlib_resources
 jupyter_core
 keras
 matplotlib
-matplotlib-base
-matplotlib-inline
 mkl
 mkl-service
 mkl_fft
@@ -72,7 +70,6 @@ yarg
 zipp
 dearpygui
 dearpygui-async
-jupyterlab-pygments
 jupyter-client
 pure-eval
 tensorflow
