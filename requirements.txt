@@ -47,10 +47,6 @@ rich
 s3transfer
 scikit-learn
 scipy
-setuptools
-statsmodels
-sqlite
-toolz
 pytorch
 torchaudio
 torchvision
