@@ -41,7 +41,6 @@ pytest-asyncio
 pytest-cov
 pyserial
 pyserial-asyncio
-pytables
 requests
 requests-toolbelt
 rich
