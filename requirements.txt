@@ -47,7 +47,7 @@ rich
 s3transfer
 scikit-learn
 scipy
-pytorch
+torch
 torchaudio
 torchvision
 tornado
