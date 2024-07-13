@@ -15,7 +15,6 @@ cachey
 dask
 fastavro
 fastparquet
-hdf5
 importlib-metadata
 importlib_resources
 jupyter_core
