@@ -13,6 +13,8 @@ boto3
 botocore
 cachey
 dask
+dask-core
+dask-expr
 fastavro
 fastparquet
 importlib-metadata
@@ -33,6 +35,7 @@ pip
 pipreqs
 prettytable
 psutil
+pyarrow
 pymongo
 pyopenssl
 pyparsing

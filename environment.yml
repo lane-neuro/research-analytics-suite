@@ -46,6 +46,8 @@ dependencies:
   - cryptography
   - cycler
   - dask
+  - dask-core
+  - dask-expr
   - decorator
   - defusedxml
   - dnspython
