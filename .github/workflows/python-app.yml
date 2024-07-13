@@ -40,11 +40,11 @@ jobs:
 
     - name: List outdated dependencies
       run: |
-        outdated=$(pip list --outdated --format=freeze)
+        outdated=$(pip list --outdated --format=columns | tail -n +3 | awk '{print $1}')
         echo "$outdated"
         if [ -n "$outdated" ]; then
           echo "Outdated dependencies found. Installing updates..."
-          echo "$outdated" | cut -d= -f1 | xargs -n1 pip install -U
+          echo "$outdated" | xargs -n1 pip install -U
         else
           echo "No outdated dependencies found."
         fi
