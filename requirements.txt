@@ -28,7 +28,6 @@ nest-asyncio
 numexpr
 numpy
 openpyxl
-openssl
 pandas
 pip
 pipreqs
@@ -56,18 +55,12 @@ scipy
 setuptools
 statsmodels
 sqlite
-sympy
-tbb
-tomli
 toolz
 pytorch
 torchaudio
 torchvision
 tornado
 wheel
-yaml
-yarg
-zipp
 dearpygui
 dearpygui-async
 jupyter-client
