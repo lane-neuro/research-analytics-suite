@@ -36,7 +36,7 @@ psutil
 pymongo
 pyopenssl
 pyparsing
-pytables
+tables
 pytest
 pytest-asyncio
 pytest-cov
