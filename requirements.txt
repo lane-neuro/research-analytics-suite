@@ -8,10 +8,6 @@
 aioconsole
 aiofiles
 aiosqlite
-anaconda-anon-usage
-anaconda-client
-anaconda-cloud-auth
-anaconda-navigator
 annotated-types
 anyio
 asttokens
@@ -36,12 +32,6 @@ charset-normalizer
 click
 cloudpickle
 colorama
-conda
-conda-content-trust
-conda-package-handling
-conda-package-streaming
-conda-repo-cli
-conda-token
 console_shortcut
 contourpy
 cryptography
