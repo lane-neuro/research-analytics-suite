@@ -340,8 +340,9 @@ class CommandRegistry:
                                    self.__class__.__name__)
 
                 # Check if the class is a singleton
-                if is_singleton(cmd_meta['class_name']):
-                    instance = cmd_meta['class_name']()
+                _class = cmd_meta['class_name']
+                if is_singleton(_class):
+                    instance = _class()
                     _returns = cmd_meta['func'](instance, *args, **kwargs)
                     if _returns is not None:
                         return _returns
