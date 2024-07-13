@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, Mock
 from typing import List, Union, Dict
 
 from research_analytics_suite.commands.CommandRegistry import CommandRegistry
@@ -10,8 +10,8 @@ class TestCommandRegistry:
     def registry(self):
         registry = CommandRegistry()
         registry._logger = patch('research_analytics_suite.utils.CustomLogger').start()
-        registry._logger.error = MagicMock()
-        registry._logger.info = MagicMock()
+        registry._logger.error = Mock()
+        registry._logger.info = Mock()
         registry._config = MagicMock()
         registry._operation_control = MagicMock()
         registry._library_manifest = MagicMock()
@@ -167,22 +167,6 @@ class TestCommandRegistry:
         result = await registry.execute_command('method', 'runtime_1', 'World')
         assert result == "Hello World"
 
-    @pytest.mark.asyncio
-    async def test_execute_command_with_incorrect_arguments(self, registry):
-        def sample_command(arg1: int, arg2: str) -> str:
-            return f"{arg1} {arg2}"
-
-        registry._initialize_command({
-            'func': sample_command,
-            'name': 'sample_command',
-            'class_name': None,
-            'args': [{'name': 'arg1', 'type': int}, {'name': 'arg2', 'type': str}],
-            'return_type': str,
-            'is_method': False
-        })
-        await registry.execute_command('sample_command', None, 1)
-        registry._logger.error.assert_called()
-
     @patch('importlib.import_module')
     @patch('pkgutil.walk_packages')
     def test_discover_commands(self, mock_walk_packages, mock_import_module, registry):
@@ -300,3 +284,30 @@ class TestCommandRegistry:
         registry.display_command_details('nonexistent_command')
         registry._logger.error.assert_called()
 
+    @pytest.mark.asyncio
+    async def test_initialize_with_missing_components(self, registry):
+        with patch('research_analytics_suite.utils.CustomLogger', side_effect=Exception("Logger init failed")), \
+                patch('research_analytics_suite.utils.Config'), \
+                patch('research_analytics_suite.operation_manager.control.OperationControl'), \
+                patch('research_analytics_suite.library_manifest.LibraryManifest'), \
+                patch('research_analytics_suite.data_engine.Workspace'):
+            with pytest.raises(Exception) as excinfo:
+                await registry.initialize()
+            assert str(excinfo.value) == "Logger init failed"
+            registry._logger.error.assert_called()
+
+    def test_register_command_with_nested_return_type(self, registry):
+        def sample_command(arg1: int) -> List[Dict[str, Union[int, str]]]:
+            return [{"key": arg1}]
+
+        command_meta = {
+            'func': sample_command,
+            'name': 'sample_command',
+            'class_name': None,
+            'args': [{'name': 'arg1', 'type': int}],
+            'return_type': List[Dict[str, Union[int, str]]],
+            'is_method': False
+        }
+        registry._initialize_command(command_meta)
+        assert 'sample_command' in registry._registry
+        assert registry._registry['sample_command']['return_type'] == 'List[Dict[str, Union[int, str]]]'

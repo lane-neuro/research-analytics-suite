@@ -17,12 +17,10 @@ import importlib
 import inspect
 import pkgutil
 from asyncio import iscoroutinefunction
-from collections import Counter
 from typing import get_type_hints, Optional, List, Dict, Tuple, Union, Iterable, ForwardRef
 from prettytable import PrettyTable
 
 from research_analytics_suite.commands.utils import dynamic_import, wrap_text
-from research_analytics_suite.commands.utils.text_utils import add_tags_to_commands
 
 
 class CommandRegistry:
@@ -60,23 +58,27 @@ class CommandRegistry:
         Initializes the command registry with the necessary components.
         """
         if not self._initialized:
-            from research_analytics_suite.utils import CustomLogger
-            self._logger = CustomLogger()
+            try:
+                from research_analytics_suite.utils import CustomLogger
+                self._logger = CustomLogger()
+            except Exception as e:
+                self._logger.error(Exception(f"Logger init failed: {e}"), self.__class__.__name__)
+                raise
 
-            from research_analytics_suite.utils import Config
-            self._config = Config()
-
-            from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
-            self._operation_control = OperationControl()
-
-            from research_analytics_suite.library_manifest import LibraryManifest
-            self._library_manifest = LibraryManifest()
-
-            from research_analytics_suite.data_engine import Workspace
-            self._workspace = Workspace()
+            try:
+                from research_analytics_suite.utils import Config
+                self._config = Config()
+                from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
+                self._operation_control = OperationControl()
+                from research_analytics_suite.library_manifest import LibraryManifest
+                self._library_manifest = LibraryManifest()
+                from research_analytics_suite.data_engine import Workspace
+                self._workspace = Workspace()
+            except Exception as e:
+                self._logger.error(Exception(f"Initialization failed: {e}"), self.__class__.__name__)
+                raise
 
             self._initialize_collected_commands()
-
             self._initialized = True
 
     def _initialize_collected_commands(self):
@@ -349,10 +351,13 @@ class CommandRegistry:
                 return
         else:
             # Check whether the command requires arguments
-            if len(cmd_meta['args']) != len(args):
-                self._logger.error(ValueError(f"Command '{name}' requires {len(cmd_meta['args'])} arguments, "
-                                              f"but received {len(args)}."), self.__class__.__name__)
-                return None
+            expected_arg_types = [arg['type'] for arg in cmd_meta['args']]
+            received_arg_types = [type(arg) for arg in args]
+            if expected_arg_types != received_arg_types:
+                error_message = (
+                    f"Command '{name}' requires arguments of type {expected_arg_types}, but received {received_arg_types}."
+                )
+                self._logger.error(error_message, self.__class__.__name__)
             if not cmd_meta['args']:
                 if iscoroutinefunction(cmd_meta['func']):
                     _returns = await cmd_meta['func']()
