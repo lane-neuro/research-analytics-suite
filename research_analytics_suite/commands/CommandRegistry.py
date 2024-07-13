@@ -430,7 +430,7 @@ class CommandRegistry:
         Returns:
             Optional[dict]: The command metadata if found, else None.
         """
-        return self._registry.get(command_name)
+        return self._registry.get(command_name, None)
 
     def display_commands(self, category: str = None, keyword: str = None, page: int = 1, column_width: int = 60):
         """
@@ -529,7 +529,8 @@ class CommandRegistry:
         """
         cmd_meta = self.get_command_details(command_name)
         if cmd_meta is None:
-            self._logger.error(ValueError(f"Command '{command_name}' not found in the registry."), self.__class__.__name__)
+            self._logger.error(ValueError(f"Command '{command_name}' not found in the registry."),
+                               self.__class__.__name__)
             return
 
         self._logger.info(f"\nCommand: {command_name}")
@@ -545,9 +546,9 @@ class CommandRegistry:
         self._logger.info('--------------------------------------------------------------------')
         if cmd_meta.get('args', []) is not [] or None:
             self._logger.info(
-            f"** [NOTE] An argument of type 'any' means the argument type was not specified by the developer, it does\n"
-            f"  ... not mean you can pass any argument type. Please refer to the source code or contact the command's\n"
-            f"  ... developer for more information.")
+                f"** [NOTE] An argument of type 'any' means the argument type was not specified by the developer, it does\n"
+                f"  ... not mean you can pass any argument type. Please refer to the source code or contact the command's\n"
+                f"  ... developer for more information.")
             self._logger.info(f"  Arguments:")
             for arg in cmd_meta.get('args', []):
                 self._logger.info(f"\t-\t{arg['name']} ({arg['type'].__name__})")

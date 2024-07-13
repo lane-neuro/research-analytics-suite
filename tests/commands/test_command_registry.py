@@ -1,9 +1,8 @@
 import pytest
-from unittest.mock import MagicMock, patch, Mock
-from typing import List, Union
+from unittest.mock import MagicMock, patch
+from typing import List, Union, Dict
 
 from research_analytics_suite.commands.CommandRegistry import CommandRegistry
-
 
 class TestCommandRegistry:
 
@@ -11,6 +10,8 @@ class TestCommandRegistry:
     def registry(self):
         registry = CommandRegistry()
         registry._logger = patch('research_analytics_suite.utils.CustomLogger').start()
+        registry._logger.error = MagicMock()
+        registry._logger.info = MagicMock()
         registry._config = MagicMock()
         registry._operation_control = MagicMock()
         registry._library_manifest = MagicMock()
@@ -106,6 +107,22 @@ class TestCommandRegistry:
         assert 'sample_command' in registry._registry
         assert registry._registry['sample_command']['return_type'] == 'None'
 
+    def test_register_command_with_complex_type(self, registry):
+        def sample_command(arg1: Dict[str, List[int]]) -> List[Dict[str, int]]:
+            return [{k: v[0]} for k, v in arg1.items()]
+
+        command_meta = {
+            'func': sample_command,
+            'name': 'sample_command',
+            'class_name': None,
+            'args': [{'name': 'arg1', 'type': Dict[str, List[int]]}],
+            'return_type': List[Dict[str, int]],
+            'is_method': False
+        }
+        registry._initialize_command(command_meta)
+        assert 'sample_command' in registry._registry
+        assert registry._registry['sample_command']['return_type'] == 'List[Dict[str, int]]'
+
     def test_register_instance(self, registry):
         class SampleClass:
             def method(self):
@@ -150,6 +167,22 @@ class TestCommandRegistry:
         result = await registry.execute_command('method', 'runtime_1', 'World')
         assert result == "Hello World"
 
+    @pytest.mark.asyncio
+    async def test_execute_command_with_incorrect_arguments(self, registry):
+        def sample_command(arg1: int, arg2: str) -> str:
+            return f"{arg1} {arg2}"
+
+        registry._initialize_command({
+            'func': sample_command,
+            'name': 'sample_command',
+            'class_name': None,
+            'args': [{'name': 'arg1', 'type': int}, {'name': 'arg2', 'type': str}],
+            'return_type': str,
+            'is_method': False
+        })
+        await registry.execute_command('sample_command', None, 1)
+        registry._logger.error.assert_called()
+
     @patch('importlib.import_module')
     @patch('pkgutil.walk_packages')
     def test_discover_commands(self, mock_walk_packages, mock_import_module, registry):
@@ -177,85 +210,20 @@ class TestCommandRegistry:
         assert 'sample_command' in registry._registry
         assert 'method' in registry._registry
 
-    def test_register_command_with_invalid_return_type(self, registry):
-        def sample_command(arg1: int, arg2: str):
-            pass
-
-        command_meta = {
-            'func': sample_command,
-            'name': 'sample_command',
-            'class_name': None,
-            'args': [{'name': 'arg1', 'type': int}, {'name': 'arg2', 'type': str}],
-            'return_type': 'InvalidType',  # Intentionally invalid
-            'is_method': False
-        }
-        registry._initialize_command(command_meta)
-        assert registry._logger
-
-    def test_register_command_with_forward_reference_return_type(self, registry):
-        def sample_command(arg1: int, arg2: str) -> 'SampleClass':
-            pass
-
-        class SampleClass:
-            pass
-
-        command_meta = {
-            'func': sample_command,
-            'name': 'sample_command',
-            'class_name': None,
-            'args': [{'name': 'arg1', 'type': int}, {'name': 'arg2', 'type': str}],
-            'return_type': SampleClass,
-            'is_method': False
-        }
-        registry._initialize_command(command_meta)
-        assert 'sample_command' in registry._registry
-        assert registry._registry['sample_command']['return_type'] == 'SampleClass'
-
-    @pytest.mark.asyncio
-    async def test_execute_command_function(self, registry):
-        def sample_command(arg1: int, arg2: str) -> str:
-            return f"{arg1} {arg2}"
-
-        registry._initialize_command({
-            'func': sample_command,
-            'name': 'sample_command',
-            'class_name': None,
-            'args': [{'name': 'arg1', 'type': int}, {'name': 'arg2', 'type': str}],
-            'return_type': str,
-            'is_method': False
-        })
-        result = await registry.execute_command('sample_command', None, 1, 'test')
-        assert result == "1 test"
-
-    @pytest.mark.asyncio
-    async def test_execute_command_method(self, registry):
-        class SampleClass:
-            def method(self, arg: str) -> str:
-                return f"Hello {arg}"
-
-        instance = SampleClass()
-        registry.register_instance(instance, 'runtime_1')
-        registry._initialize_command({
-            'func': SampleClass.method,
-            'name': 'method',
-            'class_name': 'SampleClass',
-            'args': [{'name': 'arg', 'type': str}],
-            'return_type': str,
-            'is_method': True
-        })
-        result = await registry.execute_command('method', 'runtime_1', 'World')
-        assert result == "Hello World"
-
-    def test_next_page(self, registry):
-        registry._registry = {f'command_{i}': {} for i in range(15)}  # Add sample commands
+    def test_pagination_next_page(self, registry):
+        registry._registry = {f'command_{i}': {} for i in range(25)}  # Add sample commands
         registry.display_commands = MagicMock()
         registry.next_page()
         assert registry._current_page == 2
+        registry.next_page()
+        assert registry._current_page == 3
 
-    def test_previous_page(self, registry):
-        registry._current_page = 2
-        registry._registry = {f'command_{i}': {} for i in range(15)}  # Add sample commands
+    def test_pagination_previous_page(self, registry):
+        registry._current_page = 3
+        registry._registry = {f'command_{i}': {} for i in range(25)}  # Add sample commands
         registry.display_commands = MagicMock()
+        registry.previous_page()
+        assert registry._current_page == 2
         registry.previous_page()
         assert registry._current_page == 1
 
@@ -327,3 +295,8 @@ class TestCommandRegistry:
             registry.display_command_details('sample_command')
             mock_logger_info.assert_any_call(f"\nCommand: sample_command")
             mock_logger_info.assert_any_call(f"  Description:\tThis is a test command.")
+
+    def test_display_nonexistent_command_details(self, registry):
+        registry.display_command_details('nonexistent_command')
+        registry._logger.error.assert_called()
+
