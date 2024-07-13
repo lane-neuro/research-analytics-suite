@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: [3.11]
 
     steps:
     - uses: actions/checkout@v2
@@ -24,9 +24,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest pytest-asyncio
         pip install -r requirements.txt
-    - name: Run tests
+    - name: Run ALL Tests
       env:
         PYTHON_LOG_LEVEL: DEBUG  # Set the log level to DEBUG for tests
       run: |
