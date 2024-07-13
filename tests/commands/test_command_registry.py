@@ -343,3 +343,26 @@ class TestCommandRegistry:
     def test_current_category_property(self, registry):
         registry.current_category = 'new_category'
         assert registry.current_category == 'new_category'
+
+    def test_display_command_details_for_method(self, registry):
+        class SampleClass:
+            def method(self):
+                """This is a method."""
+                pass
+
+        command_meta = {
+            'func': SampleClass.method,
+            'name': 'method',
+            'class_name': 'SampleClass',
+            'args': [],
+            'return_type': None,
+            'is_method': True,
+            'description': 'This is a method.',
+            'tags': ['test']
+        }
+        registry._initialize_command(command_meta)
+
+        with patch.object(registry._logger, 'info') as mock_logger_info:
+            registry.display_command_details('method')
+            mock_logger_info.assert_any_call(f"  Class:\tSampleClass")
+            mock_logger_info.assert_any_call(f"  Method:\tmethod")
