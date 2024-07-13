@@ -4,6 +4,7 @@ from typing import List, Union, Dict
 
 from research_analytics_suite.commands.CommandRegistry import CommandRegistry
 
+
 class TestCommandRegistry:
 
     @pytest.fixture(autouse=True)
@@ -311,3 +312,34 @@ class TestCommandRegistry:
         registry._initialize_command(command_meta)
         assert 'sample_command' in registry._registry
         assert registry._registry['sample_command']['return_type'] == 'List[Dict[str, Union[int, str]]]'
+
+    # Test for registry property
+    def test_registry_property(self, registry):
+        new_registry = {'new_command': {'name': 'new_command'}}
+        registry.registry = new_registry
+        assert registry.registry == new_registry
+
+    # Test for search property
+    def test_search_property(self, registry):
+        registry.search = 'new_search'
+        assert registry.search == 'new_search'
+
+    # Test for categories property
+    def test_categories_property(self, registry):
+        registry._categories = {'cat1': {}, 'cat2': {}}
+        assert registry.categories == {'cat1': {}, 'cat2': {}}
+
+    # Test for current_page property
+    def test_current_page_property(self, registry):
+        registry._current_page = 5
+        assert registry.current_page == 5
+
+    # Test for page_size property
+    def test_page_size_property(self, registry):
+        registry.page_size = 20
+        assert registry.page_size == 20
+
+    # Test for current_category property
+    def test_current_category_property(self, registry):
+        registry.current_category = 'new_category'
+        assert registry.current_category == 'new_category'
