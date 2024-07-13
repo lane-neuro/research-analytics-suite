@@ -21,6 +21,7 @@ from typing import get_type_hints, Optional, List, Dict, Tuple, Union, Iterable,
 from prettytable import PrettyTable
 
 from research_analytics_suite.commands.utils import dynamic_import, wrap_text
+from research_analytics_suite.utils.SingletonChecker import is_singleton
 
 
 class CommandRegistry:
@@ -333,7 +334,23 @@ class CommandRegistry:
             self.display_commands(category=None, page=1)
             return None
 
-        if cmd_meta['is_method'] and runtime_id is not None:
+        if bool(cmd_meta['is_method']):
+            if runtime_id is None:
+                self._logger.error(ValueError("Instance-specific method requires a runtime ID."),
+                                   self.__class__.__name__)
+
+                # Check if the class is a singleton
+                if is_singleton(cmd_meta['class_name']):
+                    instance = cmd_meta['class_name']()
+                    _returns = cmd_meta['func'](instance, *args, **kwargs)
+                    if _returns is not None:
+                        return _returns
+                    return
+                else:
+                    self._logger.error(ValueError(f"Instance with runtime ID '{runtime_id}' not found."),
+                                       self.__class__.__name__)
+                    return None
+
             instance = self._instances.get(runtime_id)
             if instance is None:
                 self._logger.error(ValueError(f"Instance with runtime ID '{runtime_id}' not found."),
