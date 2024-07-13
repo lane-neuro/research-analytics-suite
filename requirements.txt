@@ -13,7 +13,6 @@ boto3
 botocore
 cachey
 dask
-dask-core
 dask-expr
 fastavro
 fastparquet
