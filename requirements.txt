@@ -39,12 +39,8 @@ pyparsing
 pytest
 pytest-asyncio
 pytest-cov
-pyqt
-pyqt5-sip
-pyqtwebengine
 pyserial
 pyserial-asyncio
-pysocks
 pytables
 requests
 requests-toolbelt
