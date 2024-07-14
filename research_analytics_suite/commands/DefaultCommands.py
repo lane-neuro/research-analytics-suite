@@ -13,11 +13,9 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-import asyncio
 import sys
 
-from research_analytics_suite.commands.CommandDecorators import command
-from research_analytics_suite.commands.CommandRegistry import CommandRegistry
+from research_analytics_suite.commands import CommandRegistry, command
 from research_analytics_suite.utils import CustomLogger
 
 

@@ -74,6 +74,8 @@ def command(func=None):
         description = ' '.join(description.split())
         if 'Args' in description:
             description = description.split('Args')[0]
+        if 'Returns' in description:
+            description = description.split('Returns')[0]
 
         # Determine if the function is a method or static method
         is_method = 'self' in sig.parameters or 'cls' in sig.parameters

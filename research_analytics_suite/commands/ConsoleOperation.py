@@ -61,10 +61,6 @@ class ConsoleOperation(BaseOperation):
 
                 self.add_log_entry(f"User input: {user_input}")
 
-                if user_input == "exit":  # Exit condition
-                    self._status = "stopped"
-                    break
-
                 await process_user_input(user_input)
 
             except EOFError:
