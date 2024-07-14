@@ -38,7 +38,7 @@ class CollectionViewDialog(GUIBase):
                 action=self._update_async, is_loop=True, parallel=True)
             self._update_operation.is_ready = True
         except Exception as e:
-            self._logger.error(e, self)
+            self._logger.error(e, self.__class__.__name__)
 
     def draw(self) -> None:
         with dpg.child_window(tag="collection_view_dialog",

@@ -15,6 +15,7 @@ botocore
 cachey
 dask
 dask-expr
+distributed
 fastavro
 fastparquet
 importlib-metadata
