@@ -1,5 +1,6 @@
 # Research Analytics Suite (RAS)Requirements
 # platform: win-64 | osx-64 | linux-64
+# python: 3.11
 
 # This file may be used to install the required packages using:
 # $ pip install -r requirements.txt
