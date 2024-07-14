@@ -21,7 +21,6 @@ SAFE_MODULES = {
     'pandas': __import__('pandas'),
     'sklearn': __import__('sklearn'),
     'torch': __import__('torch'),
-    'matplotlib': __import__('matplotlib'),
 }
 
 

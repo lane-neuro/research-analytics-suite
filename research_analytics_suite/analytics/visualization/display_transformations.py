@@ -16,8 +16,6 @@ Status: Prototype
 
 from copy import deepcopy
 
-from matplotlib import pyplot as plt
-
 from research_analytics_suite.commands import command
 
 
@@ -36,6 +34,7 @@ def display_transformations(data_in, transformations, cmap='viridis'):
     Returns:
         None
     """
+    from matplotlib import pyplot as plt
 
     plt.figure(figsize=(10, 10))
 
