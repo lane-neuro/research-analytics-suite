@@ -21,6 +21,7 @@ from typing import get_type_hints, Optional, List, Dict, Tuple, Union, Iterable,
 from prettytable import PrettyTable
 
 from research_analytics_suite.commands.utils import dynamic_import, wrap_text
+from research_analytics_suite.commands.utils.text_utils import add_tags_to_commands
 from research_analytics_suite.utils.SingletonChecker import is_singleton
 
 
@@ -273,8 +274,10 @@ class CommandRegistry:
                 return
             elif len(name.split(' ')) > 1:
                 keyword = name.split(' ', 1)[1]
-            else:
+            elif args is not None and len(args) > 0:
                 keyword = args[0]
+            else:
+                keyword = kwargs.get('keyword', None)
 
             self.display_commands(keyword=keyword)
             return
@@ -401,6 +404,7 @@ class CommandRegistry:
 
     def categorize_commands(self):
         # Ensure commands are categorized
+        add_tags_to_commands(self._registry)
         self._categories = {}
         for cmd_name, cmd_meta in self._registry.items():
             category = cmd_meta.get('category', 'Uncategorized')
