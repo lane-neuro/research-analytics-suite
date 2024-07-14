@@ -1,3 +1,3 @@
 from .CategoryID import CategoryID
-from .Category import Category
+from .LibraryCategory import Category
 from .LibraryManifest import LibraryManifest

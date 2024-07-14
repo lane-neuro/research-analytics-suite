@@ -11,7 +11,7 @@ import importlib
 import pkgutil
 
 from research_analytics_suite.commands import command, register_commands
-from research_analytics_suite.library_manifest.Category import Category
+from research_analytics_suite.library_manifest.LibraryCategory import Category
 from research_analytics_suite.library_manifest.CategoryID import CategoryID
 
 
