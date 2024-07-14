@@ -5,6 +5,7 @@ from typing import Callable
 import ast
 
 from research_analytics_suite.commands import command
+from research_analytics_suite.utils.LazyModuleLoader import LazyModuleLoader
 
 SAFE_BUILTINS = {
     'print': print,
@@ -13,14 +14,6 @@ SAFE_BUILTINS = {
     'int': int,
     'float': float,
     '__import__': __import__,
-}
-
-SAFE_MODULES = {
-    'math': __import__('math'),
-    'numpy': __import__('numpy'),
-    'pandas': __import__('pandas'),
-    'sklearn': __import__('sklearn'),
-    'torch': __import__('torch'),
 }
 
 
@@ -114,7 +107,8 @@ async def _execute_code_action(code: str, memory_inputs: list = None) -> Callabl
         # Create a restricted execution environment
         safe_globals = {"__builtins__": SAFE_BUILTINS}
         # noinspection PyTypeChecker
-        safe_globals.update(SAFE_MODULES)
+        
+        safe_globals.update(LazyModuleLoader().get_all_modules())
 
         try:
             parsed_code = ast.parse(code, mode='exec')

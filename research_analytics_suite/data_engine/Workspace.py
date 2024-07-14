@@ -317,7 +317,7 @@ class Workspace:
 
     @command
     async def add_variable_to_collection(self, collection_id: str, name: str, value: any, data_type: type,
-                                         memory_slot_id: Optional[str] = None) -> Tuple[str, dict] or None:
+                                         memory_slot_id: str = None) -> Tuple[str, dict] or None:
         collection_id = collection_id or self._memory_manager.get_default_collection_id()
         try:
             collection = self._memory_manager.get_collection(collection_id)
@@ -374,7 +374,7 @@ class Workspace:
 
     @command
     async def remove_variable_from_collection(self, collection_id: str, name: str,
-                                              memory_slot_id: Optional[str] = None):
+                                              memory_slot_id: str = None):
         collection_id = collection_id or self._memory_manager.get_default_collection_id()
         try:
             collection = self._memory_manager.get_collection(collection_id)

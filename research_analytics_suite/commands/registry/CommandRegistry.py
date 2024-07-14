@@ -140,10 +140,8 @@ class CommandRegistry:
             return
 
         elif name == 'categories':
-            if not self._registration_manager.categories or self._registration_manager.categories == {}:
-                self._display_manager.categorize_commands()
-            self._logger.info(f"Available categories: {', '.join(self._registration_manager.categories.keys())}",
-                              self.__class__.__name__)
+            self._display_manager.categorize_commands()
+            self._logger.info(f"Available categories: {', '.join(self._registration_manager.categories.keys())}")
             return
 
         elif name.startswith('details'):

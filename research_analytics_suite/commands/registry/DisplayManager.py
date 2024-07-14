@@ -36,7 +36,7 @@ class DisplayManager:
         self._current_category = None
         self._search_keyword = None
 
-    def display_commands(self, category: str = None, keyword: str = None, page: int = 1, column_width: int = 60):
+    def display_commands(self, category: str = None, keyword: str = None, page: int = 1, column_width: int = 30):
         """Display commands with optional filtering by category, keyword, and pagination.
 
         Args:
@@ -51,37 +51,37 @@ class DisplayManager:
 
         self.categorize_commands()
 
+        commands = dict(self._registration_manager.registry)
+
         if keyword:
-            commands = [(cmd_name, self._registration_manager.registry[cmd_name]) for cmd_name in
-                        self._search_commands(keyword)]
+            commands = {k: v for k, v in self._registration_manager.registry.items() if keyword.lower() in k.lower()}
         elif category:
-            commands = list(self._get_commands_by_category(category).items())
-        else:
-            commands = list(self._registration_manager.registry.items())
+            commands = self._get_commands_by_category(category)
 
         total_commands = len(commands)
         total_pages = (total_commands + self._page_size - 1) // self._page_size
 
         start = (page - 1) * self._page_size
         end = start + self._page_size
-        commands_to_display = commands[start:end]
+        commands_list = list(commands.items())
+        commands_to_display = dict(commands_list[start:end])
 
         table = PrettyTable()
         table.field_names = ["Command", "Description", "Arguments", "Return Types", "Tags", "Is Method"]
         table.align = "l"
 
-        for cmd_name, cmd_meta in commands_to_display:
-            args = cmd_meta.get('args', [])
-            formatted_args = f""
+        for cmd_name, cmd_meta in commands_to_display.items():
+            args = cmd_meta['args']
+            formatted_args = ""
             for arg in args if args else []:
                 _name = arg['name']
                 _type = arg['type'].__name__
                 formatted_args += f" - {_name} ({_type})\n" if _type.lower() != 'any' else f" - {_name}\n"
 
-            description = cmd_meta.get('description', 'No description provided.')
+            description = cmd_meta['description']
 
-            return_types = cmd_meta.get('return_type', [])
-            formatted_return_types = f""
+            return_types = cmd_meta['return_type']
+            formatted_return_types = ""
             if return_types:
                 if len(return_types) > 1 and isinstance(return_types, list):
                     for rt in return_types:
@@ -94,8 +94,8 @@ class DisplayManager:
                 wrap_text(description, column_width),
                 wrap_text(formatted_args, column_width),
                 wrap_text(formatted_return_types, column_width),
-                wrap_text(str(cmd_meta.get('tags', [])), column_width),
-                str(cmd_meta.get('is_method', 'False'))
+                wrap_text(str(cmd_meta['tags']), column_width),
+                str(cmd_meta['is_method'])
             ])
 
         self._logger.info(f'\n{table}\n')
@@ -120,7 +120,7 @@ class DisplayManager:
 
         self._logger.info(f"\nCommand: {command_name}")
         self._logger.info(f"  Category:\t{cmd_meta.get('category', 'Uncategorized')}")
-        self._logger.info(f"  Description:\t{cmd_meta.get('description', 'No description provided.')}")
+        self._logger.info(f"  Description:\t{cmd_meta.get('description', None)}")
         self._logger.info(f"  tags:\t{cmd_meta.get('tags', [])}")
         self._logger.info(f"  is_method:\t{cmd_meta.get('is_method', False)}")
         if cmd_meta.get('is_method', True):
@@ -150,12 +150,11 @@ class DisplayManager:
     def categorize_commands(self):
         """Categorize commands based on their metadata."""
         add_tags_to_commands(self._registration_manager.registry)
-        self._registration_manager._categories = {}
         for cmd_name, cmd_meta in self._registration_manager.registry.items():
             category = cmd_meta.get('category', 'Uncategorized')
-            if category not in self._registration_manager._categories:
-                self._registration_manager._categories[category] = {}
-            self._registration_manager._categories[category][cmd_name] = cmd_meta
+            if category not in self._registration_manager.categories:
+                self._registration_manager.categories[category] = {}
+            self._registration_manager.categories[category][cmd_name] = cmd_meta
 
     def _search_commands(self, keyword: str):
         """Search commands by keyword.

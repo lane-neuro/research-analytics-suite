@@ -20,6 +20,7 @@ import pkgutil
 from typing import get_type_hints, List, Dict, Union, ForwardRef, Tuple
 
 from research_analytics_suite.commands.utils import dynamic_import
+from research_analytics_suite.commands.CommandDecorators import clean_description
 
 
 class RegistrationManager:
@@ -111,13 +112,13 @@ class RegistrationManager:
         self._registry[cmd_meta['name']] = {
             'func': cmd_meta.get('func', None),
             'name': cmd_meta.get('name', None),
+            'description': cmd_meta.get('description', None),
             'class_name': cmd_meta.get('class_name', None),
             'args': _args,
             'return_type': cmd_meta.get('return_type', []),
             'is_method': cmd_meta.get('is_method', False),
             '_is_command': True,
             'category': cmd_meta.get('category', 'Uncategorized'),
-            'description': cmd_meta.get('description', 'No description provided.'),
             'tags': cmd_meta.get('tags', []),
         }
 
@@ -162,30 +163,36 @@ class RegistrationManager:
             module = importlib.import_module(name)
             for _, obj in inspect.getmembers(module):
                 if inspect.isfunction(obj) and hasattr(obj, '_is_command'):
+                    _description = obj.__doc__ if obj.__doc__ else None
+                    _description = clean_description(_description) if _description else None
+
                     self._initialize_command({
                         'func': obj,
                         'name': obj.__name__,
+                        'description': _description,
                         'class_name': None,
                         'args': [{'name': param, 'type': get_type_hints(obj).get(param, any)} for param in inspect.signature(obj).parameters],
                         'return_type': get_type_hints(obj).get('return_type', []),
                         'is_method': False,
                         'category': getattr(obj, 'category', 'Uncategorized'),
-                        'description': getattr(obj, 'description', 'No description provided.'),
                         'tags': getattr(obj, 'tags', []),
                     })
                 elif inspect.isclass(obj):
                     for method_name, method in inspect.getmembers(obj, predicate=inspect.isfunction):
                         if hasattr(method, '_is_command'):
+                            _description = method.__doc__ if method.__doc__ else None
+                            _description = clean_description(_description) if _description else None
+
                             self._initialize_command({
                                 'func': method,
                                 'name': method.__name__,
+                                'description': _description,
                                 'class_name': obj.__name__,
                                 'args': [{'name': param, 'type': get_type_hints(method).get(param, any)} for param in inspect.signature(method).parameters if param != 'self'],
                                 'return_type': get_type_hints(method).get('return_type', []),
                                 'is_method': True,
                                 'class': obj,
                                 'category': getattr(method, 'category', 'Uncategorized'),
-                                'description': getattr(method, 'description', 'No description provided.'),
                                 'tags': getattr(method, 'tags', []),
                             })
 
@@ -220,7 +227,7 @@ class RegistrationManager:
         return self._instances.get(runtime_id, None)
 
     @property
-    def registry(self):
+    def registry(self) -> dict:
         """Get the command registry."""
         return self._registry
 
@@ -230,6 +237,6 @@ class RegistrationManager:
         self._registry = registry
 
     @property
-    def categories(self):
+    def categories(self) -> dict:
         """Get the available categories."""
         return self._categories

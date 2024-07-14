@@ -20,13 +20,13 @@ from research_analytics_suite.utils import CustomLogger
 
 
 @command
-def _help() -> str:
+def _help() -> None:
     """Displays available commands and their descriptions."""
-    return CommandRegistry().display_commands()
+    CommandRegistry().display_commands()
 
 
 @command
-async def _exit():
+async def _exit() -> None:
     """Exits the Research Analytics Suite."""
     try:
         from research_analytics_suite.data_engine import Workspace
@@ -38,20 +38,20 @@ async def _exit():
 
 
 @command
-async def clear():
+async def clear() -> None:
     """Clears the search and keyword variables."""
     CommandRegistry().clear_search()
     CommandRegistry().clear_category()
 
 
 @command
-def registry() -> str:
+def registry() -> dict:
     """Displays the command registry."""
     return CommandRegistry().registry
 
 
 @command
-async def resources():
+async def resources() -> None:
     """Displays system resources."""
     from research_analytics_suite.operation_manager import OperationControl
     for operation_list in OperationControl().sequencer.sequencer:
@@ -59,31 +59,29 @@ async def resources():
         from research_analytics_suite.operation_manager.operations.system import ResourceMonitorOperation
         if isinstance(operation_node, ResourceMonitorOperation):
             CustomLogger().info(operation_node.output_memory_usage())
-    return "Displaying system resources."
 
 
 @command
-async def tasks():
+async def tasks() -> None:
     """Displays all tasks."""
     from research_analytics_suite.operation_manager import OperationControl
     for task in OperationControl().task_creator.tasks:
         operation = OperationControl().sequencer.find_operation_by_task(task)
         if operation:
             CustomLogger().info(f"Task: {task.get_name()} - {operation.status}")
-    return "Displaying all tasks..."
 
 
 @command
-async def sequencer():
+async def sequencer() -> None:
     """Displays all operations in the sequencer."""
     from research_analytics_suite.operation_manager import OperationControl
     for sequencer_chain in OperationControl().sequencer.sequencer:
         operation = sequencer_chain.head.operation
         CustomLogger().info(f"Operation: {operation.task.get_name()} - {operation.status}")
-    return "Displaying all operations in the sequencer..."
 
 
 @command
-async def get_memory():
+async def get_memory() -> dict:
     """Displays local vars."""
-    return "Displaying local vars..."
+    from research_analytics_suite.data_engine import MemoryManager
+    return await MemoryManager().list_collections()

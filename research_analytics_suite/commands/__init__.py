@@ -5,6 +5,6 @@ Author: Lane
 """
 
 from .CommandDecorators import temp_command_registry
-from .CommandDecorators import register_commands, command
+from .CommandDecorators import register_commands, command, clean_description
 from research_analytics_suite.commands.registry import CommandRegistry
 from .DefaultCommands import _help, resources, tasks, registry, _exit

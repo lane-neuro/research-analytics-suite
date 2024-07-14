@@ -15,6 +15,23 @@ import inspect
 
 temp_command_registry = []
 
+def clean_description(description: str) -> str:
+    """
+    Cleans up the description string by removing extra whitespace and trimming unnecessary parts.
+
+    Args:
+        description (str): The original description string.
+
+    Returns:
+        str: The cleaned description.
+    """
+    description = ' '.join(description.split())  # Remove extra whitespace
+    if 'Args' in description:
+        description = description.split('Args')[0]
+    if 'Returns' in description:
+        description = description.split('Returns')[0]
+    return description.strip()
+
 
 def register_commands(cls):
     """
@@ -29,10 +46,8 @@ def register_commands(cls):
             type_hints = method.__annotations__
             args = [{'name': param, 'type': type_hints.get(param, any)} for param in sig.parameters if param not in ('self', 'cls')]
             return_type = type_hints.get('return', [])
-            description = method.__doc__ if method.__doc__ else 'No description available.'
-            description = ' '.join(description.split())
-            if 'Args' in description:
-                description = description.split('Args')[0]
+            description = method.__doc__ if method.__doc__ else None
+            description = clean_description(description) if description else None
 
             # Check if the method is already registered to prevent duplicates
             if not any(cmd_meta['func'] == method for cmd_meta in temp_command_registry):
@@ -70,12 +85,8 @@ def command(func=None):
 
         args = [{'name': param, 'type': type_hints.get(param, any)} for param in sig.parameters if param not in ('self', 'cls')]
         return_type = type_hints.get('return', [])
-        description = f.__doc__ if f.__doc__ else 'No description available.'
-        description = ' '.join(description.split())
-        if 'Args' in description:
-            description = description.split('Args')[0]
-        if 'Returns' in description:
-            description = description.split('Returns')[0]
+        description = f.__doc__ if f.__doc__ else None
+        description = clean_description(description) if description else None
 
         # Determine if the function is a method or static method
         is_method = 'self' in sig.parameters or 'cls' in sig.parameters
