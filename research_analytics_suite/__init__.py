@@ -33,7 +33,9 @@ def get_console_size():
         return 80, 24
 
 
-warnings.filterwarnings('ignore', category=FutureWarning)
+# Ignore RuntimeWarning for coroutine 'ResearchAnalyticsSuite._launch' was never awaited - this is expected behavior
+warnings.filterwarnings(action='ignore', category=RuntimeWarning,
+                        message="coroutine 'ResearchAnalyticsSuite._launch' was never awaited")
 
 
 CONSOLE_WIDTH, CONSOLE_HEIGHT = get_console_size()
