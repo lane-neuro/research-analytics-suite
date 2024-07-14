@@ -1,3 +1,10 @@
+"""
+LibraryManifest
+
+The LibraryManifest class is responsible for managing the library of operations available to the user.
+
+Author: Lane
+"""
 import asyncio
 import os
 import importlib
@@ -6,7 +13,6 @@ import pkgutil
 from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.library_manifest.Category import Category
 from research_analytics_suite.library_manifest.CategoryID import CategoryID
-from research_analytics_suite.library_manifest.utils import check_verified
 
 
 @register_commands
@@ -100,7 +106,7 @@ class LibraryManifest:
                 elif isinstance(operation, dict) and operation != {}:
                     operations.append(operation)
                 else:
-                    self._logger.error(Exception(f"Invalid operation type: {type(operation)}"))
+                    self._logger.error(Exception(f"Invalid operation type: {type(operation)}"), self.__class__.__name__)
 
             self._library[category_id] = operations
         self._logger.debug("Completed build_base_library")
