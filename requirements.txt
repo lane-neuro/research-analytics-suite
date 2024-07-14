@@ -51,6 +51,7 @@ rich
 s3transfer
 scikit-learn
 scipy
+statsmodels
 torch
 torchaudio
 torchvision
