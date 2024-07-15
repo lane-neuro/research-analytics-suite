@@ -13,10 +13,11 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from types import NoneType
 
 from prettytable import PrettyTable
 from research_analytics_suite.commands.utils import wrap_text
-from research_analytics_suite.commands.utils.text_utils import add_tags_to_commands
+from research_analytics_suite.commands.utils.text_utils import add_tags_to_commands, get_function_body
 
 
 class DisplayManager:
@@ -51,7 +52,7 @@ class DisplayManager:
 
         self.categorize_commands()
 
-        commands = dict(self._registration_manager.registry)
+        commands = dict[str, dict](self._registration_manager.registry)
 
         if keyword:
             commands = {k: v for k, v in self._registration_manager.registry.items() if keyword.lower() in k.lower()}
@@ -63,11 +64,14 @@ class DisplayManager:
 
         start = (page - 1) * self._page_size
         end = start + self._page_size
-        commands_list = list(commands.items())
-        commands_to_display = dict(commands_list[start:end])
+        commands_to_display = dict[str, dict]()
+
+        for i, (cmd_name, cmd_meta) in enumerate(commands.items()):
+            if start <= i < end:
+                commands_to_display[cmd_name] = cmd_meta
 
         table = PrettyTable()
-        table.field_names = ["Command", "Description", "Arguments", "Return Types", "Tags", "Is Method"]
+        table.field_names = ["class", "command", "description", "input arguments", "return types", "search tags"]
         table.align = "l"
 
         for cmd_name, cmd_meta in commands_to_display.items():
@@ -76,26 +80,30 @@ class DisplayManager:
             for arg in args if args else []:
                 _name = arg['name']
                 _type = arg['type'].__name__
-                formatted_args += f" - {_name} ({_type})\n" if _type.lower() != 'any' else f" - {_name}\n"
+                formatted_args += f"- {_name} ({_type})\n" if _type.lower() != 'any' else f"- {_name}\n"
 
             description = cmd_meta['description']
 
             return_types = cmd_meta['return_type']
-            formatted_return_types = ""
+            formatted_return_types = f""
             if return_types:
-                if len(return_types) > 1 and isinstance(return_types, list):
+                if isinstance(return_types, list) and len(return_types) > 1:
                     for rt in return_types:
-                        formatted_return_types += f" - {rt}\n"
+                        if isinstance(rt, type) and rt != 'NoneType':
+                            formatted_return_types += f"- {rt}\n"
                 else:
-                    formatted_return_types += f" - {return_types}\n"
+                    if isinstance(return_types, type) and return_types != 'NoneType':
+                        formatted_return_types += f"- {return_types.__name__}\n"
+            else:
+                formatted_return_types = f"- None"
 
             table.add_row([
+                cmd_meta.get('class_name', None),
                 wrap_text(cmd_name, column_width),
                 wrap_text(description, column_width),
                 wrap_text(formatted_args, column_width),
                 wrap_text(formatted_return_types, column_width),
                 wrap_text(str(cmd_meta['tags']), column_width),
-                str(cmd_meta['is_method'])
             ])
 
         self._logger.info(f'\n{table}\n')
@@ -118,34 +126,65 @@ class DisplayManager:
             self._logger.error(ValueError(f"Command '{command_name}' not found in the registry."))
             return
 
-        self._logger.info(f"\nCommand: {command_name}")
-        self._logger.info(f"  Category:\t{cmd_meta.get('category', 'Uncategorized')}")
-        self._logger.info(f"  Description:\t{cmd_meta.get('description', None)}")
-        self._logger.info(f"  tags:\t{cmd_meta.get('tags', [])}")
-        self._logger.info(f"  is_method:\t{cmd_meta.get('is_method', False)}")
-        if cmd_meta.get('is_method', True):
-            self._logger.info(f"  Class:\t{cmd_meta.get('class_name', 'None')}")
-            self._logger.info(f"  Method:\t{cmd_meta.get('name', 'None')}")
-        else:
-            self._logger.info(f"  Function:\t{cmd_meta.get('name', 'None')}")
-        self._logger.info('--------------------------------------------------------------------')
-        if cmd_meta.get('args', []) is not [] or None:
-            self._logger.info(f"** [NOTE] An argument of type 'any' means the argument type was not specified by the "
-                              f"developer, it does\n"
-                              f"  ... not mean you can pass any argument type. Please refer to the source code or "
-                              f"contact the command's\n ... developer for more information.")
-            self._logger.info(f"  Arguments:")
-            for arg in cmd_meta.get('args', []):
-                self._logger.info(f"\t-\t{arg['name']} ({arg['type'].__name__})")
+        _command_name = f"{cmd_meta.get('name', None)}"
+        if cmd_meta.get('class_name', None) is not None:
+            _command_name += f"\t({cmd_meta.get('class_name')})"
 
-        _return_types = cmd_meta.get('return_type', [])
-        if _return_types is not None:
-            if len(_return_types) > 1 and isinstance(_return_types, list):
-                self._logger.info(f"   Return Types:")
-                for _return_type in _return_types:
-                    self._logger.info(f"\t-\t({_return_type})")
+        _args = cmd_meta.get('args', [dict(name='None', type='None')])
+        _formatted_args = f"  "
+        if _args:
+            if len(_args) > 1 and isinstance(_args, list):
+                if _args[0].get('type', None) is not None:
+                    _formatted_args += f"input arguments:"
+                    for _arg in _args:
+                        _formatted_args += f"\n\t-\t{_arg['name']} ({_arg['type'].__name__})"
+                else:
+                    _formatted_args += f"input arguments:"
+                    for _arg in _args:
+                        _formatted_args += f"\n\t-\t{_arg}"
             else:
-                self._logger.info(f"   Return Type: ({_return_types[0]})")
+                if _args[0].get('type', None) is not None:
+                    _formatted_args += f"input argument:\t\t{_args[0]['name']} ({_args[0]['type'].__name__})"
+                else:
+                    _formatted_args += f"input argument:\t\t{_args[0]}"
+        else:
+            _formatted_args += f"input arguments:\t\tNone"
+
+        _returns = cmd_meta.get('return_type', None)
+        _return_types = f"  "
+        if _returns:
+            if len(_return_types) > 1 and isinstance(_return_types, list):
+                _return_types += f"return types:"
+                for _return_type in _return_types:
+                    _return_types += f"\n\t-\t({_return_type})"
+            elif isinstance(_returns, type):
+                _return_types += f"return type:\t\t{_returns.__name__}"
+            else:
+                _return_types += f"return type:\t\t\tNone"
+        else:
+            _return_types += f"return type:\t\t\tNone"
+
+        _formatted_func = f"  --- function ---"
+        _func = cmd_meta.get('func', None)
+        if _func:
+            _lines = get_function_body(_func)
+            _formatted_func += f"\n{_lines.strip()}"
+        else:
+            _formatted_func = f"  function:\t\t\tNone"
+        _formatted_func += f"\n   ------------------"
+
+        self._logger.info('==================================================================================')
+        self._logger.info(f"  command:\t\t\t\t{_command_name}")
+        self._logger.info(f"  category:\t\t\t\t{cmd_meta.get('category', 'Uncategorized')}")
+        self._logger.info(f"  description:\t\t\t{cmd_meta.get('description', None)}")
+        self._logger.info(f"  search tags:\t\t\t{cmd_meta.get('tags', [])}")
+        self._logger.info(_formatted_args)
+        self._logger.info(_return_types)
+        self._logger.info(_formatted_func)
+        self._logger.info(f"  ** [NOTE] An argument of type 'any' means the argument type was not specified "
+                          f"\n  ... by the developer, it does not mean you can pass any argument type. Please refer "
+                          f"\n  ... to the source code or contact the command's developer for more information.")
+        self._logger.info('==================================================================================')
 
     def categorize_commands(self):
         """Categorize commands based on their metadata."""
@@ -172,9 +211,9 @@ class DisplayManager:
                     keyword.lower() in cmd_meta.get('description', '').lower() or \
                     keyword.lower() in cmd_meta.get('category', '').lower() or \
                     keyword.lower() in cmd_meta.get('tags', '') or \
-                    keyword.lower() in [arg['name'].lower() for arg in cmd_meta.get('args', [])] or \
-                    keyword.lower() in [arg['type'].__name__.lower() for arg in cmd_meta.get('args', [])] or \
-                    keyword.lower() in [rt.lower() for rt in cmd_meta.get('return_type', [])]:
+                    keyword.lower() in [arg['name'].lower() for arg in cmd_meta.get('args', None)] or \
+                    keyword.lower() in [arg['type'].__name__.lower() for arg in cmd_meta.get('args', None)] or \
+                    keyword.lower() in [rt.lower() for rt in cmd_meta.get('return_type', None)]:
                 results.append(cmd_name)
         return results
 

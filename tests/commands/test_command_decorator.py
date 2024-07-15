@@ -51,7 +51,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
         ]
-        assert temp_command_registry[0]['return_type'] == bool
+        assert temp_command_registry[0]['return_type'] == [bool]
 
     def test_method_registration(self):
         class TestClass:
@@ -65,7 +65,7 @@ class TestCommandDecorator:
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int}
         ]
-        assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['return_type'] == [str]
         assert temp_command_registry[0]['is_method'] is True
 
     def test_no_return_type(self):
@@ -79,7 +79,7 @@ class TestCommandDecorator:
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int}
         ]
-        assert temp_command_registry[0]['return_type'] == []
+        assert temp_command_registry[0]['return_type'] is None
 
     def test_default_arguments(self):
         @command
@@ -93,7 +93,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
         ]
-        assert temp_command_registry[0]['return_type'] == Optional[str]
+        assert temp_command_registry[0]['return_type'] == [Optional[str]]
 
     def test_various_types(self):
         @command
@@ -109,7 +109,7 @@ class TestCommandDecorator:
             {'name': 'c', 'type': bool},
             {'name': 'd', 'type': Optional[str]}
         ]
-        assert temp_command_registry[0]['return_type'] == list
+        assert temp_command_registry[0]['return_type'] == [list]
 
     def test_keyword_only_arguments(self):
         @command
@@ -123,7 +123,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
         ]
-        assert temp_command_registry[0]['return_type'] == dict
+        assert temp_command_registry[0]['return_type'] == [dict]
 
     def test_self_handling(self):
         class TestClass:
@@ -139,7 +139,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
         ]
-        assert temp_command_registry[0]['return_type'] == bool
+        assert temp_command_registry[0]['return_type'] == [bool]
         assert temp_command_registry[0]['is_method'] is True
 
     def test_var_args(self):
@@ -154,7 +154,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': int},
             {'name': 'args', 'type': str}
         ]
-        assert temp_command_registry[0]['return_type'] == list
+        assert temp_command_registry[0]['return_type'] == [list]
         assert temp_command_registry[0]['is_method'] is False
 
     def test_var_kwargs(self):
@@ -169,7 +169,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': int},
             {'name': 'kwargs', 'type': str}
         ]
-        assert temp_command_registry[0]['return_type'] == dict
+        assert temp_command_registry[0]['return_type'] == [dict]
         assert temp_command_registry[0]['is_method'] is False
 
     def test_combined_args(self):
@@ -187,7 +187,7 @@ class TestCommandDecorator:
             {'name': 'c', 'type': bool},
             {'name': 'kwargs', 'type': int}
         ]
-        assert temp_command_registry[0]['return_type'] == tuple
+        assert temp_command_registry[0]['return_type'] == [tuple]
         assert temp_command_registry[0]['is_method'] is False
 
     def test_user_defined_types(self):
@@ -202,7 +202,7 @@ class TestCommandDecorator:
             {'name': 'user', 'type': User},
             {'name': 'product', 'type': Product}
         ]
-        assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['return_type'] == [str]
         assert temp_command_registry[0]['is_method'] is False
 
     def test_complex_nested_types(self):
@@ -216,7 +216,7 @@ class TestCommandDecorator:
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': List[Dict[str, Optional[User]]]}
         ]
-        assert temp_command_registry[0]['return_type'] == List[Dict[str, Optional[User]]]
+        assert temp_command_registry[0]['return_type'] == [List[Dict[str, Optional[User]]]]
         assert temp_command_registry[0]['is_method'] is False
 
     def test_complex_default_values(self):
@@ -263,7 +263,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': int},
             {'name': 'func', 'type': Callable[[int], int]}
         ]
-        assert temp_command_registry[0]['return_type'] == int
+        assert temp_command_registry[0]['return_type'] == [int]
         assert temp_command_registry[0]['is_method'] is False
 
     def test_async_function(self):
@@ -279,7 +279,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
         ]
-        assert temp_command_registry[0]['return_type'] == bool
+        assert temp_command_registry[0]['return_type'] == [bool]
         assert temp_command_registry[0]['is_method'] is False
 
     def test_async_method(self):
@@ -296,7 +296,7 @@ class TestCommandDecorator:
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int}
         ]
-        assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['return_type'] == [str]
         assert temp_command_registry[0]['is_method'] is True
 
     def test_union_types(self):
@@ -311,7 +311,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': Union[int, str]},
             {'name': 'b', 'type': Optional[bool]}
         ]
-        assert temp_command_registry[0]['return_type'] == Union[str, None]
+        assert temp_command_registry[0]['return_type'] == [Union[str, None]]
         assert temp_command_registry[0]['is_method'] is False
 
     def test_mixed_type_hints(self):
@@ -327,7 +327,7 @@ class TestCommandDecorator:
             {'name': 'b', 'type': Union[str, float]},
             {'name': 'func', 'type': Callable[[int], str]}
         ]
-        assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['return_type'] == [str]
         assert temp_command_registry[0]['is_method'] is False
 
     def test_multiple_decorators(self):
@@ -343,7 +343,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
         ]
-        assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['return_type'] == [str]
         assert temp_command_registry[0]['is_method'] is False
 
     def test_missing_type_hints(self):
@@ -358,7 +358,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': any},
             {'name': 'b', 'type': any}
         ]
-        assert temp_command_registry[0]['return_type'] == []
+        assert temp_command_registry[0]['return_type'] is None
         assert temp_command_registry[0]['is_method'] is False
 
     def test_invalid_type_hints(self):
@@ -372,7 +372,7 @@ class TestCommandDecorator:
         assert temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': 'invalid_type'}
         ]
-        assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['return_type'] == [str]
 
     def test_no_arguments(self):
         @command
@@ -398,7 +398,7 @@ class TestCommandDecorator:
             {'name': 'a', 'type': any},
             {'name': 'b', 'type': int}
         ]
-        assert temp_command_registry[0]['return_type'] == Any
+        assert temp_command_registry[0]['return_type'] == [Any]
         assert temp_command_registry[0]['is_method'] is False
 
     def test_edge_case_function_name(self):
@@ -413,5 +413,5 @@ class TestCommandDecorator:
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': int}
         ]
-        assert temp_command_registry[0]['return_type'] == str
+        assert temp_command_registry[0]['return_type'] == [str]
         assert temp_command_registry[0]['is_method'] is False

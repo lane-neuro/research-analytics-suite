@@ -10,7 +10,10 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+import inspect
+import ast
 import re
+import textwrap
 from collections import Counter
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
@@ -19,7 +22,45 @@ CUSTOM_STOP_WORDS = {"the", "a", "an", "and", "or", "but", "if", "then", "else",
                      "own", "same", "so", "than", "too", "very", "can", "will", "just", "should", "now"}
 
 VALID_WORDS = {"name", "description", "command", "operation", "data", "value", "input", "output", "file", "save",
-               "load", "get", "set", "add", "remove", "update", "clear"}
+               "load", "get", "set", "add", "remove", "update", "clear", "library", "category", "tag", "tags",
+               "registry", "register", "unregister", "list", "show", "hide", "open", "close", "create", "delete",
+               "destroy", "start", "stop", "pause", "resume", "run", "execute", "process", "analyze", "validate",
+               "check", "verify", "monitor", "control", "manage", "configure", "setup", "initialize", "finalize",
+               "shutdown", "restart", "refresh", "reset", "cancel", "abort", "exit", "quit", "help", "about", "version",
+               "license", "author", "maintainer", "email", "status", "prototype", "development", "production",
+               "testing", "debugging", "logging", "reporting", "messaging", "messaging", "notification", "alert",
+               "warning", "error", "exception", "failure", "success", "progress", "task", "operation", "process",
+               "function", "method", "class", "module", "package", "library", "framework", "system", "service",
+               "component", "info", "error", "warning", "debug", "critical", "exception"}
+
+
+def get_function_body(func):
+    """
+    Get the body of a function as a string.
+    """
+    source = inspect.getsource(func)
+
+    # Dedent the source code to remove leading spaces
+    dedented_source = textwrap.dedent(source)
+
+    # Parse the dedented source code
+    parsed = ast.parse(dedented_source)
+
+    function_node = parsed.body[0]  # Get the function node
+
+    # Extract the body of the function
+    function_body = function_node.body
+
+    # Remove the docstring if it's present
+    if isinstance(function_body[0], ast.Expr) and isinstance(function_body[0].value, ast.Str):
+        function_body = function_body[1:]
+
+    # Convert the AST nodes of the function body back to source code
+    body_lines = [ast.unparse(node) for node in function_body]
+
+    # Join the lines of the function body
+    body_code = "\n".join(body_lines)
+    return body_code
 
 
 def wrap_text(text, width):
@@ -45,7 +86,7 @@ def wrap_text(text, width):
 
 def extract_keywords(text):
     """Extracts keywords from a given text string."""
-    if not text:
+    if not text or not isinstance(text, str):
         return []
     # Remove punctuation and split into words
     words = re.findall(r'\b\w+\b', text.lower())

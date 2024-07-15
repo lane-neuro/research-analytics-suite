@@ -55,7 +55,13 @@ class LibraryManifest:
                     self._initialized = True
 
     @command
-    def get_library(self):
+    def get_library(self) -> dict:
+        """
+        Get the library of operations.
+
+        Returns:
+            dict: The library of operations
+        """
         return self._library
 
     @command
@@ -129,7 +135,10 @@ class LibraryManifest:
         self._logger.debug("Completed _populate_verified_operations")
 
     @command
-    async def load_user_library(self):
+    async def load_user_library(self) -> None:
+        """
+        Load the user library from the operations directory.
+        """
         self._logger.debug("Starting load_user_library")
         _user_dir = os.path.normpath(os.path.join(self._config.BASE_DIR, 'operations'))
         _local_operation_dir = os.path.normpath(os.path.join(
@@ -137,7 +146,7 @@ class LibraryManifest:
             self._config.WORKSPACE_OPERATIONS_DIR))
         if not os.path.exists(_local_operation_dir) or not os.path.exists(_user_dir):
             self._logger.warning("Operation directories do not exist")
-            return []
+            return
 
         operation_files = [os.path.join(_local_operation_dir, f) for f in os.listdir(_local_operation_dir)
                            if f.endswith('.json')]

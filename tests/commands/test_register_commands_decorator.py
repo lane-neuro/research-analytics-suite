@@ -19,8 +19,8 @@ class TestRegisterCommandsDecorator:
         assert mock_temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int}
         ]
-        assert mock_temp_command_registry[0]['return_type'] == str
-        assert mock_temp_command_registry[0]['is_method'] is True
+        assert mock_temp_command_registry[0]['return_type'] == [str]
+        assert mock_temp_command_registry[0]['is_method'][0] is True
 
     @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
     def test_register_multiple_commands(self, mock_temp_command_registry):
@@ -40,16 +40,16 @@ class TestRegisterCommandsDecorator:
         assert mock_temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int}
         ]
-        assert mock_temp_command_registry[0]['return_type'] == str
-        assert mock_temp_command_registry[0]['is_method'] is True
+        assert mock_temp_command_registry[0]['return_type'] == [str]
+        assert mock_temp_command_registry[0]['is_method'][0] is True
 
         assert mock_temp_command_registry[1]['name'] == 'test_method_2'
         assert mock_temp_command_registry[1]['class_name'] == 'TestClass'
         assert mock_temp_command_registry[1]['args'] == [
             {'name': 'b', 'type': str}
         ]
-        assert mock_temp_command_registry[1]['return_type'] == int
-        assert mock_temp_command_registry[1]['is_method'] is True
+        assert mock_temp_command_registry[1]['return_type'] == [int]
+        assert mock_temp_command_registry[1]['is_method'][0] is True
 
     @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
     def test_register_no_commands(self, mock_temp_command_registry):
@@ -77,8 +77,8 @@ class TestRegisterCommandsDecorator:
         assert mock_temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int}
         ]
-        assert mock_temp_command_registry[0]['return_type'] == str
-        assert mock_temp_command_registry[0]['is_method'] is True
+        assert mock_temp_command_registry[0]['return_type'] == [str]
+        assert mock_temp_command_registry[0]['is_method'][0] is True
 
     @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
     def test_register_command_with_default_args(self, mock_temp_command_registry):
@@ -95,8 +95,8 @@ class TestRegisterCommandsDecorator:
             {'name': 'a', 'type': int},
             {'name': 'b', 'type': str}
         ]
-        assert mock_temp_command_registry[0]['return_type'] == str
-        assert mock_temp_command_registry[0]['is_method'] is True
+        assert mock_temp_command_registry[0]['return_type'] == [str]
+        assert mock_temp_command_registry[0]['is_method'][0] is True
 
     @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
     def test_register_command_with_variable_args(self, mock_temp_command_registry):
@@ -112,8 +112,8 @@ class TestRegisterCommandsDecorator:
         assert mock_temp_command_registry[0]['args'] == [
             {'name': 'args', 'type': int}
         ]
-        assert mock_temp_command_registry[0]['return_type'] == str
-        assert mock_temp_command_registry[0]['is_method'] is True
+        assert mock_temp_command_registry[0]['return_type'] == [str]
+        assert mock_temp_command_registry[0]['is_method'][0] is True
 
     @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
     def test_register_static_method(self, mock_temp_command_registry):
@@ -130,8 +130,8 @@ class TestRegisterCommandsDecorator:
         assert mock_temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int}
         ]
-        assert mock_temp_command_registry[0]['return_type'] == str
-        assert mock_temp_command_registry[0]['is_method'] is False
+        assert mock_temp_command_registry[0]['return_type'] == [str]
+        assert mock_temp_command_registry[0]['is_method'][0] is False
 
     @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
     def test_register_class_method(self, mock_temp_command_registry):
@@ -148,7 +148,7 @@ class TestRegisterCommandsDecorator:
         assert mock_temp_command_registry[0]['args'] == [
             {'name': 'a', 'type': int}
         ]
-        assert mock_temp_command_registry[0]['return_type'] == str
+        assert mock_temp_command_registry[0]['return_type'] == [str]
         assert mock_temp_command_registry[0]['is_method'] is True
 
     @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
@@ -166,5 +166,5 @@ class TestRegisterCommandsDecorator:
             {'name': 'a', 'type': dict},
             {'name': 'b', 'type': list}
         ]
-        assert mock_temp_command_registry[0]['return_type'] == dict
-        assert mock_temp_command_registry[0]['is_method'] is True
+        assert mock_temp_command_registry[0]['return_type'] == [dict]
+        assert mock_temp_command_registry[0]['is_method'][0] is True

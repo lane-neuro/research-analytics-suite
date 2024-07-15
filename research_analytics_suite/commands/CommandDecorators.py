@@ -15,6 +15,7 @@ import inspect
 
 temp_command_registry = []
 
+
 def clean_description(description: str) -> str:
     """
     Cleans up the description string by removing extra whitespace and trimming unnecessary parts.
@@ -45,7 +46,10 @@ def register_commands(cls):
             sig = inspect.signature(method)
             type_hints = method.__annotations__
             args = [{'name': param, 'type': type_hints.get(param, any)} for param in sig.parameters if param not in ('self', 'cls')]
-            return_type = type_hints.get('return', [])
+            return_type = type_hints.get('return', None)
+            if return_type:
+                return_type = return_type if isinstance(return_type, list) else [return_type]
+
             description = method.__doc__ if method.__doc__ else None
             description = clean_description(description) if description else None
 
@@ -59,6 +63,7 @@ def register_commands(cls):
                     'args': args,
                     'return_type': return_type,
                     'is_method': 'self' in sig.parameters or 'cls' in sig.parameters,
+                    'is_command': True
                 })
             else:
                 for cmd_meta in temp_command_registry:
@@ -68,7 +73,8 @@ def register_commands(cls):
                         cmd_meta['class_name'] = class_name
                         cmd_meta['args'] = args
                         cmd_meta['return_type'] = return_type
-                        cmd_meta['is_method'] = 'self' in sig.parameters or 'cls' in sig.parameters
+                        cmd_meta['is_method'] = 'self' in sig.parameters or 'cls' in sig.parameters,
+                        cmd_meta['is_command'] = True
     return cls
 
 
@@ -84,7 +90,10 @@ def command(func=None):
         type_hints = f.__annotations__
 
         args = [{'name': param, 'type': type_hints.get(param, any)} for param in sig.parameters if param not in ('self', 'cls')]
-        return_type = type_hints.get('return', [])
+        return_type = type_hints.get('return', None)
+        if return_type:
+            return_type = return_type if isinstance(return_type, list) else [return_type]
+
         description = f.__doc__ if f.__doc__ else None
         description = clean_description(description) if description else None
 

@@ -3,7 +3,7 @@ import re
 from typing import Any, Union, Type, Optional, List, Dict, ForwardRef, Tuple
 
 
-def parse_typing_alias(alias: str, elements: str) -> Type[Any]:
+def parse_typing_alias(alias: str, elements: str) -> Any:
     """
     Parses the elements inside a typing alias and returns the corresponding type.
 

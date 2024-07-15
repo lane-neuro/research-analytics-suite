@@ -82,7 +82,7 @@ class CustomLogger:
         return True  # Allow the log record to be logged
 
     @command
-    def info(self, message: Union[str, List[str]]) -> None:
+    def info(self, message: str or list) -> None:
         """
         Logs an info message.
 
@@ -93,7 +93,8 @@ class CustomLogger:
             for msg in message:
                 self._logger.info(msg)
         else:
-            self._logger.info(message)
+            for part in message.split('\n'):
+                self._logger.info(part.replace('\n', ''))
 
     def debug(self, message: str) -> None:
         """

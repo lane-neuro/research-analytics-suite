@@ -19,7 +19,7 @@ import inspect
 import pkgutil
 from typing import get_type_hints, List, Dict, Union, ForwardRef, Tuple
 
-from research_analytics_suite.commands.utils import dynamic_import
+from research_analytics_suite.commands.utils import dynamic_import, parse_typing_alias
 from research_analytics_suite.commands.CommandDecorators import clean_description
 
 
@@ -86,11 +86,11 @@ class RegistrationManager:
                                                       f"{cmd_meta['name']}: {e}"), self.__class__.__name__)
                         return
 
-        _return_type = cmd_meta.get('return_type', [])
+        _return_type = cmd_meta.get('return_type')
         if isinstance(_return_type, list):
             resolved_return_types = []
             for _rt in _return_type:
-                if _rt is not any and not isinstance(_rt, type):
+                if not isinstance(_rt, type):
                     try:
                         _rt = dynamic_import(_rt)
                     except Exception as e:
@@ -101,9 +101,9 @@ class RegistrationManager:
             cmd_meta['return_type'] = resolved_return_types
         else:
             try:
-                if _return_type is not any and not isinstance(_return_type, type) and isinstance(_return_type, str):
-                    _return_type = dynamic_import(_return_type)
-                cmd_meta['return_type'] = self._get_type_name(_return_type)
+                if _return_type is not type(any) and not isinstance(_return_type, type) and isinstance(_return_type, str):
+                    _return_type = parse_typing_alias(_return_type, _return_type)
+                _return_type = [self._get_type_name(_return_type)]
             except Exception as e:
                 self._logger.error(ValueError(f"Error resolving forward reference for return type in "
                                               f"{cmd_meta['name']}: {e}"), self.__class__.__name__)
@@ -115,7 +115,7 @@ class RegistrationManager:
             'description': cmd_meta.get('description', None),
             'class_name': cmd_meta.get('class_name', None),
             'args': _args,
-            'return_type': cmd_meta.get('return_type', []),
+            'return_type': cmd_meta.get('return_type', any),
             'is_method': cmd_meta.get('is_method', False),
             '_is_command': True,
             'category': cmd_meta.get('category', 'Uncategorized'),
@@ -172,7 +172,7 @@ class RegistrationManager:
                         'description': _description,
                         'class_name': None,
                         'args': [{'name': param, 'type': get_type_hints(obj).get(param, any)} for param in inspect.signature(obj).parameters],
-                        'return_type': get_type_hints(obj).get('return_type', []),
+                        'return_type': get_type_hints(obj).get('return', any),
                         'is_method': False,
                         'category': getattr(obj, 'category', 'Uncategorized'),
                         'tags': getattr(obj, 'tags', []),
@@ -189,7 +189,7 @@ class RegistrationManager:
                                 'description': _description,
                                 'class_name': obj.__name__,
                                 'args': [{'name': param, 'type': get_type_hints(method).get(param, any)} for param in inspect.signature(method).parameters if param != 'self'],
-                                'return_type': get_type_hints(method).get('return_type', []),
+                                'return_type': get_type_hints(method).get('return', any),
                                 'is_method': True,
                                 'class': obj,
                                 'category': getattr(method, 'category', 'Uncategorized'),

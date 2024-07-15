@@ -51,6 +51,12 @@ def registry() -> dict:
 
 
 @command
+def categories() -> dict:
+    """Displays the categories."""
+    return CommandRegistry().categories
+
+
+@command
 async def resources() -> None:
     """Displays system resources."""
     from research_analytics_suite.operation_manager import OperationControl
