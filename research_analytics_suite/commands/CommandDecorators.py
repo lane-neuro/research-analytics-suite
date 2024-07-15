@@ -60,6 +60,7 @@ def register_commands(cls):
                     'name': method.__name__,
                     'description': description,
                     'class_name': class_name,
+                    'class_obj': cls,
                     'args': args,
                     'return_type': return_type,
                     'is_method': 'self' in sig.parameters or 'cls' in sig.parameters,
@@ -71,6 +72,7 @@ def register_commands(cls):
                         cmd_meta['name'] = method.__name__
                         cmd_meta['description'] = description
                         cmd_meta['class_name'] = class_name
+                        cmd_meta['class_obj'] = cls
                         cmd_meta['args'] = args
                         cmd_meta['return_type'] = return_type
                         cmd_meta['is_method'] = 'self' in sig.parameters or 'cls' in sig.parameters,
@@ -108,6 +110,7 @@ def command(func=None):
                 'description': description,
                 # Include the class name for methods, 2nd to last part of the qualname
                 'class_name': f.__qualname__.split('.')[-2] if is_method and '.' in f.__qualname__ and f.__qualname__.count('.') > 1 else None,
+                'class_obj': f.__qualname__,
                 'args': args,
                 'return_type': return_type,
                 'is_method': is_method

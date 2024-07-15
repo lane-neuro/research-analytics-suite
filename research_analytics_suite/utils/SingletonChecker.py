@@ -16,7 +16,7 @@ Status: Prototype
 
 def is_singleton(cls):
     """
-    Check if a class is a singleton by inspecting its metaclass.
+    Check if a class is a singleton by inspecting its class attribute.
 
     Args:
         cls: The class to check.
@@ -24,15 +24,11 @@ def is_singleton(cls):
     Returns:
         bool: True if the class is a singleton, False otherwise.
     """
-    if not hasattr(cls, '__class__'):
-        return False
+    # Check if the class has the '_instance' attribute
+    if hasattr(cls, '_instance'):
+        instance = getattr(cls, '_instance')
+        # Ensure the '_instance' attribute is an instance of the class
+        if instance is not None and isinstance(instance, type(cls)):
+            return True
+    return False
 
-    meta = cls.__class__
-
-    if not hasattr(meta, '_instances'):
-        return False
-
-    if not isinstance(meta._instances, dict):
-        return False
-
-    return cls in meta._instances

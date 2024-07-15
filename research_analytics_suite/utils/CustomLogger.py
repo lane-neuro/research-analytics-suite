@@ -106,6 +106,7 @@ class CustomLogger:
         """
         self._logger.debug(message)
 
+    @command
     def error(self, exception: Exception, context: str = None):
         """
         Logs an error message.

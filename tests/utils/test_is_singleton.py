@@ -7,120 +7,45 @@ from research_analytics_suite.utils.SingletonChecker import is_singleton
 class TestIsSingleton:
 
     def test_singleton_class(self):
-        SingletonMeta = MagicMock()
-        SingletonMeta._instances = {MagicMock(): MagicMock()}
-
         SingletonClass = MagicMock()
-        SingletonClass.__class__ = SingletonMeta
-        SingletonMeta._instances[SingletonClass] = SingletonClass
+        SingletonClass._instance = SingletonClass
 
         assert is_singleton(SingletonClass) is True
 
     def test_regular_class(self):
-        RegularMeta = MagicMock()
-        RegularMeta._instances = {}
-
         RegularClass = MagicMock()
-        RegularClass.__class__ = RegularMeta
+        if hasattr(RegularClass, '_instance'):
+            del RegularClass._instance
 
         assert is_singleton(RegularClass) is False
 
-    def test_non_singleton_meta_class(self):
-        NonSingletonMeta = MagicMock()
-        NonSingletonMeta._instances = {}
-
+    def test_non_singleton_class_with_instance_attr(self):
         NonSingletonClass = MagicMock()
-        NonSingletonClass.__class__ = NonSingletonMeta
+        NonSingletonClass._instance = MagicMock()  # Different instance
 
         assert is_singleton(NonSingletonClass) is False
 
-    def test_meta_without_instances_attr(self):
-        NoInstancesMeta = MagicMock()
-        del NoInstancesMeta._instances
+    def test_class_without_instance_attr(self):
+        NoInstanceAttrClass = MagicMock()
+        if hasattr(NoInstanceAttrClass, '_instance'):
+            del NoInstanceAttrClass._instance
 
-        NoInstancesClass = MagicMock()
-        NoInstancesClass.__class__ = NoInstancesMeta
+        assert is_singleton(NoInstanceAttrClass) is False
 
-        assert is_singleton(NoInstancesClass) is False
+    def test_class_with_instance_attr_none(self):
+        NoneInstanceAttrClass = MagicMock()
+        NoneInstanceAttrClass._instance = None
 
-    def test_meta_with_non_dict_instances(self):
-        NonDictInstancesMeta = MagicMock()
-        NonDictInstancesMeta._instances = []
+        assert is_singleton(NoneInstanceAttrClass) is False
 
-        NonDictInstancesClass = MagicMock()
-        NonDictInstancesClass.__class__ = NonDictInstancesMeta
+    def test_class_with_instance_attr_invalid_type(self):
+        InvalidInstanceAttrClass = MagicMock()
+        InvalidInstanceAttrClass._instance = 12345  # Invalid type for _instance
 
-        assert is_singleton(NonDictInstancesClass) is False
+        assert is_singleton(InvalidInstanceAttrClass) is False
 
-    # Edge case tests
-    def test_meta_with_instances_none(self):
-        """
-        Test when the metaclass has _instances set to None.
-        """
-        NoneInstancesMeta = MagicMock()
-        NoneInstancesMeta._instances = None
+    def test_class_with_instance_attr_different_instance(self):
+        DifferentInstanceClass = MagicMock()
+        DifferentInstanceClass._instance = MagicMock()
 
-        NoneInstancesClass = MagicMock()
-        NoneInstancesClass.__class__ = NoneInstancesMeta
-
-        assert is_singleton(NoneInstancesClass) is False
-
-    def test_meta_with_instances_non_dict(self):
-        """
-        Test when the metaclass has _instances set to a non-dict type.
-        """
-        NonDictInstancesMeta = MagicMock()
-        NonDictInstancesMeta._instances = []
-
-        NonDictInstancesClass = MagicMock()
-        NonDictInstancesClass.__class__ = NonDictInstancesMeta
-
-        assert is_singleton(NonDictInstancesClass) is False
-
-    def test_meta_with_uninitialized_instances(self):
-        """
-        Test when the metaclass has _instances but it's not properly initialized.
-        """
-        UninitializedInstancesMeta = MagicMock()
-        UninitializedInstancesMeta._instances = MagicMock()
-
-        UninitializedInstancesClass = MagicMock()
-        UninitializedInstancesClass.__class__ = UninitializedInstancesMeta
-
-        assert is_singleton(UninitializedInstancesClass) is False
-
-    def test_class_without_class_attr_explicit(self):
-        """
-        Test when the class object does not have a __class__ attribute.
-        """
-        NoClassAttr = MagicMock()
-        del NoClassAttr.__class__
-
-        assert is_singleton(NoClassAttr) is False
-
-    def test_class_without_class_attr(self):
-        """
-        Test when the class object does not have a __class__ attribute.
-        """
-        NoClassAttr = MagicMock()
-        del NoClassAttr.__class__
-
-        assert is_singleton(NoClassAttr) is False
-
-    def test_class_with_class_attr_none(self):
-        """
-        Test when the class object has a __class__ attribute set to None.
-        """
-        NoneClassAttr = MagicMock()
-        NoneClassAttr.__class__ = None
-
-        assert is_singleton(NoneClassAttr) is False
-
-    def test_class_with_class_attr_invalid_type(self):
-        """
-        Test when the class object has a __class__ attribute set to an invalid type.
-        """
-        InvalidClassAttr = MagicMock()
-        InvalidClassAttr.__class__ = 12345  # Invalid type for __class__
-
-        assert is_singleton(InvalidClassAttr) is False
+        assert is_singleton(DifferentInstanceClass) is False

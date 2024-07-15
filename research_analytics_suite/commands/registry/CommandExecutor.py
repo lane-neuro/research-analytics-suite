@@ -17,6 +17,7 @@ Status: Prototype
 from asyncio import iscoroutinefunction
 
 from research_analytics_suite.commands.registry.RegistrationManager import RegistrationManager
+from research_analytics_suite.commands.utils import dynamic_import
 from research_analytics_suite.utils.SingletonChecker import is_singleton
 
 
@@ -78,13 +79,27 @@ class CommandExecutor:
 
         if bool(cmd_meta['is_method']):
             if runtime_id is None:
-                _class = cmd_meta['class_name']
+                _class = cmd_meta['class_obj']
+
+                if _class is None:
+                    self._logger.error(ValueError(f"Class '{cmd_meta['class_name']}' not found."),
+                                       self.__class__.__name__)
+                    return None
+
                 if is_singleton(_class):
                     instance = _class()
-                    _return_values = cmd_meta['func'](self=instance, *args, **kwargs)
-                    return _return_values
+                    args = (instance, *args)
+                    try:
+                        if iscoroutinefunction(cmd_meta['func']):
+                            _return_values = await cmd_meta['func'](*args, **kwargs)
+                        else:
+                            _return_values = cmd_meta['func'](*args, **kwargs)
+                        return _return_values
+                    except Exception as e:
+                        self._logger.error(e, self.__class__.__name__)
+                        return None
                 else:
-                    self._logger.error(ValueError(f"Instance with runtime ID '{runtime_id}' not found."),
+                    self._logger.error(ValueError("Runtime ID is None and class is not a singleton."),
                                        self.__class__.__name__)
                     return None
 
@@ -94,10 +109,14 @@ class CommandExecutor:
                                    self.__class__.__name__)
                 return None
 
-            if iscoroutinefunction(cmd_meta['func']):
-                _return_values = await cmd_meta['func'](self=instance, *args, **kwargs)
-            else:
-                _return_values = cmd_meta['func'](self=instance, *args, **kwargs)
+            try:
+                if iscoroutinefunction(cmd_meta['func']):
+                    _return_values = await cmd_meta['func'](self=instance, *args, **kwargs)
+                else:
+                    _return_values = cmd_meta['func'](self=instance, *args, **kwargs)
+            except Exception as e:
+                self._logger.error(e, self.__class__.__name__)
+                return None
 
         else:
             expected_arg_types = [arg['type'] for arg in cmd_meta['args']]
@@ -107,9 +126,13 @@ class CommandExecutor:
                                    f"but received {received_arg_types}.", self.__class__.__name__)
                 return None
 
-            if iscoroutinefunction(cmd_meta['func']):
-                _return_values = await cmd_meta['func'](*args, **kwargs)
-            else:
-                _return_values = cmd_meta['func'](*args, **kwargs)
+            try:
+                if iscoroutinefunction(cmd_meta['func']):
+                    _return_values = await cmd_meta['func'](*args, **kwargs)
+                else:
+                    _return_values = cmd_meta['func'](*args, **kwargs)
+            except Exception as e:
+                self._logger.error(e, self.__class__.__name__)
+                return None
 
         return _return_values
