@@ -15,7 +15,6 @@ import traceback
 from typing import List, Union
 
 from research_analytics_suite.commands.CommandDecorators import command, register_commands
-from research_analytics_suite.utils.LoggerStream import LoggerStream
 
 
 @register_commands

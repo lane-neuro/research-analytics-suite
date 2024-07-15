@@ -16,7 +16,6 @@ Status: Prototype
 import sys
 
 from research_analytics_suite.commands import CommandRegistry, command
-from research_analytics_suite.utils import CustomLogger
 
 
 @command
@@ -32,6 +31,7 @@ async def _exit() -> None:
         from research_analytics_suite.data_engine import Workspace
         await Workspace().save_current_workspace()
     except Exception as e:
+        from research_analytics_suite.utils.CustomLogger import CustomLogger
         CustomLogger().error(Exception(f"Error saving workspace: {e}"), 'exit')
     finally:
         sys.exit(0)
@@ -57,10 +57,12 @@ def categories() -> dict:
 
 
 @command
-def library() -> dict:
+def display_library() -> None:
     """Displays the library."""
     from research_analytics_suite.library_manifest import LibraryManifest
-    return LibraryManifest().get_library()
+    _lib = LibraryManifest().get_library()
+    from research_analytics_suite.utils.CustomLogger import CustomLogger
+    CustomLogger().info(_lib)
 
 
 @command
@@ -71,6 +73,7 @@ async def resources() -> None:
         operation_node = OperationControl().sequencer.get_head_operation_from_chain(operation_list)
         from research_analytics_suite.operation_manager.operations.system import ResourceMonitorOperation
         if isinstance(operation_node, ResourceMonitorOperation):
+            from research_analytics_suite.utils.CustomLogger import CustomLogger
             CustomLogger().info(operation_node.output_memory_usage())
 
 
@@ -81,6 +84,7 @@ async def tasks() -> None:
     for task in OperationControl().task_creator.tasks:
         operation = OperationControl().sequencer.find_operation_by_task(task)
         if operation:
+            from research_analytics_suite.utils.CustomLogger import CustomLogger
             CustomLogger().info(f"Task: {task.get_name()} - {operation.status}")
 
 
@@ -90,6 +94,7 @@ async def sequencer() -> None:
     from research_analytics_suite.operation_manager import OperationControl
     for sequencer_chain in OperationControl().sequencer.sequencer:
         operation = sequencer_chain.head.operation
+        from research_analytics_suite.utils.CustomLogger import CustomLogger
         CustomLogger().info(f"Operation: {operation.task.get_name()} - {operation.status}")
 
 

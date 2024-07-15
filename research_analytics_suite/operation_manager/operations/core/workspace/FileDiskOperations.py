@@ -19,6 +19,7 @@ from typing import Optional
 import aiofiles
 from research_analytics_suite.commands import command
 from research_analytics_suite.operation_manager.operations.core import BaseOperation
+from research_analytics_suite.utils import CustomLogger
 
 
 @command
@@ -193,27 +194,30 @@ async def populate_operation_args(data, file_dir, parent_operation=None, with_in
                     operation_data = await f.read()
                     op_file_data = json.loads(operation_data)
 
-                    data_metadata['name'] = op_file_data.get('name')
-                    data_metadata['version'] = op_file_data.get('version')
-                    data_metadata['description'] = op_file_data.get('description')
-                    data_metadata['category_id'] = op_file_data.get('category_id')
-                    data_metadata['author'] = op_file_data.get('author')
-                    data_metadata['github'] = op_file_data.get('github')
-                    data_metadata['email'] = op_file_data.get('email')
-                    data_metadata['unique_id'] = op_file_data.get('unique_id')
-                    data_metadata['action'] = op_file_data.get('action')
-                    data_metadata['required_inputs'] = op_file_data.get('required_inputs')
-                    data_metadata['parent_operation'] = op_file_data.get('parent_operation')
-                    data_metadata['inheritance'] = op_file_data.get('inheritance')
-                    data_metadata['is_loop'] = op_file_data.get('is_loop')
-                    data_metadata['is_cpu_bound'] = op_file_data.get('is_cpu_bound')
-                    data_metadata['parallel'] = op_file_data.get('parallel')
+                    data_metadata['name'] = op_file_data.get('name', '[no-name]')
+                    data_metadata['version'] = op_file_data.get('version', '0.0.1')
+                    data_metadata['description'] = op_file_data.get('description', '[no-description]')
+                    data_metadata['category_id'] = op_file_data.get('category_id', -1)
+                    data_metadata['author'] = op_file_data.get('author', '[no-author]')
+                    data_metadata['github'] = op_file_data.get('github', '[no-github]')
+                    data_metadata['email'] = op_file_data.get('email', '[no-email]')
+                    data_metadata['unique_id'] = op_file_data.get(
+                        'unique_id', f"{data_metadata.get('github')}_{data_metadata.get('name')}_"
+                                     f"{data_metadata.get('version')}")
+                    data_metadata['action'] = op_file_data.get('action', None)
+                    data_metadata['required_inputs'] = op_file_data.get('required_inputs', {})
+                    data_metadata['parent_operation'] = op_file_data.get('parent_operation', None)
+                    data_metadata['inheritance'] = op_file_data.get('inheritance', [])
+                    data_metadata['is_loop'] = op_file_data.get('is_loop', False)
+                    data_metadata['is_cpu_bound'] = op_file_data.get('is_cpu_bound', False)
+                    data_metadata['parallel'] = op_file_data.get('parallel', False)
 
             except Exception as e:
-                raise e
+                CustomLogger().error(e, 'FileDiskOperations')
 
         else:
-            raise FileNotFoundError(f"Operation file not found for operation: {operation_file}")
+            CustomLogger().error(FileNotFoundError(f"Operation file not found for operation: {operation_file}"),
+                                 'FileDiskOperations')
 
     if parent_operation is not None:
         data_metadata['parent_operation'] = parent_operation
@@ -226,7 +230,7 @@ async def populate_operation_args(data, file_dir, parent_operation=None, with_in
                     file_dir=file_dir
                 )
             except Exception as e:
-                raise e
+                CustomLogger().error(e, 'FileDiskOperations')
         else:
             data_metadata['parent_operation'] = data_metadata.get('parent_operation')
     else:
@@ -246,7 +250,7 @@ async def populate_operation_args(data, file_dir, parent_operation=None, with_in
                             )
                             data_metadata['inheritance'].append(child_op)
                         except Exception as e:
-                            raise e
+                            CustomLogger().error(e, 'FileDiskOperations')
                     else:
                         data_metadata['inheritance'].append(child)
                 else:

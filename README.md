@@ -178,7 +178,7 @@ To get a local copy up and running, follow the following steps.
 ## Prerequisites
 <i>An executable package of RAS will be available for each platform once the project is ready for prototyping and deployment. In the meantime...</i>
 
-* Ensure you have Python 3.8 or later installed:
+* Ensure you have Python 3.11 or later installed:
    * You can check your Python version by running the following command in the terminal:
       ```sh
       python --version

@@ -38,7 +38,7 @@ async def get_attributes_from_disk(file_path: str) -> Optional[OperationAttribut
     if attributes is None:
         return None
 
-    _op = OperationAttributes(attributes)
+    _op = OperationAttributes(*attributes)
     await _op.initialize()
     return _op
 
@@ -105,7 +105,7 @@ async def get_attributes_from_module(module: ModuleType) -> OperationAttributes:
     return _op_props
 
 
-async def get_attributes_from_operation(operation) -> Optional[OperationAttributes]:
+async def get_attributes_from_operation(operation) -> OperationAttributes:
     """
     Gets the attributes from the operation.
 
@@ -115,7 +115,11 @@ async def get_attributes_from_operation(operation) -> Optional[OperationAttribut
     Returns:
         OperationAttributes: The operation attributes.
     """
-    _op = OperationAttributes(operation.__dict__)
+    _attributes = operation.export_attributes()
+    if _attributes.get('_initialized'):
+        del _attributes['_initialized']
+
+    _op = OperationAttributes(**operation.export_attributes())
     await _op.initialize()
     return _op
 
@@ -130,6 +134,7 @@ async def get_attributes_from_dict(attributes: dict) -> Optional[OperationAttrib
     Returns:
         OperationAttributes: The operation attributes.
     """
-    _op = OperationAttributes(attributes)
+    del attributes['_initialized']
+    _op = OperationAttributes(**attributes)
     await _op.initialize()
     return _op

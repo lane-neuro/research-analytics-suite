@@ -116,12 +116,12 @@ class CommandExecutor:
 
             if not cmd_meta['args']:
                 if iscoroutinefunction(cmd_meta['func']):
-                    _returns = await cmd_meta['func']()
+                    _returns = await cmd_meta['func'](*args, **kwargs)
                     if _returns is not None:
                         return _returns
                     return
                 else:
-                    _returns = cmd_meta['func']()
+                    _returns = cmd_meta['func'](*args, **kwargs)
                     if _returns is not None:
                         return _returns
                     return

@@ -6,6 +6,7 @@ including caching, dependency management, and handling live data inputs within t
 
 Author: Lane
 """
+from __future__ import annotations
 import asyncio
 import os
 import json
@@ -204,7 +205,7 @@ class Workspace:
             return ""
 
     @command
-    async def load_workspace(self, workspace_path) -> 'Workspace' or None:
+    async def load_workspace(self, workspace_path) -> Workspace or None:
         """
         Loads a workspace from the specified directory.
 

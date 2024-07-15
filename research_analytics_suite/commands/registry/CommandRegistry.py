@@ -154,6 +154,7 @@ class CommandRegistry:
                                               "i.e., 'details load_data' to display details for the 'load_data' "
                                               "command."), self.__class__.__name__)
             return
+
         return await self._command_executor.execute_command(name, runtime_id, *args, **kwargs)
 
     def next_page(self):

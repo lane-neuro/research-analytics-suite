@@ -34,11 +34,12 @@ class OperationAttributes:
     }
 
     def __init__(self, *args, **kwargs):
+        self.temp_kwargs = {}
+
         if not hasattr(self, '_initialized'):
             if args and isinstance(args[0], dict):
-                self.temp_kwargs = args[0]
-            else:
-                self.temp_kwargs = kwargs
+                self.temp_kwargs.update(args[0])
+            self.temp_kwargs.update(kwargs)
 
             from research_analytics_suite.utils import CustomLogger
             self._logger = CustomLogger()
@@ -86,7 +87,7 @@ class OperationAttributes:
                     self.github = self.temp_kwargs.get('github', '[no-github]')
                     self.email = self.temp_kwargs.get('email', '[no-email]')
                     self.action = self.temp_kwargs.get('action', None)
-                    self.required_inputs = self._process_required_inputs(self.temp_kwargs.get('required_inputs', {}))
+                    self.required_inputs = self.temp_kwargs.get('required_inputs', {})
                     self.parent_operation = self.temp_kwargs.get('parent_operation', None)
                     self.inheritance = self.temp_kwargs.get('inheritance', [])
                     self.is_loop = self.temp_kwargs.get('is_loop', False)
@@ -193,7 +194,7 @@ class OperationAttributes:
 
     @required_inputs.setter
     def required_inputs(self, value):
-        self._required_inputs = self._process_required_inputs(value)
+        self._required_inputs = self._process_required_inputs(value) if value and isinstance(value, dict) else {}
 
     @property
     def parent_operation(self) -> OperationAttributes or BaseOperation or None:
@@ -234,5 +235,3 @@ class OperationAttributes:
     @parallel.setter
     def parallel(self, value):
         self._parallel = value if value and isinstance(value, bool) else False
-
-
