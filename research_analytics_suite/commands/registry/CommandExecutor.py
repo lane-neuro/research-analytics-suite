@@ -57,7 +57,7 @@ class CommandExecutor:
 
             self._initialized = True
 
-    async def execute_command(self, name, runtime_id=None, *args, **kwargs):
+    async def execute_command(self, name: str, runtime_id=None, *args, **kwargs) -> any:
         """Execute a command by name.
 
         Args:
@@ -74,17 +74,15 @@ class CommandExecutor:
             self._logger.error(ValueError(f"Command '{name}' not found in the registry."), self.__class__.__name__)
             return None
 
+        _return_values = None
+
         if bool(cmd_meta['is_method']):
             if runtime_id is None:
-                self._logger.error(ValueError("Instance-specific method requires a runtime ID."),
-                                   self.__class__.__name__)
                 _class = cmd_meta['class_name']
                 if is_singleton(_class):
                     instance = _class()
-                    _returns = cmd_meta['func'](instance, *args, **kwargs)
-                    if _returns is not None:
-                        return _returns
-                    return
+                    _return_values = cmd_meta['func'](self=instance, *args, **kwargs)
+                    return _return_values
                 else:
                     self._logger.error(ValueError(f"Instance with runtime ID '{runtime_id}' not found."),
                                        self.__class__.__name__)
@@ -97,15 +95,10 @@ class CommandExecutor:
                 return None
 
             if iscoroutinefunction(cmd_meta['func']):
-                _returns = await cmd_meta['func'](instance, *args, **kwargs)
-                if _returns is not None:
-                    return _returns
-                return
+                _return_values = await cmd_meta['func'](self=instance, *args, **kwargs)
             else:
-                _returns = cmd_meta['func'](instance, *args, **kwargs)
-                if _returns is not None:
-                    return _returns
-                return
+                _return_values = cmd_meta['func'](self=instance, *args, **kwargs)
+
         else:
             expected_arg_types = [arg['type'] for arg in cmd_meta['args']]
             received_arg_types = [type(arg) for arg in args]
@@ -114,25 +107,9 @@ class CommandExecutor:
                                    f"but received {received_arg_types}.", self.__class__.__name__)
                 return None
 
-            if not cmd_meta['args']:
-                if iscoroutinefunction(cmd_meta['func']):
-                    _returns = await cmd_meta['func'](*args, **kwargs)
-                    if _returns is not None:
-                        return _returns
-                    return
-                else:
-                    _returns = cmd_meta['func'](*args, **kwargs)
-                    if _returns is not None:
-                        return _returns
-                    return
+            if iscoroutinefunction(cmd_meta['func']):
+                _return_values = await cmd_meta['func'](*args, **kwargs)
             else:
-                if iscoroutinefunction(cmd_meta['func']):
-                    _returns = await cmd_meta['func'](*args, **kwargs)
-                    if _returns is not None:
-                        return _returns
-                    return
-                else:
-                    _returns = cmd_meta['func'](*args, **kwargs)
-                    if _returns is not None:
-                        return _returns
-                    return
+                _return_values = cmd_meta['func'](*args, **kwargs)
+
+        return _return_values

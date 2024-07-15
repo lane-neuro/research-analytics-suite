@@ -95,7 +95,7 @@ class OperationExecutor:
                         try:
                             operation.task = self.task_creator.create_task(
                                 self.execute_operation(operation),
-                                name=operation.name
+                                name=operation.runtime_id
                             )
                             operation.add_log_entry(f"[TASK] {operation.name}")
                         except Exception as e:

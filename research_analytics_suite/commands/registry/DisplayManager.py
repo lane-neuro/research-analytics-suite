@@ -13,8 +13,6 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from types import NoneType
-
 from prettytable import PrettyTable
 from research_analytics_suite.commands.utils import wrap_text
 from research_analytics_suite.commands.utils.text_utils import add_tags_to_commands, get_function_body

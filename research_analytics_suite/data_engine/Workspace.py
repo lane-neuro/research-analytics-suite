@@ -467,7 +467,16 @@ class Workspace:
 
 
 @command
-def remove_non_serializable(obj):
+def remove_non_serializable(obj) -> dict or list or None:
+    """
+    Removes non-serializable objects from a dictionary or list.
+
+    Args:
+        obj: The dictionary or list to process.
+
+    Returns:
+        dict or list or None: The processed dictionary or list.
+    """
     if isinstance(obj, dict):
         for v in obj.values():
             if isinstance(v, dict):  # Each value should be a dictionary
@@ -485,7 +494,16 @@ def remove_non_serializable(obj):
 
 
 @command
-def is_serializable(obj):
+def is_serializable(obj: any) -> bool:
+    """
+    Checks if an object is serializable.
+
+    Args:
+        obj: The object to check.
+
+    Returns:
+        bool: True if the object is serializable, False otherwise.
+    """
     try:
         json.dumps(obj, indent=4)
         return True
