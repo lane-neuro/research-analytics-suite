@@ -20,7 +20,7 @@ from research_analytics_suite.gui.GUIBase import GUIBase
 
 class OperationSlotPreview(GUIBase):
 
-    def __init__(self, operation_dict: dict, width: int, height: int, parent: str):
+    def __init__(self, operation_dict, width: int, height: int, parent: str):
         """
         Initializes the OperationSlotPreview with the specified operation, width, height, and parent.
 
@@ -45,8 +45,6 @@ class OperationSlotPreview(GUIBase):
         self._action = self._operation_info["action"]
         self._output_type = None  # self._operation_info["output_type"]
         self._required_inputs = self._operation_info["required_inputs"]
-        if self._required_inputs is None:
-            self._required_inputs = []
         self._parent_id = f"parent_{self._runtime_id}"
 
     async def initialize_gui(self) -> None:  # pragma: no cover

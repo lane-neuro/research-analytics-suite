@@ -61,19 +61,26 @@ class OperationAttributes:
 
             self._initialized = False
 
-    def _process_required_inputs(self, inputs):
-        if isinstance(inputs, dict):
-            processed_dict = {}
-            for k, v in inputs.items():
-                if isinstance(v, str):
-                    try:
-                        processed_dict[k] = self._TYPES_DICT[v.lower()]
-                    except KeyError:
-                        processed_dict[k] = None
-                else:
-                    processed_dict[k] = v
-            return processed_dict
-        return {}
+    def _process_required_inputs(self, inputs: dict) -> dict:
+        """Process required inputs by converting string values using a predefined dictionary.
+
+        Args:
+            inputs (dict): A dictionary of inputs to be processed.
+
+        Returns:
+            dict: A dictionary with processed inputs.
+        """
+        if not isinstance(inputs, dict):
+            raise ValueError("Expected a dictionary as input")
+
+        processed_dict = {}
+        for k, v in inputs.items():
+            if isinstance(v, str):
+                processed_dict[k] = self._TYPES_DICT.get(v.lower(), getattr(v, '__name__', v))
+            else:
+                processed_dict[k] = getattr(v, '__name__', v)
+
+        return processed_dict
 
     async def initialize(self):
         if not self._initialized:
@@ -101,21 +108,21 @@ class OperationAttributes:
     @command
     def export_attributes(self) -> dict:
         return {
-            'name': self.name,
-            'version': self.version,
-            'description': self.description,
-            'category_id': self.category_id,
-            'author': self.author,
-            'github': self.github,
-            'email': self.email,
+            'name': self._name,
+            'version': self._version,
+            'description': self._description,
+            'category_id': self._category_id,
+            'author': self._author,
+            'github': self._github,
+            'email': self._email,
             'unique_id': self.unique_id,
-            'action': self.action,
-            'required_inputs': self.required_inputs,
-            'parent_operation': self.parent_operation,
-            'inheritance': self.inheritance,
-            'is_loop': self.is_loop,
-            'is_cpu_bound': self.is_cpu_bound,
-            'parallel': self.parallel,
+            'action': self._action,
+            'required_inputs': self._required_inputs,
+            'parent_operation': self._parent_operation,
+            'inheritance': self._inheritance,
+            'is_loop': self._is_loop,
+            'is_cpu_bound': self._is_cpu_bound,
+            'parallel': self._parallel,
         }
 
     @property
@@ -190,10 +197,12 @@ class OperationAttributes:
 
     @property
     def required_inputs(self) -> dict:
+        if not self._required_inputs:
+            return {}
         return self._required_inputs
 
     @required_inputs.setter
-    def required_inputs(self, value):
+    def required_inputs(self, value: dict):
         self._required_inputs = self._process_required_inputs(value) if value and isinstance(value, dict) else {}
 
     @property

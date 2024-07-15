@@ -22,7 +22,7 @@ from research_analytics_suite.operation_manager.operations.core.execution import
 
 class UpdatedOperationModule(GUIBase):
 
-    def __init__(self, operation_dict: dict, width: int, height: int, parent: str):
+    def __init__(self, operation_dict, width: int, height: int, parent: str):
         super().__init__(width, height, parent)
 
         self._operation_info = operation_dict
@@ -37,7 +37,7 @@ class UpdatedOperationModule(GUIBase):
         self._operation_id = self._operation_info.get("unique_id", f"{self._github}_{self._name}_{self._version}")
         self._action = action_serialized(self._operation_info.get("action"))
         self._required_inputs = self._operation_info.get("required_inputs", {})
-        self._output_type = self._operation_info.get("output_type", {})
+        # self._output_type = self._operation_info.get("output_type", {})
         self._parent_operation = self._operation_info.get("parent_operation", None)
         self._inheritance = self._operation_info.get("inheritance", [])
 

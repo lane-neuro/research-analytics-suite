@@ -21,6 +21,10 @@ def translate_item(item):
         return {translate_item(k): translate_item(v) for k, v in zip(item.keys, item.values)}
     elif isinstance(item, ast.Tuple):
         return tuple(translate_item(e) for e in item.elts)
+    elif isinstance(item, ast.Name):
+        return item.id
+    elif isinstance(item, ast.Attribute):
+        return item.attr
     return None
 
 
@@ -35,15 +39,10 @@ async def get_attributes_from_disk(file_path: str) -> Optional[OperationAttribut
         OperationAttributes: The operation attributes.
     """
     attributes = await load_from_disk(file_path=file_path, operation_group=None, with_instance=False)
-    if attributes is None:
-        return None
-
-    _op = OperationAttributes(*attributes)
-    await _op.initialize()
-    return _op
+    return attributes
 
 
-async def get_attributes_from_module(module: ModuleType) -> OperationAttributes:
+async def get_attributes_from_module(module) -> OperationAttributes:
     """
     Gets the attributes from the module.
 
@@ -116,10 +115,8 @@ async def get_attributes_from_operation(operation) -> OperationAttributes:
         OperationAttributes: The operation attributes.
     """
     _attributes = operation.export_attributes()
-    if _attributes.get('_initialized'):
-        del _attributes['_initialized']
 
-    _op = OperationAttributes(**operation.export_attributes())
+    _op = OperationAttributes(**_attributes)
     await _op.initialize()
     return _op
 

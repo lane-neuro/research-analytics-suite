@@ -23,7 +23,7 @@ from research_analytics_suite.utils import CustomLogger
 
 
 @command
-async def load_from_disk(file_path: str, operation_group: Optional[dict], with_instance=True) -> BaseOperation:
+async def load_from_disk(file_path: str, operation_group: Optional[dict], with_instance=True):
     """
     Load a BaseOperation object from disk.
 
@@ -33,7 +33,7 @@ async def load_from_disk(file_path: str, operation_group: Optional[dict], with_i
         with_instance (bool, optional): Whether to populate parent argument with an initialized BaseOperation instance.
 
     Returns:
-        BaseOperation: The loaded operation.
+        BaseOperation or OperationAttributes: The loaded operation.
     """
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")

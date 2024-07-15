@@ -28,7 +28,6 @@ def is_singleton(cls):
     if hasattr(cls, '_instance'):
         instance = getattr(cls, '_instance')
         # Ensure the '_instance' attribute is an instance of the class
-        if instance is not None and isinstance(instance, type(cls)):
+        if instance is not None and type(instance) == cls:
             return True
     return False
-

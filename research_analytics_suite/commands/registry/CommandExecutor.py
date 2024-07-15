@@ -17,7 +17,6 @@ Status: Prototype
 from asyncio import iscoroutinefunction
 
 from research_analytics_suite.commands.registry.RegistrationManager import RegistrationManager
-from research_analytics_suite.commands.utils import dynamic_import
 from research_analytics_suite.utils.SingletonChecker import is_singleton
 
 
@@ -100,7 +99,7 @@ class CommandExecutor:
                         return None
                 else:
                     self._logger.error(ValueError("Runtime ID is None and class is not a singleton."),
-                                       self.__class__.__name__)
+                                       _class.__name__)
                     return None
 
             instance = self._registration_manager.get_instance(runtime_id)
