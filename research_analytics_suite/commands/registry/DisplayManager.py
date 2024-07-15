@@ -158,7 +158,7 @@ class DisplayManager:
                 for _return_type in _return_types:
                     _return_types += f"\n\t-\t({_return_type})"
             elif isinstance(_returns, type):
-                _return_types += f"return type:\t\t{_returns.__name__}"
+                _return_types += f"return type:\t\t\t{_returns.__name__}"
             else:
                 _return_types += f"return type:\t\t\tNone"
         else:

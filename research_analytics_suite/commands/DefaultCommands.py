@@ -57,6 +57,13 @@ def categories() -> dict:
 
 
 @command
+def library() -> dict:
+    """Displays the library."""
+    from research_analytics_suite.library_manifest import LibraryManifest
+    return LibraryManifest().get_library()
+
+
+@command
 async def resources() -> None:
     """Displays system resources."""
     from research_analytics_suite.operation_manager import OperationControl

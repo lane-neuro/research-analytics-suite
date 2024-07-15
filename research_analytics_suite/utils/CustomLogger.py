@@ -92,9 +92,11 @@ class CustomLogger:
         if isinstance(message, List):
             for msg in message:
                 self._logger.info(msg)
-        else:
+        elif isinstance(message, str):
             for part in message.split('\n'):
                 self._logger.info(part.replace('\n', ''))
+        else:
+            self._logger.info(message)
 
     def debug(self, message: str) -> None:
         """

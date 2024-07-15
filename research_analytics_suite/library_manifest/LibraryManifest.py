@@ -13,6 +13,7 @@ import pkgutil
 from research_analytics_suite.commands import command, register_commands
 from research_analytics_suite.library_manifest.LibraryCategory import Category
 from research_analytics_suite.library_manifest.CategoryID import CategoryID
+from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
 
 
 @register_commands
@@ -70,9 +71,9 @@ class LibraryManifest:
         self._categories[category_id] = category
 
     @command
-    def add_operation_from_attributes(self, operation_attributes):
+    def add_operation_from_attributes(self, operation_attributes: OperationAttributes):
         category_id = operation_attributes.category_id
-        if category_id in self._categories:
+        if category_id in self._categories.keys():
             self._categories[category_id].register_operation(operation_attributes)
 
     async def build_base_library(self):
@@ -115,6 +116,7 @@ class LibraryManifest:
                     self._logger.error(Exception(f"Invalid operation type: {type(operation)}"), self.__class__.__name__)
 
             self._library[category_id] = operations
+
         self._logger.debug("Completed build_base_library")
 
     async def _populate_verified_operations(self):
@@ -128,10 +130,11 @@ class LibraryManifest:
                 self._logger.debug(f"Importing module: {module_name}")
                 module = importlib.import_module(f'operation_library.{module_name}').__dict__.get(module_name)
 
-                from research_analytics_suite.operation_manager.operations.core.memory import get_attributes_from_module
-                self.add_operation_from_attributes(await get_attributes_from_module(module))
+                from research_analytics_suite.operation_manager.operations.core.memory.utils import get_attributes_from_module
+                _operation = await get_attributes_from_module(module)
+                self.add_operation_from_attributes(_operation)
         except ModuleNotFoundError:
-            self._logger.error(Exception("operation_library module not found"))
+            self._logger.error(Exception("operation_library module not found"), self.__class__.__name__)
         self._logger.debug("Completed _populate_verified_operations")
 
     @command
@@ -139,6 +142,9 @@ class LibraryManifest:
         """
         Load the user library from the operations directory.
         """
+        if not self._initialized:
+            await self.initialize()
+
         self._logger.debug("Starting load_user_library")
         _user_dir = os.path.normpath(os.path.join(self._config.BASE_DIR, 'operations'))
         _local_operation_dir = os.path.normpath(os.path.join(

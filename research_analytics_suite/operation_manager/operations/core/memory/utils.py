@@ -1,12 +1,30 @@
 import ast
 import inspect
+from types import ModuleType
 from typing import Optional
 
 from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
 from research_analytics_suite.operation_manager.operations.core.workspace import load_from_disk
+from research_analytics_suite.utils import CustomLogger
 
 
-async def get_attributes_from_disk(file_path: str) -> Optional['OperationAttributes']:
+def translate_item(item):
+    if isinstance(item, ast.Str):
+        return item.s
+    elif isinstance(item, ast.Num):
+        return item.n
+    elif isinstance(item, ast.NameConstant):
+        return item.value
+    elif isinstance(item, ast.List):
+        return [translate_item(e) for e in item.elts]
+    elif isinstance(item, ast.Dict):
+        return {translate_item(k): translate_item(v) for k, v in zip(item.keys, item.values)}
+    elif isinstance(item, ast.Tuple):
+        return tuple(translate_item(e) for e in item.elts)
+    return None
+
+
+async def get_attributes_from_disk(file_path: str) -> Optional[OperationAttributes]:
     """
     Gets the attributes from the disk.
 
@@ -25,7 +43,7 @@ async def get_attributes_from_disk(file_path: str) -> Optional['OperationAttribu
     return _op
 
 
-async def get_attributes_from_module(module) -> Optional['OperationAttributes']:
+async def get_attributes_from_module(module: ModuleType) -> OperationAttributes:
     """
     Gets the attributes from the module.
 
@@ -48,7 +66,8 @@ async def get_attributes_from_module(module) -> Optional['OperationAttributes']:
 
     # Traverse the AST to find the class definition
     for node in ast.walk(tree):
-        if isinstance(node, ast.ClassDef) and node.name == module.__name__:
+        if isinstance(node, ast.ClassDef):
+            # Assuming the first class definition matches the module's class
             class_body = node.body
             break
 
@@ -62,26 +81,31 @@ async def get_attributes_from_module(module) -> Optional['OperationAttributes']:
             # Collect properties (assignments) before the __init__ method
             if isinstance(node, ast.Assign):
                 for target in node.targets:
-                    if isinstance(target, ast.Name):
+                    if isinstance(target, ast.Name) and target.id != 'unique_id':
                         prop_name = target.id
 
                         try:
                             if isinstance(node.value, ast.Dict):
-                                dict_items = {translate_item(k): translate_item(v) for k, v in zip(node.value.keys, node.value.values)}
-                                _op_props.__setattr__(prop_name, dict_items)
+                                dict_items = {translate_item(k): translate_item(v) for k, v in
+                                              zip(node.value.keys, node.value.values)}
+                                setattr(_op_props, prop_name, dict_items)
                             elif isinstance(node.value, ast.List):
                                 list_items = [translate_item(v) for v in node.value.elts]
-                                _op_props.__setattr__(prop_name, list_items)
+                                setattr(_op_props, prop_name, list_items)
                             elif isinstance(node.value, ast.Tuple):
                                 tuple_items = tuple(translate_item(v) for v in node.value.elts)
-                                _op_props.__setattr__(prop_name, tuple_items)
+                                setattr(_op_props, prop_name, tuple_items)
+                            else:
+                                # Direct value assignment for simple types
+                                setattr(_op_props, prop_name, translate_item(node.value))
                         except AttributeError:
-                            raise AttributeError(f"Invalid attribute: {prop_name}")
+                            CustomLogger().error(AttributeError(f"Invalid attribute: {prop_name}"),
+                                                 OperationAttributes.__name__)
 
     return _op_props
 
 
-async def get_attributes_from_operation(operation) -> Optional['OperationAttributes']:
+async def get_attributes_from_operation(operation) -> Optional[OperationAttributes]:
     """
     Gets the attributes from the operation.
 
@@ -91,12 +115,12 @@ async def get_attributes_from_operation(operation) -> Optional['OperationAttribu
     Returns:
         OperationAttributes: The operation attributes.
     """
-    _op = OperationAttributes(**operation.__dict__)
+    _op = OperationAttributes(operation.__dict__)
     await _op.initialize()
     return _op
 
 
-async def get_attributes_from_dict(attributes: dict) -> Optional['OperationAttributes']:
+async def get_attributes_from_dict(attributes: dict) -> Optional[OperationAttributes]:
     """
     Gets the attributes from the dictionary.
 
@@ -106,20 +130,6 @@ async def get_attributes_from_dict(attributes: dict) -> Optional['OperationAttri
     Returns:
         OperationAttributes: The operation attributes.
     """
-    _op = OperationAttributes(**attributes)
+    _op = OperationAttributes(attributes)
     await _op.initialize()
     return _op
-
-
-def translate_item(_v):
-    if isinstance(_v, (ast.Constant, ast.Num, ast.Str, ast.NameConstant)):
-        return _v.value
-    elif isinstance(_v, ast.Name):
-        return _v.id
-    elif isinstance(_v, ast.Attribute):
-        return _v.attr
-    elif isinstance(_v, ast.Subscript):
-        # Handle subscript if needed, placeholder return for now
-        return _v
-    else:
-        return f"{_v}"

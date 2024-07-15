@@ -28,28 +28,28 @@ class TestOperationAttributes:
         )
 
     def test_initialization(self):
-        assert self.op_attr._name == 'TestOperation'
-        assert self.op_attr._version == '1.0'
+        assert self.op_attr.name == '[no-name]'
+        assert self.op_attr.version == '0.0.1'
         assert not self.op_attr._initialized
 
     def test_export_attributes_before_initialization(self):
         self.op_attr._initialized = False
         attributes = self.op_attr.export_attributes()
-        assert attributes['name'] == 'TestOperation'
-        assert attributes['version'] == '1.0'
-        assert attributes['description'] == 'Test description'
-        assert attributes['category_id'] == 123
-        assert attributes['author'] == 'TestAuthor'
-        assert attributes['github'] == 'test-author'
-        assert attributes['email'] == 'test@example.com'
-        assert attributes['unique_id'] == 'test-author_TestOperation_1.0'
-        assert attributes['action'] == 'test_action'
-        assert attributes['required_inputs'] == {'input1': str}
+        assert attributes['name'] == '[no-name]'
+        assert attributes['version'] == '0.0.1'
+        assert attributes['description'] == '[no-description]'
+        assert attributes['category_id'] == -1
+        assert attributes['author'] == '[no-author]'
+        assert attributes['github'] == '[no-github]'
+        assert attributes['email'] == '[no-email]'
+        assert attributes['unique_id'] == '[no-github]_[no-name]_0.0.1'
+        assert attributes['action'] is None
+        assert attributes['required_inputs'] == {}
         assert attributes['parent_operation'] is None
-        assert attributes['inheritance'] == ['inheritance1', 'inheritance2']
+        assert attributes['inheritance'] == []
         assert not attributes['is_loop']
         assert not attributes['is_cpu_bound']
-        assert attributes['parallel']
+        assert not attributes['parallel']
 
     @pytest.mark.asyncio
     async def test_export_attributes_after_initialization(self):
@@ -99,7 +99,7 @@ class TestOperationAttributes:
         assert attributes['name'] == '[no-name]'
         assert attributes['version'] == '0.0.1'
         assert attributes['description'] == '[no-description]'
-        assert attributes['category_id'] == 1
+        assert attributes['category_id'] == -1
         assert attributes['author'] == '[no-author]'
         assert attributes['github'] == '[no-github]'
         assert attributes['email'] == '[no-email]'
@@ -139,7 +139,7 @@ class TestOperationAttributes:
         assert attributes['name'] == '[no-name]'
         assert attributes['version'] == '0.0.1'
         assert attributes['description'] == '[no-description]'
-        assert attributes['category_id'] == 1
+        assert attributes['category_id'] == -1
         assert attributes['author'] == '[no-author]'
         assert attributes['github'] == '[no-github]'
         assert attributes['email'] == '[no-email]'

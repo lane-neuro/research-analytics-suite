@@ -41,12 +41,12 @@ class ResearchAnalyticsSuite:
 
     def __init__(self):
         from research_analytics_suite.commands import CommandRegistry
-        self._command_registry = CommandRegistry()
-        self._logger = CustomLogger()
-        self._memory_manager = MemoryManager()
         self._config = Config()
-        self._operation_control = OperationControl()
+        self._logger = CustomLogger()
         self._library_manifest = LibraryManifest()
+        self._command_registry = CommandRegistry()
+        self._memory_manager = MemoryManager()
+        self._operation_control = OperationControl()
         self._workspace = Workspace()
 
         self._launch_tasks = []

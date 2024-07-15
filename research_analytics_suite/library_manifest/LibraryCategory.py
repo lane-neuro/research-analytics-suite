@@ -31,13 +31,17 @@ class Category:
         operations (list): A list to store the operations of the category.
         subcategories (dict): A dictionary to store subcategories.
     """
-    _instances = dict()
+    _instances = {}
     _lock = asyncio.Lock()
 
     def __new__(cls, *args, **kwargs) -> Category:
         category_id = args[0]
+        if cls._instances is None:
+            cls._instances = {}
+
         if category_id in cls._instances:
             return cls._instances[category_id]
+
         instance = super().__new__(cls)
         cls._instances[category_id] = instance
         return instance
