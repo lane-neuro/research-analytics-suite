@@ -1,13 +1,13 @@
 import os
 
-from research_analytics_suite.commands import register_commands, command
+from research_analytics_suite.commands import link_class_commands, command
 from research_analytics_suite.utils import CustomLogger
 
 
 # from research_analytics_suite.operation_manager import BaseOperation
 
 
-@register_commands
+@link_class_commands
 class MachineLearning:
     def __init__(self, data=None, model_type="logistic_regression",
                  name="MachineLearningOperation"):

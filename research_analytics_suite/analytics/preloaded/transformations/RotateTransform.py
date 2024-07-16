@@ -16,10 +16,10 @@ Status: Prototype
 
 import math
 
-from research_analytics_suite.commands import register_commands, command
+from research_analytics_suite.commands import link_class_commands, command
 
 
-@register_commands
+@link_class_commands
 class RotateTransform:
     """
     A class to apply a rotation transformation to a given datapoint.

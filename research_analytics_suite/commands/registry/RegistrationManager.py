@@ -20,7 +20,7 @@ import pkgutil
 from typing import get_type_hints, List, Dict, Union, ForwardRef, Tuple
 
 from research_analytics_suite.commands.utils import dynamic_import, parse_typing_alias
-from research_analytics_suite.commands.CommandDecorators import clean_description
+from research_analytics_suite.commands import clean_description
 
 
 class RegistrationManager:
@@ -35,7 +35,6 @@ class RegistrationManager:
         self._workspace = None
 
         self._registry = {}
-        self._instances = {}
         self._categories = {}
 
         self._initialized = False
@@ -101,7 +100,8 @@ class RegistrationManager:
             cmd_meta['return_type'] = resolved_return_types
         else:
             try:
-                if _return_type is not type(any) and not isinstance(_return_type, type) and isinstance(_return_type, str):
+                if _return_type is not type(any) and not isinstance(_return_type, type) and isinstance(_return_type,
+                                                                                                       str):
                     _return_type = parse_typing_alias(_return_type, _return_type)
                 _return_type = [self._get_type_name(_return_type)]
             except Exception as e:
@@ -115,6 +115,7 @@ class RegistrationManager:
             'description': cmd_meta.get('description', None),
             'class_name': cmd_meta.get('class_name', None),
             'class_obj': cmd_meta.get('class_obj', None),
+            'instances': cmd_meta.get('instances', {}),
             'args': _args,
             'return_type': cmd_meta.get('return_type', any),
             'is_method': cmd_meta.get('is_method', False),
@@ -173,7 +174,9 @@ class RegistrationManager:
                         'description': _description,
                         'class_name': None,
                         'class_obj': None,
-                        'args': [{'name': param, 'type': get_type_hints(obj).get(param, any)} for param in inspect.signature(obj).parameters],
+                        'instances': {},  # Initialize an empty dictionary for instances
+                        'args': [{'name': param, 'type': get_type_hints(obj).get(param, any)} for param in
+                                 inspect.signature(obj).parameters],
                         'return_type': get_type_hints(obj).get('return', any),
                         'is_method': False,
                         'category': getattr(obj, 'category', 'Uncategorized'),
@@ -191,43 +194,78 @@ class RegistrationManager:
                                 'description': _description,
                                 'class_name': obj.__name__,
                                 'class_obj': obj,
-                                'args': [{'name': param, 'type': get_type_hints(method).get(param, any)} for param in inspect.signature(method).parameters if param != 'self'],
+                                'instances': {id(obj): obj},  # Initialize an empty dictionary for instances
+                                'args': [{'name': param, 'type': get_type_hints(method).get(param, any)} for param in
+                                         inspect.signature(method).parameters if param != 'self'],
                                 'return_type': get_type_hints(method).get('return', any),
                                 'is_method': True,
-                                'class': obj,
                                 'category': getattr(method, 'category', 'Uncategorized'),
                                 'tags': getattr(method, 'tags', []),
                             })
 
-    def register_instance(self, instance, runtime_id):
-        """Register an instance with a runtime ID.
+    def register_instance(self, instance, runtime_id: int, command_name: str):
+        """Register an instance with a runtime ID under a specific command.
 
         Args:
             instance: The instance to register.
             runtime_id: The runtime ID of the instance.
+            command_name: The name of the command to which the instance belongs.
         """
-        if not self._instances:
-            self._instances = {}
-        if not runtime_id:
-            runtime_id = id(instance)
-
-        if runtime_id in self._instances:
-            self._logger.error(ValueError(f"Instance with runtime ID '{runtime_id}' already exists."),
+        if command_name not in self._registry:
+            self._logger.error(ValueError(f"Command '{command_name}' not found in registry."),
                                self.__class__.__name__)
             return
 
-        self._instances[runtime_id] = instance
+        if not runtime_id:
+            runtime_id = id(instance)
 
-    def get_instance(self, runtime_id):
-        """Get an instance by runtime ID.
+        if runtime_id in self._registry[command_name]['instances']:
+            self._logger.error(
+                ValueError(f"Instance with runtime ID '{runtime_id}' already exists for command '{command_name}'."),
+                self.__class__.__name__)
+            return
+
+        self._registry[command_name]['instances'][runtime_id] = instance
+
+    def get_instance(self, runtime_id: int, command_name: str):
+        """Get an instance by runtime ID for a specific command.
 
         Args:
             runtime_id: The runtime ID of the instance.
+            command_name: The name of the command to which the instance belongs.
 
         Returns:
             The instance associated with the runtime ID, or None if not found.
         """
-        return self._instances.get(runtime_id, None)
+        if command_name not in self._registry:
+            self._logger.error(ValueError(f"Command '{command_name}' not found in registry."),
+                               self.__class__.__name__)
+            return None
+
+        return self._registry[command_name]['instances'].get(runtime_id)
+
+    def list_instances(self, command_name: str = None) -> list:
+        """List all registered instances, optionally filtered by command name.
+
+        Args:
+            command_name: The name of the command to filter instances by.
+
+        Returns:
+            A list of registered instances.
+        """
+        if command_name:
+            if command_name not in self._registry:
+                self._logger.error(ValueError(f"Command '{command_name}' not found in registry."),
+                                   self.__class__.__name__)
+                return []
+
+            return list(self._registry[command_name]['instances'].values())
+
+        instances = []
+        for command in self._registry.values():
+            instances.extend(command['instances'].values())
+
+        return instances
 
     @property
     def registry(self) -> dict:
@@ -235,9 +273,9 @@ class RegistrationManager:
         return self._registry
 
     @registry.setter
-    def registry(self, registry):
+    def registry(self, value):
         """Set the command registry."""
-        self._registry = registry
+        self._registry = value
 
     @property
     def categories(self) -> dict:

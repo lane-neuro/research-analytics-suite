@@ -16,11 +16,11 @@ Status: Prototype
 from __future__ import annotations
 import asyncio
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
 
 
-@register_commands
+@link_class_commands
 class Category:
     """
     Category class is used to store the operations of a category.

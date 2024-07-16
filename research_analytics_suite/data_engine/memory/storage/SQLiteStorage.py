@@ -1,11 +1,11 @@
 import json
 import aiosqlite
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.data_engine.memory.storage.BaseStorage import BaseStorage
 
 
-@register_commands
+@link_class_commands
 class SQLiteStorage(BaseStorage):
     """
     SQLite storage implementation for user variables.

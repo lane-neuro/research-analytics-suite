@@ -14,10 +14,10 @@ import os
 import aiofiles
 import psutil
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 
 
-@register_commands
+@link_class_commands
 class Config:
     _instance = None
     _lock = asyncio.Lock()

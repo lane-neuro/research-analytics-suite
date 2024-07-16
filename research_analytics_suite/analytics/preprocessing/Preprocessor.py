@@ -1,10 +1,10 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
-from research_analytics_suite.commands import register_commands, command
+from research_analytics_suite.commands import link_class_commands, command
 
 
-@register_commands
+@link_class_commands
 class Preprocessor:
     def __init__(self):
         self.scaler = StandardScaler()

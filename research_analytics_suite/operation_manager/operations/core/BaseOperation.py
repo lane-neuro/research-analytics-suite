@@ -19,7 +19,7 @@ import uuid
 from abc import ABC
 from typing import Tuple, final, Optional
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
 from .execution import execute_operation, execute_inherited_operations
 from .progress import update_progress
@@ -29,7 +29,7 @@ from .inheritance import (add_child_operation, link_child_operation, remove_chil
 from .workspace import save_operation_in_workspace, load_from_disk, load_operation_group, from_dict
 
 
-@register_commands
+@link_class_commands
 class BaseOperation(ABC):
     """
     An Abstract Base Class that defines a common interface for all operations. The BaseOperation class provides a set

@@ -12,10 +12,10 @@ import json
 import uuid
 
 from .MemorySlot import MemorySlot
-from ...commands import command, register_commands
+from ...commands import command, link_class_commands
 
 
-@register_commands
+@link_class_commands
 class MemorySlotCollection(ABC):
     """
     An abstract base class representing a collection of memory slots for storing data.

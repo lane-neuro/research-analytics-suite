@@ -16,10 +16,10 @@ Status: Prototype
 import dask.dataframe as dd
 import pandas as pd
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.data_engine.core.BaseData import BaseData
 
-@register_commands
+@link_class_commands
 class DaskData(BaseData):
     """
     A class to handle data using Dask.

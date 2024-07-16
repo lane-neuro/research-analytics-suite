@@ -16,7 +16,7 @@ from typing import Tuple, Optional
 import aiofiles
 from collections import defaultdict
 
-from research_analytics_suite.commands import register_commands, command
+from research_analytics_suite.commands import link_class_commands, command
 from research_analytics_suite.library_manifest import LibraryManifest
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.memory.DataCache import DataCache
@@ -28,7 +28,7 @@ from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 
 
-@register_commands
+@link_class_commands
 class Workspace:
     """
     A class to manage multiple data engines, allowing flexible interaction with specific datasets.

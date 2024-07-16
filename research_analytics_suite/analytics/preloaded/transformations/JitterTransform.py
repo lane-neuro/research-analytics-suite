@@ -15,10 +15,10 @@ Status: Prototype
 """
 import numpy as np
 
-from research_analytics_suite.commands.CommandDecorators import command, register_commands
+from research_analytics_suite.commands.CommandDecorators import command, link_class_commands
 
 
-@register_commands
+@link_class_commands
 class JitterTransform:
     """
     A class to apply a jitter transformation to a given datapoint.

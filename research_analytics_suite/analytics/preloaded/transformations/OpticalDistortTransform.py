@@ -13,10 +13,10 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.commands import register_commands, command
+from research_analytics_suite.commands import link_class_commands, command
 
 
-@register_commands
+@link_class_commands
 class OpticalDistortTransform:
     """
     A class to apply an optical distortion transformation to a given datapoint.

@@ -8,11 +8,11 @@ Author: Lane
 """
 import asyncio
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 
 
-@register_commands
+@link_class_commands
 class MemoryManager:
     """
     A class to manage memory slot collections within the workspace using a specified storage backend.

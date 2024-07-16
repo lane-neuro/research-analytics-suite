@@ -69,7 +69,7 @@ class DisplayManager:
                 commands_to_display[cmd_name] = cmd_meta
 
         table = PrettyTable()
-        table.field_names = ["class", "command", "description", "input arguments", "return types", "search tags"]
+        table.field_names = ["class (# instances)", "command", "description", "input arguments", "return types", "search tags"]
         table.align = "l"
 
         for cmd_name, cmd_meta in commands_to_display.items():
@@ -95,8 +95,12 @@ class DisplayManager:
             else:
                 formatted_return_types = f"- None"
 
+            formatted_class = cmd_meta.get('class_name', None)
+            if formatted_class is not None:
+                formatted_class += f"({len(cmd_meta['instances'].values())})"
+
             table.add_row([
-                cmd_meta.get('class_name', None),
+                formatted_class,
                 wrap_text(cmd_name, column_width),
                 wrap_text(description, column_width),
                 wrap_text(formatted_args, column_width),
@@ -171,8 +175,21 @@ class DisplayManager:
             _formatted_func = f"  function:\t\t\tNone"
         _formatted_func += f"\n   ------------------"
 
+        _formatted_instances = f"  instances:\t\t\t["
+        _instances = cmd_meta.get('instances', {})
+        if _instances:
+            index = 0
+            for _instance in _instances.values():
+                index += 1
+                if _formatted_instances == f"  instances:\t\t\t[":
+                    _formatted_instances += f" ({index}) {_instance}"
+                    continue
+                _formatted_instances += f", ({index}) {_instance}"
+        _formatted_instances += ' ]'
+
         self._logger.info('==================================================================================')
         self._logger.info(f"  command:\t\t\t\t{_command_name}")
+        self._logger.info(_formatted_instances)
         self._logger.info(f"  category:\t\t\t\t{cmd_meta.get('category', 'Uncategorized')}")
         self._logger.info(f"  description:\t\t\t{cmd_meta.get('description', None)}")
         self._logger.info(f"  search tags:\t\t\t{cmd_meta.get('tags', [])}")

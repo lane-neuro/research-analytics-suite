@@ -9,10 +9,10 @@ Author: Lane
 
 from .BaseInput import BaseInput
 from research_analytics_suite.utils.CustomLogger import CustomLogger
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 
 
-@register_commands
+@link_class_commands
 class LiveDataHandler:
     """
     A class to handle live data inputs and integrate them into the Research Analytics Suite.

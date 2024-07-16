@@ -18,7 +18,7 @@ import json
 from collections import deque
 from typing import Optional
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.nodes.OperationNode import OperationNode
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
@@ -26,7 +26,7 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 from research_analytics_suite.operation_manager.operations.core.workspace import pack_as_local_reference
 
 
-@register_commands
+@link_class_commands
 class OperationSequencer:
     """
     A class to manage a sequencer of operations.

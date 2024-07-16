@@ -7,12 +7,12 @@ Author: Lane
 """
 from typing import Tuple
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.data_engine.memory.storage.BaseStorage import BaseStorage
 from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 
 
-@register_commands
+@link_class_commands
 class MemoryStorage(BaseStorage):
     """
     In-memory storage implementation for memory slot collections.

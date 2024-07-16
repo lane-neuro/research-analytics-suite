@@ -5,12 +5,12 @@ import asyncio
 from mmap import mmap
 from typing import Type, Tuple, Dict
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 
 DATA_SIZE_THRESHOLD = 1024 * 1024  # 1 MB
 
 
-@register_commands
+@link_class_commands
 class MemorySlot:
     """
     A class representing a slot of memory for storing data associated with operations.

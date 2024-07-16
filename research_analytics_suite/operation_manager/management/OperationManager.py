@@ -13,12 +13,12 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
-@register_commands
+@link_class_commands
 class OperationManager:
     """
     A class to manage operations within the research analytics suite.

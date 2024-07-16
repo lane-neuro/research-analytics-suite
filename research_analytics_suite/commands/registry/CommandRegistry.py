@@ -13,13 +13,12 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
 import asyncio
 
-from research_analytics_suite.commands.registry.RegistrationManager import RegistrationManager
 from research_analytics_suite.commands.registry.CommandExecutor import CommandExecutor
 from research_analytics_suite.commands.registry.DisplayManager import DisplayManager
 from research_analytics_suite.commands.registry.PaginationManager import PaginationManager
+from research_analytics_suite.commands.registry.RegistrationManager import RegistrationManager
 
 
 class CommandRegistry:
@@ -88,14 +87,25 @@ class CommandRegistry:
         """
         self._registration_manager.discover_commands(package)
 
-    def register_instance(self, instance, runtime_id):
+    def register_instance(self, instance, runtime_id, command_name):
         """Register an instance with a runtime ID.
 
         Args:
             instance: The instance to register.
             runtime_id: The runtime ID of the instance.
+            command_name: The name of the command to register.
         """
-        self._registration_manager.register_instance(instance, runtime_id)
+        self._registration_manager.register_instance(instance, runtime_id, command_name)
+
+    def _list_instances(self, command_name: str = None):
+        """List registered instances.
+
+        Args:
+            command_name: The name of the command to list instances for.
+        """
+        instances = self._registration_manager.list_instances(command_name)
+        self._logger.info(instances)
+        return instances
 
     async def execute_command(self, name, runtime_id=None, *args, **kwargs):
         """Execute a command by name.
@@ -155,6 +165,11 @@ class CommandRegistry:
                                               "command."), self.__class__.__name__)
             return
 
+        elif name == 'instances':
+            command_name = args[0] if args else kwargs.get('command_name', None)
+            self._list_instances(command_name)
+            return
+
         return await self._command_executor.execute_command(name, runtime_id, *args, **kwargs)
 
     def next_page(self):
@@ -198,9 +213,9 @@ class CommandRegistry:
         return self._registration_manager.registry
 
     @registry.setter
-    def registry(self, registry):
+    def registry(self, value):
         """Set the command registry."""
-        self._registration_manager.registry = registry
+        self._registration_manager.registry = value
 
     @property
     def search(self):

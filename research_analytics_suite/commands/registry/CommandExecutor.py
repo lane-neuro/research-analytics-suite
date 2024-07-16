@@ -102,7 +102,7 @@ class CommandExecutor:
                                        _class.__name__)
                     return None
 
-            instance = self._registration_manager.get_instance(runtime_id)
+            instance = self._registration_manager.get_instance(runtime_id, cmd_meta['name'])
             if instance is None:
                 self._logger.error(ValueError(f"Instance with runtime ID '{runtime_id}' not found."),
                                    self.__class__.__name__)

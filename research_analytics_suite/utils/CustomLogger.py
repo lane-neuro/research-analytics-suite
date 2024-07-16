@@ -14,10 +14,10 @@ import sys
 import traceback
 from typing import List, Union
 
-from research_analytics_suite.commands.CommandDecorators import command, register_commands
+from research_analytics_suite.commands.CommandDecorators import command, link_class_commands
 
 
-@register_commands
+@link_class_commands
 class CustomLogger:
     """
     A class to handle logging within the research analytics suite.

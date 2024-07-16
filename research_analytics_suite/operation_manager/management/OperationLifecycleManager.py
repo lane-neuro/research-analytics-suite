@@ -16,7 +16,7 @@ Status: Prototype
 
 import asyncio
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.execution.OperationExecutor import OperationExecutor
 from research_analytics_suite.operation_manager.management.OperationSequencer import OperationSequencer
@@ -24,7 +24,7 @@ from research_analytics_suite.operation_manager.task.TaskMonitor import TaskMoni
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
-@register_commands
+@link_class_commands
 class OperationLifecycleManager:
     """Manages the lifecycle of operations."""
 

@@ -9,7 +9,7 @@ Author: Lane
 """
 import psutil
 
-from research_analytics_suite.commands import register_commands, command
+from research_analytics_suite.commands import link_class_commands, command
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.memory.DataCache import DataCache
 from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
@@ -17,7 +17,7 @@ from research_analytics_suite.data_engine.data_streams.LiveDataHandler import Li
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
-@register_commands
+@link_class_commands
 class DataEngineOptimized(UnifiedDataEngine):
     """
     A class to handle larger datasets efficiently using distributed computing and advanced caching mechanisms.

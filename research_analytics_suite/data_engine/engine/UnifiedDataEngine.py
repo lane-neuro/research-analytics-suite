@@ -17,7 +17,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 
 from research_analytics_suite.analytics.core.AnalyticsCore import AnalyticsCore
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.core.DaskData import DaskData
 from research_analytics_suite.data_engine.memory.DataCache import DataCache
@@ -55,7 +55,7 @@ def flatten_json(y: Dict[str, any]) -> Dict[str, any]:
     return out
 
 
-@register_commands
+@link_class_commands
 class UnifiedDataEngine:
     """
     A class that combines functionalities from DaskData and TorchData.

@@ -14,12 +14,12 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.operation_manager.nodes.OperationNode import OperationNode
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
-@register_commands
+@link_class_commands
 class OperationChain:
     """
     A class to manage a chain of operations.

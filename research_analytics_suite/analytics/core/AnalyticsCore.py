@@ -14,10 +14,10 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.commands import register_commands, command
+from research_analytics_suite.commands import link_class_commands, command
 
 
-@register_commands
+@link_class_commands
 class AnalyticsCore:
     """
     A class to apply a series of transformations to a given datapoint.

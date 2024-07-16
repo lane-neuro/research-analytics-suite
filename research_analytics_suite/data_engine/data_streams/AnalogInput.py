@@ -12,11 +12,11 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.data_engine.data_streams import BaseInput
 
 
-@register_commands
+@link_class_commands
 class AnalogInput(BaseInput):
     """
     Class for handling live data input from an analog source.

@@ -3,7 +3,7 @@ from functools import wraps
 
 import pytest
 from typing import Optional, List, Dict, Union, Callable, Any
-from research_analytics_suite.commands.CommandDecorators import command, temp_command_registry
+from research_analytics_suite.commands.CommandDecorators import command, temp_command_registry, registered_methods
 
 
 # Define some user-defined types
@@ -22,19 +22,17 @@ class Product:
 
 @pytest.fixture(autouse=True)
 def clear_registry():
-    """
-    Fixture to clear the temporary command registry before each test.
-    """
     temp_command_registry.clear()
+    registered_methods.clear()
     yield
     temp_command_registry.clear()
+    registered_methods.clear()
 
 
 def additional_decorator(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
         return f(*args, **kwargs)
-
     return wrapped
 
 
@@ -59,6 +57,7 @@ class TestCommandDecorator:
             def test_method(self, a: int) -> str:
                 return "test"
 
+        instance = TestClass()
         assert len(temp_command_registry) == 1
         assert temp_command_registry[0]['name'] == 'test_method'
         assert temp_command_registry[0]['class_name'] == 'TestClass'

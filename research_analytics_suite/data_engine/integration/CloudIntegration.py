@@ -9,10 +9,10 @@ Author: Lane
 
 import boto3
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 
 
-@register_commands
+@link_class_commands
 class CloudIntegration:
     """
     A class for integrating with AWS S3.

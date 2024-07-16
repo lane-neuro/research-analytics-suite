@@ -1,9 +1,9 @@
 from sklearn.linear_model import LogisticRegression
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 
 
-@register_commands
+@link_class_commands
 class Model:
     def __init__(self, model_type="logistic_regression"):
         if model_type == "logistic_regression":

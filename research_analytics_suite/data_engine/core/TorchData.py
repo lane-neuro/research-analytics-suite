@@ -17,11 +17,11 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.data_engine.core.BaseData import BaseData
 
 
-@register_commands
+@link_class_commands
 class TorchData(BaseData, Dataset):
     """
     A class to handle data using PyTorch.

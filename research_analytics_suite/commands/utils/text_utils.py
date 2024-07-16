@@ -10,6 +10,8 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from __future__ import annotations
+
 import inspect
 import ast
 import re
@@ -147,3 +149,46 @@ def add_tags_to_commands(commands) -> dict:
         command_info['tags'] = list(set(tags))
 
     return commands
+
+
+def clean_description(description: str) -> str:
+    """
+    Cleans up the description string by removing extra whitespace and trimming unnecessary parts.
+
+    Args:
+        description (str): The original description string.
+
+    Returns:
+        str: The cleaned description.
+    """
+    description = ' '.join(description.split())  # Remove extra whitespace
+    for term in ['Args', 'Returns']:
+        if term in description:
+            description = description.split(term)[0]
+    return description.strip()
+
+
+def get_class_from_method(func) -> (str, str):
+    """
+    Returns the class name & function name from a given callable.
+
+    Args:
+        func: The callable function or method.
+
+    Returns:
+        tuple(cls, func): The class name and the callable name as a set.
+    """
+    func_name = func.__name__ if (
+                inspect.ismethod(func) or inspect.isfunction(func) or inspect.iscoroutinefunction(func)) else str(func)
+    class_name = f""
+    _path_parts = func.__qualname__.split('.')
+
+    for i in range(len(_path_parts)):
+        if _path_parts[i] == func_name:
+            if _path_parts[i - 1] != '<locals>':
+                class_name = _path_parts[i - 1]
+                func_name = _path_parts[i]
+            else:
+                class_name = None
+
+    return class_name, func_name

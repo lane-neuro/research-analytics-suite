@@ -10,13 +10,13 @@ import os
 import importlib
 import pkgutil
 
-from research_analytics_suite.commands import command, register_commands
+from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.library_manifest.LibraryCategory import Category
 from research_analytics_suite.library_manifest.CategoryID import CategoryID
 from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
 
 
-@register_commands
+@link_class_commands
 class LibraryManifest:
     """
     The LibraryManifest class is responsible for managing the library of operations available to the user.
