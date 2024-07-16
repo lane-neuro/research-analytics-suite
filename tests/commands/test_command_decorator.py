@@ -414,3 +414,20 @@ class TestCommandDecorator:
         ]
         assert temp_command_registry[0]['return_type'] == [str]
         assert temp_command_registry[0]['is_method'] is False
+
+    def test_decorator_with_none(self):
+        decorator_instance = command()
+        assert callable(decorator_instance), "The decorator should return a callable (the wrapper) when func is None"
+
+        @decorator_instance
+        def test_func(a: int, b: str) -> bool:
+            return True
+
+        assert len(temp_command_registry) == 1
+        assert temp_command_registry[0]['name'] == 'test_func'
+        assert temp_command_registry[0]['class_name'] is None
+        assert temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int},
+            {'name': 'b', 'type': str}
+        ]
+        assert temp_command_registry[0]['return_type'] == [bool]

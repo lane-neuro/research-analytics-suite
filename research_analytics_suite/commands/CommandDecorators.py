@@ -18,7 +18,7 @@ temp_command_registry = []
 registered_methods = set()
 
 
-def register_command(func, cls=None):
+def _register_command(func, cls=None):
     """
     Registers a command function with the command registry.
     Args:
@@ -52,9 +52,9 @@ def register_command(func, cls=None):
 
 def link_class_commands(cls):
     """
-    Decorator to associate each class instance with the corresponding command functions at runtime.
-    This decorator auto-detects all command methods in a class and registers them with the
-    class instance information.
+    Decorator to associate each class instance with the corresponding command functions at runtime. This
+    decorator auto-detects all command methods in a class and registers them with the class instance information.
+
     Args:
         cls: The class to link commands to.
     """
@@ -63,7 +63,7 @@ def link_class_commands(cls):
     for name, method in inspect.getmembers(
             cls, predicate=lambda x: inspect.isfunction(x) or inspect.ismethod(x) or inspect.iscoroutinefunction(x)):
         if hasattr(method, '_is_command') and (cls.__name__, name) not in registered_methods:
-            register_command(method, cls)
+            _register_command(method, cls)
 
     return cls
 
@@ -80,7 +80,7 @@ def command(func=None):
 
     def wrapper(f):
         f._is_command = True
-        register_command(f, tmp_class[0])
+        _register_command(f, tmp_class[0])
         if tmp_class[0]:
             registered_methods.add(tmp_class)
         return f

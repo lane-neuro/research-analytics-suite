@@ -178,6 +178,9 @@ def get_class_from_method(func) -> (str, str):
     Returns:
         tuple(cls, func): The class name and the callable name as a set.
     """
+    if not callable(func):
+        return None, func
+
     func_name = func.__name__ if (
                 inspect.ismethod(func) or inspect.isfunction(func) or inspect.iscoroutinefunction(func)) else str(func)
     class_name = f""
