@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import patch
 
 from research_analytics_suite.commands.CommandDecorators import link_class_commands, command
@@ -167,3 +168,51 @@ class TestLinkClassCommandsDecorator:
         ]
         assert mock_temp_command_registry[0]['return_type'] == [dict]
         assert mock_temp_command_registry[0]['is_method'] is True
+
+    @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
+    def test_register_async_command(self, mock_temp_command_registry):
+        @link_class_commands
+        class TestClass:
+            @command
+            async def async_method(self, a: int) -> str:
+                await asyncio.sleep(0.001)
+                return "async test"
+
+        assert len(mock_temp_command_registry) == 1
+        assert mock_temp_command_registry[0]['name'] == 'async_method'
+        assert mock_temp_command_registry[0]['class_name'] == 'TestClass'
+        assert mock_temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int}
+        ]
+        assert mock_temp_command_registry[0]['return_type'] == [str]
+        assert mock_temp_command_registry[0]['is_method'] is True
+
+    @patch('research_analytics_suite.commands.CommandDecorators.temp_command_registry', new_callable=list)
+    def test_register_inherited_commands(self, mock_temp_command_registry):
+        class BaseClass:
+            @command
+            def base_method(self, a: int) -> str:
+                return "base"
+
+        @link_class_commands
+        class DerivedClass(BaseClass):
+            @command
+            def derived_method(self, b: str) -> int:
+                return 42
+
+        assert len(mock_temp_command_registry) == 2
+        assert mock_temp_command_registry[0]['name'] == 'base_method'
+        assert mock_temp_command_registry[0]['class_name'] == 'BaseClass'
+        assert mock_temp_command_registry[0]['args'] == [
+            {'name': 'a', 'type': int}
+        ]
+        assert mock_temp_command_registry[0]['return_type'] == [str]
+        assert mock_temp_command_registry[0]['is_method'] is True
+
+        assert mock_temp_command_registry[1]['name'] == 'derived_method'
+        assert mock_temp_command_registry[1]['class_name'] == 'DerivedClass'
+        assert mock_temp_command_registry[1]['args'] == [
+            {'name': 'b', 'type': str}
+        ]
+        assert mock_temp_command_registry[1]['return_type'] == [int]
+        assert mock_temp_command_registry[1]['is_method'] is True

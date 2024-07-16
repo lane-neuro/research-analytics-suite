@@ -26,7 +26,14 @@ def _register_command(func, cls=None):
         cls: The class object associated with the command function.
     """
     sig = inspect.signature(func)
-    class_name = get_class_from_method(func)[0]
+
+    if isinstance(cls, type):
+        class_name = cls.__name__
+    elif isinstance(cls, str):
+        class_name = get_class_from_method(func)[0]
+    else:
+        class_name = get_class_from_method(func)[0] if get_class_from_method(func) else None
+
     type_hints = func.__annotations__
     args = [
         {'name': param, 'type': type_hints.get(param, any)} for param in sig.parameters if param not in ('self', 'cls')
@@ -36,18 +43,22 @@ def _register_command(func, cls=None):
     description = clean_description(func.__doc__) if func.__doc__ else None
     is_method = 'self' in sig.parameters or 'cls' in sig.parameters
 
-    temp_command_registry.append({
-        'func': func,
-        'name': func.__name__,
-        'description': description,
-        'class_name': class_name,
-        'class_obj': cls if cls else None,
-        'instances': {id(cls): cls} if cls else {},
-        'args': args,
-        'return_type': return_type,
-        'is_method': is_method,
-        '_is_command': True
-    })
+    # Ensure method is not registered multiple times for inherited methods
+    method_signature = (class_name, func.__name__)
+    if method_signature not in registered_methods:
+        registered_methods.add(method_signature)
+        temp_command_registry.append({
+            'func': func,
+            'name': func.__name__,
+            'description': description,
+            'class_name': class_name,
+            'class_obj': cls if isinstance(cls, type) else None,
+            'instances': {id(cls): cls} if isinstance(cls, type) else {},
+            'args': args,
+            'return_type': return_type,
+            'is_method': is_method,
+            '_is_command': True
+        })
 
 
 def link_class_commands(cls):
@@ -62,27 +73,30 @@ def link_class_commands(cls):
 
     for name, method in inspect.getmembers(
             cls, predicate=lambda x: inspect.isfunction(x) or inspect.ismethod(x) or inspect.iscoroutinefunction(x)):
-        if hasattr(method, '_is_command') and (cls.__name__, name) not in registered_methods:
-            _register_command(method, cls)
+        if hasattr(method, '_is_command'):
+            method_id = (cls.__name__, name)
+            if method_id not in registered_methods:
+                registered_methods.add(method_id)
+                _register_command(method, cls)
 
     return cls
 
 
 def command(func=None):
     """
-    Decorator to register a command.
-    This decorator auto-detects the command name, argument names, types, and return type.
+    Decorator to register a command. This decorator auto-detects the command name, argument names,
+    types, and return type.
+
     Args:
         func: The command function to register.
     """
     global registered_methods
-    tmp_class = get_class_from_method(func)
 
     def wrapper(f):
+        tmp_class = get_class_from_method(func)
         f._is_command = True
         _register_command(f, tmp_class[0])
-        if tmp_class[0]:
-            registered_methods.add(tmp_class)
+        registered_methods.add(tmp_class)
         return f
 
     if func is None:

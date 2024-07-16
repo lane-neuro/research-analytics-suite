@@ -61,33 +61,58 @@ def get_function_body(func):
     body_lines = [ast.unparse(node) for node in function_body]
 
     # Join the lines of the function body
-    body_code = "\n".join(body_lines)
+    body_code = "\n\t\t".join(body_lines)
     return body_code
 
 
-def wrap_text(text, width):
+class CustomTextWrapper(textwrap.TextWrapper):
+    def _split(self, text):
+        """
+        Override the default splitting method to handle special characters and whitespace more effectively.
+        """
+        # Match sequences of non-whitespace characters, or any single whitespace character
+        return re.findall(r'\S{1,' + str(self.width) + r'}|\S+|\s', text)
+
+
+def wrap_text(text: str, width: int) -> str:
     """
-    Wrap text to the specified width.
+    Wrap text to the specified width, handling special characters properly.
+
+    Args:
+        text (str): The text to wrap.
+        width (int): The maximum width of each line.
+
+    Returns:
+        str: The wrapped text.
     """
     if not text:
         return ""
-    lines = []
-    words = text.split(' ')
-    line = words.pop(0)
-    for word in words:
-        if len(line) + len(word) + 1 <= width:
-            line += ' ' + word
-        else:
-            lines.append(line)
-            line = word
-    lines.append(line)
-    lines = [line for line in lines if line]
-    lines = f"\n".join(lines)
-    return f"{lines}\n"
+
+    # Normalize whitespace but keep newlines
+    text = re.sub(r'[ \t]+', ' ', text)
+    paragraphs = text.split('\n')
+
+    # Create a custom text wrapper instance
+    wrapper = CustomTextWrapper(width=width, break_long_words=True, replace_whitespace=False, tabsize=4,
+                                fix_sentence_endings=True)
+
+    # Wrap each paragraph individually
+    wrapped_paragraphs = [wrapper.fill(paragraph) for paragraph in paragraphs]
+
+    # Join the wrapped paragraphs with newlines and return the result
+    return '\n'.join(wrapped_paragraphs)
 
 
-def extract_keywords(text):
-    """Extracts keywords from a given text string."""
+def extract_keywords(text: str) -> list:
+    """
+    Extracts keywords from a given text string.
+
+    Args:
+        text (str): The text string to extract keywords from.
+
+    Returns:
+        list: A list of extracted keywords
+    """
     if not text or not isinstance(text, str):
         return []
     # Remove punctuation and split into words
@@ -95,6 +120,8 @@ def extract_keywords(text):
     # Filter out common words using a broader list of stop words
     _words = []
     for word in words:
+        if word.isdigit():
+            continue
         if word in VALID_WORDS:
             _words.append(word)
         elif word not in ENGLISH_STOP_WORDS and word not in CUSTOM_STOP_WORDS:
@@ -178,11 +205,11 @@ def get_class_from_method(func) -> (str, str):
     Returns:
         tuple(cls, func): The class name and the callable name as a set.
     """
-    if not callable(func):
-        return None, func
-
     func_name = func.__name__ if (
-                inspect.ismethod(func) or inspect.isfunction(func) or inspect.iscoroutinefunction(func)) else str(func)
+                inspect.ismethod(func) or inspect.isfunction(func) or inspect.iscoroutinefunction(func)) else None
+    if not func_name:
+        return None
+
     class_name = f""
     _path_parts = func.__qualname__.split('.')
 
