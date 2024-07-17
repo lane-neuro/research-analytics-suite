@@ -13,6 +13,7 @@ Status: Prototype
 import asyncio
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.gui.GUIBase import GUIBase
+from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
 
 
 class Mapped2DSpace(GUIBase):
@@ -49,16 +50,19 @@ class Mapped2DSpace(GUIBase):
         # Placeholder for asynchronous update logic
         pass
 
-    def add_node(self, operation_dict, pos=(0, 0)):
+    def add_node(self, operation_attributes: OperationAttributes, pos=(0, 0)) -> tuple:
         """
         Adds a node to the node editor.
 
         Args:
-            operation_dict (dict): The dictionary containing the operation information.
+            operation_attributes (OperationAttributes): The dictionary containing the operation information.
             pos (tuple): The position of the node.
+
+        Returns:
+            tuple: The UUIDs of the node, input attribute, and output attribute.
         """
         node_id = dpg.generate_uuid()
-        with dpg.node(tag=node_id, parent=self._node_editor_id, label=operation_dict["name"], pos=pos):
+        with dpg.node(tag=node_id, parent=self._node_editor_id, label=operation_attributes.name, pos=pos):
             input_id = dpg.generate_uuid()
             output_id = dpg.generate_uuid()
 
@@ -67,7 +71,7 @@ class Mapped2DSpace(GUIBase):
 
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static, tag=f"{node_id}_name"):
                 with dpg.group(tag=f"{node_id}_name_group"):
-                    _operation_module = UpdatedOperationModule(operation_dict, 200, 500,
+                    _operation_module = UpdatedOperationModule(operation_attributes, 200, 500,
                                                                node_id)
                     _operation_module.draw_upper_region(parent=f"{node_id}_name_group", width=200)
 
@@ -85,7 +89,6 @@ class Mapped2DSpace(GUIBase):
 
         self._nodes.append((node_id, input_id, output_id))
         return node_id, input_id, output_id
-
 
     def link_nodes(self, output_attr, input_attr):
         """

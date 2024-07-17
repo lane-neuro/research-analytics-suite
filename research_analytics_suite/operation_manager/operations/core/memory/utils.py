@@ -38,7 +38,7 @@ async def get_attributes_from_disk(file_path: str) -> Optional[OperationAttribut
     Returns:
         OperationAttributes: The operation attributes.
     """
-    attributes = await load_from_disk(file_path=file_path, operation_group=None, with_instance=False)
+    attributes = await load_from_disk(file_path=file_path, operation_group=None)
     return attributes
 
 

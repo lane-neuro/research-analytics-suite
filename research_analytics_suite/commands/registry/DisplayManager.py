@@ -105,7 +105,7 @@ class DisplayManager:
                 wrap_text(description, column_width),
                 wrap_text(formatted_args, column_width),
                 wrap_text(formatted_return_types, column_width),
-                wrap_text(str(cmd_meta['tags']), column_width),
+                wrap_text(str(f"{cmd_meta['tags']}\n"), column_width),
             ])
 
         self._logger.info(f'\n{table}\n')

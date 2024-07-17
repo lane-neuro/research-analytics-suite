@@ -7,7 +7,8 @@ from research_analytics_suite.operation_manager.management.OperationSequencer im
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.nodes.OperationNode import OperationNode
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.operation_manager.operations.core.workspace import pack_as_local_reference
+from research_analytics_suite.operation_manager.operations.core.workspace.WorkspaceInteraction import \
+    pack_as_local_reference
 
 
 @pytest.fixture

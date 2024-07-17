@@ -18,7 +18,6 @@ import asyncio
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.gui.GUIBase import GUIBase
-from research_analytics_suite.gui.modules.OperationModule import OperationModule
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
@@ -73,9 +72,7 @@ class OperationManagerDialog(GUIBase):
         from research_analytics_suite.gui import CreateOperationModule
         self._create_operation_module = CreateOperationModule(height=400, width=800,
                                                               parent_operation=None, parent=self._parent)
-        self._create_operation_module.draw_button(label="Create New Operation", width=200, parent=self._parent)
 
-        dpg.add_button(label="Load Operation from File", width=200, parent=self.parent, callback=self.load_operation)
         self.window = dpg.add_group(parent=self.parent, tag="operation_gallery", horizontal=False)
 
     async def _update_async(self) -> None:
@@ -157,7 +154,7 @@ class OperationManagerDialog(GUIBase):
         operation_dict = await load_from_disk(file_path=file_name, operation_group=None, with_instance=False)
 
         from research_analytics_suite.gui.modules.UpdatedOperationModule import UpdatedOperationModule
-        operation_view = UpdatedOperationModule(operation_dict=operation_dict, width=self.TILE_WIDTH,
+        operation_view = UpdatedOperationModule(operation_attributes=operation_dict, width=self.TILE_WIDTH,
                                                 height=self.TILE_HEIGHT, parent=self._parent)
         await operation_view.initialize_gui()
         operation_view.draw()
@@ -175,68 +172,10 @@ class OperationManagerDialog(GUIBase):
         operation_dict = await load_from_disk(file_path=file_name, operation_group=None, with_instance=False)
 
         from research_analytics_suite.gui.modules.OperationSlotPreview import OperationSlotPreview
-        preview_tile = OperationSlotPreview(operation_dict=operation_dict, width=300,
+        preview_tile = OperationSlotPreview(operation_attributes=operation_dict, width=300,
                                             height=40, parent=self._parent)
         await preview_tile.initialize_gui()
         preview_tile.draw()
-
-    def load_operation(self, sender: str, data: dict) -> None:
-        """Loads operations from a file."""
-        if dpg.does_item_exist("selected_file"):
-            dpg.delete_item("selected_file")
-
-        with dpg.file_dialog(show=True,
-                             default_path=f"{self._config.BASE_DIR}/{self._config.WORKSPACE_NAME}/"
-                                          f"{self._config.WORKSPACE_OPERATIONS_DIR}",
-                             callback=self.load_operation_callback, tag="selected_file",
-                             width=500, height=500, modal=True):
-            dpg.add_file_extension(".json", color=(255, 255, 255, 255))
-
-    def load_operation_callback(self, sender: str, data: dict) -> None:
-        """
-        Callback function for loading operations from a file.
-
-        Args:
-            sender (str): The sender of the event.
-            data (dict): The data associated with the event.
-        """
-        asyncio.run(self._load_operation(data))
-
-    async def _load_operation(self, data: dict) -> None:
-        """
-        Loads the operation from the selected file asynchronously.
-
-        Args:
-            data (dict): The data associated with the event.
-        """
-        _file_path = data["file_path_name"]
-        if not _file_path:
-            self._logger.error(Exception("No file selected."), self)
-            return
-
-        self._logger.debug(f"Loading operation from file: {_file_path}")
-        await self.operation_preview_tile(_file_path)
-        await self.operation_context_view(_file_path)
-
-        loaded_operations = {}
-        try:
-            await BaseOperation.load_operation_group(_file_path, loaded_operations)
-            self._logger.debug(f"Loaded operations: {loaded_operations}")
-        except Exception as e:
-            self._logger.error(e, self)
-            self._logger.debug(f"Error loading operations from file: {e}")
-            return
-
-        # Uncomment and adjust if needed
-        # try:
-        #     for operation in loaded_operations.values():
-        #         await self.operation_control.operation_manager.add_initialized_operation(operation)
-        # except Exception as e:
-        #     self._logger.error(e, self)
-        #     return
-
-        # await self.refresh_display()
-        self._logger.debug("Display refreshed after loading operations.")
 
     async def on_resize(self, sender: str, data: dict) -> None:
         """

@@ -1,6 +1,7 @@
 import pytest
 
-from research_analytics_suite.operation_manager.operations.core.workspace import pack_as_local_reference
+from research_analytics_suite.operation_manager.operations.core.workspace.WorkspaceInteraction import \
+    pack_as_local_reference
 
 
 class MockOperation:

@@ -16,16 +16,17 @@ Status: Prototype
 """
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.gui.GUIBase import GUIBase
+from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
 
 
 class OperationSlotPreview(GUIBase):
 
-    def __init__(self, operation_dict, width: int, height: int, parent: str):
+    def __init__(self, operation_attributes: OperationAttributes, width: int, height: int, parent: str):
         """
         Initializes the OperationSlotPreview with the specified operation, width, height, and parent.
 
         Args:
-            operation_dict (dict): The dictionary containing the operation information.
+            operation_attributes (OperationAttributes): The dictionary containing the operation information.
             width (int): The width of the operation module.
             height (int): The height of the operation module.
             parent (str): The parent GUI element ID.
@@ -35,16 +36,16 @@ class OperationSlotPreview(GUIBase):
         from research_analytics_suite.gui.NodeEditorManager import NodeEditorManager
         self._node_manager = NodeEditorManager()
 
-        self._operation_info = operation_dict
+        self._attributes = operation_attributes
 
-        self._name = self._operation_info["name"]
-        self._version = self._operation_info["version"]
-        self._description = self._operation_info["description"]
-        self._author = self._operation_info["author"]
-        self._github = self._operation_info["github"]
-        self._action = self._operation_info["action"]
-        self._output_type = None  # self._operation_info["output_type"]
-        self._required_inputs = self._operation_info["required_inputs"]
+        self._name = self._attributes.name
+        self._version = self._attributes.version
+        self._description = self._attributes.description
+        self._author = self._attributes.author
+        self._github = self._attributes.github
+        self._action = self._attributes.action
+        self._output_type = None  # self._attributes["output_type"]
+        self._required_inputs = self._attributes.required_inputs
         self._parent_id = f"parent_{self._runtime_id}"
 
     async def initialize_gui(self) -> None:  # pragma: no cover
@@ -59,7 +60,7 @@ class OperationSlotPreview(GUIBase):
                               no_scrollbar=True, no_scroll_with_mouse=True, border=False):
             with dpg.tooltip(parent=self._parent_id, tag=f"tooltip_{self.runtime_id}"):
                 from research_analytics_suite.gui.modules.UpdatedOperationModule import UpdatedOperationModule
-                operation_view = UpdatedOperationModule(operation_dict=self._operation_info, width=200,
+                operation_view = UpdatedOperationModule(operation_attributes=self._attributes, width=200,
                                                         height=100, parent=f"tooltip_{self.runtime_id}")
                 operation_view.draw()
 
@@ -67,11 +68,11 @@ class OperationSlotPreview(GUIBase):
                            horizontal=True, horizontal_spacing=10):
                 dpg.add_button(label="+", width=25, height=25, parent=f"slot_preview_{self.runtime_id}",
                                callback=lambda: self._node_manager.editors["planning_editor"].add_node(
-                                   self._operation_info), indent=5)
+                                   self._attributes), indent=5)
                 dpg.add_text(default_value=f"{self._name}", parent=f"slot_preview_{self.runtime_id}")
 
                 # with dpg.child_window(height=30, width=55, no_scrollbar=True, pos=(self.width - 115, 5)):
-                #     deps = self._operation_info['dependencies'] if 'dependencies' in self._operation_info else []
+                #     deps = self._attributes['dependencies'] if 'dependencies' in self._attributes else []
                 #     if deps is []:
                 #         dpg.add_text("-")
                 #     elif iter(deps):
@@ -81,7 +82,7 @@ class OperationSlotPreview(GUIBase):
                 #         dpg.add_text("-")
                 #
                 # with dpg.child_window(height=30, width=55, no_scrollbar=True, pos=(self.width - 61, 5)):
-                #     outs = self._operation_info['output_type'] if 'output_type' in self._operation_info else []
+                #     outs = self._attributes['output_type'] if 'output_type' in self._attributes else []
                 #     if outs is []:
                 #         dpg.add_text("-")
                 #     elif iter(outs):

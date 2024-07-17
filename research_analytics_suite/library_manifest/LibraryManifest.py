@@ -14,6 +14,7 @@ from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.library_manifest.LibraryCategory import Category
 from research_analytics_suite.library_manifest.CategoryID import CategoryID
 from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
+from research_analytics_suite.operation_manager.operations.core.workspace import from_dict
 
 
 @link_class_commands
@@ -109,9 +110,9 @@ class LibraryManifest:
 
                 from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
                 if isinstance(operation, OperationAttributes):
-                    operations.append(operation.export_attributes())
-                elif isinstance(operation, dict) and operation != {}:
                     operations.append(operation)
+                elif isinstance(operation, dict) and operation != {}:
+                    operations.append(OperationAttributes(**operation))
                 else:
                     self._logger.error(Exception(f"Invalid operation type: {type(operation)}"), self.__class__.__name__)
 

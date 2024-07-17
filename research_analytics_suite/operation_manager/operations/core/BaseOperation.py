@@ -18,7 +18,7 @@ import asyncio
 import os.path
 import uuid
 from abc import ABC
-from typing import Tuple, List, Callable, Dict, Optional, Union, final
+from typing import Tuple, List, Dict, Optional, Union, final
 
 from research_analytics_suite.commands import command, link_class_commands
 from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
@@ -27,7 +27,8 @@ from .progress import update_progress
 from .inheritance import (add_child_operation, link_child_operation, remove_child_operation,
                           start_child_operations, pause_child_operations, resume_child_operations,
                           stop_child_operations, reset_child_operations)
-from .workspace import save_operation_in_workspace, load_from_disk, load_operation_group, from_dict
+from .workspace.WorkspaceInteraction import save_operation_in_workspace
+from .workspace.FileDiskOperations import load_from_disk, load_operation_group, from_dict
 
 
 @link_class_commands
@@ -82,60 +83,53 @@ class BaseOperation(ABC):
     def __init__(self, *args, **kwargs):
         """Initialize the operation instance."""
         if not hasattr(self, '_initialized'):
-            self._GENERATED_ID = uuid.uuid4()
+
+            from research_analytics_suite.data_engine.Workspace import Workspace
+            from research_analytics_suite.utils.CustomLogger import CustomLogger
+            from research_analytics_suite.utils.Config import Config
+            from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
+            self._workspace = Workspace()
+            self._logger = CustomLogger()
+            self._config = Config()
+            self._operation_control = OperationControl()
+            self._pause_event = asyncio.Event()
+            self._pause_event.set()
             self._gui_module = None
+
+            self._GENERATED_ID = uuid.uuid4()
             self._action_callable = None
             self._task = None
             self._status = "idle"
             self._progress = 0
             self._is_ready = False
+
             self.operation_logs = []
 
-            self._initialize_operation_attributes(*args, **kwargs)
-            self._initialized = False
+            from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import (
+                OperationAttributes)
 
-    def _initialize_operation_attributes(self, *args, **kwargs):
-        """Initialize operation-specific attributes."""
-        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import (
-            OperationAttributes)
-        self._attributes = OperationAttributes(*args, **kwargs)
-        self._action_callable = None
-        self.memory_inputs = None
-        self.memory_outputs = None
+            if len(args) == 0 or not args:
+                self._attributes = OperationAttributes(*args, **kwargs)
+                asyncio.run(self._attributes.initialize())
+            elif isinstance(args[0], OperationAttributes) and hasattr(args[0], 'unique_id'):
+                self._attributes = args[0]
+
+            from research_analytics_suite.operation_manager.operations.core.memory.MemoryInput import MemoryInput
+            from research_analytics_suite.operation_manager.operations.core.memory.MemoryOutput import MemoryOutput
+            self.memory_inputs = MemoryInput(name=f"{self.name}_input")
+            self.memory_outputs = MemoryOutput(name=f"{self.name}_output")
+
+            self._initialized = False
 
     async def initialize_operation(self):
         """Initialize any resources or setup required for the operation before it starts."""
         if self._initialized:
             return
-        await self._initialize_dependencies()
-        await self._initialize_operation_attributes_internal()
         await self._initialize_child_operations()
-        self._is_ready = False
-        self._status = "idle"
+        self.is_ready = False
+        self.status = "idle"
         self.add_log_entry(f"[INIT] {self._attributes.name}")
         self._initialized = True
-
-    async def _initialize_dependencies(self):
-        """Initialize external dependencies."""
-        from research_analytics_suite.data_engine.Workspace import Workspace
-        from research_analytics_suite.utils.CustomLogger import CustomLogger
-        from research_analytics_suite.utils.Config import Config
-        from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
-        self._workspace = Workspace()
-        self._logger = CustomLogger()
-        self._config = Config()
-        self._operation_control = OperationControl()
-        self._pause_event = asyncio.Event()
-        self._pause_event.set()
-        self._gui_module = None
-
-    async def _initialize_operation_attributes_internal(self):
-        """Initialize attributes specific to the operation."""
-        await self._attributes.initialize()
-        from research_analytics_suite.operation_manager.operations.core.memory.MemoryInput import MemoryInput
-        from research_analytics_suite.operation_manager.operations.core.memory.MemoryOutput import MemoryOutput
-        self.memory_inputs = MemoryInput(name=f"{self.name}_input")
-        self.memory_outputs = MemoryOutput(name=f"{self.name}_output")
 
     async def _initialize_child_operations(self):
         """Initialize child operations."""
@@ -348,7 +342,7 @@ class BaseOperation(ABC):
         Args:
             overwrite (bool, optional): Whether to overwrite the existing operation file. Defaults to False.
         """
-        await save_operation_in_workspace(self, overwrite)
+        await save_operation_in_workspace(self.attributes, overwrite)
 
     @staticmethod
     async def load_from_disk(file_path: str, operation_group: dict[str, BaseOperation]) -> BaseOperation:
@@ -410,14 +404,29 @@ class BaseOperation(ABC):
         return self._initialized
 
     @property
+    def attributes(self):
+        """Gets the operation attributes."""
+        if not hasattr(self, '_attributes'):
+            from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import (
+                OperationAttributes)
+            self._attributes = OperationAttributes()
+
+        return self._attributes
+
+    @attributes.setter
+    def attributes(self, value):
+        """Sets the operation attributes."""
+        self._attributes = value
+
+    @property
     def unique_id(self) -> str:
         """Gets the unique ID of the operation."""
-        return self._attributes.unique_id
+        return self.attributes.unique_id
 
     @property
     def short_id(self) -> str:
         """Gets the short unique ID of the operation."""
-        return self._attributes.unique_id[:4]
+        return self.attributes.unique_id[:4]
 
     @property
     def runtime_id(self) -> str:
@@ -427,77 +436,77 @@ class BaseOperation(ABC):
     @property
     def name(self) -> str:
         """Gets the name of the operation."""
-        return self._attributes.name
+        return self.attributes.name
 
     @name.setter
     def name(self, value: str):
         """Sets the name of the operation."""
-        self._attributes.name = value
+        self.attributes.name = value
 
     @property
     def version(self) -> str:
         """Gets the version of the operation."""
-        return self._attributes.version
+        return self.attributes.version
 
     @version.setter
     def version(self, value: str):
         """Sets the version of the operation."""
-        self._attributes.version = value
+        self.attributes.version = value
 
     @property
     def description(self) -> str:
         """Gets the description of the operation."""
-        return self._attributes.description
+        return self.attributes.description
 
     @description.setter
     def description(self, value: str):
         """Sets the description of the operation."""
-        self._attributes.description = value
+        self.attributes.description = value
 
     @property
     def category_id(self) -> int:
         """Gets the category ID of the operation."""
-        return self._attributes.category_id
+        return self.attributes.category_id
 
     @property
     def author(self) -> str:
         """Gets the author of the operation."""
-        return self._attributes.author
+        return self.attributes.author
 
     @author.setter
     def author(self, value: str):
         """Sets the author of the operation."""
-        self._attributes.author = value
+        self.attributes.author = value
 
     @property
     def github(self) -> str:
         """Gets the GitHub username of the operation author."""
-        return self._attributes.github
+        return self.attributes.github
 
     @github.setter
     def github(self, value: str):
         """Sets the GitHub username of the operation author."""
-        self._attributes.github = value
+        self.attributes.github = value
 
     @property
     def email(self) -> str:
         """Gets the email of the operation author."""
-        return self._attributes.email
+        return self.attributes.email
 
     @email.setter
     def email(self, value):
         """Sets the email of the operation author."""
-        self._attributes.email = value
+        self.attributes.email = value
 
     @property
     def action(self):
         """Gets the action to be executed by the operation."""
-        return self._attributes.action
+        return self.attributes.action
 
     @action.setter
     def action(self, value):
         """Sets the action to be executed by the operation."""
-        self._attributes.action = value
+        self.attributes.action = value
         self._action_callable = None
 
     @property
@@ -526,62 +535,62 @@ class BaseOperation(ABC):
     @property
     def required_inputs(self) -> Dict[str, type]:
         """Gets the input requirements of the operation."""
-        return self._attributes.required_inputs
+        return self.attributes.required_inputs
 
     @required_inputs.setter
     def required_inputs(self, value: Tuple[str, type]):
         """Adds an input requirement to the operation."""
-        self._attributes.required_inputs = value
+        self.attributes.required_inputs = value
 
     @property
     def parent_operation(self):
         """Gets the parent operation."""
-        return self._attributes.parent_operation
+        return self.attributes.parent_operation
 
     @parent_operation.setter
     def parent_operation(self, value):
         """Sets the parent operation."""
-        self._attributes.parent_operation = value
+        self.attributes.parent_operation = value
 
     @property
     def inheritance(self) -> list:
         """Gets the list of child operations."""
-        return self._attributes.inheritance
+        return self.attributes.inheritance
 
     @inheritance.setter
     def inheritance(self, value):
         """Sets the list of child operations."""
-        self._attributes.inheritance = value
+        self.attributes.inheritance = value
 
     @property
     def is_loop(self):
         """Gets whether the operation should run in a loop."""
-        return self._attributes.is_loop
+        return self.attributes.is_loop
 
     @is_loop.setter
     def is_loop(self, value):
         """Sets whether the operation should run in a loop."""
-        self._attributes.is_loop = value
+        self.attributes.is_loop = value
 
     @property
     def is_cpu_bound(self) -> bool:
         """Gets whether the operation is CPU-bound."""
-        return self._attributes.is_cpu_bound
+        return self.attributes.is_cpu_bound
 
     @is_cpu_bound.setter
     def is_cpu_bound(self, value):
         """Sets whether the operation is CPU-bound."""
-        self._attributes.is_cpu_bound = value
+        self.attributes.is_cpu_bound = value
 
     @property
     def parallel(self) -> bool:
         """Gets whether inherited operations should run in parallel or sequentially."""
-        return self._attributes.parallel
+        return self.attributes.parallel
 
     @parallel.setter
     def parallel(self, value):
         """Sets whether inherited operations should run in parallel or sequentially."""
-        self._attributes.parallel = value
+        self.attributes.parallel = value
 
     @property
     def is_ready(self) -> bool:
@@ -597,7 +606,7 @@ class BaseOperation(ABC):
             self._is_ready = False
             return
 
-        for child in self._attributes.inheritance:
+        for child in self.attributes.inheritance:
             if not child.is_complete and not child.parallel:
                 self._is_ready = False
                 return
@@ -679,11 +688,12 @@ class BaseOperation(ABC):
         Args:
             message (Union[str, Exception]): The message to log.
         """
+        from research_analytics_suite.utils import CustomLogger
         if self._status == "error" and isinstance(message, Exception):
-            self._logger.error(message, self._attributes.name)
+            CustomLogger().error(message, self.name)
         else:
             self.operation_logs.insert(0, message)
-            self._logger.debug(f"[{self._attributes.name}] {message}")
+            CustomLogger().debug(f"[{self.name}] {message}")
 
     def handle_error(self, e: Exception):
         """Handle an error that occurred during the operation.
@@ -693,7 +703,7 @@ class BaseOperation(ABC):
         """
         self._status = "error"
         from research_analytics_suite.utils import CustomLogger
-        CustomLogger().error(e, self._attributes.name)
+        CustomLogger().error(e, self.name)
         self.add_log_entry(f"Error: {str(e)}")
 
     def cleanup_operation(self):

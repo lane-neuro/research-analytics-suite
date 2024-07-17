@@ -1,4 +1,5 @@
 # tests/test_operation_attributes.py
+from unittest.mock import MagicMock
 
 import pytest
 import asyncio
@@ -19,9 +20,9 @@ class TestOperationAttributes:
             github='test-author',
             email='test@example.com',
             action='test_action',
-            required_inputs={'input1': 'str'},
+            required_inputs={'input1': str},
             parent_operation=None,
-            inheritance=['inheritance1', 'inheritance2'],
+            inheritance=[MagicMock(), MagicMock()],
             is_loop=False,
             is_cpu_bound=False,
             parallel=True
@@ -64,9 +65,10 @@ class TestOperationAttributes:
         assert attributes['email'] == 'test@example.com'
         assert attributes['unique_id'] == 'test-author_TestOperation_1.0'
         assert attributes['action'] == 'test_action'
-        assert attributes['required_inputs'] == {'input1': str}
+        assert attributes['required_inputs'] == {'input1': 'str'}
         assert attributes['parent_operation'] is None
-        assert attributes['inheritance'] == ['inheritance1', 'inheritance2']
+        assert isinstance(attributes['inheritance'], list)
+        assert len(attributes['inheritance']) == 2
         assert not attributes['is_loop']
         assert not attributes['is_cpu_bound']
         assert attributes['parallel']
@@ -185,7 +187,7 @@ class TestOperationAttributes:
         assert attributes['email'] == 'partial@example.com'
         assert attributes['unique_id'] == 'partial-author_PartialTest_1.1'
         assert attributes['action'] == 'partial_action'
-        assert attributes['required_inputs'] == {'input1': str}
+        assert attributes['required_inputs'] == {'input1': 'str'}
         assert attributes['parent_operation'] is None
         assert attributes['inheritance'] == []
         assert attributes['is_loop']

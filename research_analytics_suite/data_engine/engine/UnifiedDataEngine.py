@@ -294,14 +294,15 @@ class UnifiedDataEngine:
         async with aiofiles.open(os.path.join(f"{engine_path}", 'metadata.json'), 'r') as metadata_file:
             metadata = json.loads(await metadata_file.read())
 
-        data_path = os.path.join(instance_path, '../data', f"{metadata['data_name']}.joblib")
+        data_path = os.path.normpath(os.path.join(instance_path, '../data', f"{metadata['data_name']}.joblib"))
 
         # Load data
         async with aiofiles.open(data_path, 'r') as data_file:
             data = json.loads(await data_file.read())
 
         # Load engine state
-        async with aiofiles.open(os.path.join(f"{engine_path}", 'engine_state.joblib'), 'r') as state_file:
+        async with aiofiles.open(os.path.normpath(
+                os.path.join(f"{engine_path}", 'engine_state.joblib')), 'r') as state_file:
             engine_state = json.loads(await state_file.read())
 
         engine = UnifiedDataEngine()

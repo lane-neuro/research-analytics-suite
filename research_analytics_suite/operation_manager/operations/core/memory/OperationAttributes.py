@@ -16,7 +16,6 @@ from __future__ import annotations
 import asyncio
 
 from research_analytics_suite.commands import command, link_class_commands
-from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
 @link_class_commands
@@ -62,27 +61,6 @@ class OperationAttributes:
 
             self._initialized = False
 
-    def _process_required_inputs(self, inputs: dict) -> dict:
-        """Process required inputs by converting string values using a predefined dictionary.
-
-        Args:
-            inputs (dict): A dictionary of inputs to be processed.
-
-        Returns:
-            dict: A dictionary with processed inputs.
-        """
-        if not isinstance(inputs, dict):
-            raise ValueError("Expected a dictionary as input")
-
-        processed_dict = {}
-        for k, v in inputs.items():
-            if isinstance(v, str):
-                processed_dict[k] = self._TYPES_DICT.get(v.lower(), getattr(v, '__name__', v))
-            else:
-                processed_dict[k] = getattr(v, '__name__', v)
-
-        return processed_dict
-
     async def initialize(self):
         if not self._initialized:
             async with self._lock:
@@ -106,24 +84,53 @@ class OperationAttributes:
 
                     del self.temp_kwargs
 
+    def _process_required_inputs(self, inputs: dict) -> dict:
+        """Process required inputs by converting string values using a predefined dictionary.
+
+        Args:
+            inputs (dict): A dictionary of inputs to be processed.
+
+        Returns:
+            dict: A dictionary with processed inputs.
+        """
+        if not isinstance(inputs, dict):
+            raise ValueError("Expected a dictionary as input")
+
+        processed_dict = {}
+        for k, v in inputs.items():
+            if isinstance(v, str):
+                processed_dict[k] = self._TYPES_DICT.get(v.lower(), getattr(v, '__name__', v))
+            else:
+                processed_dict[k] = getattr(v, '__name__', v)
+
+        return processed_dict
+
     @command
     def export_attributes(self) -> dict:
+        """Export the attributes of the operation. This is used for saving the operation to disk."""
+        from research_analytics_suite.operation_manager.operations.core.workspace.WorkspaceInteraction import \
+            pack_as_local_reference
+        _required_inputs = {}
+        for k, v in self.required_inputs.items():
+            _required_inputs[k] = getattr(v, '__name__', v)
+
         return {
-            'name': self._name,
-            'version': self._version,
-            'description': self._description,
-            'category_id': self._category_id,
-            'author': self._author,
-            'github': self._github,
-            'email': self._email,
+            'name': self.name,
+            'version': self.version,
+            'description': self.description,
+            'category_id': self.category_id,
+            'author': self.author,
+            'github': self.github,
+            'email': self.email,
             'unique_id': self.unique_id,
-            'action': self._action,
-            'required_inputs': self._required_inputs,
-            'parent_operation': self._parent_operation,
-            'inheritance': self._inheritance,
-            'is_loop': self._is_loop,
-            'is_cpu_bound': self._is_cpu_bound,
-            'parallel': self._parallel,
+            'action': self.action,
+            'required_inputs': _required_inputs,
+            'parent_operation': pack_as_local_reference(self.parent_operation) if self.parent_operation else None,
+            'inheritance': [
+                pack_as_local_reference(child) for child in self.inheritance if self.inheritance is not []],
+            'is_loop': self.is_loop,
+            'is_cpu_bound': self.is_cpu_bound,
+            'parallel': self.parallel,
         }
 
     @property
@@ -207,13 +214,21 @@ class OperationAttributes:
         self._required_inputs = self._process_required_inputs(value) if value and isinstance(value, dict) else {}
 
     @property
-    def parent_operation(self) -> OperationAttributes or BaseOperation or None:
+    def parent_operation(self):
         return self._parent_operation if self._parent_operation else None
 
     @parent_operation.setter
     def parent_operation(self, value):
-        self._parent_operation = value if value and isinstance(
-            value, OperationAttributes or BaseOperation) else None
+        if isinstance(value, dict):
+            value = OperationAttributes(**value)
+            asyncio.run(value.initialize())
+        elif isinstance(value, OperationAttributes):
+            if not value._initialized:
+                asyncio.run(value.initialize())
+        else:
+            value = None
+
+        self._parent_operation = value
 
     @property
     def inheritance(self) -> list:
