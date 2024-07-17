@@ -13,7 +13,11 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from typing import Type
+
 from research_analytics_suite.commands import command, link_class_commands
+from research_analytics_suite.operation_manager.operations.system.ResourceMonitor import ResourceMonitor
+from research_analytics_suite.operation_manager.operations.system.ConsoleMonitor import ConsoleMonitor
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
@@ -41,8 +45,24 @@ class OperationManager:
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
+        self.resource_monitor = ResourceMonitor(cpu_threshold=90, memory_threshold=95)
+        self.console_monitor = ConsoleMonitor(prompt="\n\t>>\t")
+
+    async def initialize(self):
+        """
+        Initializes the OperationManager.
+        """
+        await self.resource_monitor.initialize_operation()
+        await self.console_monitor.initialize_operation()
+
+        await self.add_initialized_operation(self.resource_monitor)
+        await self.add_initialized_operation(self.console_monitor)
+
+        await self.resource_monitor.start_operation()
+        await self.console_monitor.start_operation()
+
     @command
-    async def add_initialized_operation(self, operation) -> BaseOperation:
+    async def add_initialized_operation(self, operation: BaseOperation) -> BaseOperation:
         """
         Adds an initialized operation to the sequencer.
 
@@ -54,14 +74,41 @@ class OperationManager:
                                self.__class__.__name__)
             raise
         self._logger.debug(f"Adding initialized operation to sequencer: {operation.name} "
-                          f"with rID: {operation.runtime_id}")
+                           f"with rID: {operation.runtime_id}")
         await self.sequencer.add_operation_to_sequencer(operation)
         self._logger.debug(f"Operation {operation.name} added to sequencer.")
         operation.add_log_entry(f"[SEQ] {operation.name}")
         return operation
 
     @command
-    async def add_operation_with_parameters(self, operation_type, *args, **kwargs) -> BaseOperation:
+    async def create_operation(self, operation_type: Type[BaseOperation], *args, **kwargs) -> BaseOperation:
+        """
+        Creates a new Operation object with the specified parameters.
+
+        Args:
+            operation_type: The type of operation to be created.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Operation: The created operation.
+        """
+        try:
+            self._logger.debug(f"Creating operation of type: {operation_type.__name__}")
+            operation = operation_type(*args, **kwargs)
+            await operation.initialize_operation()
+            self._logger.debug(f"Initialized operation: {operation.name} with ID: {operation.runtime_id}"
+                               f" and action: {operation.action}")
+
+            operation = await self.add_initialized_operation(operation)
+
+            return operation
+        except Exception as e:
+            self._logger.error(e, self.__class__.__name__)
+
+    @command
+    async def add_operation_with_parameters(
+            self, operation_type: Type[BaseOperation] = BaseOperation, *args, **kwargs) -> BaseOperation:
         """
         Creates a new Operation object with the specified parameters and adds it to the sequencer.
 
@@ -85,20 +132,7 @@ class OperationManager:
 
             return await self.add_initialized_operation(operation)
         except Exception as e:
-            self._logger.error(e, operation_type)
-
-    @command
-    async def add_operation_if_not_exists(self, operation_type, *args, **kwargs) -> BaseOperation:
-        """
-        Adds an operation to the sequencer if it does not already exist.
-
-        Args:
-            operation_type: The type of operation to be created.
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
-        """
-        if not self.task_creator.task_exists(operation_type):
-            return await self.add_operation_with_parameters(operation_type=operation_type, *args, **kwargs)
+            self._logger.error(e, self.__class__.__name__)
 
     @command
     async def resume_operation(self, operation: BaseOperation) -> None:
@@ -123,11 +157,12 @@ class OperationManager:
             await operation.pause()
 
     @command
-    async def stop_operation(self, operation: BaseOperation) -> None:
+    async def stop_operation(self, operation: BaseOperation, child_operations: bool = False) -> None:
         """
         Stops a specific operation.
 
         Args:
             operation (BaseOperation): The operation to stop.
+            child_operations (bool): Flag to stop child operations as well.
         """
-        await operation.stop()
+        await operation.stop(child_operations=child_operations)

@@ -14,12 +14,12 @@ from research_analytics_suite.operation_manager.operations.core.inheritance impo
 async def test_start_child_operations():
     operation = MagicMock()
     child_operation = MagicMock()
-    child_operation.start = AsyncMock()
-    operation.inheritance = {"child_id": child_operation}
+    child_operation.start_operation = AsyncMock()
+    operation.inheritance = [child_operation]
 
     await start_child_operations(operation)
 
-    child_operation.start.assert_awaited_once()
+    child_operation.start_operation.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -27,7 +27,7 @@ async def test_pause_child_operations():
     operation = MagicMock()
     child_operation = MagicMock()
     child_operation.pause = AsyncMock()
-    operation.inheritance = {"child_id": child_operation}
+    operation.inheritance = [child_operation]
 
     await pause_child_operations(operation)
 
@@ -39,7 +39,7 @@ async def test_resume_child_operations():
     operation = MagicMock()
     child_operation = MagicMock()
     child_operation.resume = AsyncMock()
-    operation.inheritance = {"child_id": child_operation}
+    operation.inheritance = [child_operation]
 
     await resume_child_operations(operation)
 
@@ -51,7 +51,7 @@ async def test_stop_child_operations():
     operation = MagicMock()
     child_operation = MagicMock()
     child_operation.stop = AsyncMock()
-    operation.inheritance = {"child_id": child_operation}
+    operation.inheritance = [child_operation]
 
     await stop_child_operations(operation)
 
@@ -63,7 +63,7 @@ async def test_reset_child_operations():
     operation = MagicMock()
     child_operation = MagicMock()
     child_operation.reset = AsyncMock()
-    operation.inheritance = {"child_id": child_operation}
+    operation.inheritance = [child_operation]
 
     await reset_child_operations(operation)
 

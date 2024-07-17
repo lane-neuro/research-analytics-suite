@@ -29,7 +29,7 @@ class OperationLifecycleManager:
     """Manages the lifecycle of operations."""
 
     def __init__(self, sequencer: OperationSequencer, operation_manager, executor: OperationExecutor,
-                 system_op_checker, task_monitor: TaskMonitor):
+                 task_monitor: TaskMonitor):
         """
         Initializes the OperationLifecycleManager with the given parameters.
 
@@ -41,7 +41,6 @@ class OperationLifecycleManager:
         self.sequencer = sequencer
         self.operation_manager = operation_manager
         self.operation_executor = executor
-        self.system_operation_checker = system_op_checker
         self.task_monitor = task_monitor
         self._logger = CustomLogger()
 
@@ -54,13 +53,13 @@ class OperationLifecycleManager:
                     operation = current_node.operation
                     if operation.status == "idle":
                         await operation.initialize_operation()
-                        await operation.start()
+                        await operation.start_operation()
                     current_node = current_node.next_node
             else:
                 operation = operation_chain.operation
                 if operation.status == "idle":
                     await operation.initialize_operation()
-                    await operation.start()
+                    await operation.start_operation()
 
     @command
     async def stop_all_operations(self):
@@ -88,8 +87,7 @@ class OperationLifecycleManager:
 
     async def exec_loop(self):
         """Executes the main loop of the operations manager."""
-        tasks = [self.system_operation_checker.check_system_operations(),
-                 self.start_all_operations(),
+        tasks = [self.start_all_operations(),
                  self.operation_executor.execute_ready_operations(),
                  self.task_monitor.handle_tasks()]
 

@@ -39,5 +39,5 @@ async def stop_child_operations(operation):
     """
     Stop all child operations.
     """
-    tasks = [op.stop() for op in operation.inheritance.values()]
+    tasks = [child.stop() for child in operation.inheritance]
     await asyncio.gather(*tasks)

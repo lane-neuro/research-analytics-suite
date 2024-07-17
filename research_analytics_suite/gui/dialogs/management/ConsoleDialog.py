@@ -19,7 +19,7 @@ import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.commands.UserInputProcessor import process_user_input
 from research_analytics_suite.gui.GUIBase import GUIBase
-from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
 
 class ConsoleDialog(GUIBase):
@@ -33,9 +33,8 @@ class ConsoleDialog(GUIBase):
         self.command_history = []
 
     async def initialize_gui(self) -> None:
-        self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
-                operation_type=BaseOperation, name="gui_ConsoleUpdateTask", action=self._update_async,
-                is_loop=True, parallel=True)
+        self._update_operation = await self._operation_control.operation_manager.create_operation(
+                operation_type=UpdateMonitor, name="gui_ConsoleUpdate", action=self._update_async)
         self._update_operation.is_ready = True
 
     async def _update_async(self) -> None:

@@ -62,7 +62,7 @@ class TestPackForSave:
             action="sample_action",
             required_inputs={"input1": "value1"},
             parent_operation=self.parent_operation,
-            inheritance={"child1": self.child_operation},
+            inheritance=[self.child_operation],
             is_loop=True,
             is_cpu_bound=True,
             parallel=True
@@ -120,7 +120,7 @@ class TestPackForSave:
             action="",
             required_inputs={},
             parent_operation=None,
-            inheritance={},
+            inheritance=[],
             is_loop=False,
             is_cpu_bound=False,
             parallel=False

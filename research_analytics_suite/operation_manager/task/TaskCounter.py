@@ -45,6 +45,7 @@ class TaskCounter:
             ValueError: If the task name is empty.
         """
         if not name:
+            self._logger.error(ValueError("Task name cannot be empty."), self.__class__.__name__)
             raise ValueError("Task name cannot be empty.")
 
         self.counter += 1

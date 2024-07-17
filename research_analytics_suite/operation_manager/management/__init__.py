@@ -2,6 +2,4 @@
 
 from .OperationManager import OperationManager
 from .OperationSequencer import OperationSequencer
-from .OperationStatusChecker import OperationStatusChecker
-from .SystemOperationChecker import SystemOperationChecker
 from .OperationLifecycleManager import OperationLifecycleManager

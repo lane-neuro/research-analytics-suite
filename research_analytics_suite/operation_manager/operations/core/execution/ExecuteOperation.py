@@ -2,6 +2,7 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor
 from typing import List
 
+from research_analytics_suite.utils import CustomLogger
 from .PrepareAction import prepare_action_for_exec
 
 
@@ -36,7 +37,7 @@ async def execute_inherited_operations(parent_operation):
     """
     if not parent_operation.required_inputs:
         if parent_operation.inheritance:
-            await run_operations(parent_operation, parent_operation.inheritance.values())
+            await run_operations(parent_operation, parent_operation.inheritance)
     else:
         execution_order = _determine_execution_order(parent_operation)
         await run_operations(parent_operation, execution_order)
@@ -52,12 +53,12 @@ def _determine_execution_order(parent_operation) -> List:
     parent_operation.add_log_entry(f"Determining execution order")
     execution_order = []
     processed = set()
-    while len(processed) < len(parent_operation.inheritance.keys()):
-        for op in parent_operation.inheritance.values():
-            if op.name not in processed and all(
-                    dep in processed for dep in parent_operation.required_inputs.get(op.name, [])):
-                execution_order.append(op)
-                processed.add(op.name)
+    while len(processed) < len(parent_operation.inheritance):
+        for child in parent_operation.inheritance:
+            if child.name not in processed and all(
+                    dep in processed for dep in parent_operation.required_inputs.get(child.name, {})):
+                execution_order.append(child)
+                processed.add(child.name)
     return execution_order
 
 
@@ -91,14 +92,15 @@ async def execute_action(operation):
             operation.status = "running"
             operation.add_log_entry(f"[RUN - ASYNC] {operation.name}")
             _exec_output = operation.action_callable
-            _exec_output = await _exec_output if asyncio.iscoroutine(_exec_output) else _exec_output
+            _exec_output = await _exec_output() if asyncio.iscoroutinefunction(_exec_output) else _exec_output()
 
         if _exec_output is not None:
             _result = _exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output
 
             # Ensure the result is a dictionary
             if not isinstance(_result, dict):
-                raise ValueError("The result of the executed action must be a dictionary.")
+                CustomLogger().error(Exception(f"Operation {operation.name} did not return a dictionary."),
+                                     operation.name)
 
             # Update all memory output slots with the result of the operation
             for name, value in _result.items():

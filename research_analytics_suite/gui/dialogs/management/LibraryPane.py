@@ -15,7 +15,7 @@ Status: Prototype
 import asyncio
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.gui.GUIBase import GUIBase
-from research_analytics_suite.operation_manager import BaseOperation
+from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
 
 class LibraryPane(GUIBase):
@@ -47,13 +47,15 @@ class LibraryPane(GUIBase):
 
     async def initialize_gui(self) -> None:
         self._logger.debug("Initializing the operation library dialog.")
-        self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
-            operation_type=BaseOperation, name="gui_LibraryUpdateTask", action=self._update_async,
-            is_loop=True, parallel=True)
+        self._update_operation = await self._operation_control.operation_manager.create_operation(
+            operation_type=UpdateMonitor, name="gui_LibraryUpdate", action=self._update_async)
         self._update_operation.is_ready = True
         self._logger.debug("Operation library dialog initialized.")
 
     async def _update_async(self) -> None:
+        while not dpg.does_item_exist("library_view"):
+            await asyncio.sleep(0.1)
+
         while True:
             await asyncio.sleep(self.SLEEP_DURATION)
             async with self._lock:

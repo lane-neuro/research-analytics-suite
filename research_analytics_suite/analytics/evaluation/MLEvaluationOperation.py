@@ -8,7 +8,7 @@ class MLEvaluationOperation(BaseOperation):
         self.test_data = args[1]
         self.test_target = args[2]
 
-    def start(self):
+    def start_operation(self):
         """Initialize evaluation parameters."""
         self.status = "started"
         self.add_log_entry("Evaluation operation started")

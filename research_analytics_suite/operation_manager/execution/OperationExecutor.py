@@ -19,7 +19,6 @@ import asyncio
 
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.commands.ConsoleOperation import ConsoleOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -46,7 +45,7 @@ class OperationExecutor:
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
-    async def execute_operation(self, operation: BaseOperation) -> asyncio.Task:
+    async def execute_operation(self, operation) -> asyncio.Task:
         """
         Executes a single operation.
 
@@ -87,8 +86,6 @@ class OperationExecutor:
 
             for operation in chain_operations:
                 if not operation.task or operation.task.done():
-                    if isinstance(operation, ConsoleOperation) and not self.op_control.console_operation_in_progress:
-                        continue
                     self._logger.debug(f"execute_all: [OP] {operation.name} - {operation.status} - {operation.task}")
 
                     if not operation.task and operation.is_ready is True:
@@ -100,5 +97,3 @@ class OperationExecutor:
                             operation.add_log_entry(f"[TASK] {operation.name}")
                         except Exception as e:
                             self._logger.error(e, self.__class__.__name__)
-                    if isinstance(operation, ConsoleOperation):
-                        self.op_control.console_operation_in_progress = True

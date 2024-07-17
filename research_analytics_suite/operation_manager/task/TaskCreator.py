@@ -36,19 +36,21 @@ class TaskCreator:
 
         self.tasks = set()
 
-    def task_exists(self, operation_type):
+    def task_exists(self, runtime_id) -> bool:
         """
-        Checks if a task of the specified operation type exists and is running or started.
+        Checks if a task with the given runtime ID exists.
 
         Args:
-            operation_type: The type of operations to check for.
+            runtime_id (str): The runtime ID to check.
 
         Returns:
             bool: True if a task of the specified type exists and is running or started, otherwise False.
         """
-        return (any(isinstance(task, operation_type) and task.status in ["running", "started"] for task in self.tasks)
-                or any(isinstance(operation_chain.head.operation, operation_type) for operation_chain in
-                       self.sequencer.sequencer))
+        for task in self.tasks:
+            _name = task.get_name().split(']')[1]
+            if _name == runtime_id:
+                return True
+        return False
 
     def create_task(self, coro, name):
         """
@@ -61,8 +63,10 @@ class TaskCreator:
         Returns:
             asyncio.Task: The created task.
         """
-        task = asyncio.create_task(coro, name=self.task_counter.new_task(name))
+        task_name = self.task_counter.new_task(name)
+        task = asyncio.create_task(coro, name=task_name)
         self.tasks.add(task)
+        self._logger.debug(f"Task {task_name} created.")
         return task
 
     def cancel_task(self, task_name):
@@ -76,8 +80,11 @@ class TaskCreator:
             bool: True if the task was found and cancelled, False otherwise.
         """
         for task in self.tasks:
-            if task.get_name() == task_name:
+            _name = task.get_name().split(']')[1]
+            if _name == task_name:
                 task.cancel()
                 self.tasks.remove(task)
+                self._logger.info(f"Task {task_name} cancelled.")
                 return True
         return False
+

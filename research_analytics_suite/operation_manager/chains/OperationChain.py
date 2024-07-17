@@ -16,7 +16,7 @@ Status: Prototype
 """
 from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.operation_manager.nodes.OperationNode import OperationNode
-from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager import BaseOperation
 
 
 @link_class_commands
@@ -28,7 +28,7 @@ class OperationChain:
     and iterate over the chain of operations.
     """
 
-    def __init__(self, operation: BaseOperation = None):
+    def __init__(self, operation=None):
         """
         Initializes the OperationChain with an optional initial operation.
 
@@ -40,7 +40,7 @@ class OperationChain:
             self.add_operation_to_chain(operation)
 
     @command
-    def add_operation_to_chain(self, operation: BaseOperation) -> None:
+    def add_operation_to_chain(self, operation) -> None:
         """
         Adds an operation to the end of the chain.
 
@@ -56,7 +56,7 @@ class OperationChain:
             current_node.next_node = OperationNode(operation)
 
     @command
-    def remove_operation(self, operation: BaseOperation) -> None:
+    def remove_operation(self, operation) -> None:
         """
         Removes an operation from the chain.
 
@@ -99,7 +99,7 @@ class OperationChain:
         return count
 
     @command
-    def contains(self, operation: BaseOperation) -> bool:
+    def contains(self, operation) -> bool:
         """
         Checks if the chain contains a specific operation.
 

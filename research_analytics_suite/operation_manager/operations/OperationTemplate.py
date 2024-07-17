@@ -47,18 +47,17 @@ class OperationTemplate(BaseOperation):
     description: str = "Default operation description."
     category_id: int = 0
     author: str = "Default Author"
-    github: str = "lane-neuro"
-    email: str = "default_author@email.com"
-    unique_id: str = f"{github}_{name}_{version}"
-    required_inputs: Optional[dict[str, type]] = {}
+    github: str = "[no-github]"
+    email: str = "[no-email]"
+    required_inputs: dict[str, type] = {}
     # output_parameters: Optional[dict[str, type]] = {}
     parent_operation: Optional[Type[BaseOperation]] = None
-    inheritance: Optional[list] = []
+    inheritance: list = []
     is_loop: bool = False
     is_cpu_bound: bool = False
     parallel: bool = False
 
-    def __init__(self, custom_attribute: Optional[any], *args, **kwargs):
+    def __init__(self, custom_attribute: Optional[any], *args, **kwargs) -> None:
         """
         Initialize the operation instance. Update kwargs with preset attributes and call the parent class constructor.
 
@@ -77,7 +76,6 @@ class OperationTemplate(BaseOperation):
             'author': self.author,
             'github': self.github,
             'email': self.email,
-            'unique_id': self.unique_id,
             'action': self.action,
             'required_inputs': self.required_inputs,        # dict[str, type] of required input parameters
             # 'output_parameters': self.output_parameters,   # dict[str, type] of output parameters
@@ -94,20 +92,20 @@ class OperationTemplate(BaseOperation):
         # Custom attributes
         self._custom_attribute = custom_attribute
 
-    async def initialize_operation(self):
+    async def initialize_operation(self) -> None:
         """
         Initialize any resources or setup required for the operation before it starts.
         """
         await super().initialize_operation()
 
-    async def pre_execute(self):
+    async def pre_execute(self) -> None:
         """
         Logic to run before the main execution.
             This optional method is an example; not required by BaseOperation.
         """
         pass
 
-    async def execute(self):
+    async def execute(self) -> None:
         """
         Execute the operation's logic.
         """
@@ -118,7 +116,7 @@ class OperationTemplate(BaseOperation):
 
         await self.post_execute()
 
-    async def post_execute(self):
+    async def post_execute(self) -> None:
         """
         Logic to run after the main execution.
             This optional method is an example; not required by BaseOperation.
@@ -127,7 +125,7 @@ class OperationTemplate(BaseOperation):
         self._status = "completed"
         self.add_log_entry("OperationTemplate completed.")
 
-    def validate(self):
+    def validate(self) -> None:
         """
         Validate inputs and outputs of the operation.
             This optional method is an example; not required by BaseOperation.

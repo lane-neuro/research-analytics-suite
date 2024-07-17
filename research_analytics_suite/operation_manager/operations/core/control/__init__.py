@@ -13,8 +13,8 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from .StartOperation import start_operation
-from .PauseOperation import pause_operation
-from .ResumeOperation import resume_operation
-from .StopOperation import stop_operation
+from .StartOperation import start_operation, start_child_operations
+from .PauseOperation import pause_operation, pause_child_operations
+from .ResumeOperation import resume_operation, resume_child_operations
+from .StopOperation import stop_operation, stop_child_operations
 from .ResetOperation import reset_operation

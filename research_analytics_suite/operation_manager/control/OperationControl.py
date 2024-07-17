@@ -22,8 +22,6 @@ from research_analytics_suite.operation_manager.execution.OperationExecutor impo
 from research_analytics_suite.operation_manager.management.OperationLifecycleManager import OperationLifecycleManager
 from research_analytics_suite.operation_manager.management.OperationManager import OperationManager
 from research_analytics_suite.operation_manager.management.OperationSequencer import OperationSequencer
-from research_analytics_suite.operation_manager.management.OperationStatusChecker import OperationStatusChecker
-from research_analytics_suite.operation_manager.management.SystemOperationChecker import SystemOperationChecker
 from research_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
 from research_analytics_suite.operation_manager.task.TaskMonitor import TaskMonitor
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -57,7 +55,6 @@ class OperationControl:
 
             self.operation_manager = None
             self.operation_executor = None
-            self.operation_status_checker = None
             self.user_input_manager = None
             self.system_op_checker = None
             self.lifecycle_manager = None
@@ -80,7 +77,6 @@ class OperationControl:
                     self.workspace = Workspace()
 
                     self.main_loop = asyncio.get_event_loop()
-                    self.console_operation_in_progress = False
 
                     self.sequencer = OperationSequencer()
 
@@ -88,17 +84,15 @@ class OperationControl:
                     self.task_monitor = TaskMonitor(task_creator=self.task_creator, sequencer=self.sequencer)
 
                     self.operation_manager = OperationManager(sequencer=self.sequencer, task_creator=self.task_creator)
+                    await self.operation_manager.initialize()
+
                     self.operation_executor = OperationExecutor(sequencer=self.sequencer,
                                                                 task_creator=self.task_creator)
-                    self.operation_status_checker = OperationStatusChecker(sequencer=self.sequencer)
-
-                    self.system_op_checker = SystemOperationChecker(sequencer=self.sequencer,
-                                                                    task_creator=self.task_creator)
                     self.lifecycle_manager = OperationLifecycleManager(sequencer=self.sequencer,
                                                                        operation_manager=self.operation_manager,
                                                                        executor=self.operation_executor,
-                                                                       task_monitor=self.task_monitor,
-                                                                       system_op_checker=self.system_op_checker)
+                                                                       task_monitor=self.task_monitor)
+
                     self._initialized = True
                     self._logger.debug("OperationControl.initialize: OperationControl initialized.")
 
@@ -108,6 +102,17 @@ class OperationControl:
 
     async def exec_loop(self):
         """Executes the main loop of the operations manager."""
-        while True:
+        while not self.main_loop.is_closed():
             await self.lifecycle_manager.exec_loop()
             await asyncio.sleep(self.SLEEP_TIME)
+
+    async def stop_exec_loop(self):
+        """Stops the execution loop."""
+        for task in self.task_creator.tasks:
+            _op = self.sequencer.find_operation_by_task(task)
+            _op.is_loop = False
+            await self.operation_manager.stop_operation(_op)
+
+        self.main_loop.stop()
+        self.main_loop.close()
+        self._logger.info("OperationControl: Main loop stopped.")

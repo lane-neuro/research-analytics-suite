@@ -16,7 +16,7 @@ from __future__ import annotations
 import asyncio
 
 from research_analytics_suite.commands import command, link_class_commands
-from research_analytics_suite.operation_manager import BaseOperation
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
 @link_class_commands
@@ -39,7 +39,8 @@ class OperationAttributes:
         if not hasattr(self, '_initialized'):
             if args and isinstance(args[0], dict):
                 self.temp_kwargs.update(args[0])
-            self.temp_kwargs.update(kwargs)
+            elif kwargs and isinstance(kwargs, dict):
+                self.temp_kwargs.update(kwargs)
 
             from research_analytics_suite.utils import CustomLogger
             self._logger = CustomLogger()
@@ -127,7 +128,7 @@ class OperationAttributes:
 
     @property
     def name(self) -> str:
-        return self._name
+        return self._name if self._name else "[no-name]"
 
     @name.setter
     def name(self, value):
@@ -135,7 +136,7 @@ class OperationAttributes:
 
     @property
     def version(self) -> str:
-        return self._version
+        return self._version if self._version else "0.0.1"
 
     @version.setter
     def version(self, value):
@@ -143,7 +144,7 @@ class OperationAttributes:
 
     @property
     def description(self) -> str:
-        return self._description
+        return self._description if self._description else "[no-description]"
 
     @description.setter
     def description(self, value):
@@ -151,7 +152,7 @@ class OperationAttributes:
 
     @property
     def category_id(self) -> int:
-        return self._category_id
+        return self._category_id if self._category_id else -1
 
     @category_id.setter
     def category_id(self, value: int):
@@ -159,7 +160,7 @@ class OperationAttributes:
 
     @property
     def author(self) -> str:
-        return self._author
+        return self._author if self._author else "[no-author]"
 
     @author.setter
     def author(self, value):
@@ -167,7 +168,7 @@ class OperationAttributes:
 
     @property
     def github(self) -> str:
-        return self._github
+        return self._github if self._github else "[no-github]"
 
     @github.setter
     def github(self, value):
@@ -177,7 +178,7 @@ class OperationAttributes:
 
     @property
     def email(self) -> str:
-        return self._email
+        return self._email if self._email else "[no-email]"
 
     @email.setter
     def email(self, value):
@@ -189,7 +190,7 @@ class OperationAttributes:
 
     @property
     def action(self) -> any:
-        return self._action
+        return self._action if self._action else None
 
     @action.setter
     def action(self, value):
@@ -207,11 +208,12 @@ class OperationAttributes:
 
     @property
     def parent_operation(self) -> OperationAttributes or BaseOperation or None:
-        return self._parent_operation
+        return self._parent_operation if self._parent_operation else None
 
     @parent_operation.setter
     def parent_operation(self, value):
-        self._parent_operation = value if value and isinstance(value, type(OperationAttributes) or type(BaseOperation)) else None
+        self._parent_operation = value if value and isinstance(
+            value, OperationAttributes or BaseOperation) else None
 
     @property
     def inheritance(self) -> list:
@@ -223,7 +225,7 @@ class OperationAttributes:
 
     @property
     def is_loop(self) -> bool:
-        return self._is_loop
+        return self._is_loop if self._is_loop else False
 
     @is_loop.setter
     def is_loop(self, value):
@@ -231,7 +233,7 @@ class OperationAttributes:
 
     @property
     def is_cpu_bound(self) -> bool:
-        return self._is_cpu_bound
+        return self._is_cpu_bound if self._is_cpu_bound else False
 
     @is_cpu_bound.setter
     def is_cpu_bound(self, value):
@@ -239,7 +241,7 @@ class OperationAttributes:
 
     @property
     def parallel(self) -> bool:
-        return self._parallel
+        return self._parallel if self._parallel else False
 
     @parallel.setter
     def parallel(self, value):

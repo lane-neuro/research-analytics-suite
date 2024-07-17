@@ -10,12 +10,12 @@ async def test_reset_operation_running_no_child_operations():
     operation.status = "running"
     operation.inheritance = None
     operation.stop = AsyncMock()
-    operation.start = AsyncMock()
+    operation.start_operation = AsyncMock()
 
     await reset_operation(operation)
 
     operation.stop.assert_awaited_once()
-    operation.start.assert_awaited_once()
+    operation.start_operation.assert_awaited_once()
     assert operation.progress == 0
     operation.add_log_entry.assert_called_with(f"[RESET] {operation.name}")
 
@@ -24,16 +24,16 @@ async def test_reset_operation_running_no_child_operations():
 async def test_reset_operation_paused_with_child_operations():
     operation = MagicMock()
     operation.status = "paused"
-    operation.inheritance = {"child": MagicMock()}
+    operation.inheritance = [MagicMock()]
     operation.stop = AsyncMock()
-    operation.start = AsyncMock()
+    operation.start_operation = AsyncMock()
     operation.reset_child_operations = AsyncMock()
 
     await reset_operation(operation, child_operations=True)
 
     operation.reset_child_operations.assert_awaited_once()
     operation.stop.assert_awaited_once()
-    operation.start.assert_awaited_once()
+    operation.start_operation.assert_awaited_once()
     assert operation.progress == 0
     operation.add_log_entry.assert_called_with(f"[RESET] {operation.name}")
 
@@ -44,12 +44,12 @@ async def test_reset_operation_completed_no_child_operations():
     operation.status = "completed"
     operation.inheritance = None
     operation.stop = AsyncMock()
-    operation.start = AsyncMock()
+    operation.start_operation = AsyncMock()
 
     await reset_operation(operation)
 
     operation.stop.assert_awaited_once()
-    operation.start.assert_awaited_once()
+    operation.start_operation.assert_awaited_once()
     assert operation.progress == 0
     operation.add_log_entry.assert_called_with(f"[RESET] {operation.name}")
 
@@ -58,16 +58,16 @@ async def test_reset_operation_completed_no_child_operations():
 async def test_reset_operation_error_with_child_operations():
     operation = MagicMock()
     operation.status = "error"
-    operation.inheritance = {"child": MagicMock()}
+    operation.inheritance = [MagicMock()]
     operation.stop = AsyncMock()
-    operation.start = AsyncMock()
+    operation.start_operation = AsyncMock()
     operation.reset_child_operations = AsyncMock()
 
     await reset_operation(operation, child_operations=True)
 
     operation.reset_child_operations.assert_awaited_once()
     operation.stop.assert_awaited_once()
-    operation.start.assert_awaited_once()
+    operation.start_operation.assert_awaited_once()
     assert operation.progress == 0
     operation.add_log_entry.assert_called_with(f"[RESET] {operation.name}")
 
@@ -89,11 +89,11 @@ async def test_reset_operation_exception_handling():
     operation = MagicMock()
     operation.status = "running"
     operation.stop = AsyncMock(side_effect=Exception("Test error"))
-    operation.start = AsyncMock()
+    operation.start_operation = AsyncMock()
 
     await reset_operation(operation)
 
     operation.stop.assert_awaited_once()
-    operation.start.assert_not_awaited()
+    operation.start_operation.assert_not_awaited()
     operation.handle_error.assert_called_once()
     operation.add_log_entry.assert_called_with(f"[RESET] {operation.name} - Error occurred during reset")

@@ -18,9 +18,7 @@ import asyncio
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.gui.GUIBase import GUIBase
-from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.operation_manager.operations.system.ResourceMonitorOperation import (
-    ResourceMonitorOperation)
+from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
 
 class ResourceMonitorDialog(GUIBase):
@@ -50,17 +48,15 @@ class ResourceMonitorDialog(GUIBase):
 
     async def initialize_gui(self) -> None:
         """Initializes the resource monitor by adding the update operation."""
-        self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
-                operation_type=BaseOperation, name="gui_ResourceUpdateTask",
-                action=self._update_async, is_loop=True, parallel=True)
-        self._update_operation.is_ready = True
+        self._update_operation = await self._operation_control.operation_manager.create_operation(
+            operation_type=UpdateMonitor, name="gui_ResourceUpdate", action=self._update_async)
 
     async def _update_async(self) -> None:
         """Continuously updates the resource usage displays."""
         while self._resource_monitor_operation is None:
-            self._resource_monitor_operation = self._operation_control.sequencer.get_operation_by_type(
-                ResourceMonitorOperation)
-            await asyncio.sleep(0.001)
+            if self._operation_control.operation_manager.resource_monitor is not None and \
+                    self._operation_control.operation_manager.resource_monitor.initialized:
+                self._resource_monitor_operation = self._operation_control.operation_manager.resource_monitor
 
         while True:
             dpg.set_value(value=f"{self._resource_monitor_operation.get_cpu_formatted()}", item="cpu_text")

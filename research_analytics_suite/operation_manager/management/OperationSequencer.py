@@ -43,16 +43,16 @@ class OperationSequencer:
         self._logger = CustomLogger()
 
     @command
-    async def add_operation_to_sequencer(self, operation: BaseOperation):
+    async def add_operation_to_sequencer(self, operation):
         """
         Adds an operation to the sequencer.
 
         Args:
-            operation (Operation): The operation to add to the sequencer.
+            operation: The operation to add to the sequencer.
         """
         self._logger.debug(f"Adding operation to sequencer: {operation.name} with rID: {operation.runtime_id}")
 
-        if operation.parent_operation is None:
+        if not operation.parent_operation:
             if not isinstance(operation, OperationChain):
                 operation_chain = OperationChain(operation)
             else:
@@ -67,7 +67,7 @@ class OperationSequencer:
                 self._logger.debug(f"Operation {operation.name} added to parent chain of {operation.parent_operation.name}.")
 
     @command
-    def insert_operation_in_chain(self, index: int, operation_chain: OperationChain, operation: BaseOperation) -> None:
+    def insert_operation_in_chain(self, index: int, operation_chain, operation) -> None:
         """
         Inserts an operation in a chain at a specific index.
 
@@ -86,7 +86,7 @@ class OperationSequencer:
                 current_node.next_node = new_node
 
     @command
-    def remove_operation_from_chain(self, operation_chain: OperationChain, operation: BaseOperation) -> None:
+    def remove_operation_from_chain(self, operation_chain, operation) -> None:
         """
         Removes an operation from a chain.
 
@@ -100,7 +100,7 @@ class OperationSequencer:
                 self.sequencer.remove(operation_chain)
 
     @command
-    def move_operation(self, operation: BaseOperation, new_index: int) -> None:
+    def move_operation(self, operation, new_index: int) -> None:
         """
         Moves an operation to a new index in its chain.
 
@@ -114,7 +114,7 @@ class OperationSequencer:
             self.insert_operation_in_chain(new_index, operation_chain, operation)
 
     @command
-    def remove_operation_from_sequencer(self, operation: BaseOperation) -> None:
+    def remove_operation_from_sequencer(self, operation) -> None:
         """
         Removes an operation from the sequencer.
 
@@ -147,7 +147,7 @@ class OperationSequencer:
         return None
 
     @command
-    def get_chain_by_operation(self, operation: BaseOperation) -> Optional[OperationChain]:
+    def get_chain_by_operation(self, operation) -> Optional[OperationChain]:
         """
         Gets the operation chain that contains a specific operation.
 
@@ -163,7 +163,7 @@ class OperationSequencer:
         return None
 
     @command
-    def get_operation_in_chain(self, operation_chain: OperationChain, operation: BaseOperation) \
+    def get_operation_in_chain(self, operation_chain: OperationChain, operation) \
             -> Optional[BaseOperation]:
         """
         Gets a specific operation in a chain.
@@ -243,7 +243,7 @@ class OperationSequencer:
         self.sequencer.clear()
 
     @command
-    def contains(self, operation: BaseOperation) -> bool:
+    def contains(self, operation) -> bool:
         """
         Checks if the sequencer contains a specific operation.
 

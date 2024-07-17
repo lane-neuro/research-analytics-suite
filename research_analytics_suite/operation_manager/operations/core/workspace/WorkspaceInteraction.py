@@ -39,7 +39,7 @@ def pack_for_save(operation) -> dict:
 
     _inheritance = None
     if operation.inheritance is not None:
-        _inheritance = [pack_as_local_reference(child) for child in operation.inheritance.values()]
+        _inheritance = [pack_as_local_reference(child) for child in operation.inheritance]
 
     return {
         'name': operation.name,

@@ -23,11 +23,11 @@ async def test_stop_operation_running_no_child_operations():
 async def test_stop_operation_running_with_child_operations():
     operation = MagicMock()
     operation.status = "running"
-    operation.inheritance = {"child": MagicMock()}
+    operation.inheritance = [MagicMock()]
     operation.task = AsyncMock()
     operation.task.cancel = MagicMock()
 
-    child_op = operation.inheritance["child"]
+    child_op = operation.inheritance[0]
     child_op.stop = AsyncMock()
 
     with patch('research_analytics_suite.operation_manager.operations.core.control.StopOperation.stop_child_operations',
@@ -74,10 +74,10 @@ async def test_stop_child_operations():
     child_operation_1.stop = AsyncMock()
     child_operation_2.stop = AsyncMock()
 
-    parent_operation.inheritance = {
-        "child1": child_operation_1,
-        "child2": child_operation_2
-    }
+    parent_operation.inheritance = [
+        child_operation_1,
+        child_operation_2
+    ]
 
     from research_analytics_suite.operation_manager.operations.core.control.StopOperation import stop_child_operations
     await stop_child_operations(parent_operation)

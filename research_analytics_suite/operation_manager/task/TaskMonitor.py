@@ -13,8 +13,9 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from research_analytics_suite.operation_manager.management import OperationSequencer
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
-from research_analytics_suite.commands.ConsoleOperation import ConsoleOperation
+from research_analytics_suite.operation_manager.task import TaskCreator
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 import asyncio
 
@@ -22,7 +23,7 @@ import asyncio
 class TaskMonitor:
     """Monitors and manages tasks."""
 
-    def __init__(self, task_creator, sequencer):
+    def __init__(self, task_creator: TaskCreator, sequencer: OperationSequencer):
         """
         Initializes the TaskMonitor with the given parameters.
 
@@ -54,17 +55,13 @@ class TaskMonitor:
                             self._logger.debug(f"handle_tasks: [DONE] {task.get_name()}")
                     else:
                         self._logger.error(Exception(
-                            f"handle_tasks: [ERROR] No operations found for task {task.get_name()}"), self)
+                            f"handle_tasks: [ERROR] No operations found for task {task.get_name()}"),
+                            self.__class__.__name__)
                 except Exception as e:
-                    self._logger.error(e, self)
+                    self._logger.error(e, self.__class__.__name__)
                 finally:
-                    if operation:
-                        self.task_creator.tasks.remove(task)
-                        if not operation.is_loop:
-                            self.sequencer.remove_operation_from_sequencer(operation)
-
-                        if isinstance(operation, ConsoleOperation):
-                            self.op_control.console_operation_in_progress = False
+                    if operation and not operation.is_loop:
+                        self.sequencer.remove_operation_from_sequencer(operation)
 
     def get_task_statuses(self):
         """Retrieves the status of all tasks."""

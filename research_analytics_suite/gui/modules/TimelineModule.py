@@ -26,9 +26,8 @@ class TimelineModule(GUIBase):
     async def initialize_gui(self) -> None:
         dpg.add_child_window(tag="sequencer_module", border=True, width=self.width, parent=self._parent)
 
-        self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
-                operation_type=BaseOperation, name="gui_TimelineUpdateTask",
-                action=self._update_async, is_loop=True, parallel=True)
+        self._update_operation = await self._operation_control.operation_manager.create_operation(
+                operation_type=BaseOperation, name="gui_TimelineUpdate", action=self._update_async)
         self._update_operation.is_ready = True
 
     async def _update_async(self) -> None:
@@ -67,10 +66,11 @@ class TimelineModule(GUIBase):
             self._dragging_operation = None
 
     async def update_all_elements(self) -> None:
-        for layer_index, operation_chain in enumerate(self._operation_sequencer.sequencer):
-            for idx, node in enumerate(operation_chain):
-                if not node.operation.name.startswith("gui_") and not node.operation.name.startswith("sys_"):
-                    await self.update_operation_element(node.operation, layer_index, idx)
+        pass
+        # for layer_index, operation_chain in enumerate(self._operation_sequencer.sequencer):
+        #     for idx, node in enumerate(operation_chain):
+        #         if not node.operation.name.startswith("gui_") and not node.operation.name.startswith("sys_"):
+        #             await self.update_operation_element(node.operation, layer_index, idx)
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         pass

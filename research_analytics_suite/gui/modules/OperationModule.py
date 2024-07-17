@@ -24,6 +24,7 @@ from research_analytics_suite.gui.modules.CreateOperationModule import CreateOpe
 from research_analytics_suite.gui.utils.left_aligned_button import left_aligned_button
 from research_analytics_suite.gui.utils.left_aligned_input_field import left_aligned_input_field
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
 
 class OperationModule(GUIBase):
@@ -63,9 +64,8 @@ class OperationModule(GUIBase):
     async def initialize_gui(self) -> None:
         """Initializes resources and adds the update operation."""
         try:
-            self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
-                operation_type=BaseOperation, name="gui_OperationUpdateTask",
-                action=self.update_gui, is_loop=True, parallel=True)
+            self._update_operation = await self._operation_control.operation_manager.create_operation(
+                operation_type=UpdateMonitor, name="gui_OpModuleUpdate", action=self.update_gui)
             self._update_operation.is_ready = True
         except Exception as e:
             self._logger.error(e, self)
@@ -136,8 +136,8 @@ class OperationModule(GUIBase):
 
                     dpg.add_text("Child Operations")
                     with dpg.group(tag=self._child_ops_parent, parent=f"container_{self._operation_id}"):
-                        if self._operation.inheritance.values() is not None:
-                            for child_op in self._operation.inheritance.values():
+                        if self._operation.inheritance:
+                            for child_op in self._operation.inheritance:
                                 with dpg.group(parent=self._child_ops_parent,
                                                tag=f"{child_op.runtime_id}_{self._operation_id}"):
                                     dpg.add_input_text(label="Child Operation Name", default_value=child_op.name,
@@ -171,7 +171,7 @@ class OperationModule(GUIBase):
                 children = dpg.get_item_children(self._child_ops_parent, slot=1)
                 if len(children) != current_inherited_ops:
                     dpg.delete_item(self._child_ops_parent, children_only=True)
-                    for child_op in self._operation.inheritance.values():
+                    for child_op in self._operation.inheritance:
                         dpg.add_input_text(label="Child Operation Name", default_value=child_op.name, readonly=True,
                                            parent=self._child_ops_parent)
                         dpg.add_input_text(label="Status", default_value=child_op.status, readonly=True,

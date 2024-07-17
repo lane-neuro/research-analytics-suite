@@ -6,7 +6,7 @@ from typing import Optional
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 from research_analytics_suite.gui.GUIBase import GUIBase
-from research_analytics_suite.operation_manager import BaseOperation
+from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
 
 class CollectionViewDialog(GUIBase):
@@ -33,9 +33,8 @@ class CollectionViewDialog(GUIBase):
     async def initialize_gui(self) -> None:
         """Initializes the user interface."""
         try:
-            self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
-                operation_type=BaseOperation, name="gui_MainCollectionUpdateTask",
-                action=self._update_async, is_loop=True, parallel=True)
+            self._update_operation = await self._operation_control.operation_manager.create_operation(
+                operation_type=UpdateMonitor, name="gui_MainCollectionUpdate", action=self._update_async)
             self._update_operation.is_ready = True
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)

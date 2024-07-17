@@ -1,107 +1,114 @@
 import pytest
 import asyncio
 from unittest.mock import MagicMock
-from research_analytics_suite.operation_manager.task.TaskCounter import TaskCounter
-from research_analytics_suite.utils.CustomLogger import CustomLogger
+
+from research_analytics_suite.operation_manager.task.TaskCreator import TaskCreator
 
 
-@pytest.fixture
-def sequencer():
-    """
-    Fixture for creating a sequencer mock.
-    """
-    return MagicMock()
+class TestTaskCreator:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.mock_sequencer = MagicMock()
+        self.mock_task_counter = MagicMock()
+        self.mock_logger = MagicMock()
 
+        self.task_creator = TaskCreator(self.mock_sequencer)
+        self.task_creator.task_counter = self.mock_task_counter
+        self.task_creator._logger = self.mock_logger
+        self.task_creator._logger.debug = MagicMock()
+        self.task_creator._logger.info = MagicMock()
 
-@pytest.fixture
-def task_creator(sequencer):
-    """
-    Fixture for creating a TaskCreator instance with mocked dependencies.
-    """
-    from research_analytics_suite.operation_manager import TaskCreator
-    tc = TaskCreator(sequencer)
-    tc.task_counter = MagicMock(spec=TaskCounter)
-    tc._logger = MagicMock(spec=CustomLogger)
-    return tc
+    @pytest.mark.asyncio
+    async def test_task_exists(self):
+        mock_task = asyncio.create_task(asyncio.sleep(1), name="[123]test_task")
+        self.task_creator.tasks.add(mock_task)
+        assert self.task_creator.task_exists("test_task") is True
 
+    @pytest.mark.asyncio
+    async def test_create_task(self):
+        async def sample_coro():
+            await asyncio.sleep(1)
+            return "done"
 
-@pytest.mark.asyncio
-async def test_create_task(task_creator):
-    """
-    Test creating and scheduling a new task.
-    """
-    async def dummy_coro():
-        await asyncio.sleep(0.1)
-        return "done"
+        task_name = "test_task"
+        self.mock_task_counter.new_task.return_value = task_name
+        task = self.task_creator.create_task(sample_coro(), task_name)
+        await asyncio.sleep(0.1)  # Let the event loop run a bit
 
-    task_name = "TestTask"
-    task_creator.task_counter.new_task.return_value = "[1]TestTask"
+        assert task in self.task_creator.tasks
+        assert task.get_name() == task_name
 
-    task = task_creator.create_task(dummy_coro(), task_name)
+    @pytest.mark.asyncio
+    async def test_cancel_task(self):
+        async def sample_coro():
+            await asyncio.sleep(1)
+            return "done"
 
-    assert isinstance(task, asyncio.Task)
-    assert task.get_name() == "[1]TestTask"
-    assert task in task_creator.tasks
-    task_creator.task_counter.new_task.assert_called_once_with(task_name)
+        task_name = "[72]task_to_cancel"
+        self.mock_task_counter.new_task.return_value = task_name
+        task = self.task_creator.create_task(sample_coro(), task_name)
+        await asyncio.sleep(0.1)  # Let the event loop run a bit
 
+        assert self.task_creator.cancel_task('task_to_cancel') is True
+        assert task not in self.task_creator.tasks
 
-class MockOperationType:
-    pass
+    def test_cancel_task_not_found(self):
+        assert self.task_creator.cancel_task("non_existent_task") is False
 
+    @pytest.mark.asyncio
+    async def test_create_task_with_duplicate_name(self):
+        async def sample_coro():
+            await asyncio.sleep(1)
+            return "done"
 
-def test_task_exists(task_creator):
-    """
-    Test checking if a task of the specified operation type exists.
-    """
-    operation_type = MockOperationType
+        task_name = "duplicate_task"
+        self.mock_task_counter.new_task.side_effect = [task_name, f"{task_name}_1"]
+        task1 = self.task_creator.create_task(sample_coro(), task_name)
+        task2 = self.task_creator.create_task(sample_coro(), task_name)
+        await asyncio.sleep(0.1)  # Let the event loop run a bit
 
-    # Simulate a running task of the specified type
-    task = MagicMock(spec=MockOperationType)
-    task.status = "running"
-    task_creator.tasks.add(task)
+        assert task1 in self.task_creator.tasks
+        assert task2 in self.task_creator.tasks
+        assert task1.get_name() == task_name
+        assert task2.get_name() == f"{task_name}_1"
 
-    task_exists = task_creator.task_exists(operation_type)
-    assert task_exists
+    @pytest.mark.asyncio
+    async def test_task_completion_removes_from_set(self):
+        async def sample_coro():
+            await asyncio.sleep(0.1)
+            return "done"
 
-    # Reset tasks and sequencer
-    task_creator.tasks.clear()
-    task_creator.sequencer.sequencer = []
+        task_name = "[21]completion_task"
+        self.mock_task_counter.new_task.return_value = task_name
+        task = self.task_creator.create_task(sample_coro(), task_name)
+        await task
+        await asyncio.sleep(0.1)  # Allow event loop to process task completion
 
-    # Simulate a task in the sequencer
-    operation_chain = MagicMock()
-    operation_chain.head.operation = MagicMock(spec=MockOperationType)
-    task_creator.sequencer.sequencer.append(operation_chain)
+        assert {task} not in self.task_creator.tasks
 
-    task_exists = task_creator.task_exists(operation_type)
-    assert task_exists
+    @pytest.mark.asyncio
+    async def test_logging_on_task_creation(self):
+        async def sample_coro():
+            await asyncio.sleep(1)
+            return "done"
 
+        task_name = "[52]logging_task"
+        self.mock_task_counter.new_task.return_value = task_name
+        self.task_creator.create_task(sample_coro(), task_name)
+        await asyncio.sleep(0.1)  # Let the event loop run a bit
 
-@pytest.mark.asyncio
-async def test_cancel_task(task_creator):
-    """
-    Test cancelling a task by its name.
-    """
-    async def dummy_coro():
-        await asyncio.sleep(0.1)
+        self.task_creator._logger.debug.assert_called_with(f"Task {task_name} created.")
 
-    task_name = "TestTask"
-    task_creator.task_counter.new_task.return_value = "[1]TestTask"
+    @pytest.mark.asyncio
+    async def test_logging_on_task_cancellation(self):
+        async def sample_coro():
+            await asyncio.sleep(1)
+            return "done"
 
-    task = task_creator.create_task(dummy_coro(), task_name)
+        task_name = "[51]logging_cancel_task"
+        self.mock_task_counter.new_task.return_value = task_name
+        task = self.task_creator.create_task(sample_coro(), task_name)
+        await asyncio.sleep(0.1)  # Let the event loop run a bit
 
-    # Ensure the task is created
-    assert task in task_creator.tasks
-
-    # Cancel the task
-    result = task_creator.cancel_task("[1]TestTask")
-    assert result is True
-    assert task not in task_creator.tasks
-
-    # Yield to the event loop to process the cancellation
-    await asyncio.sleep(0)
-    assert task.cancelled()
-
-    # Try to cancel a non-existent task
-    result = task_creator.cancel_task("[2]TestTask")
-    assert result is False
-    
+        self.task_creator.cancel_task('logging_cancel_task')
+        self.task_creator._logger.info.assert_called_with(f"Task logging_cancel_task cancelled.")

@@ -1,37 +1,56 @@
 """
-A module that defines the ConsoleOperation class, which is a subclass of the CustomOperation class.
+ConsoleMonitor Module
 
-The ConsoleOperation class is designed to handle user-input action from the console. It provides methods for
+The ConsoleMonitor class is designed to handle user-input action from the console. It provides methods for
 displaying a prompt for user input and processing the input action.
 
 Author: Lane
+Copyright: Lane
+Credits: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
 """
 import aioconsole
 import sys
-
 from research_analytics_suite.commands.UserInputProcessor import process_user_input
-from research_analytics_suite.operation_manager import BaseOperation
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
-class ConsoleOperation(BaseOperation):
+class ConsoleMonitor(BaseOperation):
     """
     A class used to represent a Console Operation in the Research Analytics Suite.
 
     This class provides methods for displaying a prompt for user input and processing the input data.
     """
+    name = "sys_ConsoleMonitor"
+    version = "0.0.1"
+    description = "Handles user input from the console."
+    category_id = -1
+    author = "Lane"
+    github = "lane-neuro"
+    email = "justlane@uw.edu"
+    required_inputs = {}
+    parent_operation = None
+    inheritance = []
+    is_loop = True
+    is_cpu_bound = False
+    parallel = True
+
     def __init__(self, *args, **kwargs):
         """
-        Initializes the ConsoleOperation with a prompt for user input and the action to be processed.
+        Initializes the ConsoleMonitor with a prompt for user input and the action to be processed.
 
         Args:
             prompt (str): A string that is displayed as a prompt for user input.
-            user_input_manager (UserInputManager): An instance of UserInputManager to process user input.
         """
+        self._prompt = kwargs.pop("prompt", "\n\t>>\t")
+
         from research_analytics_suite.commands import CommandRegistry
         self._command_registry = CommandRegistry()
-
-        self._prompt = "\n\t>>\t"
-        kwargs["name"] = "sys_ConsoleOperation"
 
         super().__init__(*args, **kwargs)
 
@@ -42,9 +61,6 @@ class ConsoleOperation(BaseOperation):
 
     async def execute(self) -> None:
         """Processes user input and sends it to the operation handler."""
-        self._status = "running"
-        self.add_log_entry(f"[RUN] {self._name}")
-
         while self.parallel and self.is_loop:  # Loop until a specific user input is received
             try:
                 if 'ipykernel' in sys.modules:
@@ -64,7 +80,7 @@ class ConsoleOperation(BaseOperation):
                 await process_user_input(user_input)
 
             except EOFError:
-                self.handle_error("EOFError: No input provided")
+                self.handle_error(Exception("EOFError: No input provided"))
                 break
             except UnicodeDecodeError as e:  # Catch specific exception
                 self.handle_error(e)

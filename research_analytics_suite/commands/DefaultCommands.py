@@ -71,8 +71,8 @@ async def resources() -> None:
     from research_analytics_suite.operation_manager import OperationControl
     for operation_list in OperationControl().sequencer.sequencer:
         operation_node = OperationControl().sequencer.get_head_operation_from_chain(operation_list)
-        from research_analytics_suite.operation_manager.operations.system import ResourceMonitorOperation
-        if isinstance(operation_node, ResourceMonitorOperation):
+        from research_analytics_suite.operation_manager.operations.system import ResourceMonitor
+        if isinstance(operation_node, ResourceMonitor):
             from research_analytics_suite.utils.CustomLogger import CustomLogger
             CustomLogger().info(operation_node.output_memory_usage())
 
@@ -92,7 +92,7 @@ async def tasks() -> None:
 async def sequencer() -> None:
     """Displays all operations in the sequencer."""
     from research_analytics_suite.operation_manager import OperationControl
-    for sequencer_chain in OperationControl().sequencer.sequencer:
+    for sequencer_chain in OperationControl().sequencer.sequencer if OperationControl().sequencer.sequencer else []:
         operation = sequencer_chain.head.operation
         from research_analytics_suite.utils.CustomLogger import CustomLogger
         CustomLogger().info(f"Operation: {operation.task.get_name()} - {operation.status}")

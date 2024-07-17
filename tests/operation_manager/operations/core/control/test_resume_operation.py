@@ -31,7 +31,7 @@ async def test_resume_operation_paused_with_child_operations():
     with patch('research_analytics_suite.operation_manager.operations.core.control.ResumeOperation'
                '.resume_child_operations',
                new=AsyncMock()) as mock_resume_children:
-        await resume_operation(operation, child_operations=True)
+        await resume_operation(operation, with_inherited=True)
 
         mock_resume_children.assert_awaited_once()
         operation.pause_event.set.assert_awaited_once()
@@ -72,10 +72,10 @@ async def test_resume_child_operations():
     child_operation_1.resume = AsyncMock()
     child_operation_2.resume = AsyncMock()
 
-    parent_operation.inheritance = {
-        "child1": child_operation_1,
-        "child2": child_operation_2
-    }
+    parent_operation.inheritance = [
+        child_operation_1,
+        child_operation_2
+    ]
 
     from research_analytics_suite.operation_manager.operations.core.control.ResumeOperation import \
         resume_child_operations

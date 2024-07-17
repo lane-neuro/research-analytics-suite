@@ -91,7 +91,7 @@ class MachineLearning:
         return None
 
     async def _evaluate_model(self):
-        await self.eval_operation.start()
+        await self.eval_operation.start_operation()
         await self.eval_operation.execute()
         return self.eval_operation.result
 

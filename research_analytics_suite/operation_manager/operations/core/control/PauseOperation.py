@@ -15,7 +15,7 @@ Status: Prototype
 import asyncio
 
 
-async def pause_operation(operation, child_operations=False):
+async def pause_operation(operation, child_operations=False) -> None:
     """
     Pause the operation and all child operations, if applicable.
     """
@@ -23,7 +23,7 @@ async def pause_operation(operation, child_operations=False):
         try:
             operation.is_ready = False
 
-            if child_operations and hasattr(operation, 'inheritance') and operation.inheritance is not None:
+            if child_operations and operation.inheritance:
                 await pause_child_operations(operation)
 
             await operation.pause_event.clear()
@@ -36,9 +36,9 @@ async def pause_operation(operation, child_operations=False):
         operation.add_log_entry(f"[PAUSE] {operation.name} - Already paused")
 
 
-async def pause_child_operations(operation):
+async def pause_child_operations(operation) -> None:
     """
     Pause all child operations.
     """
-    tasks = [op.pause(True) for op in operation.inheritance.values()]
+    tasks = [child.pause(True) for child in operation.inheritance]
     await asyncio.gather(*tasks)
