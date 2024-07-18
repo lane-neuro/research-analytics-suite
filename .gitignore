@@ -220,3 +220,4 @@ example.db
 identifier.sqlite
 tests/data_engine/memory/storage/example.db
 /tests/MagicMock/*
+/.idea
