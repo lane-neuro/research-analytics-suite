@@ -13,6 +13,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
@@ -91,6 +92,7 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         source ${{ matrix.venv-path }}/bin/activate
+        grep -v '^mkl' requirements.txt > requirements_filtered.txt
         python -m pip install --upgrade pip
         pip install pytest pytest-asyncio
         pip install -r requirements_filtered.txt
