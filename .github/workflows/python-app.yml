@@ -37,9 +37,17 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
          ${{ runner.os }}-pip-
-    
+
+    - name: Install HDF5 on macOS
+      if: runner.os == 'macOS'
+      run: |
+        brew install hdf5
+
     - name: Install dependencies
       run: |
+        if [[ "${{ runner.os }}" == 'macOS' ]]; then
+          export HDF5_DIR=$(brew --prefix hdf5)
+        fi
         pip install -r requirements.txt
 
     - name: Test with pytest
