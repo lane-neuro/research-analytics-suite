@@ -23,10 +23,6 @@ importlib_resources
 jupyter_core
 keras
 matplotlib
-mkl
-mkl-service
-mkl_fft
-mkl_random
 nest-asyncio
 numexpr
 numpy
