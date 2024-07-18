@@ -30,28 +30,49 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-venv-
 
-    - name: Set up virtual environment
+    - name: Set up virtual environment on Ubuntu
+      if: runner.os == 'Linux'
       run: |
         python -m venv ${{ inputs.venv-path }}
-        if [ "${{ inputs.os }}" == "ubuntu-latest" ] || [ "${{ inputs.os }}" == "macos-latest" ]; then
-          source ${{ inputs.venv-path }}/bin/activate
-        else
-          .${{ inputs.venv-path }}\Scripts\Activate.ps1
-        fi
+        source ${{ inputs.venv-path }}/bin/activate
         python -m pip install --upgrade pip
         pip install pytest pytest-asyncio
-        if [ "${{ inputs.os }}" == "macos-latest" ]; then
-          brew install hdf5
-          grep -v '^mkl' requirements.txt > requirements_filtered.txt
-          pip install -r requirements_filtered.txt
-        else
-          pip install -r requirements.txt
+        pip install -r requirements.txt
 
-    - name: Test with pytest
+    - name: Set up virtual environment on macOS
+      if: runner.os == 'macOS'
       run: |
-        if [ "${{ inputs.os }}" == "ubuntu-latest" ] || [ "${{ inputs.os }}" == "macos-latest" ]; then
-          source ${{ inputs.venv-path }}/bin/activate
-        else
-          .${{ inputs.venv-path }}\Scripts\Activate.ps1
-        fi
+        python -m venv ${{ inputs.venv-path }}
+        source ${{ inputs.venv-path }}/bin/activate
+        brew install hdf5
+        grep -v '^mkl' requirements.txt > requirements_filtered.txt
+        python -m pip install --upgrade pip
+        pip install pytest pytest-asyncio
+        pip install -r requirements_filtered.txt
+
+    - name: Set up virtual environment on Windows
+      if: runner.os == 'Windows'
+      run: |
+        python -m venv ${{ inputs.venv-path }}
+        .${{ inputs.venv-path }}\Scripts\Activate.ps1
+        python -m pip install --upgrade pip
+        pip install pytest pytest-asyncio
+        pip install -r requirements.txt
+
+    - name: Test with pytest on Ubuntu
+      if: runner.os == 'Linux'
+      run: |
+        source ${{ inputs.venv-path }}/bin/activate
+        pytest --log-level=DEBUG
+
+    - name: Test with pytest on macOS
+      if: runner.os == 'macOS'
+      run: |
+        source ${{ inputs.venv-path }}/bin/activate
+        pytest --log-level=DEBUG
+
+    - name: Test with pytest on Windows
+      if: runner.os == 'Windows'
+      run: |
+        .${{ inputs.venv-path }}\Scripts\Activate.ps1
         pytest --log-level=DEBUG
