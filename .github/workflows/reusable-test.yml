@@ -1,0 +1,57 @@
+name: Reusable Test Workflow
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      venv-path:
+        required: true
+        type: string
+
+jobs:
+  setup-and-test:
+    runs-on: ${{ inputs.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - uses: actions/cache@v3
+      id: venv-cache
+      with:
+        path: ${{ inputs.venv-path }}
+        key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-venv-
+
+    - name: Set up virtual environment
+      run: |
+        python -m venv ${{ inputs.venv-path }}
+        if [ "${{ inputs.os }}" == "ubuntu-latest" ] || [ "${{ inputs.os }}" == "macos-latest" ]; then
+          source ${{ inputs.venv-path }}/bin/activate
+        else
+          ${{ inputs.venv-path }}\Scripts\Activate.ps1
+        fi
+        python -m pip install --upgrade pip
+        pip install pytest pytest-asyncio
+        if [ "${{ inputs.os }}" == "macos-latest" ]; then
+          brew install hdf5
+          grep -v '^mkl' requirements.txt > requirements_filtered.txt
+          pip install -r requirements_filtered.txt
+        else
+          pip install -r requirements.txt
+
+    - name: Test with pytest
+      run: |
+        if [ "${{ inputs.os }}" == "ubuntu-latest" ] || [ "${{ inputs.os }}" == "macos-latest" ]; then
+          source ${{ inputs.venv-path }}/bin/activate
+        else
+          ${{ inputs.venv-path }}\Scripts\Activate.ps1
+        fi
+        pytest --log-level=DEBUG
