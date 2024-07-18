@@ -1,4 +1,4 @@
-name: Research Analytics Suite - Test Workflow
+name: Research Analytics Suite - FULL Test Workflow
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
         python-version: [3.11]
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
   setup-python:
     needs: [build]

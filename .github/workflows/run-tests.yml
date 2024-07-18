@@ -10,7 +10,6 @@ on:
 jobs:
   run-tests:
     runs-on: ubuntu-latest
-
     steps:
     - name: Run ALL Tests
       env:
