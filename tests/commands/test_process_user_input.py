@@ -177,5 +177,5 @@ class TestProcessUserInput:
         user_input = 12345  # Non-string input
         runtime_id = "runtime_123"
 
-        with pytest.raises(AttributeError):
-            await process_user_input(user_input, runtime_id)
+        response = await process_user_input(user_input, runtime_id)
+        assert response is None

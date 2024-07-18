@@ -61,7 +61,7 @@ class ConsoleMonitor(BaseOperation):
 
     async def execute(self) -> None:
         """Processes user input and sends it to the operation handler."""
-        while self.parallel and self.is_loop:  # Loop until a specific user input is received
+        while self.is_loop:  # Loop until a specific user input is received
             try:
                 if 'ipykernel' in sys.modules:
                     # Jupyter Notebook environment

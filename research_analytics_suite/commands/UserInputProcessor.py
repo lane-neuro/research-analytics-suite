@@ -36,7 +36,9 @@ async def process_user_input(user_input, runtime_id=None):
     from research_analytics_suite.commands import CommandRegistry
 
     if not isinstance(user_input, str):
-        raise AttributeError("user_input must be a string")
+        CustomLogger().error(Exception(f"Error: Unknown command '{user_input}'. Type _help to see available commands"),
+                             "UserInputProcessor")
+        return None
 
     original_input = user_input
     user_input = user_input.strip()
