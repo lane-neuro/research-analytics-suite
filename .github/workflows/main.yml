@@ -7,9 +7,9 @@ jobs:
     uses: ./.github/workflows/setup-python.yml
 
   install-dependencies:
-    needs: setup-python
+    needs: [setup-python]
     uses: ./.github/workflows/install-dependencies.yml
 
   run-tests:
-    needs: install-dependencies
+    needs: [install-dependencies]
     uses: ./.github/workflows/run-tests.yml
