@@ -61,6 +61,8 @@ class Mapped2DSpace(GUIBase):
         Returns:
             tuple: The UUIDs of the node, input attribute, and output attribute.
         """
+        from research_analytics_suite.operation_manager import BaseOperation
+        _operation = None
         node_id = dpg.generate_uuid()
         with dpg.node(tag=node_id, parent=self._node_editor_id, label=operation_attributes.name, pos=pos):
             input_id = dpg.generate_uuid()
@@ -73,7 +75,8 @@ class Mapped2DSpace(GUIBase):
                 with dpg.group(tag=f"{node_id}_name_group"):
                     _operation_module = UpdatedOperationModule(operation_attributes, 200, 500,
                                                                node_id)
-                    asyncio.run(_operation_module.initialize_gui())
+                    _operation = _operation_module.operation
+                    asyncio.run(_operation.initialize_operation())
                     _operation_module.draw_upper_region(parent=f"{node_id}_name_group", width=200)
 
             with dpg.node_attribute(tag=f"{node_id}_details", attribute_type=dpg.mvNode_Attr_Output):
