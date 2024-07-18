@@ -1,0 +1,19 @@
+name: Run Tests
+
+on:
+  workflow_call:
+    inputs:
+      log-level:
+        required: true
+        type: string
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Run ALL Tests
+      env:
+        PYTHON_LOG_LEVEL: ${{ inputs.log-level }}
+      run: |
+        pytest --log-level=${{ inputs.log-level }}
