@@ -2,10 +2,6 @@ name: Install Dependencies
 
 on:
   workflow_call:
-    inputs:
-      python-version:
-        required: true
-        type: string
 
 jobs:
   install-dependencies:
