@@ -40,16 +40,19 @@ jobs:
 
     - name: Install HDF5 on macOS
       if: runner.os == 'macOS'
-      run: |
-        brew install hdf5
+      run: brew install hdf5
 
-    - name: Install dependencies
+    - name: Prepare requirements for macOS
+      if: runner.os == 'macOS'
       run: |
-        if [[ "${{ runner.os }}" == 'macOS' ]]; then
-          export HDF5_DIR=$(brew --prefix hdf5)
-        fi
-        pip install -r requirements.txt
+        export HDF5_DIR=$(brew --prefix hdf5)
+        grep -v '^mkl' requirements.txt > requirements_filtered.txt
+        pip install numpy scipy
+        pip install -r requirements_filtered.txt
+
+    - name: Install dependencies on other OS
+      if: runner.os != 'macOS'
+      run: pip install -r requirements.txt
 
     - name: Test with pytest
-      run: |
-        pytest --log-level=DEBUG
+      run: pytest --log-level=DEBUG
