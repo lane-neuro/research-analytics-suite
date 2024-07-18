@@ -51,14 +51,12 @@ class OperationLifecycleManager:
                 current_node = operation_chain.head
                 while current_node is not None:
                     operation = current_node.operation
-                    if operation.status == "idle":
-                        await operation.initialize_operation()
+                    if operation.status == "idle" and operation.initialized:
                         await operation.start_operation()
                     current_node = current_node.next_node
             else:
                 operation = operation_chain.operation
-                if operation.status == "idle":
-                    await operation.initialize_operation()
+                if operation.status == "idle" and operation.initialized:
                     await operation.start_operation()
 
     @command
@@ -95,4 +93,4 @@ class OperationLifecycleManager:
             await asyncio.gather(*tasks)
         except Exception as e:  # Catch all exceptions, the main loop has critically failed and the suite must exit
             self._logger.error(e, self.__class__.__name__)
-            raise e
+            raise SystemExit

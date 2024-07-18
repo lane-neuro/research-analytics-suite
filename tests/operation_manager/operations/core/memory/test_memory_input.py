@@ -9,7 +9,7 @@ def memory_input():
     mem_input = MemoryInput(name="TestMemoryInput")
     slot1 = MemorySlot(name="slot1", data={'values': (list, [1, 2, 3, 4, 5])}, memory_id="slot1", operation_required=True)
     slot2 = MemorySlot(name="slot2", data={'values': (list, [None, 2, None, 4, 5])}, memory_id="slot2", operation_required=False)
-    mem_input.slots = [slot1, slot2]
+    mem_input._slots = [slot1, slot2]
     return mem_input
 
 

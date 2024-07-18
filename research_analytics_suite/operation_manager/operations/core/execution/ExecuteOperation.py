@@ -21,7 +21,7 @@ async def execute_operation(operation):
 
         await operation.validate_memory_outputs()
         if operation.parent_operation:
-            for slot in operation.memory_outputs.slots:
+            for slot in operation.memory_outputs.get_slots():
                 await operation.parent_operation.add_memory_input_slot(slot)
 
         if not operation.is_loop:
@@ -119,6 +119,6 @@ async def execute_action(operation):
                     )
                     await operation.add_memory_output_slot(new_slot)
 
-        operation.add_log_entry(f"[RESULT] {operation.memory_outputs.list_slots()}")
+        operation.add_log_entry(f"[RESULT] {operation.memory_outputs.list_slots}")
     except Exception as e:
         operation.handle_error(e)

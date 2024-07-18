@@ -118,8 +118,8 @@ class CollectionViewDialog(GUIBase):
 
                 with dpg.group(tag=collection_tag, horizontal=False):
                     dpg.add_text(collection.name, parent=collection_tag)
-                    if collection.list_slots():
-                        for slot in collection.list_slots():
+                    if collection.list_slots:
+                        for slot in collection.list_slots:
                             from research_analytics_suite.gui import MemorySlotPreview
                             slot_preview = MemorySlotPreview(parent=collection_tag, slot=slot, width=200, height=100)
                             slot_preview.draw()
@@ -167,8 +167,8 @@ class CollectionViewDialog(GUIBase):
 
     async def update_slots_in_gui(self, collection_id, collection):
         """Updates the slots and their variables in the GUI."""
-        if collection.list_slots():
-            for slot in collection.list_slots():
+        if collection.list_slots:
+            for slot in collection.list_slots:
                 if slot is not None:
                     await self.display_slot_in_gui(collection_id, slot)
 
@@ -268,8 +268,8 @@ class CollectionViewDialog(GUIBase):
             slot_items = []
             slots = self._memory_manager.get_collection_by_display_name(
                 dpg.get_value("collection_id_input"))
-            if slots.list_slots():
-                for slot in slots.list_slots():
+            if slots.list_slots:
+                for slot in slots.list_slots:
                     slot_items.append(f"{slot.name}")
 
             dpg.configure_item("memory_slot_id_input", items=slot_items,

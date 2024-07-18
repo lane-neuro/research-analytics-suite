@@ -79,7 +79,7 @@ async def load_operation_group(file_path: str, operation_group: dict, iterate_ch
 
     async def load_and_process_operation(path, group):
         if not os.path.exists(path):
-            raise FileNotFoundError(f"File not found: {path}")
+            CustomLogger().error(FileNotFoundError(f"File not found: {path}"), 'FileDiskOperations')
 
         operation = await load_from_disk(path, group)
         processed_operations.add(operation.runtime_id)
@@ -94,7 +94,8 @@ async def load_operation_group(file_path: str, operation_group: dict, iterate_ch
                     operation.parent_operation = parent_operation
                     group[parent_operation.runtime_id] = parent_operation
                 else:
-                    raise FileNotFoundError(f"Parent operation file not found: {parent_file_path}")
+                    operation.parent_operation = None
+                    CustomLogger().error(FileNotFoundError(f"Parent operation file not found: {parent_file_path}"))
             else:
                 for op in group.values():
                     if op.unique_id == parent_id:
@@ -115,13 +116,15 @@ async def load_operation_group(file_path: str, operation_group: dict, iterate_ch
                                 await operation.link_child_operation(child_operation)
                                 group[child_operation.runtime_id] = child_operation
                             else:
-                                raise FileNotFoundError(f"Child operation file not found: {child_file_path}")
+                                CustomLogger().error(
+                                    FileNotFoundError(f"Child operation file not found: {child_file_path}"),
+                                    'FileDiskOperations')
 
         return operation
 
     file_dir = os.path.dirname(file_path)
     if not os.path.exists(file_dir):
-        raise FileNotFoundError(f"Directory not found: {file_dir}")
+        CustomLogger().error(FileNotFoundError(f"Directory not found: {file_dir}"), 'FileDiskOperations')
 
     root_operation = await load_and_process_operation(file_path, operation_group)
     operation_group[root_operation.runtime_id] = root_operation

@@ -94,6 +94,10 @@ class BaseOperation(ABC):
             self._operation_control = OperationControl()
             self._pause_event = asyncio.Event()
             self._pause_event.set()
+
+            self.memory_inputs = None
+            self.memory_outputs = None
+
             self._gui_module = None
 
             self._GENERATED_ID = uuid.uuid4()
@@ -105,19 +109,16 @@ class BaseOperation(ABC):
 
             self.operation_logs = []
 
-            from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import (
+            from research_analytics_suite.operation_manager.operations.core.OperationAttributes import (
                 OperationAttributes)
 
             if len(args) == 0 or not args:
+                if kwargs.get('action', None) is None:
+                    kwargs['action'] = self.execute
                 self._attributes = OperationAttributes(*args, **kwargs)
                 asyncio.run(self._attributes.initialize())
             elif isinstance(args[0], OperationAttributes) and hasattr(args[0], 'unique_id'):
                 self._attributes = args[0]
-
-            from research_analytics_suite.operation_manager.operations.core.memory.MemoryInput import MemoryInput
-            from research_analytics_suite.operation_manager.operations.core.memory.MemoryOutput import MemoryOutput
-            self.memory_inputs = MemoryInput(name=f"{self.name}_input")
-            self.memory_outputs = MemoryOutput(name=f"{self.name}_output")
 
             self._initialized = False
 
@@ -126,6 +127,12 @@ class BaseOperation(ABC):
         if self._initialized:
             return
         await self._initialize_child_operations()
+
+        from research_analytics_suite.operation_manager.operations.core.memory.MemoryInput import MemoryInput
+        from research_analytics_suite.operation_manager.operations.core.memory.MemoryOutput import MemoryOutput
+        self.memory_inputs = MemoryInput(name=f"{self.name}_input")
+        self.memory_outputs = MemoryOutput(name=f"{self.name}_output")
+
         self.is_ready = False
         self.status = "idle"
         self.add_log_entry(f"[INIT] {self._attributes.name}")
@@ -389,11 +396,6 @@ class BaseOperation(ABC):
         return await from_dict(data, file_dir, parent_operation)
 
     @property
-    def config(self):
-        """Gets the configuration instance."""
-        return self._config
-
-    @property
     def pause_event(self):
         """Gets the pause event."""
         return self._pause_event
@@ -407,7 +409,7 @@ class BaseOperation(ABC):
     def attributes(self):
         """Gets the operation attributes."""
         if not hasattr(self, '_attributes'):
-            from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import (
+            from research_analytics_suite.operation_manager.operations.core.OperationAttributes import (
                 OperationAttributes)
             self._attributes = OperationAttributes()
 
@@ -688,12 +690,10 @@ class BaseOperation(ABC):
         Args:
             message (Union[str, Exception]): The message to log.
         """
+        self.operation_logs.insert(0, message)
+
         from research_analytics_suite.utils import CustomLogger
-        if self._status == "error" and isinstance(message, Exception):
-            CustomLogger().error(message, self.name)
-        else:
-            self.operation_logs.insert(0, message)
-            CustomLogger().debug(f"[{self.name}] {message}")
+        CustomLogger().debug(f"[{self.name}] {message}")
 
     def handle_error(self, e: Exception):
         """Handle an error that occurred during the operation.
@@ -701,10 +701,11 @@ class BaseOperation(ABC):
         Args:
             e (Exception): The exception that occurred.
         """
-        self._status = "error"
         from research_analytics_suite.utils import CustomLogger
         CustomLogger().error(e, self.name)
+
         self.add_log_entry(f"Error: {str(e)}")
+        self._status = "error"
 
     def cleanup_operation(self):
         """Clean up any resources or perform any necessary teardown after the operation has completed or been stopped.

@@ -61,7 +61,7 @@ def get_function_body(func):
     body_lines = [ast.unparse(node) for node in function_body]
 
     # Join the lines of the function body
-    body_code = "\n\t\t".join(body_lines)
+    body_code = "\n".join(body_lines)
     return body_code
 
 

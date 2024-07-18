@@ -40,18 +40,24 @@ def action_serialized(action) -> str:
         return repr(action)
 
 
-
 async def prepare_action_for_exec(operation):
     """
     Prepare the action for execution.
     """
     _action = None
     try:
+        if operation.action is None:
+            if callable(operation.execute):
+                operation.action = operation.execute
+            else:
+                from research_analytics_suite.utils import CustomLogger
+                CustomLogger().error(TypeError("operation.execute is not callable"), operation)
+
         if isinstance(operation.action, str):
             code = operation.action
-            if operation.memory_inputs and operation.memory_inputs.list_slots():
-                _action = await _execute_code_action(code, operation.memory_inputs.list_slots())
-                operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs.list_slots()}")
+            if operation.memory_inputs and operation.memory_inputs.list_slots:
+                _action = await _execute_code_action(code, operation.memory_inputs.list_slots)
+                operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs.list_slots}")
             else:
                 _action = await _execute_code_action(code, [])
             operation.add_log_entry(f"[CODE] {code}")
@@ -62,9 +68,9 @@ async def prepare_action_for_exec(operation):
                 _action = operation.action
             else:
                 t_action = operation.action
-                operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs.list_slots()}")
+                operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs.list_slots}")
                 _action = _execute_callable_action(t_action=t_action,
-                                                   memory_inputs=operation.memory_inputs.list_slots() if
+                                                   memory_inputs=operation.memory_inputs.list_slots if
                                                    operation.memory_inputs else [])
         operation.action_callable = _action
     except Exception as e:

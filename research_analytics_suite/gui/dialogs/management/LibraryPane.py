@@ -16,7 +16,7 @@ import asyncio
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.core import BaseOperation
-from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
+from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
 from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
 

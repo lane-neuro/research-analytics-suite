@@ -81,14 +81,14 @@ class TestMemoryStorage:
     async def test_add_and_remove_slots_in_collection(self, storage, collection, slot):
         await storage.add_collection(collection)
         collection.add_slot(slot)
-        assert slot in collection.slots
+        assert slot in collection.list_slots
 
         await collection.remove_slot(slot.memory_id)
-        assert slot not in collection.slots
+        assert slot not in collection.list_slots
 
     @pytest.mark.asyncio
     async def test_clear_slots_in_collection(self, storage, collection, slot):
         await storage.add_collection(collection)
         collection.add_slot(slot)
         await collection.clear_slots()
-        assert len(collection.slots) == 0
+        assert len(collection.list_slots) == 0

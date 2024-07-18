@@ -18,7 +18,6 @@ Status:         Example
 import statistics
 from typing import List
 from research_analytics_suite.operation_manager import BaseOperation
-from research_analytics_suite.operation_manager.operations.core.execution import action_serialized
 
 
 class ExampleOperation(BaseOperation):
@@ -59,33 +58,11 @@ class ExampleOperation(BaseOperation):
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        # Update kwargs with attributes
-        kwargs.update({
-            'name': self.name,
-            'version': self.version,
-            'description': self.description,
-            'category_id': self.category_id,
-            'author': self.author,
-            'github': self.github,
-            'email': self.email,
-            'unique_id': self.unique_id,
-            'required_inputs': self.required_inputs,
-            # 'output_parameters': self.output_parameters,
-            'parent_operation': self.parent_operation,
-            'inheritance': self.inheritance,
-            'is_loop': self.is_loop,
-            'is_cpu_bound': self.is_cpu_bound,
-            'parallel': self.parallel,
-        })
-
         # Don't forget to initialize any custom attributes/input parameters
         self.numbers = numbers
 
         # Call the parent class constructor
         super().__init__(*args, **kwargs)
-
-        # Serialize the action for execution
-        self.action = action_serialized(self.execute)
 
     async def initialize_operation(self):
         """

@@ -13,7 +13,7 @@ Status: Prototype
 import asyncio
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.gui.GUIBase import GUIBase
-from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
+from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
 
 
 class Mapped2DSpace(GUIBase):
@@ -73,6 +73,7 @@ class Mapped2DSpace(GUIBase):
                 with dpg.group(tag=f"{node_id}_name_group"):
                     _operation_module = UpdatedOperationModule(operation_attributes, 200, 500,
                                                                node_id)
+                    asyncio.run(_operation_module.initialize_gui())
                     _operation_module.draw_upper_region(parent=f"{node_id}_name_group", width=200)
 
             with dpg.node_attribute(tag=f"{node_id}_details", attribute_type=dpg.mvNode_Attr_Output):

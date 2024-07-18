@@ -2,14 +2,13 @@
 from unittest.mock import MagicMock
 
 import pytest
-import asyncio
 
 
 class TestOperationAttributes:
 
     @pytest.fixture(autouse=True)
     def setup_method(self):
-        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+        from research_analytics_suite.operation_manager.operations.core.OperationAttributes import \
             OperationAttributes
         self.op_attr = OperationAttributes(
             name='TestOperation',
@@ -75,7 +74,7 @@ class TestOperationAttributes:
 
     @pytest.mark.asyncio
     async def test_invalid_data_types(self):
-        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+        from research_analytics_suite.operation_manager.operations.core.OperationAttributes import \
             OperationAttributes
         op_attr_invalid = OperationAttributes(
             name=123,
@@ -116,7 +115,7 @@ class TestOperationAttributes:
 
     @pytest.mark.asyncio
     async def test_edge_case_empty_fields(self):
-        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+        from research_analytics_suite.operation_manager.operations.core.OperationAttributes import \
             OperationAttributes
         op_attr_empty = OperationAttributes(
             name='',
@@ -156,7 +155,7 @@ class TestOperationAttributes:
 
     @pytest.mark.asyncio
     async def test_partial_initialization(self):
-        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+        from research_analytics_suite.operation_manager.operations.core.OperationAttributes import \
             OperationAttributes
         op_attr_partial = OperationAttributes(
             name='PartialTest',
@@ -196,7 +195,7 @@ class TestOperationAttributes:
 
     @pytest.mark.asyncio
     async def test_missing_required_inputs(self):
-        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+        from research_analytics_suite.operation_manager.operations.core.OperationAttributes import \
             OperationAttributes
         op_attr_no_inputs = OperationAttributes(
             name='NoInputs',

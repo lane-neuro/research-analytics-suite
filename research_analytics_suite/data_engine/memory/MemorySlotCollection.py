@@ -11,8 +11,8 @@ from typing import List, Optional
 import json
 import uuid
 
-from .MemorySlot import MemorySlot
-from ...commands import command, link_class_commands
+from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
+from research_analytics_suite.commands import command, link_class_commands
 
 
 @link_class_commands
@@ -23,13 +23,12 @@ class MemorySlotCollection(ABC):
     Properties:
         collection_id (str): A unique identifier for the collection.
         name (str): A name for the collection.
-        slots (List[MemorySlot]): A list of memory slots.
+        list_slots -> List[MemorySlot]: List all memory slots.
 
     Methods:
         add_slot(slot: MemorySlot): Add a memory slot to the collection.
         remove_slot(memory_id: str): Remove a memory slot from the collection by its ID.
         get_slot(memory_id: str) -> Optional[MemorySlot]: Retrieve a memory slot by its ID.
-        list_slots() -> List[MemorySlot]: List all memory slots.
         clear_slots(): Clear all memory slots.
         update_slot(slot: MemorySlot): Update an existing memory slot.
         slot_exists(memory_id: str) -> bool: Check if a slot exists by its ID.
@@ -43,13 +42,23 @@ class MemorySlotCollection(ABC):
         remove_slots(memory_ids: List[str]): Remove multiple slots at once by their IDs.
     """
     def __init__(self, name: str = None):
+        """
+        Initialize the collection with a name.
+
+        Args:
+            name (str): The name of the collection.
+        """
+
         if name is None or name == "" or not isinstance(name, str):
             self._name = f"Collection - {uuid.uuid4().hex[:4]}"
         else:
             self._name = name
 
         self.collection_id = str(uuid.uuid4().hex)  # Generate a unique identifier for the collection
-        self.slots: List[MemorySlot] = []
+        self._slots: List[MemorySlot] = []
+
+        from research_analytics_suite.data_engine import MemoryManager
+        MemoryManager().add_collection(self)
 
     @property
     def display_name(self) -> str:
@@ -68,17 +77,18 @@ class MemorySlotCollection(ABC):
             raise ValueError("name must be a string")
         self._name = value
 
+    @property
     @command
-    def list_slots(self) -> Optional[list[MemorySlot]]:
+    def list_slots(self) -> list[MemorySlot]:
         """List all memory slots."""
-        if len(self.slots) > 0:
-            return self.slots
-        return None
+        if isinstance(self._slots, list) and len(self._slots) > 0:
+            return self._slots
+        return []
 
     @command
     def add_slot(self, slot: MemorySlot):
         """Add a memory slot to the collection."""
-        self.slots.append(slot)
+        self._slots.append(slot)
 
     @command
     def new_slot_with_data(self, data: dict) -> MemorySlot:
@@ -91,12 +101,12 @@ class MemorySlotCollection(ABC):
     @command
     async def remove_slot(self, memory_id: str):
         """Remove a memory slot from the collection by its ID."""
-        self.slots = [slot for slot in self.slots if slot.memory_id != memory_id]
+        self._slots = [slot for slot in self._slots if slot.memory_id != memory_id]
 
     @command
     def get_slot(self, memory_id: str) -> Optional[MemorySlot]:
         """Retrieve a memory slot by its ID."""
-        for slot in self.slots:
+        for slot in self._slots:
             if slot.memory_id == memory_id:
                 return slot
         return None
@@ -110,28 +120,28 @@ class MemorySlotCollection(ABC):
     @command
     async def clear_slots(self):
         """Clear all memory slots."""
-        self.slots.clear()
+        self._slots.clear()
 
     @command
     async def update_slot(self, slot: MemorySlot):
         """Update an existing memory slot."""
-        for i, s in enumerate(self.slots):
+        for i, s in enumerate(self._slots):
             if s.memory_id == slot.memory_id:
-                self.slots[i] = slot
+                self._slots[i] = slot
                 return
         raise ValueError(f"No slot found with memory_id: {slot.memory_id}")
 
     @command
     async def slot_exists(self, memory_id: str) -> bool:
         """Check if a slot exists by its ID."""
-        return any(slot.memory_id == memory_id for slot in self.slots)
+        return any(slot.memory_id == memory_id for slot in self._slots)
 
     async def to_dict(self) -> dict:
         """Convert the collection to a dictionary."""
         return {
             'collection_id': self.collection_id,
             'name': self.name,
-            'slots': [await slot.to_dict() for slot in self.slots]
+            'slots': [await slot.to_dict() for slot in self._slots]
         }
 
     @staticmethod
@@ -159,19 +169,22 @@ class MemorySlotCollection(ABC):
     @command
     def filter_slots(self, operation_required: bool) -> List[MemorySlot]:
         """Filter slots based on operation_required."""
-        return [slot for slot in self.slots if slot.operation_required == operation_required]
+        return [slot for slot in self._slots if slot.operation_required == operation_required]
 
     @command
     def find_slots_by_name(self, name: str) -> List[MemorySlot]:
         """Find slots by name."""
-        return [slot for slot in self.slots if slot.name == name]
+        return [slot for slot in self._slots if slot.name == name]
 
     @command
     def add_slots(self, slots: List[MemorySlot]):
         """Add multiple slots at once."""
-        self.slots.extend(slots)
+        if self._slots:
+            self._slots.extend(slots)
+        else:
+            self._slots = slots
 
     @command
     def remove_slots(self, memory_ids: List[str]):
         """Remove multiple slots at once by their IDs."""
-        self.slots = [slot for slot in self.slots if slot.memory_id not in memory_ids]
+        self._slots = [slot for slot in self._slots if slot.memory_id not in memory_ids]

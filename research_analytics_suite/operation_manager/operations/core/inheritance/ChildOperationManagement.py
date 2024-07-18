@@ -28,10 +28,10 @@ async def add_child_operation(operation, child_operation) -> None:
         child_operation: The child operation to be added.
     """
     from research_analytics_suite.operation_manager.operations.core import BaseOperation
+    from research_analytics_suite.utils import Config
 
     if isinstance(child_operation, dict):
-        _file_dir = os.path.join(operation.config.BASE_DIR, operation.config.WORKSPACE_NAME,
-                                 operation.config.WORKSPACE_OPERATIONS_DIR)
+        _file_dir = os.path.join(Config().BASE_DIR, Config().WORKSPACE_NAME, Config().WORKSPACE_OPERATIONS_DIR)
         child_operation = await BaseOperation.from_dict(data=child_operation, parent_operation=operation,
                                                         file_dir=_file_dir)
 

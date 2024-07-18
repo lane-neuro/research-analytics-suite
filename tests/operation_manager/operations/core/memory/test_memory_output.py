@@ -29,7 +29,7 @@ def test_initialization(memory_output):
 @pytest.mark.asyncio
 async def test_aggregate_results(memory_output, memory_slot):
     """Test the aggregate_results method."""
-    memory_output.slots = [memory_slot]
+    memory_output._slots = [memory_slot]
     result = await memory_output.aggregate_results()
     expected_result = {'values': [0.1, 0.5, 0.9]}
     assert result == expected_result

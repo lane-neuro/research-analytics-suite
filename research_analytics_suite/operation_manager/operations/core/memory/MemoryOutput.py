@@ -26,7 +26,7 @@ class MemoryOutput(MemorySlotCollection):
     async def aggregate_results(self) -> dict:
         """Aggregate results from all output slots."""
         aggregated_results = dict()
-        for slot in self.slots:
+        for slot in self.list_slots:
             aggregated_results.update(slot.data)
         return aggregated_results
 

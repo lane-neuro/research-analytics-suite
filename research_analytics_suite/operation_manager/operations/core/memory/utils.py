@@ -1,9 +1,8 @@
 import ast
 import inspect
-from types import ModuleType
 from typing import Optional
 
-from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
+from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
 from research_analytics_suite.operation_manager.operations.core.workspace import load_from_disk
 from research_analytics_suite.utils import CustomLogger
 
@@ -25,6 +24,8 @@ def translate_item(item):
         return item.id
     elif isinstance(item, ast.Attribute):
         return item.attr
+    elif isinstance(item, ast.Call):
+        return item.func
     return None
 
 
@@ -100,6 +101,11 @@ async def get_attributes_from_module(module) -> OperationAttributes:
                         except AttributeError:
                             CustomLogger().error(AttributeError(f"Invalid attribute: {prop_name}"),
                                                  OperationAttributes.__name__)
+    if _op_props.action is None:
+        if callable(module.execute):
+            _op_props.action = module.execute
+        else:
+            CustomLogger().error(TypeError("operation.execute is not callable"), _op_props.__class__.__name__)
 
     return _op_props
 

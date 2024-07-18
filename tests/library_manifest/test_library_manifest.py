@@ -46,7 +46,7 @@ class TestLibraryManifest:
         assert self.library_manifest._categories[9999].name == "Test Category"
 
     def test_add_operation_from_attributes(self):
-        from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import \
+        from research_analytics_suite.operation_manager.operations.core.OperationAttributes import \
             OperationAttributes
         operation_attributes = mock.MagicMock(spec=OperationAttributes)
         operation_attributes.category_id = 9999
@@ -79,7 +79,7 @@ class TestLibraryManifest:
         with mock.patch('os.path.exists', return_value=True):
             with mock.patch('os.listdir', return_value=['mock_operation.json']):
                 with mock.patch('builtins.open', mock.mock_open(read_data=mock_operation_json)):
-                    from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
+                    from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
                     mock_get_attributes_from_disk = mock.AsyncMock(
                         return_value=mock.MagicMock(spec=OperationAttributes)
                     )

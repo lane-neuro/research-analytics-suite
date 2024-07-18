@@ -17,7 +17,7 @@ import json
 import os
 import aiofiles
 from research_analytics_suite.commands import command
-from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
+from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
 from research_analytics_suite.utils import Config
 
 

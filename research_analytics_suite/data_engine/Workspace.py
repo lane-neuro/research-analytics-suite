@@ -358,8 +358,8 @@ class Workspace:
                                        self.__class__.__name__)
                     return
                 else:
-                    if collection.list_slots():
-                        for slot in collection.list_slots():
+                    if collection.list_slots:
+                        for slot in collection.list_slots:
                             if await slot.has_key(name):
                                 return await slot.get_data_by_key(name)
                     else:
@@ -389,8 +389,8 @@ class Workspace:
                                        self.__class__.__name__)
                     return
                 else:
-                    if collection.list_slots():
-                        for slot in collection.list_slots():
+                    if collection.list_slots:
+                        for slot in collection.list_slots:
                             if await slot.has_key(name):
                                 await slot.remove_data_by_key(name)
                                 return

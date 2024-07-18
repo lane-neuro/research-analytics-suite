@@ -196,8 +196,8 @@ class OperationAttributes:
         return f"{self.github}_{self.name}_{self.version}"
 
     @property
-    def action(self) -> any:
-        return self._action if self._action else None
+    def action(self):
+        return self._action
 
     @action.setter
     def action(self, value):

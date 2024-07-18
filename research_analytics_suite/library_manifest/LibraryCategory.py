@@ -17,7 +17,7 @@ from __future__ import annotations
 import asyncio
 
 from research_analytics_suite.commands import command, link_class_commands
-from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
+from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
 
 
 @link_class_commands

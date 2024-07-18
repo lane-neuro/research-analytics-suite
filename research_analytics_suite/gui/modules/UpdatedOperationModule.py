@@ -18,8 +18,10 @@ Status: Prototype
 from copy import copy
 
 import dearpygui.dearpygui as dpg
+
+from research_analytics_suite.commands.utils.text_utils import get_function_body
 from research_analytics_suite.gui.GUIBase import GUIBase
-from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
+from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
 
 
 class UpdatedOperationModule(GUIBase):
@@ -35,7 +37,7 @@ class UpdatedOperationModule(GUIBase):
         self._operation.attach_gui_module(self)
 
     async def initialize_gui(self) -> None:
-        pass
+        await self._operation.initialize_operation()
 
     async def _update_async(self) -> None:
         pass
@@ -103,7 +105,8 @@ class UpdatedOperationModule(GUIBase):
     def draw_lower_region(self, parent, width=200):
         dpg.add_text(default_value="Action", parent=parent, indent=10)
         with dpg.group(parent=parent, tag=f"action_group_{self._runtime_id}"):
-            dpg.add_input_text(default_value=self._attributes.action, multiline=True, tab_input=True, height=100)
+            dpg.add_input_text(default_value=get_function_body(self._attributes.action), multiline=True,
+                               tab_input=True, height=100)
 
         with dpg.group(parent=parent, tag=f"state_mods_{self._runtime_id}"):
             dpg.add_button(label="View Result", callback=self.view_result)
@@ -169,3 +172,4 @@ class UpdatedOperationModule(GUIBase):
 
         _result = await self._operation.get_results_from_memory()
         self._operation.add_log_entry(f"Viewing result: {_result}")
+        print(_result)

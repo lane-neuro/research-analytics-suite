@@ -13,8 +13,7 @@ import pkgutil
 from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.library_manifest.LibraryCategory import Category
 from research_analytics_suite.library_manifest.CategoryID import CategoryID
-from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
-from research_analytics_suite.operation_manager.operations.core.workspace import from_dict
+from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
 
 
 @link_class_commands
@@ -108,7 +107,7 @@ class LibraryManifest:
                 if operation == {}:
                     continue
 
-                from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
+                from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
                 if isinstance(operation, OperationAttributes):
                     operations.append(operation)
                 elif isinstance(operation, dict) and operation != {}:
@@ -131,7 +130,8 @@ class LibraryManifest:
                 self._logger.debug(f"Importing module: {module_name}")
                 module = importlib.import_module(f'operation_library.{module_name}').__dict__.get(module_name)
 
-                from research_analytics_suite.operation_manager.operations.core.memory.utils import get_attributes_from_module
+                from research_analytics_suite.operation_manager.operations.core.memory.utils import \
+                    get_attributes_from_module
                 _operation = await get_attributes_from_module(module)
                 self.add_operation_from_attributes(_operation)
         except ModuleNotFoundError:

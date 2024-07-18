@@ -5,6 +5,13 @@ This module defines the MemoryManager class, which manages memory slot collectio
 using a specified storage backend.
 
 Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
 """
 import asyncio
 
@@ -79,7 +86,7 @@ class MemoryManager:
         """
         if collection.name == "Primary":
             if self.default_collection:
-                self.default_collection.add_slots(collection.slots)
+                self.default_collection.add_slots(collection.list_slots)
                 self._logger.debug(f"Merged new collection with default collection: {collection.display_name}")
                 return
             else:
@@ -92,7 +99,7 @@ class MemoryManager:
                 if props.collection_id == collection.collection_id:
                     self._logger.debug(f"Collection with ID {collection.collection_id} already exists, "
                                       f"importing existing memory slots as new slots.")
-                    self.memory_slot_collections[r_id].add_slots(collection.slots)
+                    self.memory_slot_collections[r_id].add_slots(collection.list_slots)
                     return
 
             self.memory_slot_collections[collection.collection_id] = collection

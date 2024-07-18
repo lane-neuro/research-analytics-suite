@@ -51,14 +51,14 @@ class TestMemorySlotCollection:
         collection = MemorySlotCollection()
         slot = MagicMock(spec=MemorySlot)
         collection.add_slot(slot)
-        assert collection.list_slots() == [slot]
+        assert collection.list_slots == [slot]
 
     def test_new_slot_with_data(self):
         collection = MemorySlotCollection()
         data = {"key": (str, "value")}
         slot = collection.new_slot_with_data(data)
         assert slot.data == data
-        assert slot in collection.list_slots()
+        assert slot in collection.list_slots
 
     @pytest.mark.asyncio
     async def test_remove_slot(self):
@@ -67,7 +67,7 @@ class TestMemorySlotCollection:
         slot.memory_id = "test_id"
         collection.add_slot(slot)
         await collection.remove_slot("test_id")
-        assert collection.list_slots() is None
+        assert collection.list_slots == []
 
     def test_get_slot(self):
         collection = MemorySlotCollection()
@@ -90,7 +90,7 @@ class TestMemorySlotCollection:
         slot = MagicMock(spec=MemorySlot)
         collection.add_slot(slot)
         await collection.clear_slots()
-        assert collection.list_slots() is None
+        assert collection.list_slots == []
 
     @pytest.mark.asyncio
     async def test_update_slot(self):
@@ -137,7 +137,7 @@ class TestMemorySlotCollection:
         collection = await MemorySlotCollection.from_dict(data)
         assert collection.collection_id == "test_collection_id"
         assert collection.name == "Test Collection"
-        assert len(collection.slots) == 1
+        assert len(collection.list_slots) == 1
 
     @pytest.mark.asyncio
     async def test_from_json(self):
@@ -151,7 +151,7 @@ class TestMemorySlotCollection:
         collection = await MemorySlotCollection.from_json(json_data)
         assert collection.collection_id == "test_collection_id"
         assert collection.name == "Test Collection"
-        assert len(collection.slots) == 1
+        assert len(collection.list_slots) == 1
 
     def test_filter_slots(self):
         collection = MemorySlotCollection()
@@ -178,7 +178,7 @@ class TestMemorySlotCollection:
         slot1 = MagicMock(spec=MemorySlot)
         slot2 = MagicMock(spec=MemorySlot)
         collection.add_slots([slot1, slot2])
-        assert collection.list_slots() == [slot1, slot2]
+        assert collection.list_slots == [slot1, slot2]
 
     def test_remove_slots(self):
         collection = MemorySlotCollection()
@@ -189,4 +189,4 @@ class TestMemorySlotCollection:
         collection.add_slot(slot1)
         collection.add_slot(slot2)
         collection.remove_slots(["id1", "id2"])
-        assert collection.list_slots() is None
+        assert collection.list_slots == []

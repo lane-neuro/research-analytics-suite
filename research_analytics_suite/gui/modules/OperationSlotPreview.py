@@ -16,7 +16,8 @@ Status: Prototype
 """
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.gui.GUIBase import GUIBase
-from research_analytics_suite.operation_manager.operations.core.memory.OperationAttributes import OperationAttributes
+from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
+from research_analytics_suite.operation_manager.operations.core.execution import action_serialized
 
 
 class OperationSlotPreview(GUIBase):
@@ -43,7 +44,7 @@ class OperationSlotPreview(GUIBase):
         self._description = self._attributes.description
         self._author = self._attributes.author
         self._github = self._attributes.github
-        self._action = self._attributes.action
+        self._action = action_serialized(self._attributes.action)
         self._output_type = None  # self._attributes["output_type"]
         self._required_inputs = self._attributes.required_inputs
         self._parent_id = f"parent_{self._runtime_id}"
