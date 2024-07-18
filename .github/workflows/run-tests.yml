@@ -1,18 +1,27 @@
 name: Run Tests
 
-on:
-  workflow_call:
-    inputs:
-      log-level:
-        required: true
-        type: string
+on: [workflow_call]
 
 jobs:
-  run-tests:
-    runs-on: ubuntu-latest
+  test:
+    runs-on: ubuntu-22.04
+
     steps:
-    - name: Run ALL Tests
-      env:
-        PYTHON_LOG_LEVEL: ${{ inputs.log-level }}
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
       run: |
-        pytest --log-level=${{ inputs.log-level }}
+        python -m pip install --upgrade pip
+        pip install --user -r requirements.txt
+        pip install --user pytest pytest-asyncio
+
+    - name: Run pytest
+      run: pytest --log-level=DEBUG
+      env:
+        PYTHON_LOG_LEVEL: DEBUG

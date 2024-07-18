@@ -1,17 +1,19 @@
 name: Setup Python
 
-on:
-  workflow_call:
-    inputs:
-      python-version:
-        required: true
-        type: string
+on: [workflow_call]
 
 jobs:
-  setup-python:
-    runs-on: ubuntu-latest
+  setup:
+    runs-on: ubuntu-22.04
+
     steps:
-    - name: Set up Python ${{ inputs.python-version }}
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ inputs.python-version }}
+        python-version: '3.11'
+
+    - name: Check Python version
+      run: python --version

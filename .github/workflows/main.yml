@@ -1,34 +1,15 @@
-name: Research Analytics Suite - FULL Test Workflow
+name: Main Workflow
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push, pull_request]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: [3.11]
-
-    steps:
-      - uses: actions/checkout@v4
-
   setup-python:
-    needs: [build]
     uses: ./.github/workflows/setup-python.yml
-    with:
-      python-version: ${{ matrix.python-version }}
 
   install-dependencies:
-    needs: [setup-python]
+    needs: setup-python
     uses: ./.github/workflows/install-dependencies.yml
 
   run-tests:
-    needs: [install-dependencies]
+    needs: install-dependencies
     uses: ./.github/workflows/run-tests.yml
-    with:
-      log-level: DEBUG
