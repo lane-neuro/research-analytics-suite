@@ -40,14 +40,12 @@ jobs:
 
     - name: Install HDF5 on macOS
       if: runner.os == 'macOS'
-      run: |
-        brew install hdf5
+      run: brew install hdf5
 
-    - name: Install MKL on macOS
+    - name: Install MKL dependencies on macOS
       if: runner.os == 'macOS'
       run: |
-        brew install intel-openmp
-        pip install mkl-service
+        pip install mkl mkl-service
 
     - name: Install dependencies
       run: |
@@ -57,5 +55,4 @@ jobs:
         pip install -r requirements.txt
 
     - name: Test with pytest
-      run: |
-        pytest --log-level=DEBUG
+      run: pytest --log-level=DEBUG
