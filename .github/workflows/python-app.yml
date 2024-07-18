@@ -17,26 +17,32 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
         - os: ubuntu-latest
-          path: ~/.cache/pip
+          venv-path: .venv
         - os: macos-latest
-          path: ~/Library/Caches/pip
+          venv-path: .venv
         - os: windows-latest
-          path: ~\AppData\Local\pip\Cache
+          venv-path: .venv
 
-    steps:  
+    steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python 3.11
       uses: actions/setup-python@v4
       with:
         python-version: "3.11"
-    
+
     - uses: actions/cache@v3
+      id: venv-cache
       with:
-        path: ${{ matrix.path }}
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        path: ${{ matrix.venv-path }}
+        key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
-         ${{ runner.os }}-pip-
+          ${{ runner.os }}-venv-
+
+    - name: Set up virtual environment
+      run: |
+        python -m venv ${{ matrix.venv-path }}
+        source ${{ matrix.venv-path }}/bin/activate
 
     - name: Install HDF5 on macOS
       if: runner.os == 'macOS'
@@ -54,5 +60,12 @@ jobs:
       if: runner.os != 'macOS'
       run: pip install -r requirements.txt
 
+    - name: Save dependencies in virtual environment
+      run: |
+        source ${{ matrix.venv-path }}/bin/activate
+        pip install -r requirements.txt
+
     - name: Test with pytest
-      run: pytest --log-level=DEBUG
+      run: |
+        source ${{ matrix.venv-path }}/bin/activate
+        pytest --log-level=DEBUG
