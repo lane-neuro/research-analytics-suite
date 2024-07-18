@@ -113,7 +113,7 @@ class GuiLauncher:
         dpg.bind_theme(global_theme)
 
         font_paths = []
-        font_directory = "gui/assets/fonts"
+        font_directory = "./gui/assets/fonts"
 
         if os.path.exists(font_directory) and os.path.isdir(font_directory):
             for root, _, files in os.walk(font_directory):
