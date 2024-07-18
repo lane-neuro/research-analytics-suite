@@ -255,7 +255,7 @@ You can specify the workspace to open or create using the `-o` or `--open_worksp
    ```
    * This will create a new workspace at `~/Research-Analytics-Suite/workspaces/a_new_workspace` if it does not already exist. 
    * If it does exist, it will open the existing workspace at that location.
-   * Note: The path much be to a directory, not a file. 
+   * Note: The path must be a directory, not a file. 
      * So if you want to open a `'config.json'` file located at `~/Research-Analytics-Suite/workspaces/look_another_workspace/config.json`, you would instead use the following command:
      ```sh
      python ResearchAnalyticsSuite.py -o ~/Research-Analytics-Suite/workspaces/look_another_workspace
