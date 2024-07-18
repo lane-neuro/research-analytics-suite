@@ -1,4 +1,4 @@
-name: Research Analytics Suite - FULL Test Workflow
+name: Research Analytics Suite - Test Workflow
 
 on:
   push:
