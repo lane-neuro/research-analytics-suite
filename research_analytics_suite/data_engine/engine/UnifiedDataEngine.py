@@ -5,7 +5,15 @@ Defines the UnifiedDataEngine class that combines functionalities from DaskData 
 to provide a unified interface for handling data.
 
 Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
 """
+from __future__ import annotations
 import json
 import os
 import uuid
@@ -192,6 +200,7 @@ class UnifiedDataEngine:
 
     @command
     def load_data(self, file_path, return_type='dict'):
+        data = None
         data_type = os.path.splitext(file_path)[1][1:]
         self._logger.info(f"Loading data from {file_path} as {data_type}")
 
@@ -212,7 +221,8 @@ class UnifiedDataEngine:
                 pandas_df = pd.read_excel(file_path)
                 data = dd.from_pandas(pandas_df, npartitions=1)
             else:
-                raise ValueError(f"Unsupported data type: {data_type}")
+                self._logger.error(ValueError(f"Unsupported data type: {data_type}"), self.__class__.__name__)
+                return
 
             if isinstance(data, dd.DataFrame):
                 data = data.compute()
@@ -220,7 +230,7 @@ class UnifiedDataEngine:
             if return_type == 'dict':
                 data = data.to_dict()
             elif return_type != 'dataframe':
-                raise ValueError(f"Unsupported return type: {return_type}")
+                self._logger.error(ValueError(f"Unsupported return type: {return_type}"), self.__class__.__name__)
 
             return data
 
@@ -228,7 +238,7 @@ class UnifiedDataEngine:
             self._logger.error(e, self.__class__.__name__)
 
     @command
-    def save_data(self, file_path):
+    def save_data(self, file_path: str):
         """
         Saves data to the specified file path.
 
@@ -251,12 +261,19 @@ class UnifiedDataEngine:
             pandas_df = self.data.compute() if isinstance(self.data, dd.DataFrame) else self.data
             pandas_df.to_excel(file_path)
         else:
-            raise ValueError(f"Unsupported data type: {data_type}")
+            self._logger.error(ValueError(f"Unsupported data type: {data_type}"), self.__class__.__name__)
+            return
 
         self._logger.debug("Data saved")
 
     @command
-    async def save_engine(self, instance_path):
+    async def save_engine(self, instance_path: str) -> None:
+        """
+        Saves the engine to the specified instance path.
+
+        Args:
+            instance_path (str): The path to the instance.
+        """
         engine_path = os.path.join(instance_path, self._config.ENGINE_DIR, self.engine_id)
         os.makedirs(engine_path, exist_ok=True)
         data_path = os.path.join(instance_path, 'data')
@@ -287,7 +304,17 @@ class UnifiedDataEngine:
 
     @staticmethod
     @command
-    async def load_engine(instance_path, engine_id):
+    async def load_engine(instance_path: str, engine_id: str) -> UnifiedDataEngine:
+        """
+        Loads an engine from the specified instance path and engine ID.
+
+        Args:
+            instance_path (str): The path to the instance.
+            engine_id (str): The ID of the engine to load.
+
+        Returns:
+            UnifiedDataEngine: The loaded engine.
+        """
         engine_path = os.path.join(instance_path, engine_id)
 
         # Load metadata
@@ -303,11 +330,17 @@ class UnifiedDataEngine:
         # Load engine state
         async with aiofiles.open(os.path.normpath(
                 os.path.join(f"{engine_path}", 'engine_state.joblib')), 'r') as state_file:
-            engine_state = json.loads(await state_file.read())
+            try:
+                engine_state = json.loads(await state_file.read())
+            except Exception as e:
+                CustomLogger().debug(f"Failed to load engine state: {e}")
+                engine_state = {}
 
         engine = UnifiedDataEngine()
-        engine.__setstate__(engine_state)
+        if engine_state:
+            engine.__setstate__(engine_state)
         engine.data = data
+
         return engine
 
     @command
@@ -319,7 +352,7 @@ class UnifiedDataEngine:
             backend (str): The backend to set ('dask' or 'torch').
         """
         if backend not in ['dask', 'torch']:
-            raise ValueError("Backend must be either 'dask' or 'torch'")
+            self._logger.error(ValueError("Backend must be either 'dask' or 'torch'"), self.__class__.__name__)
         self.backend = backend
 
     @command
@@ -349,7 +382,7 @@ class UnifiedDataEngine:
             return self.torch_data.get_data()
 
     @command
-    def get_torch_loader(self, batch_size=32, shuffle=True):
+    def get_torch_loader(self, batch_size: int = 32, shuffle: bool = True) -> DataLoader:
         """
         Gets a PyTorch DataLoader for the data.
 
@@ -363,10 +396,17 @@ class UnifiedDataEngine:
         if self.backend == 'torch':
             return DataLoader(self.torch_data, batch_size=batch_size, shuffle=shuffle)
         else:
-            raise RuntimeError("DataLoader is only available for 'torch' backend")
+            self._logger.error(
+                RuntimeError("DataLoader is only available for 'torch' backend"), self.__class__.__name__)
 
     @command
-    def get_pickleable_data(self):
+    def get_pickleable_data(self) -> Dict[str, any]:
+        """
+        Gets the data in a pickleable format.
+
+        Returns:
+            The data in a pickleable format.
+        """
         data = self.__dict__.copy()
         data.pop('_logger', None)
         data.pop('dask_client', None)

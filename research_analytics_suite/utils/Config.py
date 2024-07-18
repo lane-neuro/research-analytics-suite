@@ -6,15 +6,15 @@ paths, memory limits, logging, and other necessary parameters.
 
 Author: Lane
 """
-
+from __future__ import annotations
 import asyncio
 import json
 import os
-
 import aiofiles
 import psutil
 
 from research_analytics_suite.commands import command, link_class_commands
+from research_analytics_suite.utils import CustomLogger
 
 
 @link_class_commands
@@ -22,12 +22,19 @@ class Config:
     _instance = None
     _lock = asyncio.Lock()
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Config:
+        """
+        Creates a new instance of the Config class if one does not already exist.
+
+        Returns:
+            Config: The Config instance.
+        """
         if not cls._instance:
             cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
+        """Initializes the Config class with NoneType attributes."""
         if not hasattr(self, '_initialized'):
             self.WORKSPACE_NAME = None
             self.BASE_DIR = None
@@ -68,17 +75,16 @@ class Config:
             self._initialized = False
 
     async def initialize(self):
+        """Initializes the configuration settings."""
         if not self._initialized:
             async with Config._lock:
                 if not self._initialized:
-                    self._initialize()
+                    self.reset_to_defaults()
                     self._initialized = True
-
-    def _initialize(self):
-        self.reset_to_defaults()
 
     @command
     def reset_to_defaults(self):
+        """Resets the configuration settings to their default values."""
         # Workspace settings
         self.WORKSPACE_NAME = 'default_workspace'
         self.BASE_DIR = os.path.normpath(os.path.abspath(
@@ -147,24 +153,40 @@ class Config:
         self.SCHEDULER_INTERVAL = 'daily'  # Options: 'hourly', 'daily', 'weekly'
 
     @command
-    async def update_setting(self, key, value):
+    async def update_setting(self, key: str, value: any) -> None:
+        """
+        Updates a configuration setting with a new value.
+
+        Args:
+            key (str): The configuration setting to update.
+            value: The new value for the configuration setting.
+        """
         if hasattr(self, key):
             setattr(self, key, value)
         else:
-            raise AttributeError(f"Config has no attribute '{key}'")
+            CustomLogger().error(AttributeError(f"Config has no attribute '{key}'"), self.__class__.__name__)
 
-    async def reload(self, new_config) -> 'Config':
-        for key, value in new_config.items():
+    async def reload(self, new_config) -> Config:
+        """
+        Reloads the configuration settings from a dictionary.
+
+        Args:
+            new_config (dict): The new configuration settings.
+
+        Returns:
+            Config: The updated configuration settings.
+        """
+        for key, value in new_config.items() if isinstance(new_config, dict) else {}:
             await self.update_setting(key, value)
         return self
 
     @command
-    async def reload_from_file(self, file_path):
+    async def reload_from_file(self, file_path: str) -> Config:
         """
         Reloads the configuration settings from a JSON file.
 
         Args:
-            file_path: The path to the configuration file.
+            file_path (str): The path to the configuration file.
 
         Returns:
             Config: The updated configuration settings.
@@ -177,11 +199,26 @@ class Config:
             raise FileNotFoundError(f"Configuration file not found at path: {file_path}")
 
         async with aiofiles.open(file_path, 'r') as f:
-            return await self.reload(json.loads(await f.read()))
+            try:
+                return await self.reload(json.loads(await f.read()))
+            except json.JSONDecodeError:
+                CustomLogger().error(ValueError(f"Invalid JSON format in configuration file: {file_path}"),
+                                     self.__class__.__name__)
+                return self
 
     @command
-    async def save_to_file(self, file_path):
+    async def save_to_file(self, file_path) -> None:
+        """
+        Saves the configuration settings to a JSON file.
+
+        Args:
+            file_path (str): The path to save the configuration file.
+        """
         async with aiofiles.open(file_path, 'w') as f:
             _copy = self.__dict__.copy()
             del _copy['_initialized']
-            await f.write(json.dumps(_copy, indent=4))
+            try:
+                await f.write(json.dumps(_copy, indent=4))
+            except Exception as e:
+                CustomLogger().error(Exception(f"Invalid JSON format in configuration file: {file_path} error: {e}"),
+                                     self.__class__.__name__)

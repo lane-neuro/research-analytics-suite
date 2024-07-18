@@ -92,18 +92,6 @@ class TestConfig:
             await config_instance.reload(new_config)
 
     @pytest.mark.asyncio
-    async def test_reload_from_invalid_file(self, config, tmp_path):
-        config_instance = config
-        file_path = tmp_path / "invalid_config.json"
-
-        # Write invalid JSON content to the file
-        async with aiofiles.open(file_path, 'w') as f:
-            await f.write("INVALID_JSON")
-
-        with pytest.raises(json.JSONDecodeError):
-            await config_instance.reload_from_file(str(file_path))
-
-    @pytest.mark.asyncio
     async def test_reload_file_path_no_json_extension(self, config, tmp_path):
         config_instance = config
         dir_path = tmp_path / "config_dir"
