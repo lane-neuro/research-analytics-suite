@@ -43,6 +43,12 @@ jobs:
       run: |
         brew install hdf5
 
+    - name: Install MKL on macOS
+      if: runner.os == 'macOS'
+      run: |
+        brew install intel-openmp
+        pip install mkl-service
+
     - name: Install dependencies
       run: |
         if [[ "${{ runner.os }}" == 'macOS' ]]; then
