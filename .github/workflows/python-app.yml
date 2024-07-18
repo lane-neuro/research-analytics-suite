@@ -54,6 +54,7 @@ jobs:
       run: |
         python -m venv ${{ matrix.venv-path }}
         source ${{ matrix.venv-path }}/bin/activate
+        brew install hdf5
         grep -v '^mkl' requirements.txt > requirements_filtered.txt
         python -m pip install --upgrade pip
         pip install pytest pytest-asyncio
@@ -67,10 +68,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install pytest pytest-asyncio
         pip install -r requirements.txt
-
-    - name: Install HDF5 on macOS
-      if: runner.os == 'macOS'
-      run: brew install hdf5
 
     - name: Prepare requirements for macOS
       if: runner.os == 'macOS'
