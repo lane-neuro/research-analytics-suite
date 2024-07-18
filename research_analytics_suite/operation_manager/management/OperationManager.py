@@ -58,9 +58,6 @@ class OperationManager:
         await self.add_initialized_operation(self.resource_monitor)
         await self.add_initialized_operation(self.console_monitor)
 
-        await self.resource_monitor.start_operation()
-        await self.console_monitor.start_operation()
-
     @command
     async def add_initialized_operation(self, operation: BaseOperation) -> BaseOperation:
         """

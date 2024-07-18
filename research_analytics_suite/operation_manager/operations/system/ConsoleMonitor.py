@@ -14,6 +14,8 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+import asyncio
+
 import aioconsole
 import sys
 from research_analytics_suite.commands.UserInputProcessor import process_user_input
@@ -61,29 +63,41 @@ class ConsoleMonitor(BaseOperation):
 
     async def execute(self) -> None:
         """Processes user input and sends it to the operation handler."""
-        while self.is_loop:  # Loop until a specific user input is received
-            try:
+        input_task = None  # Track the input task
+
+        while self.is_loop:
+            if input_task is None:
                 if 'ipykernel' in sys.modules:
                     # Jupyter Notebook environment
                     print(self._prompt)
                     user_input = input()  # Use standard input in Jupyter Notebook
+                    user_input = user_input.strip()  # Strip newline
+                    if user_input:
+                        self.add_log_entry(f"User input: {user_input}")
+                        await process_user_input(user_input)
                 else:
-                    user_input = await aioconsole.ainput(self._prompt)  # Read user input asynchronously
+                    input_task = asyncio.create_task(aioconsole.ainput(self._prompt))  # Read user input asynchronously
 
-                user_input = user_input.strip()  # Strip newline
+            if input_task is not None and input_task.done():
+                try:
+                    user_input = input_task.result().strip()  # Get the result from the input task and strip newline
 
-                if user_input == "":  # Check for empty input
-                    continue
+                    if user_input == "":  # Check for empty input
+                        continue
 
-                self.add_log_entry(f"User input: {user_input}")
+                    self.add_log_entry(f"User input: {user_input}")
 
-                await process_user_input(user_input)
+                    await process_user_input(user_input)
 
-            except EOFError:
-                self.handle_error(Exception("EOFError: No input provided"))
-                break
-            except UnicodeDecodeError as e:  # Catch specific exception
-                self.handle_error(e)
-            except Exception as e:  # Catch all other exceptions
-                self.handle_error(e)
-                break
+                except EOFError:
+                    self.handle_error(Exception("EOFError: No input provided"))
+                    break
+                except UnicodeDecodeError as e:  # Catch specific exception
+                    self.handle_error(e)
+                except Exception as e:  # Catch all other exceptions
+                    self.handle_error(e)
+                    break
+                finally:
+                    input_task = None  # Reset input task
+
+            await asyncio.sleep(0.01)  # Sleep for a short duration to avoid busy-waiting

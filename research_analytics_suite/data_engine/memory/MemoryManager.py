@@ -98,7 +98,7 @@ class MemoryManager:
             for r_id, props in self.memory_slot_collections.items():
                 if props.collection_id == collection.collection_id:
                     self._logger.debug(f"Collection with ID {collection.collection_id} already exists, "
-                                      f"importing existing memory slots as new slots.")
+                                       f"importing existing memory slots as new slots.")
                     self.memory_slot_collections[r_id].add_slots(collection.list_slots)
                     return
 

@@ -108,11 +108,12 @@ class OperationControl:
 
     async def stop_exec_loop(self):
         """Stops the execution loop."""
+        self.operation_manager.resource_monitor.is_loop = False
+        self.operation_manager.console_monitor.is_loop = False
+
         for task in self.task_creator.tasks:
             _op = self.sequencer.find_operation_by_task(task)
             _op.is_loop = False
-            await self.operation_manager.stop_operation(_op)
 
         self.main_loop.stop()
-        self.main_loop.close()
         self._logger.info("OperationControl: Main loop stopped.")

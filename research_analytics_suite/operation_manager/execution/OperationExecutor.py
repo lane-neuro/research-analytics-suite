@@ -56,7 +56,7 @@ class OperationExecutor:
             asyncio.Task: The asyncio task for the operation execution.
         """
         try:
-            if operation.status == "started":
+            if operation.status == "started" or operation.status == "idle":
                 await operation.execute()
                 return operation.task
         except Exception as e:

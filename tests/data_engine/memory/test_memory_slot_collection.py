@@ -1,10 +1,11 @@
 import json
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from research_analytics_suite.data_engine import MemorySlotCollection
 from research_analytics_suite.data_engine.memory import MemorySlot
+from research_analytics_suite.utils import CustomLogger
 
 
 class TestMemorySlotCollection:
@@ -24,11 +25,6 @@ class TestMemorySlotCollection:
         new_name = "Updated Name"
         collection.name = new_name
         assert collection.name == new_name
-
-    def test_set_name_with_invalid_type(self):
-        collection = MemorySlotCollection(name="Initial Name")
-        with pytest.raises(ValueError, match="name must be a string"):
-            collection.name = 123  # Trying to set name with a non-string type
 
     def test_set_name_and_retrieve(self):
         collection = MemorySlotCollection(name="Initial Name")

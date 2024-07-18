@@ -23,7 +23,7 @@ from research_analytics_suite.operation_manager.operations.system.UpdateMonitor 
 
 class ResourceMonitorDialog(GUIBase):
     """A class to manage the dialog for monitoring system resources."""
-    SLEEP_DURATION = 0.1
+    SLEEP_DURATION = 0.01
 
     def __init__(self, width: int, height: int, parent):
         """

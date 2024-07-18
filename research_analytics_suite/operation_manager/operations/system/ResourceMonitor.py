@@ -51,14 +51,15 @@ class ResourceMonitor(BaseOperation):
             memory_threshold (int, optional): The memory usage threshold. Defaults to 90.
         """
         self.process = None
+        self._line_profiler = None
         self.profiler = None
 
         self.cpu_threshold = kwargs.pop("cpu_threshold", 90)
         self.memory_threshold = kwargs.pop("memory_threshold", 95)
 
-        self.cpu_usage = 0
-        self.total_memory_usage = 0
-        self.process_memory_usage = 0
+        self.cpu_usage: float = 0
+        self.total_memory_usage: float = 0
+        self.process_memory_usage: float = 0
 
         super().__init__(*args, **kwargs)
 
@@ -75,9 +76,9 @@ class ResourceMonitor(BaseOperation):
         Asynchronously monitors the usage of CPU and memory.
         """
         while self.parallel and self.is_loop:
-            self.cpu_usage = self.process.cpu_percent()
-            self.total_memory_usage = psutil.virtual_memory().percent
-            self.process_memory_usage = self.process.memory_info().rss / (1024 ** 3)  # Output in GB
+            self.cpu_usage: float = self.process.cpu_percent()
+            self.total_memory_usage: float = psutil.virtual_memory().percent
+            self.process_memory_usage: float = self.process.memory_info().rss / (1024 ** 3)  # Output in GB
 
             if (self.cpu_usage / psutil.cpu_count()) > self.cpu_threshold:
                 self.handle_error(Exception(f"CPU usage has exceeded {self.cpu_threshold}%: "
@@ -87,11 +88,11 @@ class ResourceMonitor(BaseOperation):
                 self.handle_error(Exception(f"Memory usage has exceeded {self.memory_threshold}%: "
                                             f"current usage is {self.total_memory_usage}%"))
 
-            await asyncio.sleep(0.001)
+            await asyncio.sleep(0.01)
 
     @command
     def get_cpu_formatted(self) -> str:
-        return (f"Total CPU Usage:\t{round(self.cpu_usage, 2)}%\t[{psutil.cpu_count()} cores]\n"
+        return (f"Total CPU Usage:\t{round(self.cpu_usage, 2)}%\n"
                 f"RAS:\t{round(self.process.cpu_percent(), 2)}%")
 
     @command
