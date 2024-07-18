@@ -39,10 +39,26 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-venv-
 
-    - name: Set up virtual environment
+    - name: Set up virtual environment on Ubuntu
+      if: runner.os == 'Linux'
       run: |
         python -m venv ${{ matrix.venv-path }}
         source ${{ matrix.venv-path }}/bin/activate
+        pip install -r requirements.txt
+
+    - name: Set up virtual environment on macOS
+      if: runner.os == 'macOS'
+      run: |
+        python -m venv ${{ matrix.venv-path }}
+        source ${{ matrix.venv-path }}/bin/activate
+        pip install -r requirements.txt
+
+    - name: Set up virtual environment on Windows
+      if: runner.os == 'Windows'
+      run: |
+        python -m venv ${{ matrix.venv-path }}
+        .${{ matrix.venv-path }}\Scripts\Activate
+        pip install -r requirements.txt
 
     - name: Install HDF5 on macOS
       if: runner.os == 'macOS'
@@ -56,16 +72,38 @@ jobs:
         pip install numpy scipy
         pip install -r requirements_filtered.txt
 
-    - name: Install dependencies on other OS
-      if: runner.os != 'macOS'
-      run: pip install -r requirements.txt
-
-    - name: Save dependencies in virtual environment
+    - name: Save dependencies in virtual environment on Ubuntu
+      if: runner.os == 'Linux'
       run: |
         source ${{ matrix.venv-path }}/bin/activate
         pip install -r requirements.txt
 
-    - name: Test with pytest
+    - name: Save dependencies in virtual environment on macOS
+      if: runner.os == 'macOS'
       run: |
         source ${{ matrix.venv-path }}/bin/activate
+        pip install -r requirements_filtered.txt
+
+    - name: Save dependencies in virtual environment on Windows
+      if: runner.os == 'Windows'
+      run: |
+        .${{ matrix.venv-path }}\Scripts\Activate
+        pip install -r requirements.txt
+
+    - name: Test with pytest on Ubuntu
+      if: runner.os == 'Linux'
+      run: |
+        source ${{ matrix.venv-path }}/bin/activate
+        pytest --log-level=DEBUG
+
+    - name: Test with pytest on macOS
+      if: runner.os == 'macOS'
+      run: |
+        source ${{ matrix.venv-path }}/bin/activate
+        pytest --log-level=DEBUG
+
+    - name: Test with pytest on Windows
+      if: runner.os == 'Windows'
+      run: |
+        .${{ matrix.venv-path }}\Scripts\Activate
         pytest --log-level=DEBUG
