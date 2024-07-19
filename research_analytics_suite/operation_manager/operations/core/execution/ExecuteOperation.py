@@ -2,6 +2,7 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor
 from typing import List
 
+from research_analytics_suite.operation_manager.computation.GPUComputation import gpu_computation
 from research_analytics_suite.utils import CustomLogger
 from .PrepareAction import prepare_action_for_exec
 
@@ -83,14 +84,16 @@ async def execute_action(operation):
     Execute the action associated with the operation.
     """
     try:
+        operation.status = "running"
+        operation.add_log_entry(f"[RUN] {operation.name}")
+
         if operation.is_cpu_bound:
             with ProcessPoolExecutor() as executor:
-                operation.status = "running"
-                operation.add_log_entry(f"[RUN] {operation.name}: CPU-bound Operation")
                 _exec_output = await asyncio.get_event_loop().run_in_executor(executor, operation.action_callable)
+        elif operation.is_gpu_bound:
+            _exec_output = await asyncio.get_event_loop().run_in_executor(None, gpu_computation,
+                                                                          operation.action_callable)
         else:
-            operation.status = "running"
-            operation.add_log_entry(f"[RUN - ASYNC] {operation.name}")
             _exec_output = operation.action_callable
             _exec_output = await _exec_output() if asyncio.iscoroutinefunction(_exec_output) else _exec_output()
 
@@ -122,3 +125,4 @@ async def execute_action(operation):
         operation.add_log_entry(f"[RESULT] {operation.memory_outputs.list_slots}")
     except Exception as e:
         operation.handle_error(e)
+

@@ -55,6 +55,7 @@ class OperationTemplate(BaseOperation):
     inheritance: list = []
     is_loop: bool = False
     is_cpu_bound: bool = False
+    is_gpu_bound: bool = False
     parallel: bool = False
 
     def __init__(self, custom_attribute: Optional[any], *args, **kwargs) -> None:
@@ -83,6 +84,7 @@ class OperationTemplate(BaseOperation):
             'inheritance': self.inheritance,                # list of unique IDs of child operations
             'is_loop': self.is_loop,
             'is_cpu_bound': self.is_cpu_bound,
+            'is_gpu_bound': self.is_gpu_bound,
             'parallel': self.parallel
         })
 

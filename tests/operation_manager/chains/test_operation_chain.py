@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from research_analytics_suite.operation_manager import OperationChain
-from research_analytics_suite.operation_manager.nodes import OperationNode
+from research_analytics_suite.operation_manager.chains.OperationNode import OperationNode
 from research_analytics_suite.operation_manager.operations.core import BaseOperation
 
 
@@ -73,7 +73,7 @@ class TestOperationChain:
         assert operations == [self.operation1, self.operation2]
 
     def test_add_none_operation(self):
-        with patch('research_analytics_suite.operation_manager.nodes.OperationNode') as MockNode:
+        with patch('research_analytics_suite.operation_manager.chains.OperationNode') as MockNode:
             self.operation_chain.add_operation_to_chain(None)
             MockNode.assert_not_called()
 

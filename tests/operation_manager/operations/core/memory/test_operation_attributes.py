@@ -24,6 +24,7 @@ class TestOperationAttributes:
             inheritance=[MagicMock(), MagicMock()],
             is_loop=False,
             is_cpu_bound=False,
+            is_gpu_bound=False,
             parallel=True
         )
 
@@ -49,6 +50,7 @@ class TestOperationAttributes:
         assert attributes['inheritance'] == []
         assert not attributes['is_loop']
         assert not attributes['is_cpu_bound']
+        assert not attributes['is_gpu_bound']
         assert not attributes['parallel']
 
     @pytest.mark.asyncio
@@ -70,6 +72,7 @@ class TestOperationAttributes:
         assert len(attributes['inheritance']) == 2
         assert not attributes['is_loop']
         assert not attributes['is_cpu_bound']
+        assert not attributes['is_gpu_bound']
         assert attributes['parallel']
 
     @pytest.mark.asyncio
@@ -91,6 +94,7 @@ class TestOperationAttributes:
             inheritance='inheritance',
             is_loop='False',
             is_cpu_bound='False',
+            is_gpu_bound='False',
             parallel='True'
         )
 
@@ -111,6 +115,7 @@ class TestOperationAttributes:
         assert attributes['inheritance'] == []
         assert not attributes['is_loop']
         assert not attributes['is_cpu_bound']
+        assert not attributes['is_gpu_bound']
         assert not attributes['parallel']
 
     @pytest.mark.asyncio
@@ -131,6 +136,7 @@ class TestOperationAttributes:
             inheritance=[],
             is_loop=False,
             is_cpu_bound=False,
+            is_gpu_bound=False,
             parallel=False
         )
 
@@ -151,6 +157,7 @@ class TestOperationAttributes:
         assert attributes['inheritance'] == []
         assert not attributes['is_loop']
         assert not attributes['is_cpu_bound']
+        assert not attributes['is_gpu_bound']
         assert not attributes['parallel']
 
     @pytest.mark.asyncio
@@ -171,6 +178,7 @@ class TestOperationAttributes:
             inheritance=[],
             is_loop=True,
             is_cpu_bound=True,
+            is_gpu_bound=False,
             parallel=False
         )
 
@@ -191,6 +199,7 @@ class TestOperationAttributes:
         assert attributes['inheritance'] == []
         assert attributes['is_loop']
         assert attributes['is_cpu_bound']
+        assert not attributes['is_gpu_bound']
         assert not attributes['parallel']
 
     @pytest.mark.asyncio
@@ -211,6 +220,7 @@ class TestOperationAttributes:
             inheritance=[],
             is_loop=True,
             is_cpu_bound=True,
+            is_gpu_bound=False,
             parallel=True
         )
 
@@ -231,4 +241,5 @@ class TestOperationAttributes:
         assert attributes['inheritance'] == []
         assert attributes['is_loop']
         assert attributes['is_cpu_bound']
+        assert not attributes['is_gpu_bound']
         assert attributes['parallel']

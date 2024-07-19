@@ -72,6 +72,7 @@ class BaseOperation(ABC):
         inheritance (List[BaseOperation]): The child operations.
         is_loop (bool): Whether the operation should run as a loop.
         is_cpu_bound (bool): Whether the operation is CPU-bound.
+        is_gpu_bound (bool): Whether the operation is GPU-bound.
         parallel (bool): Whether child operations should run in parallel or sequentially.
         is_ready (bool): Whether the operation is ready to be executed.
         status (str): The status of the operation.
@@ -126,12 +127,13 @@ class BaseOperation(ABC):
         """Initialize any resources or setup required for the operation before it starts."""
         if self._initialized:
             return
-        await self._initialize_child_operations()
 
         from research_analytics_suite.operation_manager.operations.core.memory.MemoryInput import MemoryInput
         from research_analytics_suite.operation_manager.operations.core.memory.MemoryOutput import MemoryOutput
         self.memory_inputs = MemoryInput(name=f"{self.name}_input")
         self.memory_outputs = MemoryOutput(name=f"{self.name}_output")
+
+        await self._initialize_child_operations()
 
         self.is_ready = False
         self.status = "idle"
@@ -583,6 +585,16 @@ class BaseOperation(ABC):
     def is_cpu_bound(self, value):
         """Sets whether the operation is CPU-bound."""
         self.attributes.is_cpu_bound = value
+
+    @property
+    def is_gpu_bound(self) -> bool:
+        """Gets whether the operation is GPU-bound."""
+        return self.attributes.is_gpu_bound
+
+    @is_gpu_bound.setter
+    def is_gpu_bound(self, value):
+        """Sets whether the operation is GPU-bound."""
+        self.attributes.is_gpu_bound = value
 
     @property
     def parallel(self) -> bool:

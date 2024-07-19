@@ -13,7 +13,6 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
 import asyncio
 
 from research_analytics_suite.operation_manager.task.TaskCounter import TaskCounter
@@ -52,19 +51,22 @@ class TaskCreator:
                 return True
         return False
 
-    def create_task(self, coro, name):
+    def create_task(self, coro, name: str, is_cpu_bound: bool = True):
         """
         Creates and schedules a new asynchronous task.
 
         Args:
             coro: The coroutine to be executed as a task.
             name (str): The name of the task.
+            is_cpu_bound (bool, optional): Whether the task is CPU-bound. Defaults to True.
 
         Returns:
             asyncio.Task: The created task.
         """
         task_name = self.task_counter.new_task(name)
         task = asyncio.create_task(coro, name=task_name)
+        task.is_cpu_bound = is_cpu_bound
+        task.is_gpu_bound = not is_cpu_bound
         self.tasks.add(task)
         self._logger.debug(f"Task {task_name} created.")
         return task

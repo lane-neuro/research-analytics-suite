@@ -319,7 +319,12 @@ class UnifiedDataEngine:
 
         # Load metadata
         async with aiofiles.open(os.path.join(f"{engine_path}", 'metadata.json'), 'r') as metadata_file:
-            metadata = json.loads(await metadata_file.read())
+            try:
+                metadata = json.loads(await metadata_file.read())
+            except Exception as e:
+                CustomLogger().error(Exception(f"Failed to load metadata: {e}"), 'UnifiedDataEngine')
+                # Return an empty engine if metadata is not found
+                return UnifiedDataEngine()
 
         data_path = os.path.normpath(os.path.join(instance_path, '../data', f"{metadata['data_name']}.joblib"))
 

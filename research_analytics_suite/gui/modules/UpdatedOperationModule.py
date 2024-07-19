@@ -52,7 +52,7 @@ class UpdatedOperationModule(GUIBase):
     def draw_upper_region(self, parent, width=200):
         # with dpg.group(tag=f"upper_{self._runtime_id}", parent=parent, width=300):
         with dpg.group(horizontal=True, tag=f"basic_{self._runtime_id}",
-                       parent=parent, horizontal_spacing=20, width=width):
+                       parent=parent, horizontal_spacing=20, width=width-10):
             dpg.add_text(default_value=f"v{self._attributes.version}", indent=10)
             dpg.add_input_text(default_value=self._attributes.name)
 
@@ -78,21 +78,22 @@ class UpdatedOperationModule(GUIBase):
                 dpg.add_listbox(items=[], num_items=3)
 
         if self.operation.initialized:
-            with dpg.child_window(label="Execution", parent=parent, width=width, height=65):
-                dpg.add_button(label="Execute", width=100, callback=self.execute_operation)
-                dpg.add_button(label="Stop", width=100, callback=self.stop_operation)
-                dpg.add_button(label="Reset", width=100, callback=self.reset_operation)
+            with dpg.group(horizontal=True, tag=f"execution_{self._runtime_id}", parent=parent, width=width*.40,
+                           height=20):
+                dpg.add_button(label="Execute", callback=self.execute_operation)
+                dpg.add_button(label="Stop", callback=self.stop_operation)
+                dpg.add_button(label="Reset", callback=self.reset_operation)
 
         with dpg.group(horizontal=True, tag=f"options_{self._runtime_id}", horizontal_spacing=35, parent=parent,
                        width=width):
             dpg.add_checkbox(label="Loop", default_value=self._attributes.is_loop, indent=10)
-            dpg.add_checkbox(label="CPU", default_value=self._attributes.is_cpu_bound)
+            dpg.add_checkbox(label="GPU", default_value=self._attributes.is_gpu_bound)
             dpg.add_checkbox(label="Parallel", default_value=self._attributes.parallel)
 
     def draw_middle_region(self, parent, width=200):
         with dpg.group(horizontal=True, tag=f"middle_{self._runtime_id}",
                        parent=parent, horizontal_spacing=5):
-            with dpg.group(label="Required Inputs", parent=f"middle_{self._runtime_id}", width=width*.65):
+            with dpg.group(label="Required Inputs", parent=f"middle_{self._runtime_id}", width=width*.62):
                 dpg.add_text(default_value="Input", indent=10)
 
                 req_input_list = [

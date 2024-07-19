@@ -208,6 +208,7 @@ async def populate_operation_args(data, file_dir, parent_operation=None) -> dict
                     data_metadata['inheritance'] = op_file_data.get('inheritance', [])
                     data_metadata['is_loop'] = op_file_data.get('is_loop', False)
                     data_metadata['is_cpu_bound'] = op_file_data.get('is_cpu_bound', False)
+                    data_metadata['is_gpu_bound'] = op_file_data.get('is_gpu_bound', False)
                     data_metadata['parallel'] = op_file_data.get('parallel', False)
 
             except Exception as e:

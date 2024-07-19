@@ -57,6 +57,7 @@ class OperationAttributes:
             self.inheritance = []
             self.is_loop = False
             self.is_cpu_bound = False
+            self.is_gpu_bound = False
             self.parallel = False
 
             self._initialized = False
@@ -78,6 +79,7 @@ class OperationAttributes:
                     self.inheritance = self.temp_kwargs.get('inheritance', [])
                     self.is_loop = self.temp_kwargs.get('is_loop', False)
                     self.is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', False)
+                    self.is_gpu_bound = self.temp_kwargs.get('is_gpu_bound', False)
                     self.parallel = self.temp_kwargs.get('parallel', False)
 
                     self._initialized = True
@@ -94,7 +96,8 @@ class OperationAttributes:
             dict: A dictionary with processed inputs.
         """
         if not isinstance(inputs, dict):
-            raise ValueError("Expected a dictionary as input")
+            self._logger.error(ValueError("Expected a dictionary as input"), self.__class__.__name__)
+            return {}
 
         processed_dict = {}
         for k, v in inputs.items():
@@ -130,6 +133,7 @@ class OperationAttributes:
                 pack_as_local_reference(child) for child in self.inheritance if self.inheritance is not []],
             'is_loop': self.is_loop,
             'is_cpu_bound': self.is_cpu_bound,
+            'is_gpu_bound': self.is_gpu_bound,
             'parallel': self.parallel,
         }
 
@@ -253,6 +257,14 @@ class OperationAttributes:
     @is_cpu_bound.setter
     def is_cpu_bound(self, value):
         self._is_cpu_bound = value if value and isinstance(value, bool) else False
+
+    @property
+    def is_gpu_bound(self) -> bool:
+        return self._is_gpu_bound if self._is_gpu_bound else False
+
+    @is_gpu_bound.setter
+    def is_gpu_bound(self, value):
+        self._is_gpu_bound = value if value and isinstance(value, bool) else False
 
     @property
     def parallel(self) -> bool:

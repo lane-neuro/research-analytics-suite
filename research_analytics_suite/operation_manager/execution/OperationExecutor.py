@@ -17,6 +17,7 @@ Status: Prototype
 
 import asyncio
 
+from research_analytics_suite.operation_manager import gpu_computation
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -45,7 +46,7 @@ class OperationExecutor:
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
-    async def execute_operation(self, operation) -> asyncio.Task:
+    async def execute_operation(self, operation: BaseOperation) -> asyncio.Task:
         """
         Executes a single operation.
 
@@ -56,9 +57,17 @@ class OperationExecutor:
             asyncio.Task: The asyncio task for the operation execution.
         """
         try:
-            if operation.status == "started" or operation.status == "idle":
-                await operation.execute()
-                return operation.task
+            if operation.status in ["started", "idle"]:
+                if operation.is_gpu_bound:
+                    # Offload GPU-bound operation
+                    operation.task = self.task_creator.create_task(
+                        asyncio.to_thread(gpu_computation, operation.action_callable),
+                        name=operation.runtime_id,
+                        is_cpu_bound=False
+                    )
+                else:
+                    await operation.execute()
+                    return operation.task
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
 
@@ -88,11 +97,12 @@ class OperationExecutor:
                 if not operation.task or operation.task.done():
                     self._logger.debug(f"execute_all: [OP] {operation.name} - {operation.status} - {operation.task}")
 
-                    if not operation.task and operation.is_ready is True:
+                    if not operation.task and operation.is_ready:
                         try:
                             operation.task = self.task_creator.create_task(
                                 self.execute_operation(operation),
-                                name=operation.runtime_id
+                                name=operation.runtime_id,
+                                is_cpu_bound=not operation.is_gpu_bound
                             )
                             operation.add_log_entry(f"[TASK] {operation.name}")
                         except Exception as e:

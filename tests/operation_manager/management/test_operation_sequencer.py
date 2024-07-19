@@ -5,7 +5,7 @@ import json
 
 from research_analytics_suite.operation_manager.management.OperationSequencer import OperationSequencer
 from research_analytics_suite.operation_manager.chains.OperationChain import OperationChain
-from research_analytics_suite.operation_manager.nodes.OperationNode import OperationNode
+from research_analytics_suite.operation_manager.chains.OperationNode import OperationNode
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.operation_manager.operations.core.workspace.WorkspaceInteraction import \
     pack_as_local_reference

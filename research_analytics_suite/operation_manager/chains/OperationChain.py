@@ -15,7 +15,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 from research_analytics_suite.commands import command, link_class_commands
-from research_analytics_suite.operation_manager.nodes.OperationNode import OperationNode
+from research_analytics_suite.operation_manager.chains.OperationNode import OperationNode
 from research_analytics_suite.operation_manager import BaseOperation
 
 
