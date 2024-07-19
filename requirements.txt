@@ -32,12 +32,14 @@ numexpr
 numpy
 openpyxl
 pandas
+paramiko
 pip
 pipreqs
 prettytable
 psutil
 pyarrow
 pymongo
+pynvml
 pyopenssl
 pyparsing
 tables

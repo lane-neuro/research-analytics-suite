@@ -133,6 +133,7 @@ dependencies:
   - packaging
   - pandas
   - pandocfilters
+  - paramiko
   - parso
   - partd
   - patsy
@@ -173,6 +174,7 @@ dependencies:
   - python-fastjsonschema
   - python-tzdata
   - pytz
+  - pynvml
   - pywin32
   - pywin32-ctypes
   - pyyaml
