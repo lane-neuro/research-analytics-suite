@@ -36,12 +36,14 @@ class TestCUDAManager:
                 # Handle cases where `geteuid` doesn't exist, such as on Windows
                 pass
 
+    @pytest.mark.skipif(platform.system() != 'Windows', reason="Test only applicable to Windows")
     @mock.patch('platform.system', return_value='Windows')
     def test_check_permissions_windows(self, mock_platform):
         with mock.patch('ctypes.windll.shell32.IsUserAnAdmin', return_value=True):
             cuda_manager = CUDAManager(logger=None)  # Replace logger with a mock or real logger as needed
             assert cuda_manager.check_permissions() is True
 
+    @pytest.mark.skipif(platform.system() != 'Linux', reason="Test only applicable to Linux")
     def test_install_cuda_supported_gpu_linux(self, logger):
         with mock.patch('platform.system', return_value='Linux'):
             cuda_manager = CUDAManager(logger)

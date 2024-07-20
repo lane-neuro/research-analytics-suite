@@ -1,3 +1,5 @@
+import platform
+
 import pytest
 from unittest import mock
 from research_analytics_suite.hardware_manager.gpu.GPUDetector import GPUDetector
@@ -85,6 +87,7 @@ class TestGPUDetector:
                             logger.warning.assert_called_with("MPS backend is not available.")
                             logger.info.assert_called_with("macOS version: 10.15.7, Chip: Intel")
 
+    @pytest.mark.skipif(platform.system() != 'Linux', reason='Test only applicable to Linux')
     @mock.patch('platform.system', return_value='Linux')
     @mock.patch.object(GPUDetector, 'detect_gpu_torch', return_value=[{'name': 'GPU1', 'index': 0}])
     @mock.patch.object(GPUDetector, 'detect_gpu_pynvml', return_value=[{'name': 'GPU2', 'index': 1}])
