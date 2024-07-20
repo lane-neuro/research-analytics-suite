@@ -14,7 +14,6 @@ Status: Prototype
 """
 import pyaudio
 import wave
-import numpy as np
 
 
 class AudioRecorder:
@@ -25,22 +24,32 @@ class AudioRecorder:
     def record_audio(self, output_filename, duration=5, sample_rate=44100, channels=2):
         """Record audio from the default microphone."""
         self.logger.info(f"Recording audio for {duration} seconds...")
-        stream = self.audio.open(format=pyaudio.paInt16, channels=channels,
-                                 rate=sample_rate, input=True,
-                                 frames_per_buffer=1024)
 
-        frames = []
-        for _ in range(0, int(sample_rate / 1024 * duration)):
-            data = stream.read(1024)
-            frames.append(data)
+        stream = None
+        try:
+            stream = self.audio.open(format=pyaudio.paInt16, channels=channels,
+                                     rate=sample_rate, input=True,
+                                     frames_per_buffer=1024)
 
-        stream.stop_stream()
-        stream.close()
+            frames = []
+            for _ in range(0, int(sample_rate / 1024 * duration)):
+                data = stream.read(1024)
+                frames.append(data)
 
-        with wave.open(output_filename, 'wb') as wf:
-            wf.setnchannels(channels)
-            wf.setsampwidth(self.audio.get_sample_size(pyaudio.paInt16))
-            wf.setframerate(sample_rate)
-            wf.writeframes(b''.join(frames))
+            with wave.open(output_filename, 'wb') as wf:
+                wf.setnchannels(channels)
+                wf.setsampwidth(self.audio.get_sample_size(pyaudio.paInt16))
+                wf.setframerate(sample_rate)
+                wf.writeframes(b''.join(frames))
 
-        self.logger.info(f"Audio recording saved to {output_filename}")
+            self.logger.info(f"Audio recording saved to {output_filename}")
+
+        except Exception as e:
+            self.logger.error(f"Failed to record audio: {e}")
+            raise e
+        finally:
+            if stream:
+                if stream.is_active():
+                    stream.stop_stream()
+                stream.close()
+            self.audio.terminate()

@@ -12,9 +12,9 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-import numpy as np
 import pyaudio
 import wave
+import numpy as np
 
 
 class AudioProcessor:
