@@ -36,11 +36,11 @@ class TestCUDAManager:
                 # Handle cases where `geteuid` doesn't exist, such as on Windows
                 pass
 
-    def test_check_permissions_windows(self, cuda_manager):
-        with mock.patch('platform.system', return_value='Windows'):
-            with mock.patch('ctypes.windll.shell32.IsUserAnAdmin', return_value=1):
-                cuda_manager = CUDAManager(mock.Mock())
-                assert cuda_manager.check_permissions() is True
+    @mock.patch('platform.system', return_value='Windows')
+    def test_check_permissions_windows(self, mock_platform):
+        with mock.patch('ctypes.windll.shell32.IsUserAnAdmin', return_value=True):
+            cuda_manager = CUDAManager(logger=None)  # Replace logger with a mock or real logger as needed
+            assert cuda_manager.check_permissions() is True
 
     def test_install_cuda_supported_gpu_linux(self, logger):
         with mock.patch('platform.system', return_value='Linux'):

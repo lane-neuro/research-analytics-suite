@@ -120,18 +120,14 @@ class CUDAManager:
         return self.cuda_version_map.get(gpu_name, "Unknown")
 
     def check_permissions(self) -> bool:
-        """Check if the script has administrative permissions.
-
-        Returns:
-            bool: True if the script has administrative permissions, False otherwise.
-        """
+        """Check if the script has administrative permissions."""
         if self.os_info in ["linux", "darwin"]:
             return os.geteuid() == 0
         elif self.os_info == "windows":
             try:
                 is_admin = os.getuid() == 0
             except AttributeError:
-                is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+                is_admin = hasattr(ctypes, 'windll') and ctypes.windll.shell32.IsUserAnAdmin() != 0
             return is_admin
         else:
             return False
