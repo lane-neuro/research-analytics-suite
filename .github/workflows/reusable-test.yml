@@ -30,6 +30,18 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-venv-
 
+    - name: Install system dependencies on Ubuntu
+      if: runner.os == 'Linux'
+      run: sudo apt-get install -y portaudio19-dev
+
+    - name: Install system dependencies on macOS
+      if: runner.os == 'macOS'
+      run: brew install portaudio
+
+    - name: Install system dependencies on Windows
+      if: runner.os == 'Windows'
+      run: choco install portaudio
+
     - name: Set up virtual environment on Ubuntu
       if: runner.os == 'Linux'
       run: |
@@ -44,11 +56,9 @@ jobs:
       run: |
         python -m venv ${{ inputs.venv-path }}
         source ${{ inputs.venv-path }}/bin/activate
-        brew install hdf5
-        grep -v '^mkl' requirements.txt > requirements_filtered.txt
         python -m pip install --upgrade pip
         pip install pytest pytest-asyncio
-        pip install -r requirements_filtered.txt
+        pip install -r requirements.txt
 
     - name: Set up virtual environment on Windows
       if: runner.os == 'Windows'
