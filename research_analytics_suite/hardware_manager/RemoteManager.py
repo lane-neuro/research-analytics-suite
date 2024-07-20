@@ -16,8 +16,16 @@ import paramiko
 
 
 class RemoteManager:
-    def __init__(self, logger, remote_servers=None):
+    def __init__(self, logger, known_hosts_file, remote_servers=None):
+        """Initialize RemoteManager with logger, known hosts file, and optional remote servers list.
+
+        Args:
+            logger (Logger): The logger instance for logging messages.
+            known_hosts_file (str): Path to the known hosts file.
+            remote_servers (list, optional): List of remote servers. Defaults to None.
+        """
         self.logger = logger
+        self.known_hosts_file = known_hosts_file
         self.remote_servers = remote_servers or []
 
     def connect_to_remote_server(self, hostname, username, password):
@@ -29,16 +37,18 @@ class RemoteManager:
             password (str): The password for SSH login.
 
         Returns:
-            paramiko.SSHClient: The SSH client connection.
+            paramiko.SSHClient: The SSH client connection or None if connection fails.
         """
         self.logger.info(f"Connecting to remote server {hostname}...")
         try:
             ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.load_system_host_keys()
+            ssh.load_host_keys(self.known_hosts_file)
+            ssh.set_missing_host_key_policy(paramiko.RejectPolicy())
             ssh.connect(hostname, username=username, password=password)
             self.logger.info(f"Connected to {hostname}")
             return ssh
-        except Exception as e:
+        except paramiko.ssh_exception.SSHException as e:
             self.logger.error(f"Failed to connect to {hostname}: {e}")
             return None
 
