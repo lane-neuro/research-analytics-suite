@@ -148,6 +148,7 @@ dependencies:
   - prettytable
   - prompt-toolkit
   - psutil
+  - pyaudio
   - pycosat
   - pycparser
   - pydantic
