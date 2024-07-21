@@ -1,94 +1,149 @@
 import pytest
-from unittest import mock
+from unittest.mock import patch, MagicMock
 import subprocess
+from typing import List, Dict, Any
+
 from research_analytics_suite.hardware_manager.interface.usb.USBInterface import USBInterface
 
 
-def sort_dicts_by_keys(list_of_dicts):
-    return [dict(sorted(d.items())) for d in list_of_dicts]
+@pytest.fixture
+def logger():
+    return MagicMock()
+
+
+@pytest.fixture
+@patch('platform.system', return_value='Linux')
+def usb_interface(mock_platform_system, logger):
+    return USBInterface(logger)
 
 
 class TestUSBInterface:
-    @pytest.fixture
-    def logger(self):
-        with mock.patch('research_analytics_suite.utils.CustomLogger') as logger:
-            yield logger
+    @patch('platform.system', return_value='Linux')
+    def test_detect_os_linux(self, mock_platform_system, logger):
+        interface = USBInterface(logger)
+        assert interface.os_info == 'linux'
 
-    @pytest.fixture
-    def usb_interface(self, logger):
-        with mock.patch('platform.system', return_value='Linux'):
-            return USBInterface(logger)
+    @patch('platform.system', return_value='Windows')
+    def test_detect_os_windows(self, mock_platform_system, logger):
+        interface = USBInterface(logger)
+        assert interface.os_info == 'windows'
 
-    @pytest.mark.parametrize("os_name,command_output,expected_result", [
-        ('Linux', "Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub\n",
-         [{'bus': '001', 'device': '001', 'id': '1d6b:0002', 'description': 'Linux Foundation 2.0 root hub'}]),
-        ('Windows', "Status OK USB Composite Device\nStatus OK USB Root Hub\n",
-         [{'name': 'USB Composite Device', 'status': 'Status OK'}, {'name': 'USB Root Hub', 'status': 'Status OK'}]),
-        ('Darwin', "USB:\n\n    USB 3.0 Bus:\n\n        USB 2.0 Hub:\n\n            Product ID: 0x1234\n",
-         [{'description': 'USB 2.0 Hub', 'Product ID': '0x1234'}])
-    ])
-    def test_detect_usb_success(self, os_name, command_output, expected_result, logger):
-        with mock.patch('platform.system', return_value=os_name):
-            usb_interface = USBInterface(logger)
-            with mock.patch('subprocess.run', return_value=mock.Mock(stdout=command_output, returncode=0)):
-                result = usb_interface.detect()
-                assert sort_dicts_by_keys(result) == sort_dicts_by_keys(expected_result)
-                logger.info.assert_any_call(f"Detected devices: {result}")
+    @patch('platform.system', return_value='UnsupportedOS')
+    def test_detect_os_unsupported(self, mock_platform_system, logger):
+        interface = USBInterface(logger)
+        assert interface.os_info == 'unsupported'
+        interface.logger.error.assert_called_with('Unsupported OS: UnsupportedOS')
 
-    @pytest.mark.parametrize("os_name", ['Linux', 'Windows', 'Darwin'])
-    def test_detect_usb_failure(self, os_name, logger):
-        with mock.patch('platform.system', return_value=os_name):
-            usb_interface = USBInterface(logger)
-            with mock.patch('subprocess.run', side_effect=subprocess.CalledProcessError(1, 'cmd')):
-                result = usb_interface.detect()
-                assert result == []
-                logger.error.assert_any_call(f"Failed to detect devices: Command 'cmd' returned non-zero exit status 1.")
+    @patch('subprocess.run')
+    @patch('platform.system', return_value='Linux')
+    def test_detect_success(self, mock_platform_system, mock_subprocess_run, logger):
+        mock_subprocess_run.return_value = MagicMock(stdout='Bus 001 Device 002: ID 8087:0024 Intel Corp.', stderr='')
+        interface = USBInterface(logger)
+        devices = interface.detect()
+        assert devices == [{'bus': '001', 'device': '002', 'vendor_id': '8087', 'product_id': '0024', 'description': 'Intel Corp.'}]
+        interface.logger.debug.assert_any_call('Executing command: lsusb')
+        interface.logger.debug.assert_any_call('Command output: Bus 001 Device 002: ID 8087:0024 Intel Corp.')
+        interface.logger.debug.assert_any_call('Command stderr: ')
 
-    @pytest.mark.parametrize("os_name,command_output,expected_result", [
-        ('Linux', "Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub\n",
-         [{'bus': '001', 'device': '001', 'id': '1d6b:0002', 'description': 'Linux Foundation 2.0 root hub'}]),
-        ('Windows', "Status OK USB Composite Device\nStatus OK USB Root Hub\n",
-         [{'name': 'USB Composite Device', 'status': 'Status OK'}, {'name': 'USB Root Hub', 'status': 'Status OK'}]),
-        ('Darwin', "USB:\n\n    USB 3.0 Bus:\n\n        USB 2.0 Hub:\n\n            Product ID: 0x1234\n",
-         [{'description': 'USB 2.0 Hub', 'Product ID': '0x1234'}])
-    ])
-    def test_parse_output(self, os_name, command_output, expected_result, logger):
-        with mock.patch('platform.system', return_value=os_name):
-            usb_interface = USBInterface(logger)
-            result = usb_interface._parse_output(command_output)
-            assert sort_dicts_by_keys(result) == sort_dicts_by_keys(expected_result)
+    @patch('subprocess.run')
+    @patch('platform.system', return_value='Linux')
+    def test_detect_failure(self, mock_platform_system, mock_subprocess_run, logger):
+        mock_subprocess_run.side_effect = subprocess.CalledProcessError(
+            returncode=1, cmd=['lsusb'], output='error', stderr='error'
+        )
+        interface = USBInterface(logger)
+        with pytest.raises(subprocess.CalledProcessError):
+            interface.detect()
+        interface.logger.error.assert_any_call("Command 'lsusb' failed with error: Command '['lsusb']' returned non-zero exit status 1.")
+        interface.logger.error.assert_any_call('Command stdout: error')
+        interface.logger.error.assert_any_call('Command stderr: error')
 
-    def test_unsupported_os(self, logger):
-        with mock.patch('platform.system', return_value='unsupportedos'):
-            usb_interface = USBInterface(logger)
-            result = usb_interface.detect()
-            assert result == []
-            logger.error.assert_any_call("Unsupported OS: unsupportedos")
+    @patch('platform.system', return_value='Linux')
+    def test_get_command_linux(self, mock_platform_system, logger):
+        interface = USBInterface(logger)
+        command = interface._get_command('list')
+        assert command == ['lsusb']
 
-    def test_initialization(self, usb_interface, logger):
-        assert usb_interface.logger == logger
-        assert usb_interface.os_info == 'linux'
+    @patch('platform.system', return_value='Windows')
+    def test_get_command_windows(self, mock_platform_system, logger):
+        interface = USBInterface(logger)
+        command = interface._get_command('list')
+        assert command == ['powershell', 'Get-PnpDevice -Class USB']
 
-    @pytest.mark.parametrize("os_name,command_output,identifier,expected_result", [
-        ('Linux', "Product Description", "1-1", "Product Description"),
-        ('Windows', "FriendlyName", "1-1", "FriendlyName"),
-        ('Darwin', "Product Description", "1-1", "Product Description")
-    ])
-    def test_read_success(self, os_name, command_output, identifier, expected_result, logger):
-        with mock.patch('platform.system', return_value=os_name):
-            usb_interface = USBInterface(logger)
-            with mock.patch('subprocess.run', return_value=mock.Mock(stdout=command_output, returncode=0)):
-                result = usb_interface.read(identifier)
-                assert result == expected_result
+    @patch('platform.system', return_value='Darwin')
+    def test_get_command_darwin(self, mock_platform_system, logger):
+        interface = USBInterface(logger)
+        command = interface._get_command('list')
+        assert command == ['system_profiler', 'SPUSBDataType']
 
-    @pytest.mark.parametrize("os_name,identifier", [
-        ('Linux', "1-1"),
-        ('Windows', "1-1"),
-        ('Darwin', "1-1")
-    ])
-    def test_read_failure(self, os_name, identifier, logger):
-        with mock.patch('platform.system', return_value=os_name):
-            usb_interface = USBInterface(logger)
-            with mock.patch('subprocess.run', side_effect=subprocess.CalledProcessError(1, 'cmd')):
-                result = usb_interface.read(identifier)
-                assert result == ""
+    def test_parse_output_linux(self, logger):
+        interface = USBInterface(logger)
+        interface.os_info = 'linux'
+        output = "Bus 001 Device 002: ID 8087:0024 Intel Corp.\nBus 002 Device 003: ID 1234:5678 Test Device"
+        parsed = interface._parse_output(output)
+        assert parsed == [
+            {'bus': '001', 'device': '002', 'vendor_id': '8087', 'product_id': '0024', 'description': 'Intel Corp.'},
+            {'bus': '002', 'device': '003', 'vendor_id': '1234', 'product_id': '5678', 'description': 'Test Device'}
+        ]
+
+    def test_parse_output_windows(self, logger):
+        interface = USBInterface(logger)
+        interface.os_info = 'windows'
+        output = "Status     Class           FriendlyName        InstanceId\n" \
+                 "------     -----           ------------        ----------\n" \
+                 "OK         USB             USB Composite Device USB\\VID_1234&PID_5678\\12345678"
+        parsed = interface._parse_output(output)
+        assert parsed == [
+            {'status': 'OK', 'class': 'USB', 'friendly_name': 'USB Composite Device',
+             'instance_id': 'USB\\VID_1234&PID_5678\\12345678'}
+        ]
+
+    def test_parse_output_darwin(self, logger):
+        interface = USBInterface(logger)
+        interface.os_info = 'darwin'
+        output = "USB:\n\n    USB 3.0 Bus:\n\n        Host Controller Driver: AppleUSBXHCITR\n" \
+                 "        PCI Device ID: 0x1e31 \n        PCI Revision ID: 0x0004 \n        PCI Vendor ID: 0x8086 \n" \
+                 "            USB 2.0 Hub:\n\n              Product ID: 0x0024\n              Vendor ID: 0x8087  (Intel Corporation)\n" \
+                 "              Version: 0.05\n              Speed: Up to 480 Mb/sec\n              Location ID: 0x1a120000 / 2\n" \
+                 "              Current Available (mA): 500\n              Current Required (mA): 0\n              Extra Operating Current (mA): 0\n"
+        parsed = interface._parse_output(output)
+        assert parsed == [
+            {'product_id': '0x0024', 'vendor_id': '0x8087', 'vendor_name': '(Intel Corporation)', 'location_id': '0x1a120000 / 2', 'speed': 'Up to 480 Mb/sec'}
+        ]
+
+    def test_parse_output_empty(self, logger):
+        interface = USBInterface(logger)
+        interface.os_info = 'windows'
+        output = ""
+        parsed = interface._parse_output(output)
+        assert parsed == []
+
+    @patch('platform.system', return_value='Linux')
+    def test_read_stream_data_linux(self, mock_platform_system, logger):
+        interface = USBInterface(logger)
+        device_identifier = 'ttyUSB0'
+        with patch('subprocess.run') as mock_run:
+            mock_run.return_value = MagicMock(stdout='stream data', stderr='')
+            output = interface.read_stream_data(device_identifier)
+            assert output == 'stream data'
+            mock_run.assert_called_with(['cat', f'/dev/{device_identifier}'], capture_output=True, text=True, shell=False, check=True)
+
+    @patch('platform.system', return_value='Windows')
+    def test_read_stream_data_windows(self, mock_platform_system, logger):
+        interface = USBInterface(logger)
+        device_identifier = 'COM1'
+        with patch('subprocess.run') as mock_run:
+            mock_run.return_value = MagicMock(stdout='stream data', stderr='')
+            output = interface.read_stream_data(device_identifier)
+            assert output == 'stream data'
+            mock_run.assert_called_with(['powershell', f'Get-Content -Path \\\\.\\{device_identifier}'], capture_output=True, text=True, shell=True, check=True)
+
+    @patch('platform.system', return_value='Darwin')
+    def test_read_stream_data_darwin(self, mock_platform_system, logger):
+        interface = USBInterface(logger)
+        device_identifier = 'tty.usbserial'
+        with patch('subprocess.run') as mock_run:
+            mock_run.return_value = MagicMock(stdout='stream data', stderr='')
+            output = interface.read_stream_data(device_identifier)
+            assert output == 'stream data'
+            mock_run.assert_called_with(['cat', f'/dev/{device_identifier}'], capture_output=True, text=True, shell=False, check=True)

@@ -1,5 +1,5 @@
 """
-USBInterface
+USBInterface Module
 
 This module contains the USBInterface class, which detects and parses USB devices.
 
@@ -7,150 +7,215 @@ Author: Lane
 Copyright: Lane
 Credits: Lane
 License: BSD 3-Clause License
-Version: 0.0.0.2
+Version: 0.0.0.1
 Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-import re
+
 import subprocess
-from typing import List, Dict
+from typing import List, Dict, Any
+
 from research_analytics_suite.hardware_manager.interface.BaseInterface import BaseInterface
-import platform
 
 
 class USBInterface(BaseInterface):
-    def __init__(self, logger):
-        super().__init__(logger)
-        self.os_info = self._detect_os()
-
-    def _detect_os(self) -> str:
-        """Detect the operating system."""
-        os_name = platform.system()
-        if os_name == 'Linux' or os_name == 'Darwin':
-            return os_name.lower()
-        elif os_name == 'Windows':
-            return 'windows'
-        else:
-            self.logger.error(f"Unsupported OS: {os_name}")
-            return 'unsupported'
-
-    def _get_command(self, action: str, identifier: str = '', data: str = '', settings=None) -> List[str]:
-        """Get the command to interact with USB devices based on OS and action."""
-        if action == 'detect':
-            if self.os_info == 'linux':
-                return ['lsusb']
-            elif self.os_info == 'windows':
-                return ['powershell', '-Command', 'Get-PnpDevice -Class USB']
-            elif self.os_info == 'darwin':
-                return ['system_profiler', 'SPUSBDataType']
-            else:
-                self.logger.error(f"Unsupported OS: {self.os_info}")
-                return []
-        elif action == 'read':
-            if self.os_info == 'linux':
-                return ['cat', f'/sys/bus/usb/devices/{identifier}/product']
-            elif self.os_info == 'windows':
-                return ['powershell', '-Command',
-                        f'Get-WmiObject -Query "SELECT * '
-                        f'FROM Win32_PnPEntity WHERE DeviceID=\'{identifier}\'" | Select-Object -ExpandProperty Name']
-            elif self.os_info == 'darwin':
-                return ['system_profiler', 'SPUSBDataType', f'-detailLevel {identifier}']
-        return []
-
-    def _parse_output(self, output: str) -> List[Dict[str, str]]:
-        """Parse the output to find USB devices."""
-        devices = []
-        if self.os_info == 'linux':
-            lines = output.split('\n')
-            for line in lines:
-                if line:
-                    match = re.match(r'Bus (\d+) Device (\d+): ID (\w+:\w+) (.+)', line)
-                    if match:
-                        devices.append({
-                            'bus': match.group(1),
-                            'device': match.group(2),
-                            'id': match.group(3),
-                            'description': match.group(4)
-                        })
-        elif self.os_info == 'windows':
-            lines = output.split('\n')
-            for line in lines:
-                if line.strip() and not line.startswith('------'):
-                    parts = line.split(None, 2)
-                    if len(parts) == 3:
-                        status, cls, name = parts
-                        devices.append({
-                            'status': f"{status} {cls}",
-                            'name': name.strip()
-                        })
-        elif self.os_info == 'darwin':
-            current_device = {}
-            for line in output.split('\n'):
-                line = line.strip()
-                if not line:
-                    continue
-                if ':' in line:
-                    key, value = line.split(':', 1)
-                    key = key.strip()
-                    value = value.strip()
-                    if key == "Product ID":
-                        current_device['Product ID'] = value
-                    else:
-                        current_device['description'] = key
-                if 'description' in current_device and 'Product ID' in current_device:
-                    devices.append(current_device)
-                    current_device = {}
-            if 'description' in current_device and 'Product ID' in current_device:
-                devices.append(current_device)
-        return devices
-
     def detect(self) -> List[Dict[str, str]]:
         """Detect USB devices.
 
         Returns:
             list: Information about detected USB devices.
         """
-        command = self._get_command('detect')
-        if not command:
-            return []
-        try:
-            result = self._execute_command(command)
-            devices = self._parse_output(result)
-            self.logger.info(f"Detected devices: {devices}")
-            return devices
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"Failed to detect devices: {e}")
-            return []
+        command = self._get_command('list')
+        output = self._execute_command(command)
+        return self._parse_output(output)
 
-    def read(self, identifier: str) -> str:
-        """Read data from a USB device."""
-        command = self._get_command('read', identifier)
-        if not command:
-            return ""
-        try:
-            result = self._execute_command(command)
-            self.logger.info(f"Read from USB device {identifier}: {result}")
-            return result
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"Failed to read from USB device {identifier}: {e}")
-            return ""
-
-    def _execute_command(self, command: List[str]) -> str:
-        """Execute a system command.
+    def read_stream_data(self, device_identifier: str) -> str:
+        """Read stream data from the specified device.
 
         Args:
-            command (list): The command to execute.
+            device_identifier (str): The identifier of the device to read from.
 
         Returns:
-            str: The output of the command.
+            str: The stream data read from the device.
         """
-        self.logger.debug(f"Executing command: {' '.join(command)}")
-        try:
-            result = subprocess.run(command, capture_output=True, text=True, shell=(self.os_info == 'windows'), check=True)
-            self.logger.debug(f"Command output: {result.stdout}")
-            self.logger.debug(f"Command stderr: {result.stderr}")
-            return result.stdout
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"Command '{' '.join(command)}' failed with error: {e}")
-            raise
+        command = self._get_command('read', identifier=device_identifier)
+        self.logger.debug(f"Command for reading stream data: {command}")
+        output = self._execute_command(command)
+        return output
+
+    def _get_command(self, action: str, identifier: str = '', data: str = '', settings: Any = None) -> List[str]:
+        """Get the command to perform an action based on the OS.
+
+        Args:
+            action (str): The action to perform.
+            identifier (str): The identifier of the device (optional).
+            data (str): The data to write (optional).
+            settings (dict): The settings to apply (optional).
+
+        Returns:
+            list: Command to perform the action.
+        """
+        if self.os_info == 'linux':
+            return self._get_command_linux(action, identifier, data, settings)
+        elif self.os_info == 'windows':
+            return self._get_command_windows(action, identifier, data, settings)
+        elif self.os_info == 'darwin':
+            return self._get_command_darwin(action, identifier, data, settings)
+        return []
+
+    def _get_command_linux(self, action: str, identifier: str = '', data: str = '', settings=None) -> List[str]:
+        """Get the command for Linux systems.
+
+        Args:
+            action (str): The action to perform.
+            identifier (str): The identifier of the device (optional).
+            data (str): The data to write (optional).
+            settings (dict): The settings to apply (optional).
+
+        Returns:
+            list: Command to perform the action.
+        """
+        if action == 'list':
+            return ['lsusb']
+        elif action == 'read':
+            return ['cat', f'/dev/{identifier}']
+        return []
+
+    def _get_command_windows(self, action: str, identifier: str = '', data: str = '', settings=None) -> List[str]:
+        """Get the command for Windows systems.
+
+        Args:
+            action (str): The action to perform.
+            identifier (str): The identifier of the device (optional).
+            data (str): The data to write (optional).
+            settings (dict): The settings to apply (optional).
+
+        Returns:
+            list: Command to perform the action.
+        """
+        if action == 'list':
+            return ['powershell', 'Get-PnpDevice -Class USB']
+        elif action == 'read':
+            return ['powershell', f'Get-Content -Path \\\\.\\{identifier}']
+        return []
+
+    def _get_command_darwin(self, action: str, identifier: str = '', data: str = '', settings=None) -> List[str]:
+        """Get the command for Darwin systems.
+
+        Args:
+            action (str): The action to perform.
+            identifier (str): The identifier of the device (optional).
+            data (str): The data to write (optional).
+            settings (dict): The settings to apply (optional).
+
+        Returns:
+            list: Command to perform the action.
+        """
+        if action == 'list':
+            return ['system_profiler', 'SPUSBDataType']
+        elif action == 'read':
+            return ['cat', f'/dev/{identifier}']
+        return []
+
+    def _parse_output(self, output: str) -> List[Dict[str, str]]:
+        """Parse the raw output to extract device information.
+
+        Args:
+            output (str): Raw output from the system command.
+
+        Returns:
+            list: Parsed information about detected devices.
+        """
+        devices = []
+        if self.os_info == 'linux':
+            devices = self._parse_linux_output(output)
+        elif self.os_info == 'windows':
+            devices = self._parse_windows_output(output)
+        elif self.os_info == 'darwin':
+            devices = self._parse_darwin_output(output)
+        return devices
+
+    def _parse_linux_output(self, output: str) -> List[Dict[str, str]]:
+        """Parse the output from Linux systems.
+
+        Args:
+            output (str): Raw output from the system command.
+
+        Returns:
+            list: Parsed information about detected devices.
+        """
+        devices = []
+        for line in output.split('\n'):
+            if line.strip():
+                parts = line.split()
+                bus = parts[1]
+                device = parts[3][:-1]
+                vendor_id, product_id = parts[5].split(':')
+                device_info = {
+                    'bus': bus,
+                    'device': device,
+                    'vendor_id': vendor_id,
+                    'product_id': product_id,
+                    'description': ' '.join(parts[6:])
+                }
+                devices.append(device_info)
+        return devices
+
+    def _parse_windows_output(self, output: str) -> List[Dict[str, str]]:
+        """Parse the output from Windows systems.
+
+        Args:
+            output (str): Raw output from the system command.
+
+        Returns:
+            list: Parsed information about detected devices.
+        """
+        devices = []
+        lines = output.split('\n')
+        if len(lines) > 2:  # Ensure there are more than just the header lines
+            for line in lines[2:]:
+                if line.strip():
+                    parts = line.split()
+                    status = parts[0]
+                    device_class = parts[1]
+                    friendly_name = ' '.join(parts[2:-1])
+                    instance_id = parts[-1]
+                    device_info = {
+                        'status': status,
+                        'class': device_class,
+                        'friendly_name': friendly_name,
+                        'instance_id': instance_id
+                    }
+                    devices.append(device_info)
+        return devices
+
+    def _parse_darwin_output(self, output: str) -> List[Dict[str, str]]:
+        """Parse the output from Darwin systems.
+
+        Args:
+            output (str): Raw output from the system command.
+
+        Returns:
+            list: Parsed information about detected devices.
+        """
+        devices = []
+        current_device = None
+        for line in output.split('\n'):
+            if 'Product ID' in line:
+                if current_device:
+                    devices.append(current_device)
+                current_device = {}
+            if current_device is not None:
+                if 'Product ID' in line:
+                    current_device['product_id'] = line.split(':')[-1].strip()
+                elif 'Vendor ID' in line:
+                    current_device['vendor_id'] = line.split(':')[-1].strip().split()[0]
+                    current_device['vendor_name'] = ' '.join(line.split(':')[-1].strip().split()[1:])
+                elif 'Location ID' in line:
+                    current_device['location_id'] = line.split(':')[-1].strip()
+                elif 'Speed' in line:
+                    current_device['speed'] = line.split(':')[-1].strip()
+        if current_device:
+            devices.append(current_device)
+        return devices

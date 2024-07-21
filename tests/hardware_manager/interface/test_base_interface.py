@@ -1,127 +1,77 @@
-import subprocess
-
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch, MagicMock
+import subprocess
+from typing import List, Dict, Any
+
 from research_analytics_suite.hardware_manager.interface.BaseInterface import BaseInterface
 
 
-class TestableBaseInterface(BaseInterface):
-    def _get_command(self, action: str, identifier: str = '', data: str = '', settings=None):
-        if settings is None:
-            settings = {}
-        if action == 'detect':
-            return ['dummy_detect_command']
-        elif action == 'read':
-            return ['dummy_read_command', identifier]
-        elif action == 'write':
-            return ['dummy_write_command', identifier, data]
-        elif action == 'stream':
-            return ['dummy_stream_command', identifier]
-        elif action == 'configure':
-            return ['dummy_configure_command', identifier] + [f"{k}={v}" for k, v in settings.items()]
+class ConcreteBaseInterface(BaseInterface):
+    def detect(self) -> List[Dict[str, str]]:
         return []
 
-    def _parse_output(self, output: str):
-        return [{"dummy_key": "dummy_value"}]  # Dummy implementation for testing
+    def _get_command(self, action: str, identifier: str = '', data: str = '', settings: Any = None) -> List[str]:
+        return []
+
+    def _parse_output(self, output: str) -> List[Dict[str, str]]:
+        return []
+
+    def _get_command_linux(self, action: str, identifier: str = '', data: str = '', settings=None) -> List[str]:
+        return []
+
+    def _get_command_windows(self, action: str, identifier: str = '', data: str = '', settings=None) -> List[str]:
+        return []
+
+    def _get_command_darwin(self, action: str, identifier: str = '', data: str = '', settings=None) -> List[str]:
+        return []
+
+
+@pytest.fixture
+def logger():
+    return MagicMock()
+
+
+@pytest.fixture
+def base_interface(logger):
+    return ConcreteBaseInterface(logger)
 
 
 class TestBaseInterface:
-    @pytest.mark.parametrize("os_name", ["Linux", "Darwin", "Windows"])
+    @patch('platform.system')
+    def test_detect_os_linux(self, mock_platform_system, base_interface):
+        mock_platform_system.return_value = 'Linux'
+        os_info = base_interface._detect_os()
+        assert os_info == 'linux'
+
+    @patch('platform.system')
+    def test_detect_os_windows(self, mock_platform_system, base_interface):
+        mock_platform_system.return_value = 'Windows'
+        os_info = base_interface._detect_os()
+        assert os_info == 'windows'
+
+    @patch('platform.system')
+    def test_detect_os_unsupported(self, mock_platform_system, base_interface):
+        mock_platform_system.return_value = 'UnsupportedOS'
+        os_info = base_interface._detect_os()
+        assert os_info == 'unsupported'
+        base_interface.logger.error.assert_called_with('Unsupported OS: UnsupportedOS')
+
     @patch('subprocess.run')
-    def test_detect(self, mock_subprocess_run, os_name):
-        with patch('platform.system', return_value=os_name):
-            logger = MagicMock()
-            interface = TestableBaseInterface(logger)
-            mock_subprocess_run.return_value.stdout = 'Bus 001 Device 002: ID 1234:5678 Test Device'
-            devices = interface.detect()
-            assert devices == [{"dummy_key": "dummy_value"}]
+    def test_execute_command_success(self, mock_subprocess_run, base_interface):
+        mock_subprocess_run.return_value = MagicMock(stdout='output', stderr='')
+        result = base_interface._execute_command(['echo', 'test'])
+        assert result == 'output'
+        base_interface.logger.debug.assert_any_call('Executing command: echo test')
+        base_interface.logger.debug.assert_any_call('Command output: output')
+        base_interface.logger.debug.assert_any_call('Command stderr: ')
 
-    @pytest.mark.parametrize("os_name", ["Linux", "Darwin", "Windows"])
     @patch('subprocess.run')
-    def test_read(self, mock_subprocess_run, os_name):
-        with patch('platform.system', return_value=os_name):
-            logger = MagicMock()
-            interface = TestableBaseInterface(logger)
-            mock_subprocess_run.return_value.stdout = 'Read data'
-            data = interface.read('test_identifier')
-            assert data == 'Read data'
-
-    @pytest.mark.parametrize("os_name", ["Linux", "Darwin", "Windows"])
-    @patch('subprocess.run')
-    def test_write(self, mock_subprocess_run, os_name):
-        with patch('platform.system', return_value=os_name):
-            logger = MagicMock()
-            interface = TestableBaseInterface(logger)
-            mock_subprocess_run.return_value.stdout = ''
-            success = interface.write('test_identifier', 'test_data')
-            assert success
-
-    @pytest.mark.parametrize("os_name", ["Linux", "Darwin", "Windows"])
-    @patch('subprocess.run')
-    def test_stream(self, mock_subprocess_run, os_name):
-        with patch('platform.system', return_value=os_name):
-            logger = MagicMock()
-            interface = TestableBaseInterface(logger)
-            mock_subprocess_run.return_value.stdout = 'Streamed data'
-            data = interface.stream('test_identifier')
-            assert data == 'Streamed data'
-
-    @pytest.mark.parametrize("os_name", ["Linux", "Darwin", "Windows"])
-    @patch('subprocess.run')
-    def test_configure(self, mock_subprocess_run, os_name):
-        with patch('platform.system', return_value=os_name):
-            logger = MagicMock()
-            interface = TestableBaseInterface(logger)
-            mock_subprocess_run.return_value.stdout = ''
-            success = interface.configure('test_identifier', {'setting1': 'value1', 'setting2': 'value2'})
-            assert success
-
-    @pytest.mark.parametrize("os_name", ["Linux", "Darwin", "Windows"])
-    @patch('subprocess.run', side_effect=subprocess.CalledProcessError(1, 'cmd'))
-    def test_detect_error(self, mock_subprocess_run, os_name):
-        with patch('platform.system', return_value=os_name):
-            logger = MagicMock()
-            interface = TestableBaseInterface(logger)
-            devices = interface.detect()
-            assert devices == []
-
-    @pytest.mark.parametrize("os_name", ["Linux", "Darwin", "Windows"])
-    @patch('subprocess.run', side_effect=subprocess.CalledProcessError(1, 'cmd'))
-    def test_read_error(self, mock_subprocess_run, os_name):
-        with patch('platform.system', return_value=os_name):
-            logger = MagicMock()
-            interface = TestableBaseInterface(logger)
-            data = interface.read('test_identifier')
-            assert data == ''
-
-    @pytest.mark.parametrize("os_name", ["Linux", "Darwin", "Windows"])
-    @patch('subprocess.run', side_effect=subprocess.CalledProcessError(1, 'cmd'))
-    def test_write_error(self, mock_subprocess_run, os_name):
-        with patch('platform.system', return_value=os_name):
-            logger = MagicMock()
-            interface = TestableBaseInterface(logger)
-            success = interface.write('test_identifier', 'test_data')
-            assert not success
-
-    @pytest.mark.parametrize("os_name", ["Linux", "Darwin", "Windows"])
-    @patch('subprocess.run', side_effect=subprocess.CalledProcessError(1, 'cmd'))
-    def test_stream_error(self, mock_subprocess_run, os_name):
-        with patch('platform.system', return_value=os_name):
-            logger = MagicMock()
-            interface = TestableBaseInterface(logger)
-            data = interface.stream('test_identifier')
-            assert data == ''
-
-    @pytest.mark.parametrize("os_name", ["Linux", "Darwin", "Windows"])
-    @patch('subprocess.run', side_effect=subprocess.CalledProcessError(1, 'cmd'))
-    def test_configure_error(self, mock_subprocess_run, os_name):
-        with patch('platform.system', return_value=os_name):
-            logger = MagicMock()
-            interface = TestableBaseInterface(logger)
-            success = interface.configure('test_identifier', {'setting1': 'value1', 'setting2': 'value2'})
-            assert not success
-
-    def test_parse_output(self):
-        interface = TestableBaseInterface(MagicMock())
-        output = interface._parse_output("some output")
-        assert output == [{"dummy_key": "dummy_value"}]
+    def test_execute_command_failure(self, mock_subprocess_run, base_interface):
+        mock_subprocess_run.side_effect = subprocess.CalledProcessError(
+            returncode=1, cmd=['echo', 'test'], output='error', stderr='error'
+        )
+        with pytest.raises(subprocess.CalledProcessError):
+            base_interface._execute_command(['echo', 'test'])
+        base_interface.logger.error.assert_any_call("Command 'echo test' failed with error: Command '['echo', 'test']' returned non-zero exit status 1.")
+        base_interface.logger.error.assert_any_call('Command stdout: error')
+        base_interface.logger.error.assert_any_call('Command stderr: error')
