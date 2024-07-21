@@ -12,16 +12,15 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from ..HardwareDetector import HardwareDetector
 from .GPUDetector import GPUDetector
 from .CUDAManager import CUDAManager
 
 
-class GPUInstaller(HardwareDetector):
+class GPUInstaller:
     def detect_hardware(self): ...  # pragma: no cover
 
     def __init__(self, logger, remote_manager, remote_servers=None):
-        super().__init__(logger)
+        self.logger = logger
         self.remote_manager = remote_manager
         self.gpu_detector = GPUDetector(logger)
         self.cuda_manager = CUDAManager(logger)

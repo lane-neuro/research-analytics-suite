@@ -13,7 +13,6 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from .HardwareDetector import HardwareDetector
 from .TaskManager import TaskManager
 from .RemoteManager import RemoteManager
 from .gpu.GPUInstaller import GPUInstaller
@@ -33,7 +32,6 @@ from ..utils import CustomLogger
 class HardwareInstaller:
     def __init__(self, remote_servers=None):
         self.logger = CustomLogger()
-        self.hardware_detector = HardwareDetector(self.logger)
         self.task_manager = TaskManager(self.logger)
         self.remote_manager = RemoteManager(self.logger, remote_servers)
         self.benchmark_manager = BenchmarkManager(self.logger)
@@ -87,15 +85,3 @@ class HardwareInstaller:
             "peripherals_info": peripherals_info
         }
         self.logger.info(f"System information: {system_info}")
-
-    def prompt_user_confirmation(self, message: str) -> bool:
-        """Prompt the user for confirmation.
-
-        Args:
-            message (str): The message to display to the user.
-
-        Returns:
-            bool: True if the user confirms, False otherwise.
-        """
-        response = input(f"{message} (y/n): ").strip().lower()
-        return response == 'y'

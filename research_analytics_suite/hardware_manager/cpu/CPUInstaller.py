@@ -13,16 +13,14 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
-from ..HardwareDetector import HardwareDetector
 from .CPUDetector import CPUDetector
 
 
-class CPUInstaller(HardwareDetector):
+class CPUInstaller:
     def detect_hardware(self): ...  # pragma: no cover
 
     def __init__(self, logger, remote_manager, remote_servers=None):
-        super().__init__(logger)
+        self.logger = logger
         self.remote_manager = remote_manager
         self.cpu_detector = CPUDetector(logger)
         self.remote_servers = remote_servers or []
