@@ -6,7 +6,6 @@ This module contains the InterfaceManager class, which manages the detection of 
 Author: Lane
 Copyright: Lane
 Credits: Lane
-Credits: Lane
 License: BSD 3-Clause License
 Version: 0.0.0.2
 Maintainer: Lane
@@ -15,10 +14,8 @@ Status: Prototype
 """
 
 from .usb.USBInterface import USBInterface
-# Placeholder for additional interfaces
-# from .network.NetworkInterface import NetworkInterface
-# from .serial.SerialInterface import SerialInterface
-# from .bluetooth.BluetoothInterface import BluetoothInterface
+from .usb.USBcInterface import USBcInterface
+from .usb.MicroUSBInterface import MicroUSBInterface
 
 
 class InterfaceManager:
@@ -26,9 +23,8 @@ class InterfaceManager:
         self.logger = logger
         self.interfaces = {
             'USB': USBInterface(logger),
-            # 'Network': NetworkInterface(logger),
-            # 'Serial': SerialInterface(logger),
-            # 'Bluetooth': BluetoothInterface(logger),
+            'USB-C': USBcInterface(logger),
+            'Micro-USB': MicroUSBInterface(logger),
         }
 
     def detect_interfaces(self):
