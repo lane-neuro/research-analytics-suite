@@ -6,35 +6,30 @@ This module contains the InterfaceManager class, which manages the detection of 
 Author: Lane
 Copyright: Lane
 Credits: Lane
+Credits: Lane
 License: BSD 3-Clause License
-Version: 0.0.0.1
+Version: 0.0.0.2
 Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+
 from .usb.USBInterface import USBInterface
-from .usb.USBcInterface import USBcInterface
-from .thunderbolt.ThunderboltInterface import ThunderboltInterface
-from .display.HDMI_Interface import HDMIInterface
-from .serial.SerialDetector import SerialDetector
-from .display.VGADetector import VGADetector
-from .display.DisplayPortDetector import DisplayPortDetector
-from .network.EthernetDetector import EthernetDetector
-from .audio.AudioDetector import AudioDetector
+# Placeholder for additional interfaces
+# from .network.NetworkInterface import NetworkInterface
+# from .serial.SerialInterface import SerialInterface
+# from .bluetooth.BluetoothInterface import BluetoothInterface
 
 
 class InterfaceManager:
     def __init__(self, logger):
         self.logger = logger
-        self.usb_detector = USBInterface(logger)
-        self.usb_c_detector = USBcInterface(logger)
-        self.thunderbolt_detector = ThunderboltInterface(logger)
-        self.serial_detector = SerialDetector(logger)
-        self.vga_detector = VGADetector(logger)
-        self.hdmi_detector = HDMIInterface(logger)
-        self.displayport_detector = DisplayPortDetector(logger)
-        self.ethernet_detector = EthernetDetector(logger)
-        self.audio_detector = AudioDetector(logger)
+        self.interfaces = {
+            'USB': USBInterface(logger),
+            # 'Network': NetworkInterface(logger),
+            # 'Serial': SerialInterface(logger),
+            # 'Bluetooth': BluetoothInterface(logger),
+        }
 
     def detect_interfaces(self):
         """Detect all hardware interfaces.
@@ -42,14 +37,53 @@ class InterfaceManager:
         Returns:
             dict: Information about detected interfaces.
         """
-        interfaces = {}
-        interfaces['USB'] = self.usb_detector.detect()
-        interfaces['USB-C'] = self.usb_c_detector.detect()
-        interfaces['Thunderbolt'] = self.thunderbolt_detector.detect()
-        interfaces['Serial'] = self.serial_detector.detect_serial()
-        interfaces['VGA'] = self.vga_detector.detect_vga()
-        interfaces['HDMI'] = self.hdmi_detector.detect()
-        interfaces['DisplayPort'] = self.displayport_detector.detect_displayport()
-        interfaces['Ethernet'] = self.ethernet_detector.detect_ethernet()
-        interfaces['Audio'] = self.audio_detector.detect_audio()
-        return interfaces
+        detected_interfaces = {}
+        for interface_name, interface in self.interfaces.items():
+            try:
+                self.logger.info(f"Detecting {interface_name} interfaces...")
+                detected_interfaces[interface_name] = interface.detect()
+            except Exception as e:
+                self.logger.error(f"Error detecting {interface_name} interfaces: {e}")
+                detected_interfaces[interface_name] = None
+        return detected_interfaces
+
+    def add_interface(self, name, interface):
+        """Add a new interface for detection.
+
+        Args:
+            name (str): The name of the interface.
+            interface (BaseInterface): An instance of the interface.
+        """
+        self.logger.info(f"Adding {name} interface for detection.")
+        self.interfaces[name] = interface
+
+    def remove_interface(self, name):
+        """Remove an interface from detection.
+
+        Args:
+            name (str): The name of the interface.
+        """
+        if name in self.interfaces:
+            self.logger.info(f"Removing {name} interface from detection.")
+            del self.interfaces[name]
+        else:
+            self.logger.warning(f"Interface {name} not found in the list of interfaces.")
+
+    def get_interface(self, name):
+        """Get a specific interface.
+
+        Args:
+            name (str): The name of the interface.
+
+        Returns:
+            BaseInterface: The interface instance.
+        """
+        return self.interfaces.get(name, None)
+
+    def list_interfaces(self):
+        """List all available interfaces.
+
+        Returns:
+            list: Names of all available interfaces.
+        """
+        return list(self.interfaces.keys())
