@@ -12,5 +12,4 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from .VGADetector import VGADetector
-from .DisplayPortDetector import DisplayPortDetector
+

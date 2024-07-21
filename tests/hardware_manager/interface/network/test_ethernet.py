@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 import socket
 from typing import List, Dict, Any
 
-from research_analytics_suite.hardware_manager.interface.network.EthernetInterface import EthernetInterface
+from research_analytics_suite.hardware_manager.interface.network.Ethernet import Ethernet
 
 
 @pytest.fixture
@@ -16,23 +16,23 @@ def logger():
 @pytest.fixture
 @patch('platform.system', return_value='Linux')
 def ethernet_interface(mock_platform_system, logger):
-    return EthernetInterface(logger)
+    return Ethernet(logger)
 
 
-class TestEthernetInterface:
+class TestEthernet:
     @patch('platform.system', return_value='Linux')
     def test_detect_os_linux(self, mock_platform_system, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         assert interface.os_info == 'linux'
 
     @patch('platform.system', return_value='Windows')
     def test_detect_os_windows(self, mock_platform_system, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         assert interface.os_info == 'windows'
 
     @patch('platform.system', return_value='UnsupportedOS')
     def test_detect_os_unsupported(self, mock_platform_system, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         assert interface.os_info == 'unsupported'
         interface.logger.error.assert_called_with('Unsupported OS: UnsupportedOS')
 
@@ -40,7 +40,7 @@ class TestEthernetInterface:
     @patch('platform.system', return_value='Linux')
     def test_detect_success(self, mock_platform_system, mock_subprocess_run, logger):
         mock_subprocess_run.return_value = MagicMock(stdout='2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000', stderr='')
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         devices = interface.detect()
         assert devices == [{'interface': 'eth0', 'description': 'Ethernet Interface'}]
         interface.logger.debug.assert_any_call('Executing command: ip link')
@@ -53,7 +53,7 @@ class TestEthernetInterface:
         mock_subprocess_run.side_effect = subprocess.CalledProcessError(
             returncode=1, cmd=['ip', 'link'], output='error', stderr='error'
         )
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         with pytest.raises(subprocess.CalledProcessError):
             interface.detect()
         interface.logger.error.assert_any_call("Command 'ip link' failed with error: Command '['ip', 'link']' returned non-zero exit status 1.")
@@ -62,24 +62,24 @@ class TestEthernetInterface:
 
     @patch('platform.system', return_value='Linux')
     def test_get_command_linux(self, mock_platform_system, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         command = interface._get_command('list')
         assert command == ['ip', 'link']
 
     @patch('platform.system', return_value='Windows')
     def test_get_command_windows(self, mock_platform_system, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         command = interface._get_command('list')
         assert command == ['powershell', 'Get-NetAdapter']
 
     @patch('platform.system', return_value='Darwin')
     def test_get_command_darwin(self, mock_platform_system, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         command = interface._get_command('list')
         assert command == ['networksetup', '-listallhardwareports']
 
     def test_parse_output_linux(self, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         interface.os_info = 'linux'
         output = "2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000\n3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000"
         parsed = interface._parse_output(output)
@@ -89,7 +89,7 @@ class TestEthernetInterface:
         ]
 
     def test_parse_output_windows(self, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         interface.os_info = 'windows'
         output = "Name                      InterfaceDescription                 ifIndex Status       MacAddress         LinkSpeed\n" \
                  "----                      --------------------                 ------- ------       ----------         ---------\n" \
@@ -100,7 +100,7 @@ class TestEthernetInterface:
         ]
 
     def test_parse_output_darwin(self, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         interface.os_info = 'darwin'
         output = "Hardware Port: Ethernet\nDevice: en0\nEthernet Address: AA:BB:CC:DD:EE:FF\n\nHardware Port: Ethernet\nDevice: en1\nEthernet Address: 11:22:33:44:55:66"
         parsed = interface._parse_output(output)
@@ -110,7 +110,7 @@ class TestEthernetInterface:
         ]
 
     def test_parse_output_empty(self, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         interface.os_info = 'windows'
         output = ""
         parsed = interface._parse_output(output)
@@ -118,7 +118,7 @@ class TestEthernetInterface:
 
     @patch('platform.system', return_value='Linux')
     def test_get_ip_configuration_linux(self, mock_platform_system, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         device_identifier = 'eth0'
         with patch('subprocess.run') as mock_run:
             mock_run.return_value = MagicMock(stdout='inet 192.168.1.2 netmask 255.255.255.0 broadcast 192.168.1.255', stderr='')
@@ -128,7 +128,7 @@ class TestEthernetInterface:
 
     @patch('platform.system', return_value='Windows')
     def test_get_ip_configuration_windows(self, mock_platform_system, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         device_identifier = 'Ethernet'
         with patch('subprocess.run') as mock_run:
             mock_run.return_value = MagicMock(stdout='IPv4 Address. . . . . . . . . . . : 192.168.1.2\nSubnet Mask . . . . . . . . . . . : 255.255.255.0\nDefault Gateway . . . . . . . . . : 192.168.1.1', stderr='')
@@ -138,7 +138,7 @@ class TestEthernetInterface:
 
     @patch('platform.system', return_value='Darwin')
     def test_get_ip_configuration_darwin(self, mock_platform_system, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         device_identifier = 'en0'
         with patch('subprocess.run') as mock_run:
             mock_run.return_value = MagicMock(stdout='inet 192.168.1.2 netmask 0xffffff00 broadcast 192.168.1.255', stderr='')
@@ -148,7 +148,7 @@ class TestEthernetInterface:
 
     @patch('socket.socket')
     def test_send_data(self, mock_socket, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         mock_socket_inst = mock_socket.return_value.__enter__.return_value
         interface.send_data('192.168.1.2', 8080, 'test data')
         mock_socket_inst.connect.assert_called_with(('192.168.1.2', 8080))
@@ -156,7 +156,7 @@ class TestEthernetInterface:
 
     @patch('socket.socket')
     def test_receive_data(self, mock_socket, logger):
-        interface = EthernetInterface(logger)
+        interface = Ethernet(logger)
         mock_socket_inst = mock_socket.return_value.__enter__.return_value
         mock_conn = MagicMock()
         mock_socket_inst.accept.return_value = (mock_conn, ('192.168.1.2', 8080))

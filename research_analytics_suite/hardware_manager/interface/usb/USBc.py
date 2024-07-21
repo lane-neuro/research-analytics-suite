@@ -1,7 +1,7 @@
 """
-MicroUSBInterface Module
+USBc Module
 
-This module contains the MicroUSBInterface class, which detects and parses Micro-USB devices.
+This module contains the USBc class, which detects and parses USB-C devices.
 
 Author: Lane
 Copyright: Lane
@@ -13,16 +13,16 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from .USBInterface import USBInterface
+from .USB import USB
 from typing import List, Dict
 
 
-class MicroUSBInterface(USBInterface):
+class USBc(USB):
     def detect(self) -> List[Dict[str, str]]:
-        """Detect Micro-USB devices.
+        """Detect USB-C devices.
 
         Returns:
-            list: Information about detected Micro-USB devices.
+            list: Information about detected USB-C devices.
         """
         command = self._get_command('list')
         output = self._execute_command(command)
@@ -70,13 +70,13 @@ class MicroUSBInterface(USBInterface):
         return []
 
     def _parse_output(self, output: str) -> List[Dict[str, str]]:
-        """Parse the raw output to extract Micro-USB device information.
+        """Parse the raw output to extract USB-C device information.
 
         Args:
             output (str): Raw output from the system command.
 
         Returns:
-            list: Parsed information about detected Micro-USB devices.
+            list: Parsed information about detected USB-C devices.
         """
         devices = []
         if self.os_info == 'linux':
@@ -102,7 +102,7 @@ class MicroUSBInterface(USBInterface):
                     'product_id': product_id,
                     'description': ' '.join(parts[6:])
                 }
-                if 'micro-usb' in device_info['description'].lower():
+                if 'usb-c' in device_info['description'].lower():
                     devices.append(device_info)
         return devices
 
@@ -123,7 +123,7 @@ class MicroUSBInterface(USBInterface):
                         'friendly_name': friendly_name,
                         'instance_id': instance_id
                     }
-                    if 'micro-usb' in device_info['friendly_name'].lower():
+                    if 'usb-c' in device_info['friendly_name'].lower():
                         devices.append(device_info)
         return devices
 

@@ -1,7 +1,7 @@
 """
-WirelessInterface Module
+Wireless Module
 
-This module contains the WirelessInterface class, which detects and manages wireless devices.
+This module contains the Wireless class, which detects and manages wireless devices.
 
 Author: Lane
 Copyright: Lane
@@ -16,7 +16,7 @@ from .NetworkInterface import NetworkInterface
 from typing import List, Dict
 
 
-class WirelessInterface(NetworkInterface):
+class Wireless(NetworkInterface):
     def detect(self) -> List[Dict[str, str]]:
         """Detect Wireless devices.
 

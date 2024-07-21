@@ -1,7 +1,7 @@
 """
-ThunderboltInterface Module
+Thunderbolt Module
 
-This module contains the ThunderboltInterface class, which detects and manages Thunderbolt network devices.
+This module contains the Thunderbolt class, which detects and manages Thunderbolt network devices.
 
 Author: Lane
 Copyright: Lane
@@ -17,7 +17,7 @@ from .NetworkInterface import NetworkInterface
 from typing import List, Dict
 
 
-class ThunderboltInterface(NetworkInterface):
+class Thunderbolt(NetworkInterface):
     def detect(self) -> List[Dict[str, str]]:
         """Detect Thunderbolt network devices.
 

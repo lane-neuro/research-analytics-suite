@@ -1,7 +1,7 @@
 """
-USBInterface Module
+USB Module
 
-This module contains the USBInterface class, which detects and parses USB devices.
+This module contains the USB class, which detects and parses USB devices.
 
 Author: Lane
 Copyright: Lane
@@ -19,7 +19,7 @@ from typing import List, Dict, Any
 from research_analytics_suite.hardware_manager.interface.BaseInterface import BaseInterface
 
 
-class USBInterface(BaseInterface):
+class USB(BaseInterface):
     def detect(self) -> List[Dict[str, str]]:
         """Detect USB devices.
 

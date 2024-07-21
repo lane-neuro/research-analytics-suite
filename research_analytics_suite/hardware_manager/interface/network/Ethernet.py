@@ -1,7 +1,7 @@
 """
-EthernetInterface Module
+Ethernet Module
 
-This module contains the EthernetInterface class, which detects and manages Ethernet devices.
+This module contains the Ethernet class, which detects and manages Ethernet devices.
 
 Author: Lane
 Copyright: Lane
@@ -17,7 +17,7 @@ from .NetworkInterface import NetworkInterface
 from typing import List, Dict
 
 
-class EthernetInterface(NetworkInterface):
+class Ethernet(NetworkInterface):
     def detect(self) -> List[Dict[str, str]]:
         """Detect Ethernet devices.
 

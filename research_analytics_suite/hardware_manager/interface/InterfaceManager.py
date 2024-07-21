@@ -12,26 +12,26 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from .usb.USBInterface import USBInterface
-from .usb.USBcInterface import USBcInterface
-from .usb.MicroUSBInterface import MicroUSBInterface
-from .network.EthernetInterface import EthernetInterface
-from .network.WirelessInterface import WirelessInterface
-from .network.BluetoothInterface import BluetoothInterface
-from .network.ThunderboltInterface import ThunderboltInterface
+from .usb.USB import USB
+from .usb.USBc import USBc
+from .usb.MicroUSB import MicroUSB
+from .network.Ethernet import Ethernet
+from .network.Wireless import Wireless
+from .network.Bluetooth import Bluetooth
+from .network.Thunderbolt import Thunderbolt
 
 
 class InterfaceManager:
     def __init__(self, logger):
         self.logger = logger
         self.interfaces = {
-            'USB': USBInterface(logger),
-            'USB-C': USBcInterface(logger),
-            'Micro-USB': MicroUSBInterface(logger),
-            'Ethernet': EthernetInterface(logger),
-            'Wireless': WirelessInterface(logger),
-            'Bluetooth': BluetoothInterface(logger),
-            'Thunderbolt': ThunderboltInterface(logger),
+            'USB': USB(logger),
+            'USB-C': USBc(logger),
+            'Micro-USB': MicroUSB(logger),
+            'Ethernet': Ethernet(logger),
+            'Wireless': Wireless(logger),
+            'Bluetooth': Bluetooth(logger),
+            'Thunderbolt': Thunderbolt(logger),
         }
 
     def detect_interfaces(self):

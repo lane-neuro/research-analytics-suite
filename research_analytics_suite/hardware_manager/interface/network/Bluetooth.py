@@ -1,7 +1,7 @@
 """
-BluetoothInterface Module
+Bluetooth Module
 
-This module contains the BluetoothInterface class, which detects and manages Bluetooth devices.
+This module contains the Bluetooth class, which detects and manages Bluetooth devices.
 
 Author: Lane
 Copyright: Lane
@@ -18,7 +18,7 @@ from bleak import BleakScanner, BleakClient
 from typing import List, Dict
 
 
-class BluetoothInterface:
+class Bluetooth:
     def __init__(self, logger):
         self.logger = logger
         self.os_info = self._detect_os()
