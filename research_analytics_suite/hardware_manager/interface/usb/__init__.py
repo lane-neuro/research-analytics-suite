@@ -13,5 +13,3 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from .USBDetector import USBDetector
-from .USBcDetector import USBcDetector

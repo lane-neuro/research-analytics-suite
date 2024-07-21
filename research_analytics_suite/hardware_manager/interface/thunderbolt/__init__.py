@@ -13,4 +13,3 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from .ThunderboltDetector import ThunderboltDetector

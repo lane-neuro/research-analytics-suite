@@ -13,5 +13,4 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 from .VGADetector import VGADetector
-from .HDMIDetector import HDMIDetector
 from .DisplayPortDetector import DisplayPortDetector

@@ -14,4 +14,3 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from .InterfaceManager import InterfaceManager
