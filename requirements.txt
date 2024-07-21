@@ -10,6 +10,7 @@ aioconsole
 aiofiles
 aiosqlite
 asttokens
+bleak
 boto3
 botocore
 cachey

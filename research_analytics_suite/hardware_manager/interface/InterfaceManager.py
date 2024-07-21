@@ -7,15 +7,18 @@ Author: Lane
 Copyright: Lane
 Credits: Lane
 License: BSD 3-Clause License
-Version: 0.0.0.2
+Version: 0.0.0.1
 Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
 from .usb.USBInterface import USBInterface
 from .usb.USBcInterface import USBcInterface
 from .usb.MicroUSBInterface import MicroUSBInterface
+from .network.EthernetInterface import EthernetInterface
+from .network.WirelessInterface import WirelessInterface
+from .network.BluetoothInterface import BluetoothInterface
+from .network.ThunderboltInterface import ThunderboltInterface
 
 
 class InterfaceManager:
@@ -25,6 +28,10 @@ class InterfaceManager:
             'USB': USBInterface(logger),
             'USB-C': USBcInterface(logger),
             'Micro-USB': MicroUSBInterface(logger),
+            'Ethernet': EthernetInterface(logger),
+            'Wireless': WirelessInterface(logger),
+            'Bluetooth': BluetoothInterface(logger),
+            'Thunderbolt': ThunderboltInterface(logger),
         }
 
     def detect_interfaces(self):

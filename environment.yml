@@ -19,6 +19,7 @@ dependencies:
   - backcall
   - beautifulsoup4
   - bleach
+  - bleak
   - boltons
   - bottleneck
   - brotli
