@@ -42,48 +42,53 @@
     </ul>
     <br />
     <br />
-    <strong>RAS</strong> aims to foster a collaborative research community, enabling scientists and researchers to share their analytic workflows and contribute to a repository of shared knowledge, accelerating scientific discovery and innovation.
+    <strong>RAS</strong> aims to foster a collaborative research community, enabling scientists and researchers to share their analytic workflows and contribute to a repository of shared knowledge, accelerating scientific discovery through open collaboration.
   </p>
 </div>
 
-<br />
+---
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
   <ol>
     <li><a href="#about-the-project">About The Project</a></li>
       <ul>
-        <li><a href="#key-features">Key Features</a></li>
         <li><a href="#overall-mission">Overall Mission</a></li>
+        <li><a href="#key-features">Key Features</a></li>
         <li><a href="#developed-with">Developed With</a></li>
       </ul>
-    <li><a href="#getting-started">Getting Started</a></li>
+    <li><a href="#getting-started--prerequisites">Getting Started & Prerequisites</a></li>
         <ul>
-            <li><a href="#prerequisites">Prerequisites</a></li>
-            <li><a href="#installation">Installation</a></li>
+            <li><a href="#python-311">Python</a></li>
+            <li><a href="#clone-the-repository">Clone the Repository</a></li>
         </ul>
-    <li><a href="#command-line-arguments">Command Line Arguments</a></li>
+    <li><a href="#installation">Installation (Anaconda or Pip)</a></li>
       <ul>
+        <li><a href="#windows">Windows</a></li>
+        <li><a href="#linux">Linux</a></li>
+        <li><a href="#macos">MacOS</a></li>
+      </ul>
+    <li><a href="#running-the-project">Running the Project</a></li>
+      <ul>
+        <li><a href="#command-line-arguments">Command Line Arguments</a></li>
         <li><a href="#examples">Examples</a></li>
       </ul>
-    <li><a href="#project-structure">Project Structure</a>
+    <li><a href="#project-structure">Project Structure</a></li>
       <ul>
-        <li><a href="#operation-manager">Operation Manager</a>
-        </li>
-        <li><a href="#gui">GUI</a>
-        </li>
-        <li><a href="#data-engine">Data Engine</a>
-        </li>
-        <li><a href="#analytics">Analytics</a>
-        </li>
+        <li><a href="#operation-manager">Operation Manager</a></li>
+        <li><a href="#gui">GUI</a></li>
+        <li><a href="#data-engine">Data Engine</a></li>
+        <li><a href="#analytics">Analytics</a></li>
       </ul>
-    </li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
 </details>
+
+
+---
 
 <!-- ABOUT THE PROJECT --> 
 # About The Project
@@ -96,8 +101,9 @@ RAS aims to democratize access to powerful data analysis tools traditionally dom
 * The Research Analytics Suite aspires to cultivate a collaborative research community. It envisions a platform where scientists and researchers can share their analytic workflows, collaborate on projects, and contribute to a growing repository of shared knowledge and resources. This collaborative spirit aims to accelerate scientific discovery and innovation by leveraging the collective expertise of the global research community.
 <br />
 
-
 * By providing a versatile and accessible toolset, RAS not only enhances the efficiency and effectiveness of data analysis but also fosters a culture of open collaboration and shared progress in the scientific community.
+
+---
 
 ## Key Features
 
@@ -112,7 +118,7 @@ RAS aims to democratize access to powerful data analysis tools traditionally dom
 ### Future Integration
 * RAS is designed with future compatibility in mind, aiming to integrate seamlessly with other leading tools in the field, such as [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut), to expand its capabilities further.
 
-
+---
 ## Developed With
 RAS is built using a variety of powerful tools and libraries to ensure robust functionality and performance, including (but not limited to): <br />
 <div align="center">
@@ -166,89 +172,144 @@ RAS is built using a variety of powerful tools and libraries to ensure robust fu
 
 </div>
 
-
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+---
 <!-- GETTING STARTED -->
-# Getting Started
+# Getting Started & Prerequisites
 
 To get a local copy up and running, follow the following steps.
 
-## Prerequisites
-<i>An executable package of RAS will be available for each platform once the project is ready for prototyping and deployment. In the meantime...</i>
-
-* Ensure you have Python 3.11 or later installed:
-   * You can check your Python version by running the following command in the terminal:
-      ```sh
-      python --version
-      ```
-   * If not, you can download it [here](https://www.python.org/downloads/) or use [Anaconda](https://www.anaconda.com/).
+## Python (3.11)
+* You can check your Python version by running the following command in the terminal:
+   ```sh
+   python --version
+   ```
+* If not, you can download it [here](https://www.python.org/downloads/) or use [Anaconda](https://www.anaconda.com/).
   
-## Installation
-<i>An executable package of RAS will be available for each platform once the project is ready for prototyping and deployment. In the meantime...</i>
-1. Clone the repo
+## Clone the Repository
    ```sh
    git clone https://github.com/lane-neuro/research-analytics-suite.git
    ```
-   <br />
-2. Navigate to the project directory
+## Navigate to the project directory
    ```sh
    cd research-analytics-suite
    ```
-   <br />
-3. Install the required packages. This can be done in one of two ways:
+   <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-   * If you are using [Anaconda](https://www.anaconda.com/) as a virtual environment, you can use the supplied `environment.yml` file to create a new environment with all the required packages. 
+---
+<!-- INSTALLATION -->
+# Installation
+## Windows
+### Anaconda
+1. Create a new environment using the supplied `environment.yml` file:
+   ```sh
+   conda env create -f environment.yml
+   ```
+2. Activate the environment:
+   ```sh
+    conda activate research-analytics-suite
+    ```
+   > <i>Continue to [Running the Project](#running-the-project)</i>
    
+### Pip
+1. Install the required packages using the following command:
+   ```sh
+   pip install -r requirements.txt
+   ```
+   > <i>Continue to [Running the Project](#running-the-project)</i>
+   <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+---
+
+## Linux
+### [Prerequisite] PortAudio
+1. Install PortAudio using the following command in the terminal:
+   ```sh
+   sudo apt-get install -y portaudio19-dev
+   ```
+### Anaconda
+1. Create a new environment using the supplied `environment.yml` file:
+   ```sh
+   conda env create -f environment.yml
+   ```
+2. Activate the environment:
+   ```sh
+    conda activate research-analytics-suite
+    ```
+   > <i>Continue to [Running the Project](#running-the-project)</i>
+   
+### Pip
+1. Install the required packages using the following command:
+   ```sh
+   pip install -r requirements.txt
+   ```
+   > <i>Continue to [Running the Project](#running-the-project)</i>
+   <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+---
+
+## MacOS
+### [Prerequisite] Homebrew
+1. You can install Homebrew using *one* [1] of the following methods:
+   - Download the package installer from the [Homebrew GitHub](https://github.com/Homebrew/brew/releases/tag/4.3.10) page.
+   
+      **--- OR ---**
+   - Run the following command in the terminal from the [Homebrew website](https://brew.sh/):
+   ```sh
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+2. Once [Homebrew](https://brew.sh/) is installed, install the required packages using the following commands:
+   ```sh
+   brew install portaudio
+   ```
+   ```sh
+   brew install hdf5
+   ```
+3. Install RAS using Anaconda **OR** Pip (below).
    <br />
-    
-     To do this, run the following command in the terminal:
-     ```sh
-     conda env create -f environment.yml
-     ```
-     Then, activate the environment:
-     ```sh
-     conda activate research-analytics-suite
-     ```
-   <br />
 
-   <p align="center"><b>OR</b></p>
-   <p align="center"><i>[the following option is typically not recommended given it installs all requirements on your global python path]</i></p> 
-   <br /> 
+### Anaconda
+1. Create a new environment using the supplied `environment.yml` file:
+   ```sh
+   conda env create -f environment.yml
+   ```
+2. Activate the environment:
+   ```sh
+   conda activate research-analytics-suite
+   ```
+   > <i>Continue to [Running the Project](#running-the-project)</i>
 
-   * <i>Alternatively</i>, you can install the required packages globally. While this is the easier route, it is <i>typically **not recommended**</i>.<br />
+### Pip
+1. Install the required packages using the following command:
+   ```sh
+    pip install -r requirements.txt
+    ```
+    > <i>Continue to [Running the Project](#running-the-project)</i>
+   <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-   <br />
-
-     If this is what you wish to do, run the following command in the terminal:
-
-     ```sh 
-     pip install -r requirements.txt
-     ```
-   <br />
-
-4. Run the project using the following command in the terminal:
-   - (see [Command Line Arguments](#command-line-arguments) below for customization)
+---
+# Running the Project
+Launch the Research Analytics Suite (RAS) using the following command in the terminal:
    ```sh
    python ResearchAnalyticsSuite.py
    ```
-   
-   <p align="right">(<a href="#readme-top">back to top</a>)</p>
-<br />
-
-# Command Line Arguments
-
+   * This will launch RAS with the default settings.
+> <i>See [Command Line Arguments](#command-line-arguments) for launch argument customization</i>
+## Command Line Arguments
 You can provide the following command line arguments to customize the behavior of the Research Analytics Suite:
 
 - **`-g`, `--gui`**: Launches the Research Analytics Suite GUI 
    - default: `'true'`).
 - **`-o`, `--open_workspace`**: Opens or creates a workspace at the specified directory. 
    - default: `'~/Research-Analytics-Suite/workspaces/default_workspace'`
+> <i>See the [Examples](#examples) section below for implementation examples.</i> 
+  <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Examples
-
-### Creating / Opening a RAS Workspace
+---
+# Examples
+## Creating / Opening a RAS Workspace
 You can specify the workspace to open or create using the `-o` or `--open_workspace` argument.
    ```sh
    python ResearchAnalyticsSuite.py -o ~/Research-Analytics-Suite/workspaces/a_new_workspace
@@ -257,14 +318,12 @@ You can specify the workspace to open or create using the `-o` or `--open_worksp
    * If it does exist, it will open the existing workspace at that location.
    * Note: The path must be a directory, not a file. 
      * So if you want to open a `'config.json'` file located at `~/Research-Analytics-Suite/workspaces/look_another_workspace/config.json`, you would instead use the following command:
-     ```sh
-     python ResearchAnalyticsSuite.py -o ~/Research-Analytics-Suite/workspaces/look_another_workspace
-     ```
+        ```sh
+        python ResearchAnalyticsSuite.py -o ~/Research-Analytics-Suite/workspaces/look_another_workspace
+        ```
      * This will open the workspace configuration file located within the `~/Research-Analytics-Suite/workspaces/look_another_workspace` directory.
 
-     <br />
-
-### Launching RAS with the GUI
+## Launching RAS with the GUI
 The GUI is the default mode of operation for RAS. However, you can explicitly specify the GUI mode by using the following command:
    ```sh
    python ResearchAnalyticsSuite.py -g true
@@ -272,21 +331,16 @@ The GUI is the default mode of operation for RAS. However, you can explicitly sp
    * This will launch RAS with the GUI; this essentially has the same effect as running RAS without any command-line arguments.
    * This is the default mode of operation for RAS, providing an interactive interface for data analysis and visualization.
 
-   <br />
-
-### Launching RAS without the GUI (Command-Line Mode)
+## Launching RAS in Command-Line / Headless Mode
 The GUI is the default mode of operation for RAS. However, you can run RAS in command-line mode only by using the following command:
    ```sh
    python ResearchAnalyticsSuite.py -g false
    ```
    * This will launch RAS without the GUI, running in command-line mode only.
-   * This is useful for running RAS in headless mode or for scripting purposes; such as batch processing, automation, or integration with other tools.
-   
-   <br />
-
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+---
 <!-- PROJECT STRUCTURE -->
 # Project Structure
 <i>Fluid and subject to change as the project is developed further. Refer to the code for the most up-to-date information.</i>
@@ -352,12 +406,14 @@ The `analytics` package handles the application and visualization of data transf
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+---
 <!-- USAGE EXAMPLES -->
 # Usage
 > <i>To be implemented at a later date.</i>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+---
 <!-- CONTRIBUTING -->
 # Contributing
 
@@ -380,13 +436,15 @@ Don't forget to give the project a star! Thanks again!
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+---
 <!-- LICENSE -->
 # License
 
-Distributed under the BSD 3-Clause License. See `LICENSE` for more information.
+Distributed under the [BSD-3-Clause License](https://github.com/lane-neuro/research-analytics-suite/blob/main/LICENSE). See `LICENSE` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+---
 <!-- CONTACT -->
 # Contact
 
