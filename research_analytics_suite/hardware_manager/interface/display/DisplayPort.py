@@ -66,7 +66,7 @@ class DisplayPort(DisplayInterface):
     def _parse_linux_output(self, output: str) -> List[Dict[str, str]]:
         devices = []
         for line in output.split('\n'):
-            if 'DisplayPort' in line:
+            if ' connected' in line and 'DP' in line:
                 parts = line.split()
                 interface = parts[0]
                 device_info = {'interface': interface, 'description': 'DisplayPort Interface'}

@@ -66,7 +66,7 @@ class HDMI(DisplayInterface):
     def _parse_linux_output(self, output: str) -> List[Dict[str, str]]:
         devices = []
         for line in output.split('\n'):
-            if 'HDMI' in line:
+            if ' connected' in line and 'HDMI' in line:
                 parts = line.split()
                 interface = parts[0]
                 device_info = {'interface': interface, 'description': 'HDMI Interface'}
