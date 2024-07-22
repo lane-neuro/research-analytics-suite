@@ -1,4 +1,4 @@
-# Research Analytics Suite (RAS)Requirements
+# Research Analytics Suite (RAS) Requirements
 # platform: win-64 | osx-64 | linux-64
 # python: 3.11
 
@@ -6,6 +6,7 @@
 # $ pip install -r requirements.txt
 
 # Requirements --------------------------------------------------------------------
+# Common dependencies
 aioconsole
 aiofiles
 aiosqlite
@@ -24,10 +25,6 @@ importlib_resources
 jupyter_core
 keras
 matplotlib
-mkl
-mkl-service
-mkl_fft
-mkl_random
 nest-asyncio
 numexpr
 numpy
@@ -41,7 +38,6 @@ psutil
 pyarrow
 pymongo
 pynvml
-pyaudio
 pyopenssl
 pyparsing
 tables
@@ -67,3 +63,14 @@ dearpygui-async
 jupyter-client
 pure-eval
 tensorflow
+
+# Windows-specific dependencies
+pyaudio; sys_platform == 'win32'
+mkl; sys_platform == 'win32'
+mkl-service; sys_platform == 'win32'
+mkl_fft; sys_platform == 'win32'
+mkl_random; sys_platform == 'win32'
+
+# macOS-specific dependencies
+pyaudio; sys_platform == 'darwin'
+# Exclude MKL packages as they are not available for macOS

@@ -47,10 +47,9 @@ jobs:
         source ${{ inputs.venv-path }}/bin/activate
         brew install portaudio
         brew install hdf5
-        grep -v '^mkl' requirements.txt > requirements_filtered.txt
         python -m pip install --upgrade pip
         pip install pytest pytest-asyncio
-        pip install -r requirements_filtered.txt
+        pip install -r requirements.txt
 
     - name: Set up virtual environment on Windows
       if: runner.os == 'Windows'
