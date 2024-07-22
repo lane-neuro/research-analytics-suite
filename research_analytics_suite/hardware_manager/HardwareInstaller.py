@@ -34,7 +34,7 @@ class HardwareInstaller:
         self.logger = CustomLogger()
         self.task_manager = TaskManager(self.logger)
         self.remote_manager = RemoteManager(self.logger, remote_servers)
-        self.interface_manager = InterfaceManager(self.logger)
+        self.interface_manager = InterfaceManager()
         self.benchmark_manager = BenchmarkManager(self.logger, self.interface_manager)
 
         self.memory_info = MemoryInfo(self.logger)

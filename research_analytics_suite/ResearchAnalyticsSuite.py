@@ -42,9 +42,11 @@ class ResearchAnalyticsSuite:
     def __init__(self):
         from research_analytics_suite.commands import CommandRegistry
         from research_analytics_suite.hardware_manager.HardwareInstaller import HardwareInstaller
+        from research_analytics_suite.hardware_manager.interface.InterfaceManager import InterfaceManager
         self._config = Config()
         self._logger = CustomLogger()
         self._hardware_installer = HardwareInstaller()
+        self._interface_manager = InterfaceManager()
         self._library_manifest = LibraryManifest()
         self._command_registry = CommandRegistry()
         self._memory_manager = MemoryManager()

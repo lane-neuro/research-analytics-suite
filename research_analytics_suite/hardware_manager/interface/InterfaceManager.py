@@ -12,6 +12,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+import asyncio
 from asyncio import iscoroutinefunction
 from research_analytics_suite.commands import link_class_commands, command
 
@@ -26,18 +27,30 @@ from .network.Thunderbolt import Thunderbolt
 
 @link_class_commands
 class InterfaceManager:
-    def __init__(self, logger):
-        self.logger = logger
-        self.base_interfaces = {
-            'USB': USB(logger),
-            'USB-C': USBc(logger),
-            'Micro-USB': MicroUSB(logger),
-            'Ethernet': Ethernet(logger),
-            'Wireless': Wireless(logger),
-            'Bluetooth': Bluetooth(logger),
-            'Thunderbolt': Thunderbolt(logger),
-        }
-        self.interfaces = {}
+    _instance = None
+    _lock = asyncio.Lock()
+
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, '_instance') or not cls._instance:
+            cls._instance = super(InterfaceManager, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        if not hasattr(self, '_initialized'):
+            from research_analytics_suite.utils import CustomLogger
+            self.logger = CustomLogger()
+            self.base_interfaces = {
+                'USB': USB(self.logger),
+                'USB-C': USBc(self.logger),
+                'Micro-USB': MicroUSB(self.logger),
+                'Ethernet': Ethernet(self.logger),
+                'Wireless': Wireless(self.logger),
+                'Bluetooth': Bluetooth(self.logger),
+                'Thunderbolt': Thunderbolt(self.logger),
+            }
+            self.interfaces = {}
+
+            self._initialized = True
 
     @command
     async def detect_interfaces(self):
@@ -53,7 +66,8 @@ class InterfaceManager:
                 detected_interfaces[interface_name] = await interface.detect() if iscoroutinefunction(
                     interface.detect) else interface.detect()
             except Exception as e:
-                self.logger.error(f"Error detecting {interface_name} interfaces: {e}")
+                self.logger.error(Exception(f"Error detecting {interface_name} interfaces: {e}"),
+                                  self.__class__.__name__)
                 detected_interfaces[interface_name] = None
         self.interfaces = detected_interfaces
 
