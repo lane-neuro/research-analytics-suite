@@ -13,4 +13,3 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from .SerialDetector import SerialDetector

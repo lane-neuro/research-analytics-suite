@@ -27,7 +27,8 @@ def mock_interfaces(mock_logger):
                   autospec=True) as MockDisplayPort, \
             patch('research_analytics_suite.hardware_manager.interface.display.HDMI.HDMI', autospec=True) as MockHDMI, \
             patch('research_analytics_suite.hardware_manager.interface.display.VGA.VGA', autospec=True) as MockVGA, \
-            patch('research_analytics_suite.hardware_manager.interface.display.PCI.PCI', autospec=True) as MockPCI:
+            patch('research_analytics_suite.hardware_manager.interface.display.PCI.PCI', autospec=True) as MockPCI, \
+            patch('research_analytics_suite.hardware_manager.interface.serial.Serial.Serial', autospec=True) as MockSerial:
         MockUSB.return_value.detect = AsyncMock(return_value=[{'device': 'USB1'}])
         MockUSBc.return_value.detect = AsyncMock(return_value=[{'device': 'USB-C1'}])
         MockMicroUSB.return_value.detect = AsyncMock(return_value=[{'device': 'MicroUSB1'}])
@@ -39,6 +40,7 @@ def mock_interfaces(mock_logger):
         MockHDMI.return_value.detect = AsyncMock(return_value=[{'device': 'HDMI1'}])
         MockVGA.return_value.detect = AsyncMock(return_value=[{'device': 'VGA1'}])
         MockPCI.return_value.detect = AsyncMock(return_value=[{'device': 'PCI1'}])
+        MockSerial.return_value.detect = AsyncMock(return_value=[{'device': 'Serial1'}])
 
         yield {
             'USB': MockUSB,
@@ -51,7 +53,8 @@ def mock_interfaces(mock_logger):
             'DisplayPort': MockDisplayPort,
             'HDMI': MockHDMI,
             'VGA': MockVGA,
-            'PCI': MockPCI
+            'PCI': MockPCI,
+            'Serial': MockSerial
         }
 
 
@@ -74,7 +77,8 @@ class TestInterfaceManager:
             'DisplayPort': mock_interfaces['DisplayPort'](mock_logger),
             'HDMI': mock_interfaces['HDMI'](mock_logger),
             'VGA': mock_interfaces['VGA'](mock_logger),
-            'PCI': mock_interfaces['PCI'](mock_logger)
+            'PCI': mock_interfaces['PCI'](mock_logger),
+            'Serial': mock_interfaces['Serial'](mock_logger)
         }
 
     async def test_singleton(self):
@@ -95,7 +99,8 @@ class TestInterfaceManager:
             'DisplayPort': [{'device': 'DisplayPort1'}],
             'HDMI': [{'device': 'HDMI1'}],
             'VGA': [{'device': 'VGA1'}],
-            'PCI': [{'device': 'PCI1'}]
+            'PCI': [{'device': 'PCI1'}],
+            'Serial': [{'device': 'Serial1'}]
         }
 
     async def test_add_interface(self):
@@ -120,7 +125,7 @@ class TestInterfaceManager:
         interfaces_list = self.manager.list_interfaces()
         assert interfaces_list == [
             'USB', 'USB-C', 'Micro-USB', 'Ethernet', 'Wireless', 'Bluetooth', 'Thunderbolt',
-            'DisplayPort', 'HDMI', 'VGA', 'PCI'
+            'DisplayPort', 'HDMI', 'VGA', 'PCI', 'Serial'
         ]
 
     async def test_get_interface(self):
@@ -144,6 +149,7 @@ class TestInterfaceManager:
             call.info("- {'device': 'DisplayPort1'}"),
             call.info("- {'device': 'HDMI1'}"),
             call.info("- {'device': 'VGA1'}"),
-            call.info("- {'device': 'PCI1'}")
+            call.info("- {'device': 'PCI1'}"),
+            call.info("- {'device': 'Serial1'}")
         ]
         self.manager.logger.assert_has_calls(expected_calls, any_order=True)

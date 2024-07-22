@@ -27,6 +27,7 @@ from .display.DisplayPort import DisplayPort
 from .display.HDMI import HDMI
 from .display.VGA import VGA
 from .display.PCI import PCI
+from .serial.Serial import Serial
 
 
 @link_class_commands
@@ -54,7 +55,8 @@ class InterfaceManager:
                 'DisplayPort': DisplayPort(self.logger),
                 'HDMI': HDMI(self.logger),
                 'VGA': VGA(self.logger),
-                'PCI': PCI(self.logger)
+                'PCI': PCI(self.logger),
+                'Serial': Serial(self.logger)
             }
             self.interfaces = {}
 
