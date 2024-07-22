@@ -67,7 +67,7 @@
         <li><a href="#linux">Linux</a></li>
         <li><a href="#macos">MacOS</a></li>
       </ul>
-    <li><a href="#running-ras">Running Research Analytics Suite</a></li>
+    <li><a href="#running-research-analytics-suite">Running Research Analytics Suite</a></li>
       <ul>
         <li><a href="#command-line-arguments">Command Line Arguments</a></li>
         <li><a href="#examples">Examples</a></li>
