@@ -2,28 +2,34 @@ name: Research Analytics Suite - Full Test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
 
 jobs:
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        include:
-        - os: ubuntu-latest
-          venv-path: .venv
-        - os: macos-latest
-          venv-path: .venv
-        - os: windows-latest
-          venv-path: .venv
-
+  ubuntu-latest:
+    name: Ubuntu
     uses: ./.github/workflows/reusable-test.yml
     with:
-      os: ${{ matrix.os }}
-      venv-path: ${{ matrix.venv-path }}
+      name: Ubuntu
+      os: ubuntu-latest
+      venv-path: .venv
+
+  macos-latest:
+    name: macOS
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      name: macOS
+      os: macos-latest
+      venv-path: .venv
+
+  windows-latest:
+    name: Windows
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      name: Windows
+      os: windows-latest
+      venv-path: .venv
