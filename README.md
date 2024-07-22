@@ -20,16 +20,16 @@
     </a>
   </p>
 
+![Ubuntu](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/test-ubuntu-latest.yml/badge.svg)
+![macOS](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/test-macos-latest.yml/badge.svg)
+![Windows](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/test-windows-latest.yml/badge.svg)
+
+
   <a href="https://github.com/lane-neuro/research-analytics-suite">
     <img src="research_analytics_suite/gui/assets/images/centered_banner_white_black_text_1200x467.png" alt="Research Analytics Suite Banner" style="max-width: 75%; height: auto;">
   </a>
   <p>Author: <a href="#contact">Lane</a></p>
 </div>
-
-![Ubuntu](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/test-ubuntu-latest.yml/badge.svg)
-![macOS](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/test-macos-latest.yml/badge.svg)
-![Windows](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/test-windows-latest.yml/badge.svg)
-
 
 <div>
   <p align="left">
