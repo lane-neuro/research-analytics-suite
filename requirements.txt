@@ -71,6 +71,13 @@ mkl-service; sys_platform == 'win32'
 mkl_fft; sys_platform == 'win32'
 mkl_random; sys_platform == 'win32'
 
+# Linux-specific dependencies
+pyaudio; sys_platform == 'linux'
+mkl; sys_platform == 'linux'
+mkl-service; sys_platform == 'linux'
+mkl_fft; sys_platform == 'linux'
+mkl_random; sys_platform == 'linux'
+
 # macOS-specific dependencies
 pyaudio; sys_platform == 'darwin'
 # Exclude MKL packages as they are not available for macOS
