@@ -27,8 +27,11 @@
 </div>
 
 ![Ubuntu](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/python-app.yml/badge.svg?branch=main&job=ubuntu-latest)
+
 ![macOS](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/python-app.yml/badge.svg?branch=main&job=macos-latest)
+
 ![Windows](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/python-app.yml/badge.svg?branch=main&job=windows-latest)
+
 
 <div>
   <p align="left">

@@ -14,7 +14,6 @@ jobs:
     name: Ubuntu
     uses: ./.github/workflows/reusable-test.yml
     with:
-      name: Ubuntu
       os: ubuntu-latest
       venv-path: .venv
 
@@ -22,7 +21,6 @@ jobs:
     name: macOS
     uses: ./.github/workflows/reusable-test.yml
     with:
-      name: macOS
       os: macos-latest
       venv-path: .venv
 
@@ -30,6 +28,5 @@ jobs:
     name: Windows
     uses: ./.github/workflows/reusable-test.yml
     with:
-      name: Windows
       os: windows-latest
       venv-path: .venv

@@ -1,4 +1,4 @@
-name: ${{ inputs.name }} - Test
+name: Reusable Test Workflow
 
 on:
   workflow_call:
@@ -7,9 +7,6 @@ on:
         required: true
         type: string
       venv-path:
-        required: true
-        type: string
-      name:
         required: true
         type: string
 
