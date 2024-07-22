@@ -41,7 +41,6 @@
       <li><strong>Future Integration</strong>: Designed for compatibility with tools like <a href="https://github.com/DeepLabCut/DeepLabCut">DeepLabCut</a>.</li>
     </ul>
     <br />
-    <br />
     <strong>RAS</strong> aims to foster a collaborative research community, enabling scientists and researchers to share their analytic workflows and contribute to a repository of shared knowledge, accelerating scientific discovery through open collaboration.
   </p>
 </div>
@@ -51,7 +50,7 @@
 <details>
   <summary>Table of Contents</summary>
   <ol>
-    <li><a href="#about-the-project">About The Project</a></li>
+    <li><a href="#research-analytics-suite">Welcome</a></li>
       <ul>
         <li><a href="#overall-mission">Overall Mission</a></li>
         <li><a href="#key-features">Key Features</a></li>
@@ -68,7 +67,7 @@
         <li><a href="#linux">Linux</a></li>
         <li><a href="#macos">MacOS</a></li>
       </ul>
-    <li><a href="#running-the-project">Running the Project</a></li>
+    <li><a href="#running-ras">Running Research Analytics Suite</a></li>
       <ul>
         <li><a href="#command-line-arguments">Command Line Arguments</a></li>
         <li><a href="#examples">Examples</a></li>
@@ -91,7 +90,7 @@
 ---
 
 <!-- ABOUT THE PROJECT --> 
-# About The Project
+# Research Analytics Suite
 
 The **Research Analytics Suite (RAS)** is a cutting-edge, open-source platform developed in Python to address the diverse needs of scientific data analysis. RAS stands out by offering a comprehensive suite of tools for data aggregation, management, and analysis, derived from various input sources such as pixel-tracking technology, accelerometers, and analog voltage outputs.
 
@@ -290,7 +289,7 @@ To get a local copy up and running, follow the following steps.
    <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
-# Running the Project
+# Running Research Analytics Suite
 Launch the Research Analytics Suite (RAS) using the following command in the terminal:
    ```sh
    python ResearchAnalyticsSuite.py
