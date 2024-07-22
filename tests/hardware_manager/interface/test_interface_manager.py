@@ -1,7 +1,6 @@
 import pytest
 import asyncio
 from unittest.mock import MagicMock, patch, AsyncMock, call
-
 from research_analytics_suite.hardware_manager.interface.InterfaceManager import InterfaceManager
 
 
@@ -23,7 +22,12 @@ def mock_interfaces(mock_logger):
             patch('research_analytics_suite.hardware_manager.interface.network.Bluetooth.Bluetooth',
                   autospec=True) as MockBluetooth, \
             patch('research_analytics_suite.hardware_manager.interface.network.Thunderbolt.Thunderbolt',
-                  autospec=True) as MockThunderbolt:
+                  autospec=True) as MockThunderbolt, \
+            patch('research_analytics_suite.hardware_manager.interface.display.DisplayPort.DisplayPort',
+                  autospec=True) as MockDisplayPort, \
+            patch('research_analytics_suite.hardware_manager.interface.display.HDMI.HDMI', autospec=True) as MockHDMI, \
+            patch('research_analytics_suite.hardware_manager.interface.display.VGA.VGA', autospec=True) as MockVGA, \
+            patch('research_analytics_suite.hardware_manager.interface.display.PCI.PCI', autospec=True) as MockPCI:
         MockUSB.return_value.detect = AsyncMock(return_value=[{'device': 'USB1'}])
         MockUSBc.return_value.detect = AsyncMock(return_value=[{'device': 'USB-C1'}])
         MockMicroUSB.return_value.detect = AsyncMock(return_value=[{'device': 'MicroUSB1'}])
@@ -31,6 +35,10 @@ def mock_interfaces(mock_logger):
         MockWireless.return_value.detect = AsyncMock(return_value=[{'device': 'Wireless1'}])
         MockBluetooth.return_value.detect = AsyncMock(return_value=[{'device': 'Bluetooth1'}])
         MockThunderbolt.return_value.detect = AsyncMock(return_value=[{'device': 'Thunderbolt1'}])
+        MockDisplayPort.return_value.detect = AsyncMock(return_value=[{'device': 'DisplayPort1'}])
+        MockHDMI.return_value.detect = AsyncMock(return_value=[{'device': 'HDMI1'}])
+        MockVGA.return_value.detect = AsyncMock(return_value=[{'device': 'VGA1'}])
+        MockPCI.return_value.detect = AsyncMock(return_value=[{'device': 'PCI1'}])
 
         yield {
             'USB': MockUSB,
@@ -40,6 +48,10 @@ def mock_interfaces(mock_logger):
             'Wireless': MockWireless,
             'Bluetooth': MockBluetooth,
             'Thunderbolt': MockThunderbolt,
+            'DisplayPort': MockDisplayPort,
+            'HDMI': MockHDMI,
+            'VGA': MockVGA,
+            'PCI': MockPCI
         }
 
 
@@ -59,6 +71,10 @@ class TestInterfaceManager:
             'Wireless': mock_interfaces['Wireless'](mock_logger),
             'Bluetooth': mock_interfaces['Bluetooth'](mock_logger),
             'Thunderbolt': mock_interfaces['Thunderbolt'](mock_logger),
+            'DisplayPort': mock_interfaces['DisplayPort'](mock_logger),
+            'HDMI': mock_interfaces['HDMI'](mock_logger),
+            'VGA': mock_interfaces['VGA'](mock_logger),
+            'PCI': mock_interfaces['PCI'](mock_logger)
         }
 
     async def test_singleton(self):
@@ -76,6 +92,10 @@ class TestInterfaceManager:
             'Wireless': [{'device': 'Wireless1'}],
             'Bluetooth': [{'device': 'Bluetooth1'}],
             'Thunderbolt': [{'device': 'Thunderbolt1'}],
+            'DisplayPort': [{'device': 'DisplayPort1'}],
+            'HDMI': [{'device': 'HDMI1'}],
+            'VGA': [{'device': 'VGA1'}],
+            'PCI': [{'device': 'PCI1'}]
         }
 
     async def test_add_interface(self):
@@ -98,7 +118,10 @@ class TestInterfaceManager:
     async def test_list_interfaces(self):
         await self.manager.detect_interfaces()
         interfaces_list = self.manager.list_interfaces()
-        assert interfaces_list == ['USB', 'USB-C', 'Micro-USB', 'Ethernet', 'Wireless', 'Bluetooth', 'Thunderbolt']
+        assert interfaces_list == [
+            'USB', 'USB-C', 'Micro-USB', 'Ethernet', 'Wireless', 'Bluetooth', 'Thunderbolt',
+            'DisplayPort', 'HDMI', 'VGA', 'PCI'
+        ]
 
     async def test_get_interface(self):
         await self.manager.detect_interfaces()
@@ -118,6 +141,9 @@ class TestInterfaceManager:
             call.info("- {'device': 'Wireless1'}"),
             call.info("- {'device': 'Bluetooth1'}"),
             call.info("- {'device': 'Thunderbolt1'}"),
+            call.info("- {'device': 'DisplayPort1'}"),
+            call.info("- {'device': 'HDMI1'}"),
+            call.info("- {'device': 'VGA1'}"),
+            call.info("- {'device': 'PCI1'}")
         ]
         self.manager.logger.assert_has_calls(expected_calls, any_order=True)
-

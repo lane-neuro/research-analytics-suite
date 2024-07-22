@@ -6,6 +6,7 @@ This module contains the InterfaceManager class, which manages the detection of 
 Author: Lane
 Copyright: Lane
 Credits: Lane
+Credits: Lane
 License: BSD 3-Clause License
 Version: 0.0.0.1
 Maintainer: Lane
@@ -14,7 +15,6 @@ Status: Prototype
 """
 import asyncio
 from asyncio import iscoroutinefunction
-from research_analytics_suite.commands import link_class_commands, command
 
 from .usb.USB import USB
 from .usb.USBc import USBc
@@ -23,9 +23,12 @@ from .network.Ethernet import Ethernet
 from .network.Wireless import Wireless
 from .network.Bluetooth import Bluetooth
 from .network.Thunderbolt import Thunderbolt
+from .display.DisplayPort import DisplayPort
+from .display.HDMI import HDMI
+from .display.VGA import VGA
+from .display.PCI import PCI
 
 
-@link_class_commands
 class InterfaceManager:
     _instance = None
     _lock = asyncio.Lock()
@@ -47,12 +50,15 @@ class InterfaceManager:
                 'Wireless': Wireless(self.logger),
                 'Bluetooth': Bluetooth(self.logger),
                 'Thunderbolt': Thunderbolt(self.logger),
+                'DisplayPort': DisplayPort(self.logger),
+                'HDMI': HDMI(self.logger),
+                'VGA': VGA(self.logger),
+                'PCI': PCI(self.logger)
             }
             self.interfaces = {}
 
             self._initialized = True
 
-    @command
     async def detect_interfaces(self):
         """Detect all hardware interfaces.
 
@@ -93,7 +99,6 @@ class InterfaceManager:
         else:
             self.logger.warning(f"Interface {name} not found in the list of interfaces.")
 
-    @command
     def get_interface(self, name):
         """Get a specific interface.
 
@@ -105,7 +110,6 @@ class InterfaceManager:
         """
         return self.interfaces.get(name, None)
 
-    @command
     def list_interfaces(self):
         """List all available interfaces.
 
@@ -114,7 +118,6 @@ class InterfaceManager:
         """
         return list(self.interfaces.keys())
 
-    @command
     def print_interfaces(self):
         """Print all available interfaces."""
         if not self.interfaces:
