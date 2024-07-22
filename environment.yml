@@ -113,10 +113,6 @@ dependencies:
   - matplotlib-inline
   - menuinst
   - mistune
-  - mkl
-  - mkl-service
-  - mkl_fft
-  - mkl_random
   - mpmath
   - more-itertools
   - navigator-updater
@@ -232,6 +228,14 @@ dependencies:
   - zlib
   - zstandard
   - zstd
+  - sel(win, linux): mkl
+  - sel(win, linux): mkl-service
+  - sel(win, linux): mkl_fft
+  - sel(win, linux): mkl_random
+  - sel(osx): openblas
+  - sel(osx): libopenblas
+  - sel(osx): numpy  # Ensure numpy is built with openblas
+  - sel(osx): scipy  # Ensure scipy is built with openblas
   - pip:
       - dearpygui
       - dearpygui-async
