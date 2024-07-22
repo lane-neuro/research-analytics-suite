@@ -95,9 +95,17 @@ class USB(BaseInterface):
             list: Command to perform the action.
         """
         if action == 'list':
-            return ['powershell', 'Get-PnpDevice -Class USB']
+            return [
+                'powershell',
+                '-Command',
+                'Get-PnpDevice -Class USB | Format-Table -Property Status,Class,FriendlyName,InstanceId -AutoSize -Wrap'
+            ]
         elif action == 'read':
-            return ['powershell', f'Get-Content -Path \\\\.\\{identifier}']
+            return [
+                'powershell',
+                '-Command',
+                f'Get-Content -Path \\\\.\\{identifier}'
+            ]
         return []
 
     def _get_command_darwin(self, action: str, identifier: str = '', data: str = '', settings=None) -> List[str]:
@@ -173,21 +181,46 @@ class USB(BaseInterface):
         """
         devices = []
         lines = output.split('\n')
-        if len(lines) > 2:  # Ensure there are more than just the header lines
-            for line in lines[2:]:
-                if line.strip():
-                    parts = line.split()
-                    status = parts[0]
-                    device_class = parts[1]
-                    friendly_name = ' '.join(parts[2:-1])
-                    instance_id = parts[-1]
-                    device_info = {
-                        'status': status,
-                        'class': device_class,
-                        'friendly_name': friendly_name,
-                        'instance_id': instance_id
-                    }
-                    devices.append(device_info)
+        current_device = None
+
+        for line in lines:
+            if line.startswith('Status'):
+                continue  # Skip the header line
+            if line.startswith('------'):
+                continue  # Skip the separator line
+
+            if line.strip():
+                parts = line.split()
+                if len(parts) < 4:
+                    if current_device:
+                        current_device['instance_id'] += line.strip()
+                    else:
+                        self.logger.warning(f"Unexpected line format: {line}")
+                    continue
+
+                if current_device:
+                    devices.append(current_device)
+
+                status = parts[0]
+                device_class = parts[1]
+                friendly_name = ' '.join(parts[2:-1])
+                instance_id = parts[-1]
+
+                current_device = {
+                    'status': status,
+                    'class': device_class,
+                    'friendly_name': friendly_name,
+                    'instance_id': instance_id
+                }
+            else:
+                if current_device and 'instance_id' in current_device and not current_device['instance_id'].endswith(
+                        '\\'):
+                    devices.append(current_device)
+                    current_device = None
+
+        if current_device and 'instance_id' in current_device:
+            devices.append(current_device)
+
         return devices
 
     def _parse_darwin_output(self, output: str) -> List[Dict[str, str]]:

@@ -15,15 +15,16 @@ Status: Prototype
 """
 from .CPUBenchmark import CPUBenchmark
 from .GPUBenchmark import GPUBenchmark
-from .InterfaceStatusChecker import InterfaceStatusChecker
+from research_analytics_suite.hardware_manager.interface.InterfaceStatusChecker import InterfaceStatusChecker
 
 
 class BenchmarkManager:
-    def __init__(self, logger):
+    def __init__(self, logger, interface_manager):
         self.logger = logger
+        self.interface_manager = interface_manager
         self.cpu_benchmark = CPUBenchmark(logger)
         self.gpu_benchmark = GPUBenchmark(logger)
-        self.status_checker = InterfaceStatusChecker(logger)
+        self.status_checker = InterfaceStatusChecker(logger, self.interface_manager)
 
     def run_benchmarks(self, cpu_info: list[dict], gpu_info: list[dict]) -> dict:
         """Run benchmarks for CPU and GPU, and check the status of interfaces.

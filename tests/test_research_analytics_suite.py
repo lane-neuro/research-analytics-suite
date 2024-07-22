@@ -22,11 +22,13 @@ class TestResearchAnalyticsSuite:
         Test that all components are initialized correctly.
         """
         with patch.object(self.suite._logger, 'initialize', new=AsyncMock()) as logger_initialize, \
+                patch.object(self.suite._hardware_installer.interface_manager, 'detect_interfaces', new=AsyncMock()) as hardware_initialize, \
                 patch.object(self.suite._memory_manager, 'initialize', new=AsyncMock()) as memory_initialize, \
                 patch.object(self.suite._config, 'initialize', new=AsyncMock()) as config_initialize, \
                 patch.object(self.suite._operation_control, 'initialize', new=AsyncMock()) as operation_initialize, \
                 patch.object(self.suite._library_manifest, 'initialize', new=AsyncMock()) as library_initialize, \
-                patch.object(self.suite._workspace, 'initialize', new=AsyncMock()) as workspace_initialize:
+                patch.object(self.suite._workspace, 'initialize', new=AsyncMock()) as workspace_initialize, \
+                patch.object(self.suite._logger, 'info', new=MagicMock()) as logger_info_mock:
             await self.suite._initialize_components()
             logger_initialize.assert_called_once()
             memory_initialize.assert_called_once()

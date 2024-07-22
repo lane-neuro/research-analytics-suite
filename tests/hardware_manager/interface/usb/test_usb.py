@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import subprocess
-from typing import List, Dict, Any
 
 from research_analytics_suite.hardware_manager.interface.usb.USB import USB
 
@@ -68,7 +67,7 @@ class TestUSB:
     def test_get_command_windows(self, mock_platform_system, logger):
         interface = USB(logger)
         command = interface._get_command('list')
-        assert command == ['powershell', 'Get-PnpDevice -Class USB']
+        assert command == ['powershell', '-Command', 'Get-PnpDevice -Class USB | Format-Table -Property Status,Class,FriendlyName,InstanceId -AutoSize -Wrap']
 
     @patch('platform.system', return_value='Darwin')
     def test_get_command_darwin(self, mock_platform_system, logger):
@@ -91,11 +90,29 @@ class TestUSB:
         interface.os_info = 'windows'
         output = "Status     Class           FriendlyName        InstanceId\n" \
                  "------     -----           ------------        ----------\n" \
-                 "OK         USB             USB Composite Device USB\\VID_1234&PID_5678\\12345678"
+                 "OK         USB             USB Composite Device USB\\VID_1234&PID_5678\\12345678\n" \
+                 "Unknown    USB             Unknown USB Device  USB\\VID_8765&PID_4321\\87654321"
         parsed = interface._parse_output(output)
         assert parsed == [
             {'status': 'OK', 'class': 'USB', 'friendly_name': 'USB Composite Device',
-             'instance_id': 'USB\\VID_1234&PID_5678\\12345678'}
+             'instance_id': 'USB\\VID_1234&PID_5678\\12345678'},
+            {'status': 'Unknown', 'class': 'USB', 'friendly_name': 'Unknown USB Device',
+             'instance_id': 'USB\\VID_8765&PID_4321\\87654321'}
+        ]
+
+    def test_parse_output_windows_truncated_lines(self, logger):
+        interface = USB(logger)
+        interface.os_info = 'windows'
+        output = "Status     Class           FriendlyName        InstanceId\n" \
+                 "------     -----           ------------        ----------\n" \
+                 "OK         USB             USB Composite Device USB\\VID_1234&PID_5678\\12345678\n" \
+                 "                                                                               9E1CF5001BC3\n" \
+                 "                                                                               00\\3&11583659&0&A0\n" \
+                 "                                                                               A1\\4&38AB2860&0&0308"
+        parsed = interface._parse_output(output)
+        assert parsed == [
+            {'status': 'OK', 'class': 'USB', 'friendly_name': 'USB Composite Device',
+             'instance_id': 'USB\\VID_1234&PID_5678\\123456789E1CF5001BC300\\3&11583659&0&A0A1\\4&38AB2860&0&0308'}
         ]
 
     def test_parse_output_darwin(self, logger):
@@ -136,7 +153,7 @@ class TestUSB:
             mock_run.return_value = MagicMock(stdout='stream data', stderr='')
             output = interface.read_stream_data(device_identifier)
             assert output == 'stream data'
-            mock_run.assert_called_with(['powershell', f'Get-Content -Path \\\\.\\{device_identifier}'], capture_output=True, text=True, shell=True, check=True)
+            mock_run.assert_called_with(['powershell', '-Command', f'Get-Content -Path \\\\.\\{device_identifier}'], capture_output=True, text=True, shell=True, check=True)
 
     @patch('platform.system', return_value='Darwin')
     def test_read_stream_data_darwin(self, mock_platform_system, logger):

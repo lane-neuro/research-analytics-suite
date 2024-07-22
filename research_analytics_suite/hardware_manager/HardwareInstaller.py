@@ -18,7 +18,7 @@ from .RemoteManager import RemoteManager
 from .gpu.GPUInstaller import GPUInstaller
 from .cpu.CPUInstaller import CPUInstaller
 from .benchmark import BenchmarkManager
-from .interface import InterfaceManager
+from .interface.InterfaceManager import InterfaceManager
 from .system_info.MemoryInfo import MemoryInfo
 from .system_info.StorageInfo import StorageInfo
 from .system_info.NetworkInfo import NetworkInfo
@@ -34,8 +34,8 @@ class HardwareInstaller:
         self.logger = CustomLogger()
         self.task_manager = TaskManager(self.logger)
         self.remote_manager = RemoteManager(self.logger, remote_servers)
-        self.benchmark_manager = BenchmarkManager(self.logger)
         self.interface_manager = InterfaceManager(self.logger)
+        self.benchmark_manager = BenchmarkManager(self.logger, self.interface_manager)
 
         self.memory_info = MemoryInfo(self.logger)
         self.storage_info = StorageInfo(self.logger)

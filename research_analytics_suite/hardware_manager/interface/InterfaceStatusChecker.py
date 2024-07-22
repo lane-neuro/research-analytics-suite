@@ -13,13 +13,13 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from ..interface import InterfaceManager
+from research_analytics_suite.hardware_manager.interface import InterfaceManager
 
 
 class InterfaceStatusChecker:
-    def __init__(self, logger):
+    def __init__(self, logger, interface_manager):
         self.logger = logger
-        self.interface_manager = InterfaceManager(logger)
+        self.interface_manager = interface_manager
 
     def check_status(self):
         """Check the status of all interfaces.
