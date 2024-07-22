@@ -1,0 +1,14 @@
+name: Ubuntu [latest]
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      os: ubuntu-latest
+      venv-path: .venv

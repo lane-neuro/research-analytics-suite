@@ -26,11 +26,9 @@
   <p>Author: <a href="#contact">Lane</a></p>
 </div>
 
-![Ubuntu](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/python-app.yml/badge.svg?branch=main&job=ubuntu-latest)
-
-![macOS](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/python-app.yml/badge.svg?branch=main&job=macos-latest)
-
-![Windows](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/python-app.yml/badge.svg?branch=main&job=windows-latest)
+![Ubuntu](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/test-ubuntu-latest.yml/badge.svg)
+![macOS](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/test-macos-latest.yml/badge.svg)
+![Windows](https://github.com/lane-neuro/research-analytics-suite/actions/workflows/test-windows-latest.yml/badge.svg)
 
 
 <div>

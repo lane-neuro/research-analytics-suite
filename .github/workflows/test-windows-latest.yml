@@ -1,0 +1,14 @@
+name: Windows [latest]
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      os: windows-latest
+      venv-path: .venv
