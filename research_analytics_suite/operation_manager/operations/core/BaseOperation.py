@@ -7,7 +7,7 @@ Author: Lane
 Copyright: Lane
 Credits: Lane
 License: BSD 3-Clause License
-Version: 0.0.0.2
+Version: 0.0.0.1
 Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
@@ -21,6 +21,7 @@ from abc import ABC
 from typing import Tuple, List, Dict, Optional, Union, final
 
 from research_analytics_suite.commands import command, link_class_commands
+from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
 from .execution import execute_operation, execute_inherited_operations
 from .progress import update_progress
@@ -66,8 +67,8 @@ class BaseOperation(ABC):
         action (Callable): The action to be executed by the operation.
         task (Optional[asyncio.Task]): The task associated with the operation.
         required_inputs (Dict[str, type]): The input requirements of the operation (e.g., memory slots required).
-        memory_inputs (MemoryInput): Memory input slots associated with the operation.
-        memory_outputs (MemoryOutput): Memory output slots associated with the operation.
+        memory_inputs (set): Memory input slots associated with the operation.
+        memory_outputs (set): Memory output slots associated with the operation.
         parent_operation (Optional[BaseOperation]): The parent operation.
         inheritance (List[BaseOperation]): The child operations.
         is_loop (bool): Whether the operation should run as a loop.
@@ -84,11 +85,11 @@ class BaseOperation(ABC):
     def __init__(self, *args, **kwargs):
         """Initialize the operation instance."""
         if not hasattr(self, '_initialized'):
-
             from research_analytics_suite.data_engine.Workspace import Workspace
             from research_analytics_suite.utils.CustomLogger import CustomLogger
             from research_analytics_suite.utils.Config import Config
             from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
+
             self._workspace = Workspace()
             self._logger = CustomLogger()
             self._config = Config()
@@ -96,8 +97,8 @@ class BaseOperation(ABC):
             self._pause_event = asyncio.Event()
             self._pause_event.set()
 
-            self.memory_inputs = None
-            self.memory_outputs = None
+            self.memory_inputs = set()
+            self.memory_outputs = set()
 
             self._gui_module = None
 
@@ -127,11 +128,6 @@ class BaseOperation(ABC):
         """Initialize any resources or setup required for the operation before it starts."""
         if self._initialized:
             return
-
-        from research_analytics_suite.operation_manager.operations.core.memory.MemoryInput import MemoryInput
-        from research_analytics_suite.operation_manager.operations.core.memory.MemoryOutput import MemoryOutput
-        self.memory_inputs = MemoryInput(name=f"{self.name}_input")
-        self.memory_outputs = MemoryOutput(name=f"{self.name}_output")
 
         await self._initialize_child_operations()
 
@@ -271,79 +267,105 @@ class BaseOperation(ABC):
 
     @command
     @final
-    async def add_memory_input_slot(self, memory_slot):
-        """Add a memory input slot."""
-        self.memory_inputs.add_slot(memory_slot)
+    def add_memory_input(self, memory_slot: MemorySlot) -> None:
+        """Add a memory input slot.
+
+        Args:
+            memory_slot (MemorySlot): The memory slot to add as an input.
+        """
+        self.memory_inputs.add(memory_slot)
 
     @command
     @final
-    async def remove_memory_input_slot(self, memory_id: str):
-        """Remove a memory input slot by its ID."""
-        await self.memory_inputs.remove_slot(memory_id)
+    def remove_memory_input(self, memory_id: str) -> None:
+        """Remove a memory input slot by its ID.
 
-    @final
-    def get_memory_input_slot(self, memory_id: str):
-        """Get a memory input slot by its ID."""
-        return self.memory_inputs.get_slot(memory_id)
-
-    @final
-    def get_memory_input_slot_data(self, memory_id: str):
-        """Get the data of a memory input slot by its ID."""
-        return self.memory_inputs.get_slot_data(memory_id)
+        Args:
+            memory_id (str): The ID of the memory slot to remove.
+        """
+        self.memory_inputs = {slot for slot in self.memory_inputs if slot.memory_id != memory_id}
 
     @command
     @final
-    async def add_memory_output_slot(self, memory_slot):
-        """Add a memory output slot."""
-        self.memory_outputs.add_slot(memory_slot)
+    def add_memory_output(self, memory_slot: MemorySlot) -> None:
+        """Add a memory output slot.
+
+        Args:
+            memory_slot (MemorySlot): The memory slot to add as an output.
+        """
+        self.memory_outputs.add(memory_slot)
 
     @command
     @final
-    async def remove_memory_output_slot(self, memory_id: str):
-        """Remove a memory output slot by its ID."""
-        await self.memory_outputs.remove_slot(memory_id)
+    def remove_memory_output(self, memory_id: str) -> None:
+        """Remove a memory output slot by its ID.
+
+        Args:
+            memory_id (str): The ID of the memory slot to remove.
+        """
+        self.memory_outputs = {slot for slot in self.memory_outputs if slot.memory_id != memory_id}
 
     @final
-    def get_memory_output_slot(self, memory_id: str):
-        """Get a memory output slot by its ID."""
-        return self.memory_outputs.get_slot(memory_id)
+    def get_memory_data(self, memory_id: str) -> MemorySlot:
+        """Get the data from a memory slot by its ID.
 
-    @final
-    def get_memory_output_slot_data(self, memory_id: str):
-        """Get the data of a memory output slot by its ID."""
-        return self.memory_outputs.get_slot_data(memory_id)
+        Args:
+            memory_id (str): The ID of the memory slot.
+
+        Returns:
+            MemorySlot: The memory slot with the given ID.
+        """
+        for slot in self.memory_inputs.union(self.memory_outputs):
+            if slot.memory_id == memory_id:
+                return slot
+        raise ValueError(f"No memory slot found with ID {memory_id}")
 
     @command
     async def validate_memory_inputs(self):
-        """Validate all memory inputs."""
-        if self.memory_inputs is not None:
-            await self.memory_inputs.validate_inputs()
+        """Validate all memory inputs.
+
+        Raises:
+            ValueError: If any memory input is invalid.
+        """
+        for memory_slot in self.memory_inputs:
+            if memory_slot.data is None:
+                raise ValueError(f"Memory input {memory_slot.name} is not set.")
 
     @command
     async def validate_memory_outputs(self):
-        """Validate all memory outputs."""
-        if self.memory_outputs is not None:
-            await self.memory_outputs.validate_results()
+        """Validate all memory outputs.
+
+        Raises:
+            ValueError: If any memory output is invalid.
+        """
+        for memory_slot in self.memory_outputs:
+            if memory_slot.data is None:
+                raise ValueError(f"Memory output {memory_slot.name} is not set.")
 
     @command
     @final
-    async def get_results_from_memory(self) -> dict:
+    async def get_results(self) -> dict:
         """Retrieve the results of the operation from the workspace.
 
         Returns:
             dict: The name of the variable and its value.
         """
-        return await self.memory_outputs.aggregate_results()
+        results = {}
+        for memory_slot in self.memory_outputs:
+            results[memory_slot.name] = memory_slot.data
+        return results
 
     @command
     async def clear_memory_inputs(self):
         """Clear all memory inputs."""
-        await self.memory_inputs.clear_slots()
+        for memory_slot in self.memory_inputs:
+            memory_slot.data = None
 
     @command
     async def clear_memory_outputs(self):
         """Clear all memory outputs."""
-        await self.memory_outputs.clear_slots()
+        for memory_slot in self.memory_outputs:
+            memory_slot.data = None
 
     async def save_operation_in_workspace(self, overwrite: bool = False):
         """Save the BaseOperation object to disk.
@@ -535,16 +557,6 @@ class BaseOperation(ABC):
             self.handle_error(TypeError("\'task\' property must be an asyncio.Task"))
             return
         self._task = value
-
-    @property
-    def required_inputs(self) -> Dict[str, type]:
-        """Gets the input requirements of the operation."""
-        return self.attributes.required_inputs
-
-    @required_inputs.setter
-    def required_inputs(self, value: Tuple[str, type]):
-        """Adds an input requirement to the operation."""
-        self.attributes.required_inputs = value
 
     @property
     def parent_operation(self):

@@ -96,10 +96,3 @@ async def sequencer() -> None:
         operation = sequencer_chain.head.operation
         from research_analytics_suite.utils.CustomLogger import CustomLogger
         CustomLogger().info(f"Operation: {operation.task.get_name()} - {operation.status}")
-
-
-@command
-async def get_memory() -> dict:
-    """Displays local vars."""
-    from research_analytics_suite.data_engine import MemoryManager
-    return await MemoryManager().list_collections()

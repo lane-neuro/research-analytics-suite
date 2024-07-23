@@ -27,7 +27,7 @@ dependencies:
   - brotli-python
   - boto3
   - botocore
-  - cachey
+  - cachetools
   - ca-certificates
   - certifi
   - cffi

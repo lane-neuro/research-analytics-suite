@@ -85,7 +85,7 @@ class TestLibraryManifest:
                     )
 
                     with mock.patch(
-                            'research_analytics_suite.operation_manager.operations.core.memory.get_attributes_from_disk',
+                            'research_analytics_suite.operation_manager.operations.core.get_attributes_from_disk',
                             mock_get_attributes_from_disk):
                         await self.library_manifest.load_user_library()
 

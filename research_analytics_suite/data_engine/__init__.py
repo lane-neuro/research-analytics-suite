@@ -6,7 +6,6 @@ managing metadata, caching data, and integrating live data input sources.
 """
 
 from .core import *
-from .integration import *
 from .engine import *
 from .memory import *
 from .data_streams import *

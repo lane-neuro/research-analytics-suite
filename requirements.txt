@@ -14,7 +14,7 @@ asttokens
 bleak
 boto3
 botocore
-cachey
+cachetools
 dask
 dask-expr
 distributed

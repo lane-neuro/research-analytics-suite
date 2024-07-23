@@ -1,14 +1,22 @@
 """
 DataCache Module
 
-Defines the DataCache class for caching data to optimize access to datasets.
+This module defines the DataCache class for caching data to optimize access to datasets.
 
 Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
 """
+from __future__ import annotations
 import asyncio
 import sys
-
-from cachey import Cache
+from cachetools import LRUCache
+from research_analytics_suite.utils import CustomLogger
 
 
 class DataCache:
@@ -16,10 +24,16 @@ class DataCache:
     A class to manage caching of data for optimizing access to datasets.
 
     Attributes:
-        _cache (Cache): An instance of Cachey to store cached data.
+        _logger (CustomLogger): Logger instance for logging events.
+        _instance (DataCache): Singleton instance of DataCache.
+        _lock (asyncio.Lock): Lock to ensure thread-safe operations.
+        _size (int): The size of the cache in bytes.
+        _workspace (Workspace): Workspace instance for managing the workspace.
+        _cache (LRUCache): An instance of LRUCache to store cached data.
+        _initialized (bool): Flag indicating whether the cache has been initialized.
     """
-    _logger = None
-    _instance = None
+    _logger: CustomLogger = None
+    _instance: DataCache = None
     _lock = asyncio.Lock()
 
     def __new__(cls, *args, **kwargs):
@@ -42,12 +56,8 @@ class DataCache:
         """
         if not hasattr(self, '_initialized'):
             self._size = size
-
-            self._logger = None
             self._workspace = None
-
             self._cache = None
-
             self._initialized = False
 
     async def initialize(self):
@@ -57,15 +67,10 @@ class DataCache:
         if not self._initialized:
             async with DataCache._lock:
                 if not self._initialized:
-
-                    from research_analytics_suite.utils import CustomLogger
                     self._logger = CustomLogger()
-
                     from research_analytics_suite.data_engine import Workspace
                     self._workspace = Workspace()
-
-                    self._cache = Cache(self._size)
-
+                    self._cache = LRUCache(maxsize=int(self._size))
                     self._initialized = True
 
     def get(self, key):
@@ -89,7 +94,7 @@ class DataCache:
             data: The data to cache.
         """
         cost = sys.getsizeof(data)
-        self._cache.put(key=key, value=data, cost=cost)
+        self._cache[key] = data
 
     def clear(self):
         """

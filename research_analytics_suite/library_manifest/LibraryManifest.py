@@ -130,7 +130,7 @@ class LibraryManifest:
                 self._logger.debug(f"Importing module: {module_name}")
                 module = importlib.import_module(f'operation_library.{module_name}').__dict__.get(module_name)
 
-                from research_analytics_suite.operation_manager.operations.core.memory.utils import \
+                from research_analytics_suite.operation_manager.operations.core.utils import \
                     get_attributes_from_module
                 _operation = await get_attributes_from_module(module)
                 self.add_operation_from_attributes(_operation)
@@ -161,7 +161,7 @@ class LibraryManifest:
 
         for _op in operation_files:
             self._logger.debug(f"Loading operation from file: {_op}")
-            from research_analytics_suite.operation_manager.operations.core.memory import get_attributes_from_disk
+            from research_analytics_suite.operation_manager.operations.core import get_attributes_from_disk
             self.add_operation_from_attributes(await get_attributes_from_disk(_op))
         self._logger.debug("Completed load_user_library")
 

@@ -1,25 +1,31 @@
 """
-CloudIntegration Module
+S3Integration Module
 
 This module defines methods for integrating with cloud services like AWS S3 for scalable storage
-and processing within the research analytics suite.
+and processing within the Research Analytics Suite.
 
 Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
 """
-
 import boto3
 
 from research_analytics_suite.commands import command, link_class_commands
 
 
 @link_class_commands
-class CloudIntegration:
+class S3Integration:
     """
     A class for integrating with AWS S3.
     """
     def __init__(self, aws_access_key, aws_secret_key, region_name):
         """
-        Initializes the CloudIntegration instance.
+        Initializes the S3Integration instance.
 
         Args:
             aws_access_key (str): The AWS access key.

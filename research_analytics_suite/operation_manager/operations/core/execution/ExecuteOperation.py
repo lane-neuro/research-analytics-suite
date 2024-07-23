@@ -23,7 +23,7 @@ async def execute_operation(operation):
         await operation.validate_memory_outputs()
         if operation.parent_operation:
             for slot in operation.memory_outputs.get_slots():
-                await operation.parent_operation.add_memory_input_slot(slot)
+                await operation.parent_operation.add_memory_input(slot)
 
         if not operation.is_loop:
             operation.status = "completed"
@@ -113,14 +113,14 @@ async def execute_action(operation):
                         slot.data = {name: (type(value), value)}
                         await operation.memory_outputs.update_slot(slot)
                 else:
+                    # Todo replace with MemoryManager calls
                     from research_analytics_suite.data_engine import MemorySlot
                     new_slot = MemorySlot(
                         memory_id=f'{operation.runtime_id}',
                         name=f"{name}",
-                        operation_required=False,
-                        data={name: (type(value), value)}
+                        data=value
                     )
-                    await operation.add_memory_output_slot(new_slot)
+                    operation.add_memory_output(new_slot)
 
         operation.add_log_entry(f"[RESULT] {operation.memory_outputs.list_slots}")
     except Exception as e:

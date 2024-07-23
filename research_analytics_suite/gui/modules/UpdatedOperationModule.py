@@ -174,6 +174,6 @@ class UpdatedOperationModule(GUIBase):
             self.operation.add_log_entry(
                 "ERROR: Cannot view the results of an operation that has not been initialized.")
 
-        _result = await self.operation.get_results_from_memory()
+        _result = await self.operation.get_results()
         self.operation.add_log_entry(f"Viewing result: {_result}")
         print(_result)

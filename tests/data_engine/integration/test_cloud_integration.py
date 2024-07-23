@@ -1,7 +1,7 @@
 import pytest
 from unittest import mock
 
-from research_analytics_suite.data_engine import CloudIntegration
+from research_analytics_suite.data_engine.memory.S3Integration import S3Integration
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ class TestCloudIntegration:
     def setup_method(self, mock_boto3_client, mock_custom_logger):
         self.mock_s3_client = mock_boto3_client.return_value
         self.mock_logger_instance = mock_custom_logger.return_value
-        self.cloud_integration = CloudIntegration(
+        self.cloud_integration = S3Integration(
             aws_access_key="test_access_key",
             aws_secret_key="test_secret_key",
             region_name="us-west-1"

@@ -4,7 +4,7 @@ import sys
 from typing import Optional
 
 import dearpygui.dearpygui as dpg
-from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
+# from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
@@ -78,7 +78,7 @@ class CollectionViewDialog(GUIBase):
             await asyncio.sleep(0.001)
 
         while True:
-            collections = await self._workspace.list_memory_collections()
+            collections = await self._workspace.list_slot_collection()
             collection_items = []
             for collection_id, collection in collections.items():
                 if collection.name.startswith('sys_') or collection.name.startswith('gui_'):
@@ -110,7 +110,7 @@ class CollectionViewDialog(GUIBase):
                 return
 
             for collection in self.collection_list:
-                collection = self._memory_manager.get_collection(collection)
+                collection = dict()  # self._memory_manager.get_collection(collection)
                 if collection.name.startswith("gui_") or collection.name.startswith("sys_"):
                     continue
                 collection_tag = f"collection_group_{collection}"
@@ -129,7 +129,7 @@ class CollectionViewDialog(GUIBase):
         search_query = dpg.get_value(self.search_bar)
         # Logic for searching collections and slots based on the query
 
-    def add_collection(self, collection: MemorySlotCollection):
+    def add_collection(self, collection):
         """Adds a new collection to the primary view."""
         self.collections.append(collection)
         self.add_collection(collection)
@@ -200,15 +200,16 @@ class CollectionViewDialog(GUIBase):
                            memory_slot_id: Optional[str] = None) -> None:
         """Adds a user variable."""
         try:
-            await self._workspace.add_variable_to_collection(collection_id=collection_id, name=name, value=value,
-                                                             data_type=data_type, memory_slot_id=memory_slot_id)
+            await self._workspace.add_memory_slot(collection_id=collection_id, name=name, value=value,
+                                                  data_type=data_type, memory_slot_id=memory_slot_id)
         except Exception as e:
             self._logger.error(Exception(f"Failed to add variable '{name}': {e}", self))
 
     async def remove_variable(self, name, collection_id, memory_slot_id: Optional[str] = None) -> None:
         """Removes a user variable."""
         try:
-            await self._workspace.remove_variable_from_collection(collection_id, name, memory_slot_id)
+            # await self._workspace.remove_variable_from_collection(collection_id, name, memory_slot_id)
+            ...
         except Exception as e:
             self._logger.error(Exception(f"Failed to remove variable '{name}': {e}", self))
 
@@ -266,14 +267,13 @@ class CollectionViewDialog(GUIBase):
         """Updates the slot combobox in the GUI."""
         if dpg.does_item_exist("memory_slot_id_input"):
             slot_items = []
-            slots = self._memory_manager.get_collection_by_display_name(
-                dpg.get_value("collection_id_input"))
-            if slots.list_slots:
-                for slot in slots.list_slots:
-                    slot_items.append(f"{slot.name}")
-
-            dpg.configure_item("memory_slot_id_input", items=slot_items,
-                               default_value=slot_items[0] if slot_items else "")
+            # slots = self._memory_manager.get_collection_by_display_name(dpg.get_value("collection_id_input"))
+            # if slots.list_slots:
+            #     for slot in slots.list_slots:
+            #         slot_items.append(f"{slot.name}")
+            #
+            # dpg.configure_item("memory_slot_id_input", items=slot_items,
+            #                    default_value=slot_items[0] if slot_items else "")
 
     async def open_add_var_dialog(self) -> None:
         """Opens a dialog to add a user variable."""
@@ -370,7 +370,7 @@ class CollectionViewDialog(GUIBase):
 
         for file in _selected_files:
             file_path = file
-            data = self._workspace.get_default_data_engine().load_data(file_path)
-            collection = self._memory_manager.get_default_collection_id()
-            collection = self._memory_manager.get_collection(collection)
-            collection.new_slot_with_data(data)
+            # data = self._workspace.get_default_data_engine().load_data(file_path)
+            # collection = self._memory_manager.get_default_collection_id()
+            # collection = self._memory_manager.get_collection(collection)
+            # collection.new_slot_with_data(data)
