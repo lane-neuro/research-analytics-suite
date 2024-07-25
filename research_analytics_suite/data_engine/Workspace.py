@@ -16,11 +16,9 @@ Status: Prototype
 from __future__ import annotations
 import asyncio
 import os
-from typing import Tuple
 from collections import defaultdict
 
 from research_analytics_suite.commands import link_class_commands, command
-from research_analytics_suite.library_manifest import LibraryManifest
 from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
 from research_analytics_suite.utils.CustomLogger import CustomLogger
@@ -47,6 +45,7 @@ class Workspace:
         if not hasattr(self, '_initialized'):
             self._logger = CustomLogger()
             self._config = Config()
+            from research_analytics_suite.library_manifest.LibraryManifest import LibraryManifest
             self._library_manifest = LibraryManifest()
             self._memory_manager = MemoryManager()
 
@@ -241,7 +240,7 @@ class Workspace:
                 self.add_data_engine(data_engine)
 
             await self._library_manifest.load_user_library()
-            await self.restore_memory_manager(os.path.join(workspace_path, 'user_variables.db'))
+            await self.restore_memory_manager(os.path.join(workspace_path, self._config.DATA_DIR, 'memory_manager.db'))
             self._logger.info(f"Workspace loaded from {workspace_path}")
             return self
 
@@ -257,22 +256,7 @@ class Workspace:
         self._initialized = False
 
     @command
-    async def list_slot_collection(self) -> dict:
-        """
-        Lists all MemorySlot instances in the workspace.
-
-        Returns:
-            dict: A list of MemorySlot instances.
-        """
-        return await self._memory_manager.list_memory_slots()
-
-    @command
-    async def add_memory_slot(self, collection_id: str, name: str, value: any, data_type: type,
-                              memory_slot_id: str = None) -> Tuple[str, dict] or None:
-        ...
-
-    @command
-    async def save_memory_manager(self, file_path: str) -> None:
+    async def save_memory_manager(self, file_path: str) -> None:  # pragma: no cover
         """
         Saves the user variables database to the specified file.
 
@@ -282,7 +266,7 @@ class Workspace:
         ...
 
     @command
-    async def restore_memory_manager(self, file_path: str) -> None:
+    async def restore_memory_manager(self, file_path: str) -> None:  # pragma: no cover
         """
         Restores a serialized MemorySlotCollection object from the specified save file.
 

@@ -15,15 +15,18 @@ async def execute_operation(operation):
         if operation.inheritance:
             await execute_inherited_operations(operation)
 
-        await operation.validate_memory_inputs()
+        try:
+            await operation.validate_inputs()
+        except ValueError or Exception as e:
+            operation.handle_error(e)
+            return
 
         await prepare_action_for_exec(operation)
         await run_operations(operation, [operation])
 
-        await operation.validate_memory_outputs()
         if operation.parent_operation:
-            for slot in operation.memory_outputs.get_slots():
-                await operation.parent_operation.add_memory_input(slot)
+            for slot in operation.memory_outputs:
+                await operation.parent_operation.add_input(slot)
 
         if not operation.is_loop:
             operation.status = "completed"
@@ -83,6 +86,9 @@ async def execute_action(operation):
     """
     Execute the action associated with the operation.
     """
+    from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+    memory_manager = MemoryManager()
+
     try:
         operation.status = "running"
         operation.add_log_entry(f"[RUN] {operation.name}")
@@ -91,8 +97,8 @@ async def execute_action(operation):
             with ProcessPoolExecutor() as executor:
                 _exec_output = await asyncio.get_event_loop().run_in_executor(executor, operation.action_callable)
         elif operation.is_gpu_bound:
-            _exec_output = await asyncio.get_event_loop().run_in_executor(None, gpu_computation,
-                                                                          operation.action_callable)
+            _exec_output = await asyncio.get_event_loop().run_in_executor(
+                None, gpu_computation, operation.action_callable)
         else:
             _exec_output = operation.action_callable
             _exec_output = await _exec_output() if asyncio.iscoroutinefunction(_exec_output) else _exec_output()
@@ -106,23 +112,23 @@ async def execute_action(operation):
                                      operation.name)
 
             # Update all memory output slots with the result of the operation
-            for name, value in _result.items():
-                slots = operation.memory_outputs.find_slots_by_name(name)
-                if slots and len(slots) > 0:
-                    for slot in slots:
-                        slot.data = {name: (type(value), value)}
-                        await operation.memory_outputs.update_slot(slot)
+            for _slot_id in operation.memory_outputs:
+                _name = await memory_manager.slot_name(_slot_id)
+                _value = _result.pop(_name, None)
+                if _value is not None:
+                    await memory_manager.update_slot(_slot_id, _value)
                 else:
-                    # Todo replace with MemoryManager calls
-                    from research_analytics_suite.data_engine import MemorySlot
-                    new_slot = MemorySlot(
-                        memory_id=f'{operation.runtime_id}',
-                        name=f"{name}",
-                        data=value
-                    )
-                    operation.add_memory_output(new_slot)
+                    CustomLogger().error(Exception(f"Operation {operation.name} did not return a value for {_name}"),
+                                         operation.name)
 
-        operation.add_log_entry(f"[RESULT] {operation.memory_outputs.list_slots}")
+            for key, value in _result.copy().items() if _result is not None else {}:
+                for _slot_id in operation.memory_outputs:
+                    if key == await memory_manager.slot_name(_slot_id):
+                        await memory_manager.update_slot(_slot_id, value)
+                        _result.pop(key)
+                        break
+            operation.add_log_entry(f"[OUTPUT IDs] {operation.memory_outputs}")
+        # operation.status = "completed"
+
     except Exception as e:
         operation.handle_error(e)
-

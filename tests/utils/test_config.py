@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+from unittest.mock import MagicMock
 
 import aiofiles
 import psutil

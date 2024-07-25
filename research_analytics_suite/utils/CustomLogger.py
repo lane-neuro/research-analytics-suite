@@ -1,18 +1,7 @@
-"""
-CustomLogger Module
-
-This module defines the CustomLogger class, which is responsible for logging messages within the research analytics
-suite. It sets up a logger with a specific format, handles different log levels, and queues log messages for asynchronous
-processing.
-
-Author: Lane
-"""
-
 import asyncio
 import logging
-import sys
 import traceback
-from typing import List, Union
+from typing import List
 
 from research_analytics_suite.commands.CommandDecorators import command, link_class_commands
 
@@ -34,7 +23,7 @@ class CustomLogger:
         returns the existing instance.
         """
         if not cls._instance:
-            cls._instance = super().__new__(cls, *args, **kwargs)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
@@ -76,7 +65,7 @@ class CustomLogger:
         Args:
             record (logging.LogRecord): The log record to send to the queue.
         """
-        message = record.getMessage()
+        message = f"{record.levelname}: {record.getMessage()}"
         self.log_message_queue.put_nowait(message)
         return True  # Allow the log record to be logged
 
@@ -88,6 +77,10 @@ class CustomLogger:
         Args:
             message: The message to log.
         """
+        if not self._logger:
+            print(f"Logger not initialized: {message}")
+            return
+
         if isinstance(message, List):
             for msg in message:
                 self._logger.info(msg)
@@ -104,6 +97,10 @@ class CustomLogger:
         Args:
             message (str): The message to log.
         """
+        if not self._logger:
+            print(f"Logger not initialized: {message}")
+            return
+
         self._logger.debug(message)
 
     @command
@@ -115,6 +112,10 @@ class CustomLogger:
             exception (Exception): The exception to log.
             context: The context in which the error occurred.
         """
+        if not self._logger:
+            print(f"Logger not initialized: {exception}")
+            return
+
         error_info = traceback.format_exc()
         error_message = f"An error occurred in {context}: {exception}"
         if error_info != 'NoneType: None\n':
@@ -128,4 +129,8 @@ class CustomLogger:
         Args:
             message (str): The message to log.
         """
+        if not self._logger:
+            print(f"Logger not initialized: {message}")
+            return
+
         self._logger.warning(message)

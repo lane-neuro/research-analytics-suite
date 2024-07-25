@@ -1,10 +1,8 @@
 import asyncio
 import os
-import sys
 from typing import Optional
 
 import dearpygui.dearpygui as dpg
-# from research_analytics_suite.data_engine.memory.MemorySlotCollection import MemorySlotCollection
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
@@ -35,7 +33,7 @@ class CollectionViewDialog(GUIBase):
         try:
             self._update_operation = await self._operation_control.operation_manager.create_operation(
                 operation_type=UpdateMonitor, name="gui_MainCollectionUpdate", action=self._update_async)
-            self._update_operation.is_ready = True
+            self._update_operation.is_ready = False
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
 
@@ -77,20 +75,20 @@ class CollectionViewDialog(GUIBase):
         while not dpg.does_item_exist("data_collection_tools_group"):
             await asyncio.sleep(0.001)
 
-        while True:
-            collections = await self._workspace.list_slot_collection()
-            collection_items = []
-            for collection_id, collection in collections.items():
-                if collection.name.startswith('sys_') or collection.name.startswith('gui_'):
-                    continue
-                collection_items.append(f"{collection.display_name}")
-                self.collection_groups[collection_id] = f"{collection.display_name}"
-                await self.display_collection_in_gui(collection_id, collection)
-
-            if dpg.does_item_exist("collection_id_input"):
-                dpg.configure_item("collection_id_input", items=collection_items)
-
-            await asyncio.sleep(0.005)
+        # while True:
+        #     collections = await self._workspace.list_slot_collection()
+        #     collection_items = []
+        #     for collection_id, collection in collections.items():
+        #         if collection.name.startswith('sys_') or collection.name.startswith('gui_'):
+        #             continue
+        #         collection_items.append(f"{collection.display_name}")
+        #         self.collection_groups[collection_id] = f"{collection.display_name}"
+        #         await self.display_collection_in_gui(collection_id, collection)
+        #
+        #     if dpg.does_item_exist("collection_id_input"):
+        #         dpg.configure_item("collection_id_input", items=collection_items)
+        #
+        #     await asyncio.sleep(0.005)
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         """Resizes the GUI."""
@@ -103,26 +101,26 @@ class CollectionViewDialog(GUIBase):
         if dpg.does_item_exist("collection_group"):
             dpg.delete_item("collection_group")
 
-        with dpg.group(parent="data_collection_tools_group", tag="collection_group",
-                       width=-1, height=-1, horizontal=True):
-            """Draws the collection summary view elements."""
-            if self.collection_list is None:
-                return
-
-            for collection in self.collection_list:
-                collection = dict()  # self._memory_manager.get_collection(collection)
-                if collection.name.startswith("gui_") or collection.name.startswith("sys_"):
-                    continue
-                collection_tag = f"collection_group_{collection}"
-                self.collection_groups[collection] = collection_tag
-
-                with dpg.group(tag=collection_tag, horizontal=False):
-                    dpg.add_text(collection.name, parent=collection_tag)
-                    if collection.list_slots:
-                        for slot in collection.list_slots:
-                            from research_analytics_suite.gui import MemorySlotPreview
-                            slot_preview = MemorySlotPreview(parent=collection_tag, slot=slot, width=200, height=100)
-                            slot_preview.draw()
+        # with dpg.group(parent="data_collection_tools_group", tag="collection_group",
+        #                width=-1, height=-1, horizontal=True):
+        #     """Draws the collection summary view elements."""
+        #     if self.collection_list is None:
+        #         return
+        #
+        #     for collection in self.collection_list:
+        #         collection = dict()  # self._memory_manager.get_collection(collection)
+        #         if collection.name.startswith("gui_") or collection.name.startswith("sys_"):
+        #             continue
+        #         collection_tag = f"collection_group_{collection}"
+        #         self.collection_groups[collection] = collection_tag
+        #
+        #         with dpg.group(tag=collection_tag, horizontal=False):
+        #             dpg.add_text(collection.name, parent=collection_tag)
+        #             if collection.list_slots:
+        #                 for slot in collection.list_slots:
+        #                     from research_analytics_suite.gui import MemorySlotPreview
+        #                     slot_preview = MemorySlotPreview(parent=collection_tag, slot=slot, width=200, height=100)
+        #                     slot_preview.draw()
 
     def search(self, sender, data):
         """Callback function for search bar."""
@@ -196,12 +194,13 @@ class CollectionViewDialog(GUIBase):
         if dpg.does_item_exist(slot_group_tag):
             dpg.delete_item(slot_group_tag)
 
-    async def add_variable(self, name, value, data_type, collection_id: str,
-                           memory_slot_id: Optional[str] = None) -> None:
+    async def add_variable(self, name, value) -> None:
         """Adds a user variable."""
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        memory_manager = MemoryManager()
+
         try:
-            await self._workspace.add_memory_slot(collection_id=collection_id, name=name, value=value,
-                                                  data_type=data_type, memory_slot_id=memory_slot_id)
+            await memory_manager.create_slot(name=name, data=value)
         except Exception as e:
             self._logger.error(Exception(f"Failed to add variable '{name}': {e}", self))
 
@@ -346,8 +345,7 @@ class CollectionViewDialog(GUIBase):
                 memory_slot_id = None
 
             if collection_id:
-                await self.add_variable(name=name, value=value, data_type=data_type, collection_id=collection_id,
-                                        memory_slot_id=memory_slot_id)
+                await self.add_variable(name=name, value=value)
                 dpg.hide_item(self.add_var_dialog_id)
             else:
                 self._logger.error(Exception(f"Collection ID not found"), self)

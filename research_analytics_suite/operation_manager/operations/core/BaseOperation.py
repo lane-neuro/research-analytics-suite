@@ -267,80 +267,77 @@ class BaseOperation(ABC):
 
     @command
     @final
-    def add_memory_input(self, memory_slot: MemorySlot) -> None:
+    async def add_input(self, name: str, data: any = None) -> None:
         """Add a memory input slot.
 
         Args:
-            memory_slot (MemorySlot): The memory slot to add as an input.
+            name (str): The name of the memory slot.
+            data (any, optional): The data to store in the memory slot. Defaults to None.
+
         """
-        self.memory_inputs.add(memory_slot)
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        memory_manager = MemoryManager()
+        self.memory_inputs.update(await memory_manager.create_slot(name=name, data=data))
 
     @command
     @final
-    def remove_memory_input(self, memory_id: str) -> None:
-        """Remove a memory input slot by its ID.
+    async def add_output(self, memory_id: str) -> None:
+        """Add a memory output slot by its ID.
+
+        Args:
+            memory_id (str): The ID of the memory slot.
+        """
+        self.memory_outputs.update(memory_id)
+
+    @command
+    @final
+    async def remove_slot(self, memory_id: str) -> None:
+        """Remove a memory slot by its ID.
 
         Args:
             memory_id (str): The ID of the memory slot to remove.
         """
-        self.memory_inputs = {slot for slot in self.memory_inputs if slot.memory_id != memory_id}
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        memory_manager = MemoryManager()
 
-    @command
-    @final
-    def add_memory_output(self, memory_slot: MemorySlot) -> None:
-        """Add a memory output slot.
-
-        Args:
-            memory_slot (MemorySlot): The memory slot to add as an output.
-        """
-        self.memory_outputs.add(memory_slot)
-
-    @command
-    @final
-    def remove_memory_output(self, memory_id: str) -> None:
-        """Remove a memory output slot by its ID.
-
-        Args:
-            memory_id (str): The ID of the memory slot to remove.
-        """
-        self.memory_outputs = {slot for slot in self.memory_outputs if slot.memory_id != memory_id}
+        for slot_id in self.memory_inputs.union(self.memory_outputs):
+            if slot_id == memory_id:
+                self.memory_inputs.remove(slot_id)
+                await memory_manager.delete_slot(memory_id)
 
     @final
-    def get_memory_data(self, memory_id: str) -> MemorySlot:
+    async def get_slot_data(self, memory_id: str) -> any:
         """Get the data from a memory slot by its ID.
 
         Args:
             memory_id (str): The ID of the memory slot.
 
         Returns:
-            MemorySlot: The memory slot with the given ID.
+            any: The data stored in the memory slot.
         """
-        for slot in self.memory_inputs.union(self.memory_outputs):
-            if slot.memory_id == memory_id:
-                return slot
-        raise ValueError(f"No memory slot found with ID {memory_id}")
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        memory_manager = MemoryManager()
+
+        for slot_id in self.memory_inputs.union(self.memory_outputs):
+            if slot_id == memory_id:
+                return await memory_manager.slot_data(memory_id)
+
+        self._logger.warning(f"No memory slot found with ID {memory_id}")
+        return None
 
     @command
-    async def validate_memory_inputs(self):
-        """Validate all memory inputs.
+    async def validate_inputs(self) -> None:
+        """Passes all memory inputs through a data check/validation."""
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        memory_manager = MemoryManager()
 
-        Raises:
-            ValueError: If any memory input is invalid.
-        """
-        for memory_slot in self.memory_inputs:
-            if memory_slot.data is None:
-                raise ValueError(f"Memory input {memory_slot.name} is not set.")
-
-    @command
-    async def validate_memory_outputs(self):
-        """Validate all memory outputs.
-
-        Raises:
-            ValueError: If any memory output is invalid.
-        """
-        for memory_slot in self.memory_outputs:
-            if memory_slot.data is None:
-                raise ValueError(f"Memory output {memory_slot.name} is not set.")
+        _valid, _invalid = await memory_manager.validate_slots(memory_ids=list(self.memory_inputs), require_values=True)
+        if _invalid and len(_invalid) > 0:
+            for _id in _invalid:
+                _name = await memory_manager.slot_name(_id)
+                _data = await memory_manager.slot_data(_id)
+                self._logger.warning(f"Invalid memory slot: {_name} ({_id}) with data: {_data}")
+            raise ValueError("Invalid memory slots found")
 
     @command
     @final
@@ -350,24 +347,28 @@ class BaseOperation(ABC):
         Returns:
             dict: The name of the variable and its value.
         """
-        results = {}
-        for memory_slot in self.memory_outputs:
-            results[memory_slot.name] = memory_slot.data
-        return results
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        memory_manager = MemoryManager()
+
+        _results = {}
+        for slot_id in self.memory_outputs:
+            _name = await memory_manager.slot_name(slot_id)
+            _results[_name] = await memory_manager.slot_data(slot_id)
+        return _results
 
     @command
-    async def clear_memory_inputs(self):
+    async def clear_inputs(self):
         """Clear all memory inputs."""
         for memory_slot in self.memory_inputs:
             memory_slot.data = None
 
     @command
-    async def clear_memory_outputs(self):
+    async def clear_outputs(self):
         """Clear all memory outputs."""
         for memory_slot in self.memory_outputs:
             memory_slot.data = None
 
-    async def save_operation_in_workspace(self, overwrite: bool = False):
+    async def save_in_workspace(self, overwrite: bool = False):
         """Save the BaseOperation object to disk.
 
         Args:

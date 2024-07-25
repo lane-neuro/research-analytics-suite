@@ -22,11 +22,11 @@ class TestDataCache:
 
     def test_data_cache_set_get(self):
         self.cache.set("key", "value")
-        assert self.cache.get("key") == "value"
+        assert self.cache.get_key("key") == "value"
 
     def test_data_cache_clear(self):
         self.cache.set("key1", "value1")
         self.cache.set("key2", "value2")
         self.cache.clear()
-        assert self.cache.get("key1") is None
-        assert self.cache.get("key2") is None
+        assert self.cache.get_key("key1") is None
+        assert self.cache.get_key("key2") is None

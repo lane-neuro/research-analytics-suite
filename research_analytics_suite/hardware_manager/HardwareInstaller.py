@@ -26,7 +26,7 @@ from .system_info.BatteryInfo import BatteryInfo
 from .system_info.OSInfo import OSInfo
 from .system_info.TemperatureInfo import TemperatureInfo
 from .system_info.PeripheralsInfo import PeripheralsInfo
-from ..utils import CustomLogger
+from research_analytics_suite.utils import CustomLogger
 
 
 class HardwareInstaller:

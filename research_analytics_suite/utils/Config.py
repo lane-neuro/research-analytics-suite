@@ -14,7 +14,6 @@ import aiofiles
 import psutil
 
 from research_analytics_suite.commands import command, link_class_commands
-from research_analytics_suite.utils import CustomLogger
 
 
 @link_class_commands
@@ -44,6 +43,7 @@ class Config:
             self.WORKSPACE_OPERATIONS_DIR = None
             self.BACKUP_DIR = None
             self.ENGINE_DIR = None
+            self.CACHE_DIR = None
             self.DISTRIBUTED = None
             self.MEMORY_LIMIT = None
             self.LOG_LEVEL = None
@@ -72,6 +72,7 @@ class Config:
             self.BATCH_SIZE = None
             self.TRANSFORMATIONS = None
             self.SCHEDULER_INTERVAL = None
+
             self._initialized = False
 
     async def initialize(self):
@@ -97,6 +98,7 @@ class Config:
         self.WORKSPACE_OPERATIONS_DIR = os.path.normpath(os.path.join(self.WORKSPACE_DIR, 'operations'))
         self.BACKUP_DIR = 'backup'
         self.ENGINE_DIR = 'engine'
+        self.CACHE_DIR = 'cache'
 
         # Memory settings
         self.MEMORY_LIMIT = psutil.virtual_memory().total * 0.5  # 50% of available memory
@@ -108,7 +110,7 @@ class Config:
         self.LOG_RETENTION = '4 weeks'  # Retain logs for 4 weeks
 
         # Data engine settings
-        self.DISTRIBUTED = True
+        self.DISTRIBUTED = True  # Use distributed memory management by default
         self.CACHE_SIZE = 2e9  # 2GB cache size by default
         self.NUM_THREADS = 4  # Number of threads for processing
 
@@ -164,7 +166,7 @@ class Config:
         if hasattr(self, key):
             setattr(self, key, value)
         else:
-            CustomLogger().error(AttributeError(f"Config has no attribute '{key}'"), self.__class__.__name__)
+            raise AttributeError(f"Config has no attribute '{key}'")
 
     async def reload(self, new_config) -> Config:
         """
@@ -196,15 +198,13 @@ class Config:
             file_path = os.path.normpath(os.path.join(file_path, 'config.json'))
 
         if not os.path.exists(file_path):
-            raise FileNotFoundError(f"Configuration file not found at path: {file_path}")
+            raise FileNotFoundError(f"Configuration file not found: {file_path}")
 
         async with aiofiles.open(file_path, 'r') as f:
             try:
                 return await self.reload(json.loads(await f.read()))
             except json.JSONDecodeError:
-                CustomLogger().error(ValueError(f"Invalid JSON format in configuration file: {file_path}"),
-                                     self.__class__.__name__)
-                return self
+                raise ValueError(f"Invalid JSON format in configuration file: {file_path}")
 
     @command
     async def save_to_file(self, file_path) -> None:
@@ -220,5 +220,4 @@ class Config:
             try:
                 await f.write(json.dumps(_copy, indent=4))
             except Exception as e:
-                CustomLogger().error(Exception(f"Invalid JSON format in configuration file: {file_path} error: {e}"),
-                                     self.__class__.__name__)
+                raise e

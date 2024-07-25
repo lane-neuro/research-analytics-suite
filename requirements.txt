@@ -17,6 +17,7 @@ botocore
 cachetools
 dask
 dask-expr
+diskcache
 distributed
 fastavro
 fastparquet

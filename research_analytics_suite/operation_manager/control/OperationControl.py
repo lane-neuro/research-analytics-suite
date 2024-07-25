@@ -17,7 +17,7 @@ Status: Prototype
 
 import asyncio
 
-from research_analytics_suite.commands import link_class_commands, CommandRegistry
+from research_analytics_suite.commands import CommandRegistry
 from research_analytics_suite.operation_manager.execution.OperationExecutor import OperationExecutor
 from research_analytics_suite.operation_manager.management.OperationLifecycleManager import OperationLifecycleManager
 from research_analytics_suite.operation_manager.management.OperationManager import OperationManager
@@ -27,7 +27,6 @@ from research_analytics_suite.operation_manager.task.TaskMonitor import TaskMoni
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
-@link_class_commands
 class OperationControl:
     """A class for handling the lifecycle of Operation instances."""
     SLEEP_TIME = 0.001

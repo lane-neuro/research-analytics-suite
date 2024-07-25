@@ -222,3 +222,5 @@ tests/data_engine/memory/example.db
 /tests/MagicMock/*
 /.idea
 tests/data_engine/memory/memory_manager.db
+memory_manager.db
+memory_manager.db

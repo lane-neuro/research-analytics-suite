@@ -34,7 +34,7 @@ class LibraryPane(GUIBase):
     def __init__(self, width: int, height: int, parent):
         super().__init__(width, height, parent)
 
-        from research_analytics_suite.library_manifest import LibraryManifest
+        from research_analytics_suite.library_manifest.LibraryManifest import LibraryManifest
         self._library_manifest = LibraryManifest()
 
         from research_analytics_suite.utils import CustomLogger

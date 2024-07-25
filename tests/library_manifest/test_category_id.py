@@ -1,6 +1,6 @@
 import pytest
 
-from research_analytics_suite.library_manifest import CategoryID
+from research_analytics_suite.library_manifest.CategoryID import CategoryID
 
 
 class TestCategoryID:

@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from cachetools import LRUCache
+import diskcache
 from research_analytics_suite.utils import CustomLogger
 
 
@@ -29,7 +30,7 @@ class DataCache:
         _lock (asyncio.Lock): Lock to ensure thread-safe operations.
         _size (int): The size of the cache in bytes.
         _workspace (Workspace): Workspace instance for managing the workspace.
-        _cache (LRUCache): An instance of LRUCache to store cached data.
+        _cache: An instance of LRUCache or diskcache to store cached data.
         _initialized (bool): Flag indicating whether the cache has been initialized.
     """
     _logger: CustomLogger = None
@@ -47,17 +48,21 @@ class DataCache:
             cls._instance = super(DataCache, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, size=2e9):
+    def __init__(self, size=2e9, backend='cachetools', directory='cache_directory'):
         """
         Initializes the DataCache instance.
 
         Args:
             size (int): The size of the cache in bytes. Default is 2GB.
+            backend (str): The caching backend to use ('cachetools' or 'diskcache'). Default is 'cachetools'.
+            directory (str): The directory to store diskcache files. Default is 'cache_directory'.
         """
         if not hasattr(self, '_initialized'):
             self._size = size
             self._workspace = None
             self._cache = None
+            self._backend = backend
+            self._directory = directory
             self._initialized = False
 
     async def initialize(self):
@@ -70,10 +75,13 @@ class DataCache:
                     self._logger = CustomLogger()
                     from research_analytics_suite.data_engine import Workspace
                     self._workspace = Workspace()
-                    self._cache = LRUCache(maxsize=int(self._size))
+                    if self._backend == 'diskcache':
+                        self._cache = diskcache.Cache(self._directory)
+                    else:
+                        self._cache = LRUCache(maxsize=int(self._size))
                     self._initialized = True
 
-    def get(self, key):
+    def get_key(self, key) -> any:
         """
         Retrieves data from the cache.
 
@@ -96,8 +104,27 @@ class DataCache:
         cost = sys.getsizeof(data)
         self._cache[key] = data
 
+    def delete(self, key):
+        """
+        Deletes data from the cache.
+
+        Args:
+            key (str): The key for the data to delete.
+        """
+        try:
+            del self._cache[key]
+        except KeyError:
+            self._logger.debug(f"Key '{key}' not found in cache.")
+
     def clear(self):
         """
         Clears all data from the cache.
         """
         self._cache.clear()
+
+    async def close(self):
+        """
+        Cleans up resources used by DataCache.
+        """
+        # Logic to clean up the cache, if needed.
+        pass

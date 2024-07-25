@@ -52,7 +52,7 @@ class RegistrationManager:
                 from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
                 self._operation_control = OperationControl()
 
-                from research_analytics_suite.library_manifest import LibraryManifest
+                from research_analytics_suite.library_manifest.LibraryManifest import LibraryManifest
                 self._library_manifest = LibraryManifest()
 
                 from research_analytics_suite.data_engine import Workspace

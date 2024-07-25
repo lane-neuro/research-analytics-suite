@@ -51,15 +51,17 @@ async def prepare_action_for_exec(operation):
                 operation.action = operation.execute
             else:
                 from research_analytics_suite.utils import CustomLogger
-                CustomLogger().error(TypeError("operation.execute is not callable"), operation)
+                CustomLogger().error(TypeError("operation.execute is not callable and no action is provided."),
+                                     operation.name)
+                return
 
         if isinstance(operation.action, str):
             code = operation.action
-            if operation.memory_inputs and operation.memory_inputs.list_slots:
-                _action = await _execute_code_action(code, operation.memory_inputs.list_slots)
-                operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs.list_slots}")
+            if operation.memory_inputs:
+                _action = await _execute_code_action(code, operation.memory_inputs)
+                operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs}")
             else:
-                _action = await _execute_code_action(code, [])
+                _action = await _execute_code_action(code, set())
             operation.add_log_entry(f"[CODE] {code}")
         elif callable(operation.action):
             if asyncio.iscoroutinefunction(operation.action):
@@ -68,16 +70,14 @@ async def prepare_action_for_exec(operation):
                 _action = operation.action
             else:
                 t_action = operation.action
-                operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs.list_slots}")
-                _action = _execute_callable_action(t_action=t_action,
-                                                   memory_inputs=operation.memory_inputs.list_slots if
-                                                   operation.memory_inputs else [])
+                operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs}")
+                _action = _execute_callable_action(t_action=t_action, memory_inputs=operation.memory_inputs)
         operation.action_callable = _action
     except Exception as e:
         operation.handle_error(e)
 
 
-async def _execute_code_action(code: str, memory_inputs: list = None) -> Callable[[], any]:
+async def _execute_code_action(code: str, memory_inputs: set = None) -> Callable[[], any]:
     """
     Execute a code action.
 
@@ -88,27 +88,33 @@ async def _execute_code_action(code: str, memory_inputs: list = None) -> Callabl
     Returns:
         callable: The action callable.
     """
+    from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+    memory_manager = MemoryManager()
 
     async def action() -> any:
+        inputs = {}
 
-        # Extract the actual data values from the MemorySlot tuples
-        inputs = {slot.name: await slot.get_data_by_key(slot.name) for slot in memory_inputs} if memory_inputs else {}
-        for k, v in inputs.items():
-            if isinstance(v, tuple):
-                if v[0] is type(None):
-                    inputs[k] = None
-                elif v[0] == 'module':
-                    try:
-                        inputs[k] = __import__(v[1])
-                    except ImportError:
-                        inputs[k] = None
-                elif (v[0] == 'function' or v[0] == 'method' or v[0] == 'builtin_function_or_method' or
-                      v[0] == 'method-wrapper' or v[0] == 'class'):
-                    inputs[k] = v[1]
-                else:
-                    inputs[k] = v[0](v[1])
-            else:
-                inputs[k] = v
+        # for k, v in inputs.items():
+        #     if isinstance(v, tuple):
+        #         if v[0] is type(None):
+        #             inputs[k] = None
+        #         elif v[0] == 'module':
+        #             try:
+        #                 inputs[k] = __import__(v[1])
+        #             except ImportError:
+        #                 inputs[k] = None
+        #         elif (v[0] == 'function' or v[0] == 'method' or v[0] == 'builtin_function_or_method' or
+        #               v[0] == 'method-wrapper' or v[0] == 'class'):
+        #             inputs[k] = v[1]
+        #         else:
+        #             inputs[k] = v[0](v[1])
+        #     else:
+        #         inputs[k] = v
+
+        for slot_id in memory_inputs:
+            _name = await memory_manager.slot_name(slot_id)
+            _data = await memory_manager.slot_data(slot_id)
+            inputs[_name] = _data
 
         # Create a restricted execution environment
         safe_globals = {"__builtins__": SAFE_BUILTINS}
@@ -126,23 +132,28 @@ async def _execute_code_action(code: str, memory_inputs: list = None) -> Callabl
     return action
 
 
-def _execute_callable_action(t_action, memory_inputs: list = None):
+def _execute_callable_action(t_action, memory_inputs: set = None):
     """
     Execute a callable action.
 
     Args:
         t_action (callable): The callable to execute.
-        memory_inputs (list): The memory inputs to use for the action.
+        memory_inputs (set): The memory inputs to use for the action.
 
     Returns:
         callable: The action callable.
     """
+    from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+    _memory_manager = MemoryManager()
 
     def action() -> any:
-        inputs = {slot.name: slot.data for slot in memory_inputs} if memory_inputs else {}
-        # Extract the actual data values from the MemorySlot tuples
-        inputs = {k: v for k, (t, v) in inputs.items()}
-        _output = t_action(*inputs.values())
+        inputs = {}
+        for _slot_id in memory_inputs:
+            _name = _memory_manager.slot_name(_slot_id)
+            _data = _memory_manager.slot_data(_slot_id)
+            inputs[_name] = _data
+
+        _output = t_action(**inputs)
         if _output is not None:
             return _output
         return

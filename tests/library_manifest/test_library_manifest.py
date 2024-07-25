@@ -1,7 +1,7 @@
 import pytest
 import pytest_asyncio
 from unittest import mock
-from research_analytics_suite.library_manifest import LibraryManifest
+from research_analytics_suite.library_manifest.LibraryManifest import LibraryManifest
 
 
 class TestLibraryManifest:

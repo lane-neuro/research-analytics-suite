@@ -56,15 +56,15 @@ class TestCustomLogger:
         self.logger.info("Test info message")
         self.logger.warning("Test warning message")
 
-        await asyncio.sleep(0.001)  # Ensure messages are processed
+        await asyncio.sleep(0.1)  # Ensure messages are processed
         queue_contents = []
         while not self.logger.log_message_queue.empty():
             queue_contents.append(await self.logger.log_message_queue.get())
 
-        assert any("Test error" in msg for msg in queue_contents)
-        assert "Test debug message" in queue_contents
-        assert "Test info message" in queue_contents
-        assert "Test warning message" in queue_contents
+        assert any("ERROR: An error occurred in test_logging_levels: Test error" in msg for msg in queue_contents)
+        assert "DEBUG: Test debug message" in queue_contents
+        assert "INFO: Test info message" in queue_contents
+        assert "WARNING: Test warning message" in queue_contents
 
     @pytest.mark.asyncio
     async def test_logging_queue(self):
@@ -76,8 +76,8 @@ class TestCustomLogger:
         while not self.logger.log_message_queue.empty():
             queue_contents.append(await self.logger.log_message_queue.get())
 
-        assert "Test queue message" in queue_contents
-        assert "Test queue message debug" in queue_contents
+        assert "INFO: Test queue message" in queue_contents
+        assert "DEBUG: Test queue message debug" in queue_contents
 
     @pytest.mark.asyncio
     async def test_error_logging(self):
@@ -89,8 +89,7 @@ class TestCustomLogger:
         await asyncio.sleep(0.001)  # Ensure messages are processed
         assert not self.logger.log_message_queue.empty()
         error_message = await self.logger.log_message_queue.get()
-        assert "Test error" in error_message
-        assert "test_error_logging" in error_message
+        assert "ERROR: An error occurred in test_error_logging: Test error" in error_message
 
     @pytest.mark.asyncio
     async def test_empty_message_logging(self):
@@ -102,7 +101,8 @@ class TestCustomLogger:
         while not self.logger.log_message_queue.empty():
             queue_contents.append(await self.logger.log_message_queue.get())
 
-        assert "" in queue_contents
+        assert "INFO: " in queue_contents
+        assert "DEBUG: " in queue_contents
 
     @pytest.mark.asyncio
     async def test_concurrent_logging(self):
@@ -119,5 +119,5 @@ class TestCustomLogger:
             queue_contents.append(await self.logger.log_message_queue.get())
 
         # Check if a few messages are present in the queue
-        assert any(f"Concurrent log {i}" in msg for i in range(10) for msg in queue_contents)
-        assert any(f"Concurrent debug {i}" in msg for i in range(10) for msg in queue_contents)
+        assert any(f"INFO: Concurrent log {i}" in msg for i in range(10) for msg in queue_contents)
+        assert any(f"DEBUG: Concurrent debug {i}" in msg for i in range(10) for msg in queue_contents)

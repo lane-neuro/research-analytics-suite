@@ -438,7 +438,7 @@ class UnifiedDataEngine:
         Returns:
             The cached data or None if the key is not found.
         """
-        return self.data_cache.get(key)
+        return self.data_cache.get_key(key)
 
     @command
     def clear_cache(self):

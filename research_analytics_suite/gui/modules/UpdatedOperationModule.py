@@ -115,7 +115,7 @@ class UpdatedOperationModule(GUIBase):
             with dpg.group(parent=parent, tag=f"state_mods_{self._runtime_id}"):
                 dpg.add_button(label="View Result", callback=self.view_result)
                 dpg.add_button(label="Reload Original Attributes", callback=self.reload_attributes)
-                dpg.add_button(label="Save Operation Settings", callback=self.operation.save_operation_in_workspace,
+                dpg.add_button(label="Save Operation Settings", callback=self.operation.save_in_workspace,
                                tag=f"save_{self._runtime_id}")
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
@@ -174,6 +174,12 @@ class UpdatedOperationModule(GUIBase):
             self.operation.add_log_entry(
                 "ERROR: Cannot view the results of an operation that has not been initialized.")
 
-        _result = await self.operation.get_results()
-        self.operation.add_log_entry(f"Viewing result: {_result}")
-        print(_result)
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        memory_manager = MemoryManager()
+
+        _output_slots = await self.operation.memory_outputs
+        _output_dict = {}
+        for slot_id in _output_slots:
+            _output_dict[memory_manager.slot_name(slot_id)] = await memory_manager.slot_data(slot_id)
+        self.operation.add_log_entry(f"Viewing result: {_output_dict}")
+        print(_output_dict)

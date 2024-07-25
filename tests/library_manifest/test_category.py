@@ -2,7 +2,7 @@ import pytest
 
 import pytest_asyncio
 
-from research_analytics_suite.library_manifest import Category
+from research_analytics_suite.library_manifest.Category import Category
 
 
 class TestCategory:

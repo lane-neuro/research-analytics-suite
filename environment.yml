@@ -51,6 +51,7 @@ dependencies:
   - dask-expr
   - decorator
   - defusedxml
+  - diskcache
   - dnspython
   - docopt
   - et_xmlfile
