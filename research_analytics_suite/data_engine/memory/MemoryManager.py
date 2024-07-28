@@ -159,8 +159,9 @@ class MemoryManager:
         memory_slot = self._data_cache.get_key(key=memory_id)
         if memory_slot:
             memory_slot.close()
-            os.remove(memory_slot._file_path)  # Remove memory-mapped file if it exists
-        self._data_cache.delete(key=memory_id)
+            if memory_slot._file_path:
+                os.remove(memory_slot._file_path)  # Remove memory-mapped file if it exists
+            self._data_cache.delete(key=memory_id)
 
     async def list_slots(self) -> dict:
         """

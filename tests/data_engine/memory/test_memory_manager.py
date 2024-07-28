@@ -43,9 +43,56 @@ class TestMemoryManager:
         assert self.memory_manager._initialized is True
 
     @pytest.mark.asyncio
+    async def test_initialize_twice(self):
+        await self.memory_manager.initialize()
+        assert self.memory_manager._initialized is True
+
+        # Initialize again and check that it doesn't reinitialize
+        await self.memory_manager.initialize()
+        assert self.memory_manager._initialized is True  # Should still be true without reinitialization
+
+    @pytest.mark.asyncio
+    async def test_update_slot_with_non_existing_id(self):
+        memory_id = "nonexistingid"
+        self.memory_manager._data_cache.get_key.return_value = None
+
+        with patch.object(MemorySlot, 'setup', new_callable=AsyncMock):
+            with patch.object(MemorySlot, 'set_data', new_callable=AsyncMock):
+                updated_memory_id = await self.memory_manager.update_slot(memory_id=memory_id, data="new_value")
+
+        self.memory_manager._data_cache.set.assert_called_once()
+        assert updated_memory_id == memory_id
+
+    @pytest.mark.asyncio
+    async def test_delete_non_existing_slot(self):
+        memory_id = "nonexistingid"
+        self.memory_manager._data_cache.get_key.return_value = None
+
+        # Should not raise any exception
+        await self.memory_manager.delete_slot(memory_id=memory_id)
+
+        # Verify delete was not called because the slot doesn't exist
+        self.memory_manager._data_cache.delete.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_slot_data_retrieval_error(self):
+        memory_id = "nonexistingid"
+        self.memory_manager._data_cache.get_key.return_value = None
+
+        data = await self.memory_manager.slot_data(memory_id=memory_id)
+        assert data is None
+
+    @pytest.mark.asyncio
+    async def test_validate_slots_with_empty_list(self):
+        memory_ids = []
+        valid_slots, invalid_slots = await self.memory_manager.validate_slots(memory_ids=memory_ids)
+
+        assert valid_slots == []
+        assert invalid_slots == []
+
+    @pytest.mark.asyncio
     async def test_create_slot(self):
         memory_id = await self.memory_manager.create_slot(name="test_slot", data="value", db_path=":memory:")
-
         self.memory_manager._data_cache.set.assert_called_once()
         assert len(memory_id) == 8  # UUID truncated to 8 characters
 
@@ -112,5 +159,4 @@ class TestMemoryManager:
     @pytest.mark.asyncio
     async def test_cleanup(self):
         await self.memory_manager.cleanup()
-
         self.memory_manager._data_cache.close.assert_called_once()

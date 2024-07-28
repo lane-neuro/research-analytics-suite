@@ -347,14 +347,11 @@ class BaseOperation(ABC):
         Returns:
             dict: The name of the variable and its value.
         """
-        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
-        memory_manager = MemoryManager()
-
-        _results = {}
-        for slot_id in self.memory_outputs:
-            _name = await memory_manager.slot_name(slot_id)
-            _results[_name] = await memory_manager.slot_data(slot_id)
-        return _results
+        results = {}
+        for memory_slot in self.memory_outputs:
+            if memory_slot.data is not None:
+                results[memory_slot.name] = await self.get_slot_data(memory_slot)
+        return results
 
     @command
     async def clear_inputs(self):
