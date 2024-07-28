@@ -112,7 +112,7 @@ class TestMemoryManager:
     async def test_delete_slot(self):
         memory_id = "12345678"
         mock_slot = MagicMock(spec=MemorySlot)
-        mock_slot._file_path = "test_mmap.dat"
+        mock_slot.file_path = "test_mmap.dat"
         self.memory_manager._data_cache.get_key.return_value = mock_slot
 
         with patch('os.remove', MagicMock()) as mock_remove:

@@ -125,8 +125,8 @@ class MemoryManager:
         _id = uuid.uuid4().hex[:8]
         memory_slot = MemorySlot(memory_id=_id, name=name, data=data, db_path=db_path, file_path=file_path)
         await memory_slot.setup()
-        self._data_cache.set(key=memory_slot._memory_id, data=memory_slot)
-        return memory_slot._memory_id
+        self._data_cache.set(key=memory_slot.memory_id, data=memory_slot)
+        return memory_slot.memory_id
 
     async def update_slot(self, memory_id: str, data: any) -> str:
         """
@@ -159,8 +159,8 @@ class MemoryManager:
         memory_slot = self._data_cache.get_key(key=memory_id)
         if memory_slot:
             memory_slot.close()
-            if memory_slot._file_path:
-                os.remove(memory_slot._file_path)  # Remove memory-mapped file if it exists
+            if memory_slot.file_path:
+                os.remove(memory_slot.file_path)  # Remove memory-mapped file if it exists
             self._data_cache.delete(key=memory_id)
 
     async def list_slots(self) -> dict:

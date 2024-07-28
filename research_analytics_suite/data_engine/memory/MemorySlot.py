@@ -116,6 +116,24 @@ class MemorySlot:
         self._name = value
 
     @property
+    def memory_id(self) -> str:
+        """Gets the unique identifier for the memory slot.
+
+        Returns:
+            str: The unique identifier for the memory slot.
+        """
+        return self._memory_id or ""
+
+    @property
+    def file_path(self) -> str:
+        """Gets the file path for memory-mapped storage.
+
+        Returns:
+            str: The file path for memory-mapped storage.
+        """
+        return self._file_path or ""
+
+    @property
     async def data(self) -> any:
         """Gets the data stored in the memory slot."""
         async with self._lock:
