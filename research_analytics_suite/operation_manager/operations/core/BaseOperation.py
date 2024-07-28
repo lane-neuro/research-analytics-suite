@@ -319,11 +319,16 @@ class BaseOperation(ABC):
         memory_manager = MemoryManager()
 
         for slot_id in self.memory_inputs.union(self.memory_outputs):
-            if slot_id == memory_id:
-                return await memory_manager.slot_data(memory_id)
-
-        self._logger.warning(f"No memory slot found with ID {memory_id}")
-        return None
+            if slot_id.lower() == memory_id.lower():
+                try:
+                    _data = await memory_manager.slot_data(memory_id)
+                    return _data
+                except Exception as e:
+                    self._logger.error(e)
+                    return None
+        else:
+            self._logger.warning(f"No memory slot found with ID {memory_id}")
+            return None
 
     @command
     async def validate_inputs(self) -> None:
