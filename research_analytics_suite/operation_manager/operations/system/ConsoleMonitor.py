@@ -49,6 +49,7 @@ class ConsoleMonitor(BaseOperation):
         Args:
             prompt (str): A string that is displayed as a prompt for user input.
         """
+        kwargs.update({"action": self.execute})
         self._prompt = kwargs.pop("prompt", "\n\t>>\t")
 
         from research_analytics_suite.commands import CommandRegistry

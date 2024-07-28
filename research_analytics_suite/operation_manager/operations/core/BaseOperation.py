@@ -21,7 +21,6 @@ from abc import ABC
 from typing import Tuple, List, Dict, Optional, Union, final
 
 from research_analytics_suite.commands import command, link_class_commands
-from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 from .control import start_operation, pause_operation, resume_operation, stop_operation, reset_operation
 from .execution import execute_operation, execute_inherited_operations
 from .progress import update_progress
@@ -116,6 +115,7 @@ class BaseOperation(ABC):
 
             if len(args) == 0 or not args:
                 if kwargs.get('action', None) is None:
+                    self._logger.warning(f"Operation [{self.name}] must have an action to execute.")
                     kwargs['action'] = self.execute
                 self._attributes = OperationAttributes(*args, **kwargs)
                 asyncio.run(self._attributes.initialize())

@@ -61,6 +61,8 @@ class ResourceMonitor(BaseOperation):
         self.total_memory_usage: float = 0
         self.process_memory_usage: float = 0
 
+        kwargs.update({"action": self.execute})
+
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self) -> None:
