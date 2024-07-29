@@ -214,13 +214,8 @@ list_directory.py
 directory_structure.txt
 .DS_Store
 .idea/dataSources.xml
-research_analytics_suite/example.db
 .idea/sqldialects.xml
-example.db
 identifier.sqlite
-tests/data_engine/memory/example.db
 /tests/MagicMock/*
 /.idea
-tests/data_engine/memory/memory_manager.db
-memory_manager.db
-memory_manager.db
+*.db
