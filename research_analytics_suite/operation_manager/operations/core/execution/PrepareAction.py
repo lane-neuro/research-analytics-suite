@@ -44,35 +44,49 @@ async def prepare_action_for_exec(operation):
     """
     Prepare the action for execution.
     """
+    from research_analytics_suite.utils import CustomLogger
+
     _action = None
     try:
         if operation.action is None:
             if callable(operation.execute):
                 operation.action = operation.execute
             else:
-                from research_analytics_suite.utils import CustomLogger
                 CustomLogger().error(TypeError("operation.execute is not callable and no action is provided."),
                                      operation.name)
                 return
 
         if isinstance(operation.action, str):
             code = operation.action
-            if operation.memory_inputs:
-                _action = await _execute_code_action(code, operation.memory_inputs)
-                operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs}")
-            else:
-                _action = await _execute_code_action(code, set())
-            operation.add_log_entry(f"[CODE] {code}")
+
+            async def _code_action():
+                if operation.memory_inputs:
+                    result = await _execute_code_action(code, operation.memory_inputs)
+                    CustomLogger().debug(f"Memory Inputs: {operation.memory_inputs}")
+                    operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs}")
+                else:
+                    CustomLogger().debug(f"No memory inputs for code action: {operation.name}")
+                    result = await _execute_code_action(code, set())
+                operation.add_log_entry(f"[CODE] {code}")
+                return result
+
+            _action = _code_action
+            CustomLogger().debug(f"Code prepared for execution: {operation.name}")
         elif callable(operation.action):
             if asyncio.iscoroutinefunction(operation.action):
+                CustomLogger().debug(f"Action is a coroutine: {operation.action}")
                 _action = operation.action
             elif isinstance(operation.action, types.MethodType):
+                CustomLogger().debug(f"Action is a method: {operation.action}")
                 _action = operation.action
             else:
+                CustomLogger().debug(f"Action is a callable: {operation.action}")
                 t_action = operation.action
                 operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs}")
-                _action = _execute_callable_action(t_action=t_action, memory_inputs=operation.memory_inputs)
+                _action = lambda: _execute_callable_action(t_action=t_action, memory_inputs=operation.memory_inputs)
+            CustomLogger().debug(f"Callable prepared for execution: {operation.name}")
         operation.action_callable = _action
+        CustomLogger().debug(f"Action prepared for execution: {operation.name}")
     except Exception as e:
         operation.handle_error(e)
 
@@ -94,23 +108,6 @@ async def _execute_code_action(code: str, memory_inputs: set = None) -> Callable
     async def action() -> any:
         inputs = {}
 
-        # for k, v in inputs.items():
-        #     if isinstance(v, tuple):
-        #         if v[0] is type(None):
-        #             inputs[k] = None
-        #         elif v[0] == 'module':
-        #             try:
-        #                 inputs[k] = __import__(v[1])
-        #             except ImportError:
-        #                 inputs[k] = None
-        #         elif (v[0] == 'function' or v[0] == 'method' or v[0] == 'builtin_function_or_method' or
-        #               v[0] == 'method-wrapper' or v[0] == 'class'):
-        #             inputs[k] = v[1]
-        #         else:
-        #             inputs[k] = v[0](v[1])
-        #     else:
-        #         inputs[k] = v
-
         for slot_id in memory_inputs:
             _name = await memory_manager.slot_name(slot_id)
             _data = await memory_manager.slot_data(slot_id)
@@ -119,7 +116,7 @@ async def _execute_code_action(code: str, memory_inputs: set = None) -> Callable
         # Create a restricted execution environment
         safe_globals = {"__builtins__": SAFE_BUILTINS}
         # noinspection PyTypeChecker
-        
+
         safe_globals.update(LazyModuleLoader().get_all_modules())
 
         try:

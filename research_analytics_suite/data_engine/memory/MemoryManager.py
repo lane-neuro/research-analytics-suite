@@ -17,12 +17,17 @@ from __future__ import annotations
 import asyncio
 import os
 import uuid
+
+import aiosqlite
+
+from research_analytics_suite.commands import link_class_commands, command
 from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 from research_analytics_suite.data_engine.memory.DataCache import DataCache
 from research_analytics_suite.utils import CustomLogger
 from research_analytics_suite.utils import Config
 
 
+@link_class_commands
 class MemoryManager:
     """
     A class to manage memory slot collections within the workspace using a specified storage backend.
@@ -102,6 +107,7 @@ class MemoryManager:
             self._logger.debug("MemoryManager initialized.")
             self._initialized = True
 
+    @command
     async def create_slot(self, name: str, data: any, db_path: str = None, file_path: str = None) -> str:
         """
         Creates a new memory slot and stores it in both cache and SQLite storage.
@@ -125,9 +131,10 @@ class MemoryManager:
         _id = uuid.uuid4().hex[:8]
         memory_slot = MemorySlot(memory_id=_id, name=name, data=data, db_path=db_path, file_path=file_path)
         await memory_slot.setup()
-        self._data_cache.set(key=memory_slot.memory_id, data=memory_slot)
+        self._data_cache.set(key=memory_slot.memory_id, data=self.get_slot(memory_id=_id))
         return memory_slot.memory_id
 
+    @command
     async def update_slot(self, memory_id: str, data: any) -> str:
         """
         Updates the data in an existing memory slot.
@@ -146,9 +153,10 @@ class MemoryManager:
             memory_slot = MemorySlot(memory_id=memory_id, name="", data=data, db_path=self._db_path)
             await memory_slot.setup()
             await memory_slot.set_data(data)
-            self._data_cache.set(key=memory_id, data=memory_slot)
+            self._data_cache.set(key=memory_id, data=self.get_slot(memory_id=memory_id))
         return memory_id
 
+    @command
     async def delete_slot(self, memory_id: str) -> None:
         """
         Deletes a memory slot from both cache and SQLite storage.
@@ -163,14 +171,22 @@ class MemoryManager:
                 os.remove(memory_slot.file_path)  # Remove memory-mapped file if it exists
             self._data_cache.delete(key=memory_id)
 
-    async def list_slots(self) -> dict:
+    @command
+    async def list_slots(self) -> list:
         """
         Lists all memory slots stored in the SQLite storage.
 
         Returns:
-            dict: A dictionary of memory slots.
+            list: A dictionary of memory slots.
         """
-        return await self._data_cache.list_keys()
+        memory_slots = []
+        for memory_slot in self._data_cache.cache_values():
+            if not isinstance(memory_slot, MemorySlot):
+                continue
+            print(memory_slot)
+            memory_slots.append(memory_slot)
+
+        return memory_slots
 
     async def slot_data(self, memory_id: str) -> any:
         """
@@ -190,7 +206,7 @@ class MemoryManager:
         await memory_slot.setup()
         data = await memory_slot.data
         if data:
-            self._data_cache.set(key=memory_id, data=memory_slot)
+            self._data_cache.set(key=memory_id, data=self.get_slot(memory_id=memory_id))
         return data
 
     async def slot_name(self, memory_id: str) -> str:
@@ -211,8 +227,21 @@ class MemoryManager:
         await memory_slot.setup()
         name = memory_slot.name
         if name:
-            self._data_cache.set(key=memory_id, data=memory_slot)
+            self._data_cache.set(key=memory_id, data=self.get_slot(memory_id=memory_id))
         return name
+
+    @command
+    def get_slot(self, memory_id: str) -> MemorySlot:
+        """
+        Retrieves a MemorySlot instance from the cache.
+
+        Args:
+            memory_id (str): The unique identifier for the memory slot.
+
+        Returns:
+            MemorySlot: The MemorySlot instance.
+        """
+        return self._data_cache.get_key(key=memory_id)
 
     async def validate_slots(self, memory_ids: list, require_values: bool = True) -> (list, list):
         """

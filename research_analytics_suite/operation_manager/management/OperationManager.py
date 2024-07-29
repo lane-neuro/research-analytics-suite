@@ -45,18 +45,19 @@ class OperationManager:
         self.task_creator = task_creator
         self._logger = CustomLogger()
 
-        self.resource_monitor = ResourceMonitor(cpu_threshold=90, memory_threshold=95)
-        self.console_monitor = ConsoleMonitor(prompt="\n\t>>\t")
+        self.resource_monitor = None
+        self.console_monitor = None
 
     async def initialize(self):
         """
         Initializes the OperationManager.
         """
-        await self.resource_monitor.initialize_operation()
-        await self.console_monitor.initialize_operation()
-
-        await self.add_initialized_operation(self.resource_monitor)
-        await self.add_initialized_operation(self.console_monitor)
+        self.resource_monitor = await self.create_operation(
+            ResourceMonitor, cpu_threshold=90, memory_threshold=95)
+        self._logger.debug("Resource monitor initialized.")
+        self.console_monitor = await self.create_operation(
+            ConsoleMonitor, prompt="\n\t>>\t")
+        self._logger.debug("Console monitor initialized.")
 
     @command
     async def add_initialized_operation(self, operation: BaseOperation) -> BaseOperation:

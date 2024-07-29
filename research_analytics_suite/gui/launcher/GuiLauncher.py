@@ -23,7 +23,7 @@ from research_analytics_suite.data_engine import Workspace
 from research_analytics_suite.gui.NodeEditorManager import NodeEditorManager
 from research_analytics_suite.gui.dialogs.management.LibraryPane import LibraryPane
 from research_analytics_suite.gui.dialogs.management.ResourceMonitorDialog import ResourceMonitorDialog
-from research_analytics_suite.gui.dialogs.data_handling.CollectionViewDialog import CollectionViewDialog
+from research_analytics_suite.gui.dialogs.data_handling.DataManagementDialog import DataManagementDialog
 from research_analytics_suite.gui.dialogs.management.ConsoleDialog import ConsoleDialog
 from research_analytics_suite.gui.dialogs.settings.SettingsDialog import SettingsDialog
 from research_analytics_suite.gui.modules.TimelineModule import TimelineModule
@@ -268,7 +268,7 @@ class GuiLauncher:
     async def setup_data_collection_pane(self) -> None:
         """Sets up the data collection pane."""
         with dpg.group(parent="data_collection_pane"):
-            self._collection_view_dialog = CollectionViewDialog(width=-1, height=-1, parent="data_collection_pane")
+            self._collection_view_dialog = DataManagementDialog(width=-1, height=-1, parent="data_collection_pane")
             dpg.add_text("Data Collection Tools")
             await self._collection_view_dialog.initialize_gui()
 

@@ -34,7 +34,7 @@ class TestMemoryManager:
                     self.memory_manager._data_cache.get_key = MagicMock()
                     self.memory_manager._data_cache.set = MagicMock()
                     self.memory_manager._data_cache.delete = MagicMock()
-                    self.memory_manager._data_cache.list_keys = AsyncMock(return_value={})
+                    self.memory_manager._data_cache.cache_values = MagicMock()
                     self.memory_manager._data_cache.close = AsyncMock()
 
     @pytest.mark.asyncio
@@ -123,12 +123,22 @@ class TestMemoryManager:
 
     @pytest.mark.asyncio
     async def test_list_slots(self):
-        expected_slots = {"slot1": "data1", "slot2": "data2"}
-        self.memory_manager._data_cache.list_keys.return_value = expected_slots
+        memory_slot_mock_1 = MagicMock(spec=MemorySlot)
+        memory_slot_mock_1.memory_id = "id_01"
+        memory_slot_mock_1.name = "name1"
+        memory_slot_mock_1.data = 100
+
+        memory_slot_mock_2 = MagicMock(spec=MemorySlot)
+        memory_slot_mock_2.memory_id = "id_02"
+        memory_slot_mock_2.name = "name2"
+        memory_slot_mock_2.data = "data2"
+        expected_slots = [memory_slot_mock_1, memory_slot_mock_2]
+
+        self.memory_manager._data_cache.cache_values.return_value = expected_slots
 
         slots = await self.memory_manager.list_slots()
 
-        self.memory_manager._data_cache.list_keys.assert_called_once()
+        self.memory_manager._data_cache.cache_values.assert_called_once()
         assert slots == expected_slots
 
     @pytest.mark.asyncio

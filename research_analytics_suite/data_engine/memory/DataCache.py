@@ -93,6 +93,18 @@ class DataCache:
         """
         return self._cache.get(key)
 
+    def cache_values(self) -> list:
+        """
+        Retrieves all values from the cache.
+
+        Returns:
+            List[any]: The values stored in the cache.
+        """
+        _cache_values = []
+        for key in self._cache.keys():
+            _cache_values.append(self._cache[key])
+        return _cache_values
+
     def set(self, key, data):
         """
         Stores data in the cache.

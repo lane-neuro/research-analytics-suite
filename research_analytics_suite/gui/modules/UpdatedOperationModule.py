@@ -15,6 +15,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+import asyncio
 from copy import copy
 
 import dearpygui.dearpygui as dpg
@@ -80,9 +81,9 @@ class UpdatedOperationModule(GUIBase):
         if self.operation.initialized:
             with dpg.group(horizontal=True, tag=f"execution_{self._runtime_id}", parent=parent, width=width*.40,
                            height=20):
-                dpg.add_button(label="Execute", callback=self.execute_operation)
-                dpg.add_button(label="Stop", callback=self.stop_operation)
-                dpg.add_button(label="Reset", callback=self.reset_operation)
+                dpg.add_button(label="Execute", callback=lambda: asyncio.create_task(self.execute_operation()))
+                dpg.add_button(label="Stop", callback=lambda: asyncio.create_task(self.stop_operation()))
+                dpg.add_button(label="Reset", callback=lambda: asyncio.create_task(self.reset_operation()))
 
         with dpg.group(horizontal=True, tag=f"options_{self._runtime_id}", horizontal_spacing=35, parent=parent,
                        width=width):
@@ -125,7 +126,7 @@ class UpdatedOperationModule(GUIBase):
         dpg.set_item_width(self._parent_id, new_width)
         dpg.set_item_height(self._parent_id, new_height)
 
-    def reload_attributes(self, sender: any, app_data: any, user_data: any) -> None:
+    def reload_attributes(self) -> None:
         """Reloads the original attributes of the operation."""
         from research_analytics_suite.operation_manager import BaseOperation
 
@@ -133,20 +134,22 @@ class UpdatedOperationModule(GUIBase):
         self.operation = BaseOperation(self._attributes)
         self.operation.add_log_entry("Reloaded original attributes.")
 
-    async def execute_operation(self, sender: any, app_data: any, user_data: any) -> None:
+    async def execute_operation(self) -> None:
         """Executes the operation. If the operation has not been initialized, it will be initialized first."""
         if not hasattr(self.operation, "_initialized"):
             self.operation.add_log_entry("Detected uninitialized operation. Initializing operation.")
+            self._logger.debug(f"Initializing operation {self.operation.name}.")
             await self.operation.initialize_operation()
 
         try:
             self.operation.is_ready = True
+            self._logger.debug(f"Operation {self.operation.name} is ready for execution.")
             self.operation.add_log_entry("Marked operation for execution.")
         except Exception as e:
             self._logger.error(e, self)
             self.operation.add_log_entry(f"Error executing operation: {e}")
 
-    async def stop_operation(self, sender: any, app_data: any, user_data: any) -> None:
+    async def stop_operation(self) -> None:
         """Stops the operation."""
         if not hasattr(self.operation, "_initialized") or not self.operation.initialized:
             self.operation.add_log_entry("ERROR: Cannot stop an operation that has not been initialized.")
@@ -157,7 +160,7 @@ class UpdatedOperationModule(GUIBase):
             self._logger.error(e, self)
             self.operation.add_log_entry(f"Error stopping operation: {e}")
 
-    async def reset_operation(self, sender: any, app_data: any, user_data: any) -> None:
+    async def reset_operation(self) -> None:
         """Resets the operation."""
         if not hasattr(self.operation, "_initialized"):
             self.operation.add_log_entry("ERROR: Cannot reset an operation that has not been initialized.")
@@ -168,7 +171,7 @@ class UpdatedOperationModule(GUIBase):
             self._logger.error(e, self)
             self.operation.add_log_entry(f"Error resetting operation: {e}")
 
-    async def view_result(self, sender: any, app_data: any, user_data: any) -> None:
+    async def view_result(self) -> None:
         """Handles the event when the user clicks the 'View Result' button."""
         if not hasattr(self.operation, "_initialized"):
             self.operation.add_log_entry(
