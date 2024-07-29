@@ -61,10 +61,15 @@ class TestMemorySlot:
     async def test_metadata_update(self, memory_slot):
         old_modified_at = memory_slot._modified_at
         new_data = {"new_key": "new_value"}
+
+        # Adding a small delay to ensure timestamp difference
+        await asyncio.sleep(0.001)
+
         await memory_slot.set_data(new_data)
 
+        print(f"Old modified_at: {old_modified_at}, New modified_at: {memory_slot._modified_at}")
         assert memory_slot._modified_at > old_modified_at, "Modified timestamp should update after setting new data."
-
+        
     @pytest.mark.asyncio
     async def test_memory_slot_close(self, memory_slot):
         memory_slot.close()
