@@ -82,8 +82,6 @@ class OperationExecutor:
             Exception: If an exception occurs during the execution of an operation, it is caught and handled by the
             ErrorHandler instance.
         """
-        self._logger.debug("OperationControl: Sequencer Size: " + str(self.sequencer.size()))
-
         # Create a copy of the sequencer for iteration
         sequencer_copy = set(self.sequencer.sequencer)
 

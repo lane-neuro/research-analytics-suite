@@ -62,11 +62,10 @@ class SettingsDialog(GUIBase):
             dpg.add_separator()
 
             # Logging settings
-            dpg.add_input_text(label="Log File", default_value=self._config.LOG_FILE, tag="log_file")
             dpg.add_input_text(label="Log Rotation", default_value=self._config.LOG_ROTATION, tag="log_rotation")
             dpg.add_input_text(label="Log Retention", default_value=self._config.LOG_RETENTION, tag="log_retention")
-            dpg.add_combo(label="Log Level", items=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-                          default_value=self._config.LOG_LEVEL, tag="log_level")
+            dpg.add_checkbox(label="Debug Output to Console", default_value=self._config.DEBUG_CONSOLE,
+                             tag="debug_console")
 
             dpg.add_separator()
 
@@ -153,8 +152,7 @@ class SettingsDialog(GUIBase):
 
         self._config.MEMORY_LIMIT = dpg.get_value("memory_limit")
 
-        self._config.LOG_LEVEL = dpg.get_value("log_level")
-        self._config.LOG_FILE = dpg.get_value("log_file")
+        self._config.DEBUG_CONSOLE = dpg.get_value("debug_console")
         self._config.LOG_ROTATION = dpg.get_value("log_rotation")
         self._config.LOG_RETENTION = dpg.get_value("log_retention")
 

@@ -51,13 +51,13 @@ class BaseInterface(ABC):
         self.logger.debug(f"Executing command: {' '.join(command)}")
         try:
             result = subprocess.run(command, capture_output=True, text=True, shell=(self.os_info == 'windows'), check=True)
-            self.logger.debug(f"Command output: {result.stdout}")
-            self.logger.debug(f"Command stderr: {result.stderr}")
+            self.logger.debug(f"Command output: {result.stdout}") if result.stdout else None
+            self.logger.debug(f"Command stderr: {result.stderr}") if result.stderr else None
             return result.stdout
         except subprocess.CalledProcessError as e:
             self.logger.error(f"Command '{' '.join(command)}' failed with error: {e}")
-            self.logger.error(f"Command stdout: {e.stdout}")
-            self.logger.error(f"Command stderr: {e.stderr}")
+            self.logger.error(f"Command stdout: {e.stdout}") if e.stdout else None
+            self.logger.error(f"Command stderr: {e.stderr}") if e.stderr else None
             raise e
 
     @abstractmethod

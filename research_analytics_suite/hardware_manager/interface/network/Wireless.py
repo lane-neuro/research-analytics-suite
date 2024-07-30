@@ -62,7 +62,11 @@ class Wireless(NetworkInterface):
 
     def _get_command_windows(self, action: str, identifier: str = '', data: str = '', settings=None) -> List[str]:
         if action == 'list':
-            return ['powershell', 'Get-NetAdapter -InterfaceDescription *Wi-Fi*']
+            return [
+                'powershell',
+                'Get-NetAdapter -InterfaceDescription *Wi-Fi* '
+                '| Format-Table -AutoSize -Wrap'
+            ]
         elif action == 'read':
             return ['powershell', f'Get-NetAdapter -Name {identifier}']
         elif action == 'connect':

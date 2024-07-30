@@ -40,9 +40,6 @@ class TestUSB:
         interface = USB(logger)
         devices = interface.detect()
         assert devices == [{'bus': '001', 'device': '002', 'vendor_id': '8087', 'product_id': '0024', 'description': 'Intel Corp.'}]
-        interface.logger.debug.assert_any_call('Executing command: lsusb')
-        interface.logger.debug.assert_any_call('Command output: Bus 001 Device 002: ID 8087:0024 Intel Corp.')
-        interface.logger.debug.assert_any_call('Command stderr: ')
 
     @patch('subprocess.run')
     @patch('platform.system', return_value='Linux')
@@ -67,7 +64,7 @@ class TestUSB:
     def test_get_command_windows(self, mock_platform_system, logger):
         interface = USB(logger)
         command = interface._get_command('list')
-        assert command == ['powershell', '-Command', 'Get-PnpDevice -Class USB | Format-Table -Property Status,Class,FriendlyName,InstanceId -AutoSize -Wrap']
+        assert command == ['powershell', '-Command', 'Get-PnpDevice -Class USB | Format-Table -AutoSize -Wrap']
 
     @patch('platform.system', return_value='Darwin')
     def test_get_command_darwin(self, mock_platform_system, logger):

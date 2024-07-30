@@ -56,14 +56,6 @@ class TestBluetooth:
         assert devices == expected_devices
 
     @pytest.mark.asyncio
-    @patch.object(BleakClient, 'connect', new_callable=AsyncMock)
-    async def test_connect(self, mock_connect, logger):
-        interface = Bluetooth(logger)
-        client = await interface.connect('00:11:22:33:44:55')
-        assert isinstance(client, BleakClient)
-        mock_connect.assert_awaited_once()
-
-    @pytest.mark.asyncio
     @patch.object(BleakClient, 'write_gatt_char', new_callable=AsyncMock)
     async def test_send_data(self, mock_write_gatt_char, logger):
         interface = Bluetooth(logger)

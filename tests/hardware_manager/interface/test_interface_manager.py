@@ -12,9 +12,6 @@ def mock_logger():
 @pytest.fixture
 def mock_interfaces(mock_logger):
     with patch('research_analytics_suite.hardware_manager.interface.usb.USB.USB', autospec=True) as MockUSB, \
-            patch('research_analytics_suite.hardware_manager.interface.usb.USBc.USBc', autospec=True) as MockUSBc, \
-            patch('research_analytics_suite.hardware_manager.interface.usb.MicroUSB.MicroUSB',
-                  autospec=True) as MockMicroUSB, \
             patch('research_analytics_suite.hardware_manager.interface.network.Ethernet.Ethernet',
                   autospec=True) as MockEthernet, \
             patch('research_analytics_suite.hardware_manager.interface.network.Wireless.Wireless',
@@ -30,8 +27,6 @@ def mock_interfaces(mock_logger):
             patch('research_analytics_suite.hardware_manager.interface.display.PCI.PCI', autospec=True) as MockPCI, \
             patch('research_analytics_suite.hardware_manager.interface.serial.Serial.Serial', autospec=True) as MockSerial:
         MockUSB.return_value.detect = AsyncMock(return_value=[{'device': 'USB1'}])
-        MockUSBc.return_value.detect = AsyncMock(return_value=[{'device': 'USB-C1'}])
-        MockMicroUSB.return_value.detect = AsyncMock(return_value=[{'device': 'MicroUSB1'}])
         MockEthernet.return_value.detect = AsyncMock(return_value=[{'device': 'Ethernet1'}])
         MockWireless.return_value.detect = AsyncMock(return_value=[{'device': 'Wireless1'}])
         MockBluetooth.return_value.detect = AsyncMock(return_value=[{'device': 'Bluetooth1'}])
@@ -44,8 +39,6 @@ def mock_interfaces(mock_logger):
 
         yield {
             'USB': MockUSB,
-            'USB-C': MockUSBc,
-            'Micro-USB': MockMicroUSB,
             'Ethernet': MockEthernet,
             'Wireless': MockWireless,
             'Bluetooth': MockBluetooth,
@@ -68,8 +61,6 @@ class TestInterfaceManager:
 
         self.manager.base_interfaces = {
             'USB': mock_interfaces['USB'](mock_logger),
-            'USB-C': mock_interfaces['USB-C'](mock_logger),
-            'Micro-USB': mock_interfaces['Micro-USB'](mock_logger),
             'Ethernet': mock_interfaces['Ethernet'](mock_logger),
             'Wireless': mock_interfaces['Wireless'](mock_logger),
             'Bluetooth': mock_interfaces['Bluetooth'](mock_logger),
@@ -90,8 +81,6 @@ class TestInterfaceManager:
         await self.manager.detect_interfaces()
         assert self.manager.interfaces == {
             'USB': [{'device': 'USB1'}],
-            'USB-C': [{'device': 'USB-C1'}],
-            'Micro-USB': [{'device': 'MicroUSB1'}],
             'Ethernet': [{'device': 'Ethernet1'}],
             'Wireless': [{'device': 'Wireless1'}],
             'Bluetooth': [{'device': 'Bluetooth1'}],
@@ -124,7 +113,7 @@ class TestInterfaceManager:
         await self.manager.detect_interfaces()
         interfaces_list = self.manager.list_interfaces()
         assert interfaces_list == [
-            'USB', 'USB-C', 'Micro-USB', 'Ethernet', 'Wireless', 'Bluetooth', 'Thunderbolt',
+            'USB', 'Ethernet', 'Wireless', 'Bluetooth', 'Thunderbolt',
             'DisplayPort', 'HDMI', 'VGA', 'PCI', 'Serial'
         ]
 
@@ -132,24 +121,3 @@ class TestInterfaceManager:
         await self.manager.detect_interfaces()
         usb_interface = self.manager.get_interface('USB')
         assert usb_interface == [{'device': 'USB1'}]
-
-    @pytest.mark.asyncio
-    async def test_print_interfaces(self):
-        await self.manager.detect_interfaces()
-        self.manager.print_interfaces()
-        expected_calls = [
-            call.info("Available interfaces:"),
-            call.info("- {'device': 'USB1'}"),
-            call.info("- {'device': 'USB-C1'}"),
-            call.info("- {'device': 'MicroUSB1'}"),
-            call.info("- {'device': 'Ethernet1'}"),
-            call.info("- {'device': 'Wireless1'}"),
-            call.info("- {'device': 'Bluetooth1'}"),
-            call.info("- {'device': 'Thunderbolt1'}"),
-            call.info("- {'device': 'DisplayPort1'}"),
-            call.info("- {'device': 'HDMI1'}"),
-            call.info("- {'device': 'VGA1'}"),
-            call.info("- {'device': 'PCI1'}"),
-            call.info("- {'device': 'Serial1'}")
-        ]
-        self.manager.logger.assert_has_calls(expected_calls, any_order=True)

@@ -53,7 +53,8 @@ class TestThunderbolt:
         interface = Thunderbolt(logger)
         with pytest.raises(subprocess.CalledProcessError):
             interface.detect()
-        interface.logger.error.assert_any_call("Command 'lspci -nn -D' failed with error: Command '['lspci', '-nn', '-D']' returned non-zero exit status 1.")
+        interface.logger.error.assert_any_call(
+            "Command 'lspci -nn -D' failed with error: Command '['lspci', '-nn', '-D']' returned non-zero exit status 1.")
         interface.logger.error.assert_any_call('Command stdout: error')
         interface.logger.error.assert_any_call('Command stderr: error')
 
@@ -67,7 +68,9 @@ class TestThunderbolt:
     def test_get_command_windows(self, mock_platform_system, logger):
         interface = Thunderbolt(logger)
         command = interface._get_command('list')
-        assert command == ['powershell', 'Get-PnpDevice -Class Net']
+        assert command == ['powershell',
+                           'Get-PnpDevice -Class Net -PresentOnly | Where-Object { $_.HardwareID -like '
+                           '"*Thunderbolt*" } | Format-Table -Autosize -Wrap']
 
     @patch('platform.system', return_value='Darwin')
     def test_get_command_darwin(self, mock_platform_system, logger):

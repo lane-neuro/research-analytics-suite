@@ -21,6 +21,9 @@ class TestResearchAnalyticsSuite:
         """
         Test that all components are initialized correctly.
         """
+        self.suite._args = MagicMock()
+        self.suite._args.open_workspace = '/tmp/test_workspace'
+
         with patch.object(self.suite._logger, 'initialize', new=AsyncMock()) as logger_initialize, \
                 patch.object(self.suite._hardware_installer.interface_manager, 'detect_interfaces', new=AsyncMock()) as hardware_initialize, \
                 patch.object(self.suite._memory_manager, 'initialize', new=AsyncMock()) as memory_initialize, \
@@ -28,14 +31,16 @@ class TestResearchAnalyticsSuite:
                 patch.object(self.suite._operation_control, 'initialize', new=AsyncMock()) as operation_initialize, \
                 patch.object(self.suite._library_manifest, 'initialize', new=AsyncMock()) as library_initialize, \
                 patch.object(self.suite._workspace, 'initialize', new=AsyncMock()) as workspace_initialize, \
-                patch.object(self.suite._logger, 'info', new=MagicMock()) as logger_info_mock:
+                patch.object(self.suite._logger, 'info', new=MagicMock()) as logger_info_mock, \
+                patch.object(self.suite, '_setup_workspace', new=AsyncMock()) as setup_workspace_mock:
             await self.suite._initialize_components()
+            setup_workspace_mock.assert_called_once()
             logger_initialize.assert_called_once()
             memory_initialize.assert_called_once()
             config_initialize.assert_called_once()
             operation_initialize.assert_called_once()
             library_initialize.assert_called_once()
-            workspace_initialize.assert_called_once()
+            workspace_initialize.assert_not_called()  # because we are calling _setup_workspace
 
     @pytest.mark.asyncio
     async def test_setup_workspace_new(self):
@@ -84,7 +89,6 @@ class TestResearchAnalyticsSuite:
                 patch('asyncio.get_event_loop', return_value=MagicMock(close=MagicMock())):
             await self.suite._launch()
             init_components_mock.assert_called_once()
-            setup_workspace_mock.assert_called_once()
             save_workspace_mock.assert_called_once()
             logger_info_mock.assert_any_call('Saving Workspace...')
 
@@ -104,10 +108,9 @@ class TestResearchAnalyticsSuite:
                 patch('research_analytics_suite.gui.GuiLauncher.setup_main_window', new=AsyncMock()) as setup_main_window_mock:
             await self.suite._launch()
             init_components_mock.assert_called_once()
-            setup_workspace_mock.assert_called_once()
             save_workspace_mock.assert_called_once()
             logger_info_mock.assert_any_call('Saving Workspace...')
-            assert setup_main_window_mock.call_count == 1
+            setup_main_window_mock.assert_called_once()
 
     def test_run(self):
         """

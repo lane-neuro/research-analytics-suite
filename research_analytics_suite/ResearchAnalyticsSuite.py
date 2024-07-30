@@ -45,15 +45,17 @@ class ResearchAnalyticsSuite:
         from research_analytics_suite.hardware_manager.interface.InterfaceManager import InterfaceManager
         self._config = Config()
         self._logger = CustomLogger()
+        self._workspace = Workspace()
         self._memory_manager = MemoryManager()
         self._hardware_installer = HardwareInstaller()
         self._interface_manager = InterfaceManager()
         self._library_manifest = LibraryManifest()
         self._command_registry = CommandRegistry()
         self._operation_control = OperationControl()
-        self._workspace = Workspace()
 
         self._launch_tasks = []
+
+        self._args = None
 
     def _parse_launch_args(self):
         """
@@ -73,17 +75,17 @@ class ResearchAnalyticsSuite:
         """
         Initializes the components of the Research Analytics Suite.
         """
-        await self._logger.initialize()
         await self._config.initialize()
+        await self._logger.initialize()
+        await self._setup_workspace()
         await self._memory_manager.initialize()
+
         await self._operation_control.initialize()
+        self._launch_tasks.append(self._operation_control.exec_loop())
+
         await self._library_manifest.initialize()
-        await self._workspace.initialize()
         await self._command_registry.initialize()
         await self._hardware_installer.interface_manager.detect_interfaces()
-
-        self._hardware_installer.interface_manager.print_interfaces()
-        self._launch_tasks.append(self._operation_control.exec_loop())
 
     async def _setup_workspace(self):
         """
@@ -105,7 +107,6 @@ class ResearchAnalyticsSuite:
         Initializes and launches the Research Analytics Suite.
         """
         await self._initialize_components()
-        await self._setup_workspace()
 
         if self._args.gui.lower() == 'true':
             try:

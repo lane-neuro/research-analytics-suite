@@ -13,7 +13,6 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-import subprocess
 from typing import List, Dict, Any
 
 from research_analytics_suite.hardware_manager.interface.BaseInterface import BaseInterface
@@ -98,7 +97,7 @@ class USB(BaseInterface):
             return [
                 'powershell',
                 '-Command',
-                'Get-PnpDevice -Class USB | Format-Table -Property Status,Class,FriendlyName,InstanceId -AutoSize -Wrap'
+                'Get-PnpDevice -Class USB | Format-Table -AutoSize -Wrap'
             ]
         elif action == 'read':
             return [

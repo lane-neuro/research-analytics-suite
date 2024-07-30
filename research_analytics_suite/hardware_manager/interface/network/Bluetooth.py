@@ -41,6 +41,7 @@ class Bluetooth:
             list: Information about detected Bluetooth devices.
         """
         devices = await BleakScanner.discover()
+        self.logger.debug(f"Detected Bluetooth devices: {devices}")
         return [{'address': device.address, 'name': device.name} for device in devices]
 
     async def connect(self, address: str) -> BleakClient:
@@ -54,6 +55,8 @@ class Bluetooth:
         """
         client = BleakClient(address)
         await client.connect()
+        self.logger.debug(f"Connected to Bluetooth device: {address} with client: {client} "
+                          f"and services: {client.services}")
         return client
 
     async def send_data(self, client: BleakClient, characteristic: str, data: str):
@@ -64,6 +67,7 @@ class Bluetooth:
             characteristic (str): The characteristic UUID to write to.
             data (str): The data to send.
         """
+        self.logger.debug(f"Sending data: {data} to characteristic: {characteristic} on device: {client.address}")
         await client.write_gatt_char(characteristic, data.encode())
 
     async def receive_data(self, client: BleakClient, characteristic: str) -> str:
@@ -76,5 +80,7 @@ class Bluetooth:
         Returns:
             str: The received data.
         """
+        self.logger.debug(f"Receiving data from characteristic: {characteristic} on device: {client.address}")
         data = await client.read_gatt_char(characteristic)
+        self.logger.debug(f"Received data: {data} from characteristic: {characteristic} on device: {client.address}")
         return data.decode()

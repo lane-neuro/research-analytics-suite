@@ -41,9 +41,7 @@ class TaskMonitor:
 
     async def handle_tasks(self):
         """Handles the execution and monitoring of tasks."""
-        self._logger.debug("handle_tasks: [INIT]")
         for task in self.task_creator.tasks.copy():
-            self._logger.debug(f"handle_tasks: [CHECK] {task.get_name()}")
             if task.done():
                 operation = self.sequencer.find_operation_by_task(task)
                 try:

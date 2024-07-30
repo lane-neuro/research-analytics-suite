@@ -110,17 +110,28 @@ class BaseOperation(ABC):
 
             self.operation_logs = []
 
-            from research_analytics_suite.operation_manager.operations.core.OperationAttributes import (
-                OperationAttributes)
+            from research_analytics_suite.operation_manager.operations.core.OperationAttributes import \
+                OperationAttributes
 
-            if len(args) == 0 or not args:
+            # If args is empty or not passed, initialize OperationAttributes with kwargs
+            if not args or len(args) == 0:
                 if kwargs.get('action', None) is None:
-                    self._logger.warning(f"Operation [{self.name}] must have an action to execute.")
+                    self._logger.warning(
+                        f"Operation [{kwargs.get('name', '[Unnamed Operation]')}] must have an action to execute.")
                     kwargs['action'] = self.execute
-                self._attributes = OperationAttributes(*args, **kwargs)
-                asyncio.run(self._attributes.initialize())
+                self._attributes = OperationAttributes(**kwargs)
+            # If the first argument is an instance of OperationAttributes, use it directly
             elif isinstance(args[0], OperationAttributes) and hasattr(args[0], 'unique_id'):
                 self._attributes = args[0]
+            # Otherwise, pass both args and kwargs to OperationAttributes
+            else:
+                self._attributes = OperationAttributes(*args, **kwargs)
+
+            # Initialize the attributes asynchronously
+            if asyncio.get_event_loop().is_running():
+                asyncio.create_task(self._attributes.initialize())
+            else:
+                asyncio.run(self._attributes.initialize())
 
             self._initialized = False
 
@@ -497,6 +508,11 @@ class BaseOperation(ABC):
         """Gets the category ID of the operation."""
         return self.attributes.category_id
 
+    @category_id.setter
+    def category_id(self, value: int):
+        """Sets the category ID of the operation."""
+        self.attributes.category_id = value
+
     @property
     def author(self) -> str:
         """Gets the author of the operation."""
@@ -582,12 +598,12 @@ class BaseOperation(ABC):
         self.attributes.inheritance = value
 
     @property
-    def is_loop(self):
+    def is_loop(self) -> bool:
         """Gets whether the operation should run in a loop."""
         return self.attributes.is_loop
 
     @is_loop.setter
-    def is_loop(self, value):
+    def is_loop(self, value: bool):
         """Sets whether the operation should run in a loop."""
         self.attributes.is_loop = value
 
@@ -597,7 +613,7 @@ class BaseOperation(ABC):
         return self.attributes.is_cpu_bound
 
     @is_cpu_bound.setter
-    def is_cpu_bound(self, value):
+    def is_cpu_bound(self, value: bool):
         """Sets whether the operation is CPU-bound."""
         self.attributes.is_cpu_bound = value
 
@@ -607,7 +623,7 @@ class BaseOperation(ABC):
         return self.attributes.is_gpu_bound
 
     @is_gpu_bound.setter
-    def is_gpu_bound(self, value):
+    def is_gpu_bound(self, value: bool):
         """Sets whether the operation is GPU-bound."""
         self.attributes.is_gpu_bound = value
 
@@ -617,7 +633,7 @@ class BaseOperation(ABC):
         return self.attributes.parallel
 
     @parallel.setter
-    def parallel(self, value):
+    def parallel(self, value: bool):
         """Sets whether inherited operations should run in parallel or sequentially."""
         self.attributes.parallel = value
 
@@ -627,7 +643,7 @@ class BaseOperation(ABC):
         return self._is_ready
 
     @is_ready.setter
-    def is_ready(self, value):
+    def is_ready(self, value: bool):
         """Sets whether the operation is ready to be executed."""
         if not isinstance(value, bool):
             self.handle_error(TypeError("\'is_ready\' property must be a boolean"))
@@ -648,7 +664,7 @@ class BaseOperation(ABC):
         return self._status
 
     @status.setter
-    def status(self, value):
+    def status(self, value: str):
         """Sets the status of the operation."""
         valid_statuses = ["idle", "started", "waiting", "running", "paused", "stopped", "completed", "error"]
         if value not in valid_statuses:
@@ -735,7 +751,9 @@ class BaseOperation(ABC):
         self._status = "error"
 
     def cleanup_operation(self):
-        """Clean up any resources or perform any necessary teardown after the operation has completed or been stopped.
+        """
+        Clean up any resources or perform any necessary teardown after the operation has completed
+        or been stopped.
         """
         self._progress = 0
         self._status = "idle"

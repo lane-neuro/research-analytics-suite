@@ -38,27 +38,26 @@ class OperationAttributes:
         if not hasattr(self, '_initialized'):
             if args and isinstance(args[0], dict):
                 self.temp_kwargs.update(args[0])
-            elif kwargs and isinstance(kwargs, dict):
-                self.temp_kwargs.update(kwargs)
+            self.temp_kwargs.update(kwargs)
 
             from research_analytics_suite.utils import CustomLogger
             self._logger = CustomLogger()
 
-            self.name = None
-            self.version = None
-            self.description = None
-            self.category_id = None
-            self.author = None
-            self.github = None
-            self.email = None
-            self.action = None
-            self.required_inputs = {}
-            self.parent_operation = None
-            self.inheritance = []
-            self.is_loop = False
-            self.is_cpu_bound = False
-            self.is_gpu_bound = False
-            self.parallel = False
+            self.name = self.temp_kwargs.get('name', args[0] if len(args) > 0 else None)
+            self.version = self.temp_kwargs.get('version', args[1] if len(args) > 1 else None)
+            self.description = self.temp_kwargs.get('description', args[2] if len(args) > 2 else None)
+            self.category_id = self.temp_kwargs.get('category_id', args[3] if len(args) > 3 else None)
+            self.author = self.temp_kwargs.get('author', args[4] if len(args) > 4 else None)
+            self.github = self.temp_kwargs.get('github', args[5] if len(args) > 5 else None)
+            self.email = self.temp_kwargs.get('email', args[6] if len(args) > 6 else None)
+            self.action = self.temp_kwargs.get('action', args[7] if len(args) > 7 else None)
+            self.required_inputs = self.temp_kwargs.get('required_inputs', args[8] if len(args) > 8 else {})
+            self.parent_operation = self.temp_kwargs.get('parent_operation', args[9] if len(args) > 9 else None)
+            self.inheritance = self.temp_kwargs.get('inheritance', args[10] if len(args) > 10 else [])
+            self.is_loop = self.temp_kwargs.get('is_loop', args[11] if len(args) > 11 else False)
+            self.is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', args[12] if len(args) > 12 else False)
+            self.is_gpu_bound = self.temp_kwargs.get('is_gpu_bound', args[13] if len(args) > 13 else False)
+            self.parallel = self.temp_kwargs.get('parallel', args[14] if len(args) > 14 else False)
 
             self._initialized = False
 
@@ -66,21 +65,21 @@ class OperationAttributes:
         if not self._initialized:
             async with self._lock:
                 if not self._initialized:
-                    self.name = self.temp_kwargs.get('name', '[no-name]')
-                    self.version = self.temp_kwargs.get('version', '0.0.1')
-                    self.description = self.temp_kwargs.get('description', '[no-description]')
-                    self.category_id = self.temp_kwargs.get('category_id', -1)
-                    self.author = self.temp_kwargs.get('author', '[no-author]')
-                    self.github = self.temp_kwargs.get('github', '[no-github]')
-                    self.email = self.temp_kwargs.get('email', '[no-email]')
-                    self.action = self.temp_kwargs.get('action', None)
-                    self.required_inputs = self.temp_kwargs.get('required_inputs', {})
-                    self.parent_operation = self.temp_kwargs.get('parent_operation', None)
-                    self.inheritance = self.temp_kwargs.get('inheritance', [])
-                    self.is_loop = self.temp_kwargs.get('is_loop', False)
-                    self.is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', False)
-                    self.is_gpu_bound = self.temp_kwargs.get('is_gpu_bound', False)
-                    self.parallel = self.temp_kwargs.get('parallel', False)
+                    self.name = self.temp_kwargs.get('name', self.name or '[no-name]')
+                    self.version = self.temp_kwargs.get('version', self.version or '0.0.1')
+                    self.description = self.temp_kwargs.get('description', self.description or '[no-description]')
+                    self.category_id = self.temp_kwargs.get('category_id', self.category_id or -1)
+                    self.author = self.temp_kwargs.get('author', self.author or '[no-author]')
+                    self.github = self.temp_kwargs.get('github', self.github or '[no-github]')
+                    self.email = self.temp_kwargs.get('email', self.email or '[no-email]')
+                    self.action = self.temp_kwargs.get('action', self.action or None)
+                    self.required_inputs = self.temp_kwargs.get('required_inputs', self.required_inputs)
+                    self.parent_operation = self.temp_kwargs.get('parent_operation', self.parent_operation)
+                    self.inheritance = self.temp_kwargs.get('inheritance', self.inheritance)
+                    self.is_loop = self.temp_kwargs.get('is_loop', self.is_loop)
+                    self.is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', self.is_cpu_bound)
+                    self.is_gpu_bound = self.temp_kwargs.get('is_gpu_bound', self.is_gpu_bound)
+                    self.parallel = self.temp_kwargs.get('parallel', self.parallel)
 
                     self._initialized = True
 
@@ -163,11 +162,14 @@ class OperationAttributes:
 
     @property
     def category_id(self) -> int:
-        return self._category_id if self._category_id else -1
+        return self._category_id if hasattr(self, '_category_id') else -1
 
     @category_id.setter
     def category_id(self, value: int):
-        self._category_id = value if value and isinstance(value, int) else -1
+        if value is not None and isinstance(value, int):
+            self._category_id = value
+        else:
+            self._category_id = -1
 
     @property
     def author(self) -> str:
@@ -225,10 +227,16 @@ class OperationAttributes:
     def parent_operation(self, value):
         if isinstance(value, dict):
             value = OperationAttributes(**value)
-            asyncio.run(value.initialize())
+            if asyncio.get_event_loop().is_running():
+                asyncio.ensure_future(value.initialize())
+            else:
+                asyncio.run(value.initialize())
         elif isinstance(value, OperationAttributes):
             if not value._initialized:
-                asyncio.run(value.initialize())
+                if asyncio.get_event_loop().is_running():
+                    asyncio.ensure_future(value.initialize())
+                else:
+                    asyncio.run(value.initialize())
         else:
             value = None
 

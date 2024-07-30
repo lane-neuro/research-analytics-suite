@@ -27,7 +27,7 @@ class Serial(Serial_Interface):
         Returns:
             list: Information about detected serial ports.
         """
-        self.logger.info("Detecting serial ports...")
+        self.logger.debug("Detecting serial ports...")
         command = self._get_command('detect')
         output = self._execute_command(command)
         return self._parse_output(output)

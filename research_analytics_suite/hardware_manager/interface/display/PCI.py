@@ -40,7 +40,11 @@ class PCI(DisplayInterface):
         if self.os_info == 'linux':
             return ['lspci']
         elif self.os_info == 'windows':
-            return ['powershell', 'Get-PnpDevice -Class Display']
+            return [
+                'powershell',
+                'Get-PnpDevice -Class Display -PresentOnly | Where-Object { $_.HardwareID -like "*PCI*" } '
+                '| Format-Table -AutoSize -Wrap'
+            ]
         elif self.os_info == 'darwin':
             return ['system_profiler', 'SPPCIDataType']
         return []

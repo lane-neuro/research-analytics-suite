@@ -15,7 +15,7 @@ Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         In Progress
 """
 from typing import List, Optional, Type
-from research_analytics_suite.operation_manager import BaseOperation
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
 class BasicArithmeticOperations(BaseOperation):
@@ -36,7 +36,6 @@ class BasicArithmeticOperations(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"numbers": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -54,6 +53,7 @@ class BasicArithmeticOperations(BaseOperation):
             **kwargs: Arbitrary keyword arguments.
         """
         self.numbers = numbers
+        kwargs.update({"action": self.execute})
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):

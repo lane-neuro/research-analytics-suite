@@ -17,8 +17,6 @@ from asyncio import iscoroutinefunction
 from research_analytics_suite.commands import link_class_commands, command
 
 from .usb.USB import USB
-from .usb.USBc import USBc
-from .usb.MicroUSB import MicroUSB
 from .network.Ethernet import Ethernet
 from .network.Wireless import Wireless
 from .network.Bluetooth import Bluetooth
@@ -46,8 +44,6 @@ class InterfaceManager:
             self.logger = CustomLogger()
             self.base_interfaces = {
                 'USB': USB(self.logger),
-                'USB-C': USBc(self.logger),
-                'Micro-USB': MicroUSB(self.logger),
                 'Ethernet': Ethernet(self.logger),
                 'Wireless': Wireless(self.logger),
                 'Bluetooth': Bluetooth(self.logger),
@@ -72,7 +68,7 @@ class InterfaceManager:
         detected_interfaces = {}
         for interface_name, interface in self.base_interfaces.items():
             try:
-                self.logger.info(f"Detecting {interface_name} interfaces...")
+                self.logger.debug(f"Detecting {interface_name} interfaces...", self.__class__.__name__)
                 detected_interfaces[interface_name] = await interface.detect() if iscoroutinefunction(
                     interface.detect) else interface.detect()
             except Exception as e:
@@ -88,7 +84,7 @@ class InterfaceManager:
             name (str): The name of the interface.
             interface (BaseInterface): An instance of the interface.
         """
-        self.logger.info(f"Adding {name} interface for detection.")
+        self.logger.debug(f"Adding {name} interface for detection.", self.__class__.__name__)
         self.base_interfaces[name] = interface
 
     def remove_interface(self, name):
@@ -98,7 +94,7 @@ class InterfaceManager:
             name (str): The name of the interface.
         """
         if name in self.interfaces:
-            self.logger.info(f"Removing {name} interface from detection.")
+            self.logger.info(f"Removing {name} interface from detection.", self.__class__.__name__)
             del self.base_interfaces[name]
         else:
             self.logger.warning(f"Interface {name} not found in the list of interfaces.")
@@ -129,7 +125,7 @@ class InterfaceManager:
         """Print all available interfaces."""
         if not self.interfaces:
             return
-        self.logger.info("Available interfaces:")
+        self.logger.debug("Available interfaces:", self.__class__.__name__)
         for interface_type in self.interfaces:
             for interface in self.interfaces[interface_type]:
-                self.logger.info(f"- {interface}")
+                self.logger.debug(f"- {interface}", self.__class__.__name__)

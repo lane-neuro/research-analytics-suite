@@ -93,6 +93,8 @@ class CommandExecutor:
                             _return_values = await cmd_meta['func'](*args, **kwargs)
                         else:
                             _return_values = cmd_meta['func'](*args, **kwargs)
+                        self._logger.info(f"Command '{name}' executed successfully.", self.__class__.__name__)
+                        self._logger.info(f"Return values: {_return_values}", self.__class__.__name__)
                         return _return_values
                     except Exception as e:
                         self._logger.error(e, self.__class__.__name__)

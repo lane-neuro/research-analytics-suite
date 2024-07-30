@@ -46,7 +46,7 @@ class Config:
             self.CACHE_DIR = None
             self.DISTRIBUTED = None
             self.MEMORY_LIMIT = None
-            self.LOG_LEVEL = None
+            self.DEBUG_CONSOLE = None
             self.LOG_FILE = None
             self.LOG_ROTATION = None
             self.LOG_RETENTION = None
@@ -104,10 +104,9 @@ class Config:
         self.MEMORY_LIMIT = psutil.virtual_memory().total * 0.5  # 50% of available memory
 
         # Logging settings
-        self.LOG_LEVEL = 'INFO'
-        self.LOG_FILE = os.path.normpath(os.path.join(self.LOG_DIR, 'app.log'))
-        self.LOG_ROTATION = '1 week'  # Rotate logs every week
-        self.LOG_RETENTION = '4 weeks'  # Retain logs for 4 weeks
+        self.DEBUG_CONSOLE = False
+        self.LOG_ROTATION = 1  # Rotate logs every week
+        self.LOG_RETENTION = 4  # Retain logs for 4 weeks
 
         # Data engine settings
         self.DISTRIBUTED = True  # Use distributed memory management by default
@@ -178,8 +177,16 @@ class Config:
         Returns:
             Config: The updated configuration settings.
         """
+        from research_analytics_suite.utils import CustomLogger
+        custom_logger = CustomLogger()
+        custom_logger.info("Reloading configuration settings...")
+
         for key, value in new_config.items() if isinstance(new_config, dict) else {}:
             await self.update_setting(key, value)
+
+        custom_logger.info("Configuration settings reloaded.")
+        custom_logger.debug(f"New configuration settings: {new_config}")
+        custom_logger.add_file_handlers()
         return self
 
     @command

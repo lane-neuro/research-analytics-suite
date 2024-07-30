@@ -39,12 +39,15 @@ class TestEthernet:
     @patch('subprocess.run')
     @patch('platform.system', return_value='Linux')
     def test_detect_success(self, mock_platform_system, mock_subprocess_run, logger):
-        mock_subprocess_run.return_value = MagicMock(stdout='2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000', stderr='')
+        mock_subprocess_run.return_value = MagicMock(
+            stdout='2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000',
+            stderr='')
         interface = Ethernet(logger)
         devices = interface.detect()
         assert devices == [{'interface': 'eth0', 'description': 'Ethernet Interface'}]
         interface.logger.debug.assert_any_call('Executing command: ip link')
-        interface.logger.debug.assert_any_call('Command output: 2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000')
+        interface.logger.debug.assert_any_call(
+            'Command output: 2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000')
         interface.logger.debug.assert_any_call('Command stderr: ')
 
     @patch('subprocess.run')
@@ -56,7 +59,8 @@ class TestEthernet:
         interface = Ethernet(logger)
         with pytest.raises(subprocess.CalledProcessError):
             interface.detect()
-        interface.logger.error.assert_any_call("Command 'ip link' failed with error: Command '['ip', 'link']' returned non-zero exit status 1.")
+        interface.logger.error.assert_any_call(
+            "Command 'ip link' failed with error: Command '['ip', 'link']' returned non-zero exit status 1.")
         interface.logger.error.assert_any_call('Command stdout: error')
         interface.logger.error.assert_any_call('Command stderr: error')
 
@@ -70,7 +74,9 @@ class TestEthernet:
     def test_get_command_windows(self, mock_platform_system, logger):
         interface = Ethernet(logger)
         command = interface._get_command('list')
-        assert command == ['powershell', 'Get-NetAdapter']
+        assert command == ['powershell',
+                           'Get-NetAdapter -InterfaceDescription *Ethernet* | Format-Table -AutoSize '
+                           '-Wrap']
 
     @patch('platform.system', return_value='Darwin')
     def test_get_command_darwin(self, mock_platform_system, logger):
@@ -121,30 +127,37 @@ class TestEthernet:
         interface = Ethernet(logger)
         device_identifier = 'eth0'
         with patch('subprocess.run') as mock_run:
-            mock_run.return_value = MagicMock(stdout='inet 192.168.1.2 netmask 255.255.255.0 broadcast 192.168.1.255', stderr='')
+            mock_run.return_value = MagicMock(stdout='inet 192.168.1.2 netmask 255.255.255.0 broadcast 192.168.1.255',
+                                              stderr='')
             ip_config = interface.get_ip_configuration(device_identifier)
             assert ip_config == {'ip_address': '192.168.1.2', 'netmask': '255.255.255.0', 'broadcast': '192.168.1.255'}
-            mock_run.assert_called_with(['ip', 'addr', 'show', device_identifier], capture_output=True, text=True, shell=False, check=True)
+            mock_run.assert_called_with(['ip', 'addr', 'show', device_identifier], capture_output=True, text=True,
+                                        shell=False, check=True)
 
     @patch('platform.system', return_value='Windows')
     def test_get_ip_configuration_windows(self, mock_platform_system, logger):
         interface = Ethernet(logger)
         device_identifier = 'Ethernet'
         with patch('subprocess.run') as mock_run:
-            mock_run.return_value = MagicMock(stdout='IPv4 Address. . . . . . . . . . . : 192.168.1.2\nSubnet Mask . . . . . . . . . . . : 255.255.255.0\nDefault Gateway . . . . . . . . . : 192.168.1.1', stderr='')
+            mock_run.return_value = MagicMock(
+                stdout='IPv4 Address. . . . . . . . . . . : 192.168.1.2\nSubnet Mask . . . . . . . . . . . : 255.255.255.0\nDefault Gateway . . . . . . . . . : 192.168.1.1',
+                stderr='')
             ip_config = interface.get_ip_configuration(device_identifier)
             assert ip_config == {'ip_address': '192.168.1.2', 'netmask': '255.255.255.0', 'gateway': '192.168.1.1'}
-            mock_run.assert_called_with(['powershell', f'Get-NetIPAddress -InterfaceAlias {device_identifier}'], capture_output=True, text=True, shell=True, check=True)
+            mock_run.assert_called_with(['powershell', f'Get-NetIPAddress -InterfaceAlias {device_identifier}'],
+                                        capture_output=True, text=True, shell=True, check=True)
 
     @patch('platform.system', return_value='Darwin')
     def test_get_ip_configuration_darwin(self, mock_platform_system, logger):
         interface = Ethernet(logger)
         device_identifier = 'en0'
         with patch('subprocess.run') as mock_run:
-            mock_run.return_value = MagicMock(stdout='inet 192.168.1.2 netmask 0xffffff00 broadcast 192.168.1.255', stderr='')
+            mock_run.return_value = MagicMock(stdout='inet 192.168.1.2 netmask 0xffffff00 broadcast 192.168.1.255',
+                                              stderr='')
             ip_config = interface.get_ip_configuration(device_identifier)
             assert ip_config == {'ip_address': '192.168.1.2', 'netmask': '0xffffff00', 'broadcast': '192.168.1.255'}
-            mock_run.assert_called_with(['ifconfig', device_identifier], capture_output=True, text=True, shell=False, check=True)
+            mock_run.assert_called_with(['ifconfig', device_identifier], capture_output=True, text=True, shell=False,
+                                        check=True)
 
     @patch('socket.socket')
     def test_send_data(self, mock_socket, logger):

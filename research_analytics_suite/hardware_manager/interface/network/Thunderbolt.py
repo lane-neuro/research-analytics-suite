@@ -55,7 +55,11 @@ class Thunderbolt(NetworkInterface):
 
     def _get_command_windows(self, action: str, identifier: str = '', data: str = '', settings=None) -> List[str]:
         if action == 'list':
-            return ['powershell', 'Get-PnpDevice -Class Net']
+            return [
+                'powershell',
+                'Get-PnpDevice -Class Net -PresentOnly | Where-Object { $_.HardwareID -like "*Thunderbolt*" } '
+                '| Format-Table -Autosize -Wrap'
+            ]
         return []
 
     def _get_command_darwin(self, action: str, identifier: str = '', data: str = '', settings=None) -> List[str]:
