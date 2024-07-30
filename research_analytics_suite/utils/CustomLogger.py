@@ -1,3 +1,21 @@
+"""
+CustomLogger Module
+
+This module contains the CustomLogger class, which is used to handle logging within the research analytics suite. The
+CustomLogger class sets up a logger with a specific format, handles different log levels, and queues log messages for
+asynchronous processing. The CustomLogger class is a singleton class, meaning that only one instance of the class can
+exist at a time. This is to ensure that all log messages are handled by the same logger instance.
+
+Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
+"""
+
 import asyncio
 import logging
 import os
@@ -76,7 +94,13 @@ class CustomLogger:
                     )
                     stream_handler.setFormatter(formatter)
 
-                    for logger in [self._info_logger, self._error_logger, self._debug_logger, self._warning_logger, self._critical_logger]:
+                    for logger in [
+                        self._info_logger,
+                        self._error_logger,
+                        self._debug_logger,
+                        self._warning_logger,
+                        self._critical_logger
+                    ]:
                         if logger.level != logging.DEBUG or self._config.DEBUG_CONSOLE is True:
                             logger.addHandler(stream_handler)
                         logger.addFilter(self._log_message)
