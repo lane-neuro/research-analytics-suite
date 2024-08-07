@@ -35,7 +35,6 @@ class MeanCalculation(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"numbers": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []

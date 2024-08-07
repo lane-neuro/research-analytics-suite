@@ -12,6 +12,7 @@ import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
+from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
 
 class TimelineModule(GUIBase):
@@ -27,7 +28,7 @@ class TimelineModule(GUIBase):
         dpg.add_child_window(tag="sequencer_module", border=True, width=self.width, parent=self._parent)
 
         self._update_operation = await self._operation_control.operation_manager.create_operation(
-                operation_type=BaseOperation, name="gui_TimelineUpdate", action=self._update_async)
+                operation_type=UpdateMonitor, name="gui_TimelineUpdate", action=self._update_async)
         self._update_operation.is_ready = True
 
     async def _update_async(self) -> None:

@@ -81,6 +81,23 @@ class BaseOperation(ABC):
     """
     _GENERATED_ID = None
 
+    def __new__(cls, *args, **kwargs):
+        instance = super().__new__(cls)
+        for attr, value in cls.__dict__.items():
+            if not attr.startswith("__") and not callable(value):
+                # Check if the attribute is a property with a setter
+                if isinstance(getattr(cls, attr, None), property) and getattr(cls, attr).fset is not None:
+                    try:
+                        setattr(instance, attr, value)
+                    except AttributeError:
+                        pass
+                elif not isinstance(getattr(cls, attr, None), property):
+                    try:
+                        setattr(instance, attr, value)
+                    except AttributeError:
+                        pass
+        return instance
+
     def __init__(self, *args, **kwargs):
         """Initialize the operation instance."""
         if not hasattr(self, '_initialized'):
@@ -119,7 +136,7 @@ class BaseOperation(ABC):
                     self._logger.warning(
                         f"Operation [{kwargs.get('name', '[Unnamed Operation]')}] must have an action to execute.")
                     kwargs['action'] = self.execute
-                self._attributes = OperationAttributes(**kwargs)
+                self._attributes = OperationAttributes(*args, **kwargs)
             # If the first argument is an instance of OperationAttributes, use it directly
             elif isinstance(args[0], OperationAttributes) and hasattr(args[0], 'unique_id'):
                 self._attributes = args[0]
@@ -144,7 +161,7 @@ class BaseOperation(ABC):
 
         self.is_ready = False
         self.status = "idle"
-        self.add_log_entry(f"[INIT] {self._attributes.name}")
+        self.add_log_entry(f"[INIT] {self.name}")
         self._initialized = True
 
     async def _initialize_child_operations(self):
@@ -153,14 +170,13 @@ class BaseOperation(ABC):
             self._config.BASE_DIR, 'workspaces', self._config.WORKSPACE_NAME,
             self._config.WORKSPACE_OPERATIONS_DIR))
 
-        if self._attributes.inheritance:
-            for u_id, child in enumerate(self._attributes.inheritance):
+        if self.inheritance:
+            for u_id, child in enumerate(self.inheritance):
                 if isinstance(child, dict):
                     await self.link_child_operation(
-                        await BaseOperation.from_dict(data=child, file_dir=_file_dir,
-                                                      parent_operation=self))
-                if self._attributes.inheritance[u_id].parent_operation is None:
-                    self._attributes.inheritance[u_id].parent_operation = self
+                        await BaseOperation.from_dict(data=child, file_dir=_file_dir, parent_operation=self))
+                if self.inheritance[u_id].parent_operation is None:
+                    self.inheritance[u_id].parent_operation = self
 
     @final
     def __setstate__(self, state):
@@ -651,7 +667,7 @@ class BaseOperation(ABC):
             self._is_ready = False
             return
 
-        for child in self.attributes.inheritance:
+        for child in self.inheritance:
             if not child.is_complete and not child.parallel:
                 self._is_ready = False
                 return
