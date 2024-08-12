@@ -35,31 +35,36 @@ class OperationAttributes:
     def __init__(self, *args, **kwargs):
         self.temp_kwargs = {}
 
-        if not hasattr(self, '_initialized'):
-            if args and isinstance(args[0], dict):
-                self.temp_kwargs.update(args[0])
-            self.temp_kwargs.update(kwargs)
+        if args and isinstance(args[0], dict):
+            self.temp_kwargs.update(args[0])
+        self.temp_kwargs.update(kwargs)
 
-            from research_analytics_suite.utils import CustomLogger
-            self._logger = CustomLogger()
+        from research_analytics_suite.utils import CustomLogger
+        self._logger = CustomLogger()
 
-            self.name = self.temp_kwargs.get('name', args[0] if len(args) > 0 else None)
-            self.version = self.temp_kwargs.get('version', args[1] if len(args) > 1 else None)
-            self.description = self.temp_kwargs.get('description', args[2] if len(args) > 2 else None)
-            self.category_id = self.temp_kwargs.get('category_id', args[3] if len(args) > 3 else None)
-            self.author = self.temp_kwargs.get('author', args[4] if len(args) > 4 else None)
-            self.github = self.temp_kwargs.get('github', args[5] if len(args) > 5 else None)
-            self.email = self.temp_kwargs.get('email', args[6] if len(args) > 6 else None)
-            self.action = self.temp_kwargs.get('action', args[7] if len(args) > 7 else None)
-            self.required_inputs = self.temp_kwargs.get('required_inputs', args[8] if len(args) > 8 else {})
-            self.parent_operation = self.temp_kwargs.get('parent_operation', args[9] if len(args) > 9 else None)
-            self.inheritance = self.temp_kwargs.get('inheritance', args[10] if len(args) > 10 else [])
-            self.is_loop = self.temp_kwargs.get('is_loop', args[11] if len(args) > 11 else False)
-            self.is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', args[12] if len(args) > 12 else False)
-            self.is_gpu_bound = self.temp_kwargs.get('is_gpu_bound', args[13] if len(args) > 13 else False)
-            self.parallel = self.temp_kwargs.get('parallel', args[14] if len(args) > 14 else False)
+        # Use kwargs to directly initialize attributes, with defaults
+        self.name = self.temp_kwargs.get('name', '[no-name]')
+        self.version = self.temp_kwargs.get('version', '0.0.1')
+        self.description = self.temp_kwargs.get('description', '[no-description]')
+        self.category_id = self.temp_kwargs.get('category_id', -1)
+        self.author = self.temp_kwargs.get('author', '[no-author]')
+        self.github = self.temp_kwargs.get('github', '[no-github]')
+        self.email = self.temp_kwargs.get('email', '[no-email]')
+        self.action = self.temp_kwargs.get('action', None)
+        self.required_inputs = self.temp_kwargs.get('required_inputs', {})
+        self.parent_operation = self.temp_kwargs.get('parent_operation', None)
+        self.inheritance = self.temp_kwargs.get('inheritance', [])
+        self.is_loop = self.temp_kwargs.get('is_loop', False)
+        self.is_cpu_bound = self.temp_kwargs.get('is_cpu_bound', False)
+        self.is_gpu_bound = self.temp_kwargs.get('is_gpu_bound', False)
+        self.parallel = self.temp_kwargs.get('parallel', False)
 
-            self._initialized = False
+        # Handle any extra attributes not predefined
+        for key, value in self.temp_kwargs.items():
+            if not hasattr(self, key):
+                setattr(self, key, value)
+
+        self._initialized = False
 
     async def initialize(self):
         if not self._initialized:
@@ -98,14 +103,10 @@ class OperationAttributes:
             self._logger.error(ValueError("Expected a dictionary as input"), self.__class__.__name__)
             return {}
 
-        processed_dict = {}
-        for k, v in inputs.items():
-            if isinstance(v, str):
-                processed_dict[k] = self._TYPES_DICT.get(v.lower(), getattr(v, '__name__', v))
-            else:
-                processed_dict[k] = getattr(v, '__name__', v)
-
-        return processed_dict
+        return {
+            k: self._TYPES_DICT.get(v.lower(), v) if isinstance(v, str) else v
+            for k, v in inputs.items()
+        }
 
     @command
     def export_attributes(self) -> dict:

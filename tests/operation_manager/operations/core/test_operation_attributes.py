@@ -88,6 +88,36 @@ class TestOperationAttributes:
         assert attrs.parallel is False
 
     @pytest.mark.asyncio
+    async def test_initialization_mixed_args_kwargs(self, mock_logger):
+        # Mixed args and kwargs provided, kwargs should take precedence
+        attrs = OperationAttributes(
+            {'name': 'arg_name', 'version': '0.0.1', 'description': 'arg_description'},
+            name='kwarg_name', version='0.0.2', description='kwarg_description',
+            category_id=2, author='kwarg_author', github='@kwarg_github',
+            email='kwarg@example.com', action='kwarg_action', required_inputs={'input1': 'str'},
+            parent_operation=None, inheritance=['kwarg_inheritance'], is_loop=True,
+            is_cpu_bound=True, is_gpu_bound=False, parallel=False
+        )
+        await attrs.initialize()
+
+        # Assertions to ensure kwargs take precedence over args
+        assert attrs.name == 'kwarg_name'
+        assert attrs.version == '0.0.2'
+        assert attrs.description == 'kwarg_description'
+        assert attrs.category_id == 2
+        assert attrs.author == 'kwarg_author'
+        assert attrs.github == 'kwarg_github'
+        assert attrs.email == 'kwarg@example.com'
+        assert attrs.action == 'kwarg_action'
+        assert attrs.required_inputs == {'input1': str}
+        assert attrs.parent_operation is None
+        assert attrs.inheritance == ['kwarg_inheritance']
+        assert attrs.is_loop is True
+        assert attrs.is_cpu_bound is True
+        assert attrs.is_gpu_bound is False
+        assert attrs.parallel is False
+
+    @pytest.mark.asyncio
     async def test_initialization_priority_kwargs_over_args(self, mock_logger):
         attrs = OperationAttributes(
             {'name': 'arg_name'}, name='kwarg_name', version='0.0.2'
@@ -105,6 +135,97 @@ class TestOperationAttributes:
         await attrs.initialize()
 
         assert attrs.name == 'arg_name'
+
+    @pytest.mark.asyncio
+    async def test_initialization_partial_overlap_args_kwargs(self, mock_logger):
+        attrs = OperationAttributes(
+            {'name': 'arg_name', 'version': '0.0.1'},
+            name='kwarg_name', description='kwarg_description',
+            category_id=2, author='kwarg_author'
+        )
+        await attrs.initialize()
+
+        assert attrs.name == 'kwarg_name'  # kwarg should override arg
+        assert attrs.version == '0.0.1'  # no kwarg provided, so arg is used
+        assert attrs.description == 'kwarg_description'
+        assert attrs.category_id == 2
+        assert attrs.author == 'kwarg_author'
+
+    @pytest.mark.asyncio
+    async def test_initialization_empty_args_valid_kwargs(self, mock_logger):
+        attrs = OperationAttributes(
+            name='kwarg_name', version='0.0.2', description='kwarg_description',
+            category_id=2, author='kwarg_author', github='@kwarg_github',
+            email='kwarg@example.com', action='kwarg_action', required_inputs={'input1': 'str'},
+            parent_operation=None, inheritance=['kwarg_inheritance'], is_loop=True,
+            is_cpu_bound=True, is_gpu_bound=False, parallel=False
+        )
+        await attrs.initialize()
+
+        assert attrs.name == 'kwarg_name'
+        assert attrs.version == '0.0.2'
+        assert attrs.description == 'kwarg_description'
+        assert attrs.category_id == 2
+        assert attrs.author == 'kwarg_author'
+        assert attrs.github == 'kwarg_github'
+        assert attrs.email == 'kwarg@example.com'
+        assert attrs.action == 'kwarg_action'
+        assert attrs.required_inputs == {'input1': str}
+        assert attrs.parent_operation is None
+        assert attrs.inheritance == ['kwarg_inheritance']
+        assert attrs.is_loop is True
+        assert attrs.is_cpu_bound is True
+        assert attrs.is_gpu_bound is False
+        assert attrs.parallel is False
+
+    @pytest.mark.asyncio
+    async def test_initialization_invalid_args_valid_kwargs(self, mock_logger):
+        attrs = OperationAttributes(
+            {'name': 123, 'version': 456},  # Invalid types
+            name='kwarg_name', version='0.0.2', description='kwarg_description',
+            category_id=2, author='kwarg_author', github='@kwarg_github',
+            email='kwarg@example.com', action='kwarg_action', required_inputs={'input1': 'str'},
+            parent_operation=None, inheritance=['kwarg_inheritance'], is_loop=True,
+            is_cpu_bound=True, is_gpu_bound=False, parallel=False
+        )
+        await attrs.initialize()
+
+        assert attrs.name == 'kwarg_name'
+        assert attrs.version == '0.0.2'
+        assert attrs.description == 'kwarg_description'
+        assert attrs.category_id == 2
+        assert attrs.author == 'kwarg_author'
+        assert attrs.github == 'kwarg_github'
+        assert attrs.email == 'kwarg@example.com'
+        assert attrs.action == 'kwarg_action'
+        assert attrs.required_inputs == {'input1': str}
+        assert attrs.parent_operation is None
+        assert attrs.inheritance == ['kwarg_inheritance']
+        assert attrs.is_loop is True
+        assert attrs.is_cpu_bound is True
+        assert attrs.is_gpu_bound is False
+        assert attrs.parallel is False
+
+    @pytest.mark.asyncio
+    async def test_initialization_with_no_args_or_kwargs(self, mock_logger):
+        attrs = OperationAttributes()
+        await attrs.initialize()
+
+        assert attrs.name == '[no-name]'
+        assert attrs.version == '0.0.1'
+        assert attrs.description == '[no-description]'
+        assert attrs.category_id == -1
+        assert attrs.author == '[no-author]'
+        assert attrs.github == '[no-github]'
+        assert attrs.email == '[no-email]'
+        assert attrs.action is None
+        assert attrs.required_inputs == {}
+        assert attrs.parent_operation is None
+        assert attrs.inheritance == []
+        assert attrs.is_loop is False
+        assert attrs.is_cpu_bound is False
+        assert attrs.is_gpu_bound is False
+        assert attrs.parallel is False
 
     @pytest.mark.asyncio
     async def test_invalid_data_types(self, mock_logger):
@@ -270,6 +391,25 @@ class TestOperationAttributes:
         assert initialization_time < 1, f"Initialization took too long: {initialization_time} seconds"
 
     @pytest.mark.asyncio
+    async def test_performance_mixed_args_kwargs_initialization(self, mock_logger):
+        start_time = time.time()
+
+        attrs = OperationAttributes(
+            {'name': 'arg_name', 'version': '0.0.1', 'description': 'arg_description'},
+            name='kwarg_name', version='0.0.2', description='kwarg_description',
+            category_id=2, author='kwarg_author', github='@kwarg_github',
+            email='kwarg@example.com', action='kwarg_action',
+            required_inputs={f'input_{i}': 'str' for i in range(100)},
+            parent_operation=None, inheritance=['kwarg_inheritance'], is_loop=True,
+            is_cpu_bound=True, is_gpu_bound=False, parallel=True
+        )
+        await attrs.initialize()
+
+        end_time = time.time()
+        initialization_time = end_time - start_time
+        assert initialization_time < 1, f"Initialization took too long: {initialization_time} seconds"
+
+    @pytest.mark.asyncio
     async def test_modify_single_attribute_repeatedly(self, mock_logger):
         attrs = OperationAttributes()
         await attrs.initialize()
@@ -327,3 +467,63 @@ class TestOperationAttributes:
             assert attrs.is_cpu_bound == bool(i % 2)
             assert attrs.is_gpu_bound == bool((i + 1) % 2)
             assert attrs.parallel == bool((i + 1) % 2)
+
+    @pytest.mark.asyncio
+    async def test_backward_compatibility(self, mock_logger):
+        # Simulate an older version usage
+        old_attrs = OperationAttributes(
+            name='old_name', version='0.0.1', description='old_description',
+            author='old_author'
+        )
+        await old_attrs.initialize()
+
+        assert old_attrs.name == 'old_name'
+        assert old_attrs.version == '0.0.1'
+        assert old_attrs.description == 'old_description'
+        assert old_attrs.author == 'old_author'
+
+        # Ensure defaults are still applied correctly for missing attributes
+        assert old_attrs.category_id == -1
+        assert old_attrs.github == '[no-github]'
+
+    @pytest.mark.asyncio
+    async def test_future_attribute_expansion(self, mock_logger):
+        # Hypothetical future attribute
+        future_attrs = OperationAttributes(
+            name='future_name', version='0.0.2', description='future_description',
+            category_id=2, author='future_author', github='@future_github',
+            email='future@example.com', action='future_action', required_inputs={'input1': 'str'},
+            parent_operation=None, inheritance=['future_inheritance'], is_loop=True,
+            is_cpu_bound=True, is_gpu_bound=False, parallel=False,
+            new_attribute='future_value'  # Hypothetical future attribute
+        )
+        await future_attrs.initialize()
+
+        assert hasattr(future_attrs, 'new_attribute')
+        assert getattr(future_attrs, 'new_attribute', None) == 'future_value'
+
+    @pytest.mark.asyncio
+    async def test_versioning_support(self, mock_logger):
+        # Version 1.0.0 behavior
+        v1_attrs = OperationAttributes(version='1.0.0')
+        await v1_attrs.initialize()
+        assert v1_attrs.version == '1.0.0'
+        # Add specific checks for version 1.0.0
+
+        # Future version behavior
+        future_version = '2.0.0'
+        v2_attrs = OperationAttributes(version=future_version)
+        await v2_attrs.initialize()
+        assert v2_attrs.version == future_version
+        # Add specific checks for future version
+
+    @pytest.mark.asyncio
+    async def test_stress_large_number_of_attributes(self, mock_logger):
+        large_attrs = OperationAttributes(
+            **{f'attr_{i}': f'value_{i}' for i in range(1000)}
+        )
+        await large_attrs.initialize()
+
+        # Ensure all attributes are correctly initialized
+        for i in range(1000):
+            assert getattr(large_attrs, f'attr_{i}', None) == f'value_{i}'
