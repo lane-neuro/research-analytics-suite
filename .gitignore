@@ -219,3 +219,5 @@ identifier.sqlite
 /tests/MagicMock/*
 /.idea
 *.db
+*/None
+None
