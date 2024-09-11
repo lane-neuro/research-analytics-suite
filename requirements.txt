@@ -54,7 +54,7 @@ s3transfer
 scikit-learn
 scipy
 statsmodels
-pytorch
+torch
 torchaudio
 torchvision
 tornado
