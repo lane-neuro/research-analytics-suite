@@ -210,7 +210,7 @@ dependencies:
   - tinycss2
   - tomli
   - toolz
-  - pytorch
+  - torch
   - torchaudio
   - torchvision
   - tornado
