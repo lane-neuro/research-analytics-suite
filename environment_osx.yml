@@ -1,10 +1,13 @@
 name: research-analytics-suite
 channels:
-  - anaconda
   - conda-forge
   - defaults
   - pytorch
 dependencies:
+  - openblas
+  - libopenblas
+  - numpy  # Ensure numpy is built with openblas
+  - scipy  # Ensure scipy is built with openblas
   - aioconsole
   - aiofiles
   - aiosqlite
@@ -206,7 +209,7 @@ dependencies:
   - tinycss2
   - tomli
   - toolz
-  - torch
+  - pytorch
   - torchaudio
   - torchvision
   - tornado
@@ -229,14 +232,6 @@ dependencies:
   - zlib
   - zstandard
   - zstd
-  - sel(win, linux): mkl
-  - sel(win, linux): mkl-service
-  - sel(win, linux): mkl_fft
-  - sel(win, linux): mkl_random
-  - sel(osx): openblas
-  - sel(osx): libopenblas
-  - sel(osx): numpy  # Ensure numpy is built with openblas
-  - sel(osx): scipy  # Ensure scipy is built with openblas
   - pip:
       - dearpygui
       - dearpygui-async

@@ -206,9 +206,9 @@ To get a local copy up and running, follow the following steps.
 # Installation
 ## Windows
 ### Anaconda
-1. Create a new environment using the supplied `environment.yml` file:
+1. Create a new environment using the supplied `environment_win_linux.yml` file:
    ```sh
-   conda env create -f environment.yml
+   conda env create -f environment_win_linux.yml
    ```
 2. Activate the environment:
    ```sh
@@ -233,9 +233,9 @@ To get a local copy up and running, follow the following steps.
    sudo apt-get install -y portaudio19-dev
    ```
 ### Anaconda
-1. Create a new environment using the supplied `environment.yml` file:
+1. Create a new environment using the supplied `environment_win_linux.yml` file:
    ```sh
-   conda env create -f environment.yml
+   conda env create -f environment_win_linux.yml
    ```
 2. Activate the environment:
    ```sh
@@ -275,9 +275,9 @@ To get a local copy up and running, follow the following steps.
    <br />
 
 ### Anaconda
-1. Create a new environment using the supplied `environment.yml` file:
+1. Create a new environment using the supplied `environment_osx.yml` file:
    ```sh
-   conda env create -f environment.yml
+   conda env create -f environment_osx.yml
    ```
 2. Activate the environment:
    ```sh
