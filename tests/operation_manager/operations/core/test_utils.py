@@ -37,7 +37,7 @@ def sample_module():
 
 
 @pytest.fixture
-async def sample_operation():
+def sample_operation():
     operation = MagicMock()
     operation.export_attributes.return_value = {
         'name': 'operation_name',

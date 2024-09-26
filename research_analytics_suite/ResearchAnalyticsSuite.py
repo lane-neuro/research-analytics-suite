@@ -77,8 +77,8 @@ class ResearchAnalyticsSuite:
         """
         await self._config.initialize()
         await self._logger.initialize()
-        await self._setup_workspace()
         await self._memory_manager.initialize()
+        await self._setup_workspace()
 
         await self._operation_control.initialize()
         self._launch_tasks.append(self._operation_control.exec_loop())

@@ -3,7 +3,7 @@ import pytest
 from research_analytics_suite.data_engine.memory.DataCache import DataCache
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope="function")
 async def data_cache():
     cache = DataCache()
     await cache.initialize()
