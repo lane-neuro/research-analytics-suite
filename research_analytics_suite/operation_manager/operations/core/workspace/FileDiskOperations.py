@@ -35,28 +35,23 @@ async def load_from_disk(file_path: str, operation_group: Optional[dict]):
         BaseOperation or OperationAttributes: The loaded operation.
     """
     if not os.path.exists(file_path):
-        CustomLogger().error(FileNotFoundError(f"File not found: {file_path}"), 'FileDiskOperations')
+        raise FileNotFoundError(f"File not found: {file_path}")
 
     async with aiofiles.open(file_path, 'r') as file:
         try:
             data = await file.read()
             state = json.loads(data)
         except json.JSONDecodeError as e:
-            CustomLogger().error(
-                json.JSONDecodeError(f"Failed to decode JSON from file: {file_path}", data, e.pos),
-                'FileDiskOperations')
-            return None
+            raise json.JSONDecodeError(f"Failed to decode JSON from file: {file_path}", data, e.pos)
         except Exception as e:
-            CustomLogger().error(e, 'FileDiskOperations')
-            return None
+            raise RuntimeError(f"Unexpected error when loading file: {file_path}") from e
 
         if not isinstance(state, dict):
-            CustomLogger().error(TypeError("Loaded data must be a dictionary"), 'FileDiskOperations')
-            return None
+            raise TypeError(f"Loaded data from {file_path} is not a dictionary")
 
         operation = await from_dict(data=state, file_dir=os.path.dirname(file_path))
 
-        if operation_group is not None and operation.runtime_id not in operation_group.keys():
+        if operation_group is not None and operation.runtime_id not in operation_group:
             operation_group[operation.runtime_id] = operation
 
         return operation

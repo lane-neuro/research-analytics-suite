@@ -199,7 +199,7 @@ class UnifiedDataEngine:
             return False
 
     @command
-    def load_data(self, file_path, return_type='dict'):
+    def load_data(self, file_path, return_type='dict') :
         data = None
         data_type = os.path.splitext(file_path)[1][1:]
         self._logger.info(f"Loading data from {file_path} as {data_type}")
@@ -232,10 +232,11 @@ class UnifiedDataEngine:
             elif return_type != 'dataframe':
                 self._logger.error(ValueError(f"Unsupported return type: {return_type}"), self.__class__.__name__)
 
-            return data
+            return data, data_type
 
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
+            raise e
 
     @command
     def save_data(self, file_path: str):

@@ -113,7 +113,6 @@ class BaseOperation(ABC):
             self._pause_event = asyncio.Event()
             self._pause_event.set()
 
-            self.memory_inputs = set()
             self.memory_outputs = set()
 
             self._gui_module = None
@@ -136,19 +135,21 @@ class BaseOperation(ABC):
                     self._logger.warning(
                         f"Operation [{kwargs.get('name', '[Unnamed Operation]')}] must have an action to execute.")
                     kwargs['action'] = self.execute
-                self._attributes = OperationAttributes(*args, **kwargs)
+                self.attributes = OperationAttributes(*args, **kwargs)
+
             # If the first argument is an instance of OperationAttributes, use it directly
             elif isinstance(args[0], OperationAttributes) and hasattr(args[0], 'unique_id'):
-                self._attributes = args[0]
+                self.attributes = args[0]
+
             # Otherwise, pass both args and kwargs to OperationAttributes
             else:
-                self._attributes = OperationAttributes(*args, **kwargs)
+                self.attributes = OperationAttributes(*args, **kwargs)
 
             # Initialize the attributes asynchronously
             if asyncio.get_event_loop().is_running():
-                asyncio.create_task(self._attributes.initialize())
+                asyncio.create_task(self.attributes.initialize())
             else:
-                asyncio.run(self._attributes.initialize())
+                asyncio.run(self.attributes.initialize())
 
             self._initialized = False
 
@@ -304,7 +305,10 @@ class BaseOperation(ABC):
         """
         from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
         memory_manager = MemoryManager()
-        self.memory_inputs.update(await memory_manager.create_slot(name=name, data=data))
+
+        self.attributes.required_inputs = await memory_manager.create_slot(name=name, data=data, d_type=type(data))
+        self.add_log_entry(f"[MEMORY] Added input slot: {name} with data: {data}")
+        self.add_log_entry(f"[MEMORY] Memory inputs: {self.attributes.required_inputs}")
 
     @command
     @final
@@ -314,7 +318,11 @@ class BaseOperation(ABC):
         Args:
             memory_id (str): The ID of the memory slot.
         """
-        self.memory_outputs.update(memory_id)
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        memory_manager = MemoryManager()
+        self.memory_outputs.update(await memory_manager.create_slot(name=memory_id, data=None, d_type=type(None)))
+        self.add_log_entry(f"[MEMORY] Added output slot: {memory_id}")
+        self.add_log_entry(f"[MEMORY] Memory outputs: {self.memory_outputs}")
 
     @command
     @final
@@ -327,10 +335,15 @@ class BaseOperation(ABC):
         from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
         memory_manager = MemoryManager()
 
-        for slot_id in self.memory_inputs.union(self.memory_outputs):
-            if slot_id == memory_id:
-                self.memory_inputs.remove(slot_id)
+        for slot_id in self.attributes.required_inputs and self.memory_outputs:
+            if slot_id.lower() == memory_id.lower():
+                if memory_id in self.attributes.required_inputs:
+                    self.attributes._required_input_ids.remove(memory_id)
+                if memory_id in self.memory_outputs:
+                    self.memory_outputs.discard(memory_id)
                 await memory_manager.delete_slot(memory_id)
+                self.add_log_entry(f"[MEMORY] Removed slot: {memory_id}")
+                return
 
     @final
     async def get_slot_data(self, memory_id: str) -> any:
@@ -345,10 +358,11 @@ class BaseOperation(ABC):
         from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
         memory_manager = MemoryManager()
 
-        for slot_id in self.memory_inputs.union(self.memory_outputs):
+        for slot_id in self.attributes.required_inputs and self.memory_outputs:
             if slot_id.lower() == memory_id.lower():
                 try:
-                    _data = await memory_manager.slot_data(memory_id)
+                    _data = memory_manager.slot_data(memory_id)
+                    self.add_log_entry(f"[MEMORY] Retrieved data from slot: {memory_id}")
                     return _data
                 except Exception as e:
                     self._logger.error(e)
@@ -363,11 +377,12 @@ class BaseOperation(ABC):
         from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
         memory_manager = MemoryManager()
 
-        _valid, _invalid = await memory_manager.validate_slots(memory_ids=list(self.memory_inputs), require_values=True)
+        _valid, _invalid = memory_manager.validate_slots(memory_ids=list(self.attributes.required_inputs.values()),
+                                                         require_values=True)
         if _invalid and len(_invalid) > 0:
             for _id in _invalid:
-                _name = await memory_manager.slot_name(_id)
-                _data = await memory_manager.slot_data(_id)
+                _name = memory_manager.slot_name(_id)
+                _data = memory_manager.slot_data(_id)
                 self._logger.warning(f"Invalid memory slot: {_name} ({_id}) with data: {_data}")
             raise ValueError("Invalid memory slots found")
 
@@ -388,8 +403,14 @@ class BaseOperation(ABC):
     @command
     async def clear_inputs(self):
         """Clear all memory inputs."""
-        for memory_slot in self.memory_inputs:
-            memory_slot.data = None
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        memory_manager = MemoryManager()
+
+        for memory_slot in self.attributes.required_inputs:
+            _slot = memory_manager.get_slot(memory_slot)
+            if _slot:
+                await _slot.set_data(None)
+                self.add_log_entry(f"[MEMORY] Cleared input slot: {memory_slot}")
 
     @command
     async def clear_outputs(self):

@@ -75,7 +75,7 @@ class DataManagementDialog(GUIBase):
         while True:
             await asyncio.sleep(.001)
 
-            slots = await self._memory_manager.list_slots()
+            slots = self._memory_manager.list_slots()
             dpg.delete_item("management_tools_group")
 
             with dpg.group(tag="management_tools_group", parent="slots_window", width=-1, height=-1):
@@ -102,10 +102,10 @@ class DataManagementDialog(GUIBase):
         """Removes a collection from the primary view."""
         self.memory_slots = {c for c in self.memory_slots if c.memory_id != slot_id}
 
-    async def add_variable(self, name, value) -> None:
+    async def add_variable(self, name, d_type, value) -> None:
         """Adds a user variable."""
         try:
-            _slot_id = await self._memory_manager.create_slot(name=name, data=value)
+            _slot_id = await self._memory_manager.create_slot(name=name, d_type=d_type, data=value)
             self.add_memory_slot(_slot_id)
         except Exception as e:
             self._logger.error(Exception(f"Failed to add variable '{name}': {e}", self))
@@ -125,7 +125,7 @@ class DataManagementDialog(GUIBase):
         with dpg.file_dialog(show=True,
                              default_path=f"{self._config.BASE_DIR}/{self._config.WORKSPACE_NAME}/"
                                           f"{self._config.DATA_DIR}",
-                             callback=self._import_data,
+                             callback=asyncio.create_task(self._import_data),
                              tag="selected_file",
                              width=500, height=500, modal=True):
             dpg.add_file_extension(".json", color=(255, 255, 255, 255))
@@ -230,13 +230,13 @@ class DataManagementDialog(GUIBase):
             elif data_type == set:
                 value = set(value)
 
-            await self.add_variable(name=name, value=value)
+            await self.add_variable(name=name, d_type=data_type, value=value)
             dpg.hide_item(self.add_var_dialog_id)
 
         except Exception as e:
             self._logger.error(Exception(f"Error adding user variable: {e}", self))
 
-    def _import_data(self, sender, app_data, user_data):
+    async def _import_data(self, sender, app_data, user_data):
         """
         Imports data from the selected file into the data engine.
 
@@ -251,7 +251,7 @@ class DataManagementDialog(GUIBase):
 
         for file in _selected_files:
             file_path = file
-            data = self._workspace.get_default_data_engine().load_data(file_path)
+            data, d_type = self._workspace.get_default_data_engine().load_data(file_path)
             if data:
                 _name = os.path.basename(file_path)
-                self.add_variable(name=file_path, value=data)
+                await self.add_variable(name=file_path, d_type=d_type, value=data)

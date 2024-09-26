@@ -47,7 +47,7 @@ class UpdatedOperationModule(GUIBase):
         with dpg.group(tag=self._parent_id, parent=self._parent, height=self.height):
             self.draw_upper_region(self._parent_id, width=self.width)
             self.draw_details_region(self._parent_id, width=self.width)
-            self.draw_middle_region(self._parent_id, width=self.width)
+            asyncio.get_event_loop().run_until_complete(self.draw_middle_region(self._parent_id, width=self.width))
             self.draw_lower_region(self._parent_id, width=self.width)
 
     def draw_upper_region(self, parent, width=200):
@@ -91,16 +91,14 @@ class UpdatedOperationModule(GUIBase):
             dpg.add_checkbox(label="GPU", default_value=self._attributes.is_gpu_bound)
             dpg.add_checkbox(label="Parallel", default_value=self._attributes.parallel)
 
-    def draw_middle_region(self, parent, width=200):
+    async def draw_middle_region(self, parent, width=200):
         with dpg.group(horizontal=True, tag=f"middle_{self._runtime_id}",
                        parent=parent, horizontal_spacing=5):
             with dpg.group(label="Required Inputs", parent=f"middle_{self._runtime_id}", width=width*.62):
                 dpg.add_text(default_value="Input", indent=10)
 
-                req_input_list = [
-                    f"{str(value)}" for _, value in self._attributes.required_inputs.items()
-                ] if self._attributes.required_inputs else []
-                dpg.add_listbox(items=req_input_list, num_items=3)
+                req_inputs_dict = self._attributes.required_inputs
+                dpg.add_listbox(items=list(req_inputs_dict.keys()), num_items=3)
 
             with dpg.group(label="Inherited Ops", width=width*.65):
                 dpg.add_text(default_value="Inherited Ops", indent=10)
@@ -177,12 +175,6 @@ class UpdatedOperationModule(GUIBase):
             self.operation.add_log_entry(
                 "ERROR: Cannot view the results of an operation that has not been initialized.")
 
-        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
-        memory_manager = MemoryManager()
+        _output_dict = await self.operation.get_results()
+        self._logger.debug(f"Viewing result: {_output_dict}")
 
-        _output_slots = await self.operation.memory_outputs
-        _output_dict = {}
-        for slot_id in _output_slots:
-            _output_dict[memory_manager.slot_name(slot_id)] = await memory_manager.slot_data(slot_id)
-        self.operation.add_log_entry(f"Viewing result: {_output_dict}")
-        print(_output_dict)

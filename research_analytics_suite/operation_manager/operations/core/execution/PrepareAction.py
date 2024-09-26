@@ -83,7 +83,9 @@ async def prepare_action_for_exec(operation):
                 CustomLogger().debug(f"Action is a callable: {operation.action}")
                 t_action = operation.action
                 operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs}")
-                _action = lambda: _execute_callable_action(t_action=t_action, memory_inputs=operation.memory_inputs)
+                _action = lambda: (
+                    asyncio.get_event_loop().create_task(
+                        _execute_callable_action(t_action=t_action, memory_inputs=operation.memory_inputs)))
             CustomLogger().debug(f"Callable prepared for execution: {operation.name}")
         operation.action_callable = _action
         CustomLogger().debug(f"Action prepared for execution: {operation.name}")
@@ -109,8 +111,8 @@ async def _execute_code_action(code: str, memory_inputs: set = None) -> Callable
         inputs = {}
 
         for slot_id in memory_inputs:
-            _name = await memory_manager.slot_name(slot_id)
-            _data = await memory_manager.slot_data(slot_id)
+            _name = memory_manager.slot_name(slot_id)
+            _data = memory_manager.slot_data(slot_id)
             inputs[_name] = _data
 
         # Create a restricted execution environment
@@ -129,7 +131,7 @@ async def _execute_code_action(code: str, memory_inputs: set = None) -> Callable
     return action
 
 
-def _execute_callable_action(t_action, memory_inputs: set = None):
+async def _execute_callable_action(t_action, memory_inputs: set = None):
     """
     Execute a callable action.
 
@@ -143,7 +145,7 @@ def _execute_callable_action(t_action, memory_inputs: set = None):
     from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
     _memory_manager = MemoryManager()
 
-    def action() -> any:
+    async def action() -> any:
         inputs = {}
         for _slot_id in memory_inputs:
             _name = _memory_manager.slot_name(_slot_id)

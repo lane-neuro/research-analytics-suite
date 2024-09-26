@@ -85,7 +85,8 @@ class Mapped2DSpace(GUIBase):
 
             with dpg.node_attribute(tag=f"{node_id}_middle", attribute_type=dpg.mvNode_Attr_Input):
                 with dpg.group(tag=f"{node_id}_middle_group"):
-                    _operation_module.draw_middle_region(parent=f"{node_id}_middle_group", width=200)
+                    asyncio.get_event_loop().run_until_complete(
+                        _operation_module.draw_middle_region(parent=f"{node_id}_middle_group", width=200))
 
             with dpg.node_attribute(tag=f"{node_id}_lower", attribute_type=dpg.mvNode_Attr_Static):
                 with dpg.group(tag=f"{node_id}_lower_group", width=260):

@@ -46,7 +46,6 @@ class OperationSlotPreview(GUIBase):
         self._github = self._attributes.github
         self._action = action_serialized(self._attributes.action)
         self._output_type = None  # self._attributes["output_type"]
-        self._required_inputs = self._attributes.required_inputs
         self._parent_id = f"parent_{self._runtime_id}"
 
     async def initialize_gui(self) -> None:  # pragma: no cover

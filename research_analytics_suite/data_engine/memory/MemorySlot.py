@@ -17,8 +17,11 @@ import pickle
 import sys
 import time
 from mmap import mmap
+from typing import Type
+
 import aiosqlite
 from research_analytics_suite.utils import CustomLogger
+from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
 
 class MemorySlot:
@@ -42,34 +45,43 @@ class MemorySlot:
     """
     DATA_SIZE_THRESHOLD = 2e6  # 2MB
 
-    def __init__(self, memory_id: str, name: str, data: any, db_path: str, file_path: str = None):
+    def __init__(self, memory_id: str, name: str, d_type: type, data: any, db_path: str, file_path: str = None):
         """
         Initialize the MemorySlot instance.
 
         Args:
             memory_id (str): A unique identifier for the memory slot.
             name (str): A name for the memory slot.
+            d_type (type): The data type for the memory slot.
             data (any): The data stored in the memory slot.
             db_path (str): The path to the SQLite database file.
             file_path (str): The file path for memory-mapped storage.
         """
         self._logger = CustomLogger()
 
+        from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
+        self._operation_control = OperationControl()
+
         self._memory_id = memory_id
         self.name = name
+        self.data_type = d_type
         self._metadata = {}
         self._created_at = time.time()
         self._modified_at = self._created_at
+        self._last_modified = None
         self._lock = asyncio.Lock()
 
         self.db_path = db_path
         self._file_path = file_path
         self._use_mmap = False
         self._mmapped_file = None
-        self._file = None  # Ensure _file is always initialized
+        self._file = None
 
         self._check_data_size(data)
         self._initial_data = data
+
+        self._data = None
+        self._update_operation = None
 
     async def setup(self) -> None:
         """
@@ -96,6 +108,15 @@ class MemorySlot:
             row = await cursor.fetchone()
             if not row and self._initial_data is not None:
                 await self.set_data(self._initial_data)
+
+        # Create an update operation to update the data stored in the memory slot
+        try:
+            self._update_operation = await self._operation_control.operation_manager.create_operation(
+                operation_type=UpdateMonitor, name=f"slot_{self.memory_id}", action=self._update_data)
+            self._update_operation.is_ready = True
+        except Exception as e:
+            self._logger.error(e, self.__class__.__name__)
+
 
     @property
     def name(self) -> str:
@@ -134,29 +155,31 @@ class MemorySlot:
         return self._file_path or ""
 
     @property
-    async def data(self) -> any:
-        """Gets the data stored in the memory slot."""
-        async with self._lock:
-            if self._use_mmap:
-                if self._mmapped_file:
-                    self._mmapped_file.seek(0)
-                    serialized_data = self._mmapped_file.read()
-                    return pickle.loads(serialized_data)
-            else:
-                try:
-                    async with aiosqlite.connect(self.db_path) as conn:
-                        cursor = await conn.execute(
-                            "SELECT data FROM variables WHERE memory_id = ?",
-                            (self._memory_id,)
-                        )
-                        row = await cursor.fetchone()
-                        if row:
-                            data = row[0]
-                            return pickle.loads(data)
-                        else:
-                            return None
-                except Exception as e:
-                    self._logger.error(Exception(f"[SQLite] Get variable error: {e}"), self.__class__.__name__)
+    def data_type(self) -> type:
+        """Gets the data type for the memory slot.
+
+        Returns:
+            Type: The data type for the memory slot.
+        """
+        return self._data_type
+
+    @data_type.setter
+    def data_type(self, value: type):
+        """Sets the data type for the memory slot.
+
+        Args:
+            value (Type): The data type for the memory slot.
+        """
+        self._data_type = value
+
+    @property
+    def data(self) -> any:
+        """Gets the data stored in the memory slot.
+
+        Returns:
+            any: The data stored in the memory slot.
+        """
+        return self._data
 
     async def set_data(self, value: any) -> None:
         """Stores the data within SQLite or memory-mapped file."""
@@ -174,7 +197,39 @@ class MemorySlot:
                         await conn.commit()
                 except Exception as e:
                     self._logger.error(Exception(f"[SQLite] Add variable error: {e}"), self.__class__.__name__)
+
+            self._data = value
             self._update_modified_time()
+
+    async def _update_data(self) -> None:
+        """Updates the data stored in the memory slot."""
+        while not self._update_operation.is_running:
+            await asyncio.sleep(.1)
+
+        while self._update_operation.is_running:
+            await asyncio.sleep(.01)
+            if self._last_modified != self._modified_at:
+                async with self._lock:
+                    if self._use_mmap:
+                        if self._mmapped_file:
+                            self._mmapped_file.seek(0)
+                            serialized_data = self._mmapped_file.read()
+                            self._data = pickle.loads(serialized_data)
+                            self._last_modified = self._modified_at
+                    else:
+                        try:
+                            async with aiosqlite.connect(self.db_path) as conn:
+                                cursor = await conn.execute(
+                                    "SELECT data FROM variables WHERE memory_id = ?",
+                                    (self._memory_id,)
+                                )
+                                row = await cursor.fetchone()
+                                if row:
+                                    data = row[0]
+                                    self._data = pickle.loads(data)
+                                    self._last_modified = self._modified_at
+                        except Exception as e:
+                            self._logger.error(Exception(f"[SQLite] Get variable error: {e}"), self.__class__.__name__)
 
     def _check_data_size(self, _data) -> None:
         """

@@ -17,8 +17,7 @@ from __future__ import annotations
 import asyncio
 import os
 import uuid
-
-import aiosqlite
+from typing import Type
 
 from research_analytics_suite.commands import link_class_commands, command
 from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
@@ -72,6 +71,7 @@ class MemoryManager:
             self._cache_directory = cache_directory
 
             self._data_cache = None
+            self._slot_collection = {}
 
             self._initialized = False
 
@@ -88,32 +88,41 @@ class MemoryManager:
             self._logger = CustomLogger()
             self._config = Config()
 
-            try:
-                self._db_path = os.path.normpath(self._db_path)
-            except Exception as e:
-                self._db_path = os.path.normpath(os.path.join(
-                    self._config.BASE_DIR, self._config.WORKSPACE_NAME,
-                    self._config.DATA_DIR, "memory_manager.db"))
+            await self._initialize_data_cache()
 
-            try:
-                self._cache_directory = os.path.normpath(self._cache_directory)
-            except Exception as e:
-                self._cache_directory = os.path.normpath(
-                    os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
-                                 self._config.DATA_DIR, self._config.CACHE_DIR))
-
-            self._data_cache = DataCache(backend=self._cache_backend, directory=self._cache_directory)
-            await self._data_cache.initialize()
             self._logger.debug("MemoryManager initialized.")
             self._initialized = True
 
+    async def _initialize_data_cache(self):
+        """
+        Initializes the data cache for the MemoryManager.
+        """
+        try:
+            self._db_path = os.path.normpath(self._db_path)
+        except Exception as e:
+            self._db_path = os.path.normpath(os.path.join(
+                self._config.BASE_DIR, self._config.WORKSPACE_NAME,
+                self._config.DATA_DIR, "memory_manager.db"))
+
+        try:
+            self._cache_directory = os.path.normpath(self._cache_directory)
+        except Exception as e:
+            self._cache_directory = os.path.normpath(
+                os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
+                             self._config.DATA_DIR, self._config.CACHE_DIR))
+
+        self._data_cache = DataCache(backend=self._cache_backend, directory=self._cache_directory)
+        await self._data_cache.initialize()
+
     @command
-    async def create_slot(self, name: str, data: any, db_path: str = None, file_path: str = None) -> str:
+    async def create_slot(self, name: str, d_type: type, data: any = None, db_path: str = None, file_path: str = None) \
+            -> str:
         """
         Creates a new memory slot and stores it in both cache and SQLite storage.
 
         Args:
             name (str): The name of the memory slot.
+            d_type (Type): The data type of the memory slot.
             data (any): The data to store in the memory slot.
             db_path (str): The path to the SQLite database file.
             file_path (str): The file path for memory-mapped storage.
@@ -129,10 +138,15 @@ class MemoryManager:
                 file_path = None
 
         _id = uuid.uuid4().hex[:8]
-        memory_slot = MemorySlot(memory_id=_id, name=name, data=data, db_path=db_path, file_path=file_path)
+        memory_slot = MemorySlot(
+            memory_id=_id, name=name, d_type=d_type, data=data, db_path=db_path, file_path=file_path)
+        self._slot_collection[memory_slot.memory_id] = memory_slot
         await memory_slot.setup()
-        self._data_cache.set(key=memory_slot.memory_id, data=self.get_slot(memory_id=_id))
-        return memory_slot.memory_id
+
+        try:
+            self._data_cache.set(key=memory_slot.memory_id, data=lambda: self.get_slot(memory_id=_id))
+        finally:
+            return memory_slot.memory_id
 
     @command
     async def update_slot(self, memory_id: str, data: any) -> str:
@@ -150,10 +164,10 @@ class MemoryManager:
         if memory_slot:
             await memory_slot.set_data(data)
         else:
-            memory_slot = MemorySlot(memory_id=memory_id, name="", data=data, db_path=self._db_path)
+            d_type = type(data)
+            memory_slot = MemorySlot(memory_id=memory_id, name="", d_type=d_type, data=data, db_path=self._db_path)
             await memory_slot.setup()
             await memory_slot.set_data(data)
-            self._data_cache.set(key=memory_id, data=self.get_slot(memory_id=memory_id))
         return memory_id
 
     @command
@@ -172,23 +186,16 @@ class MemoryManager:
             self._data_cache.delete(key=memory_id)
 
     @command
-    async def list_slots(self) -> list:
+    def list_slots(self) -> list:
         """
         Lists all memory slots stored in the SQLite storage.
 
         Returns:
             list: A dictionary of memory slots.
         """
-        memory_slots = []
-        for memory_slot in self._data_cache.cache_values():
-            if not isinstance(memory_slot, MemorySlot):
-                continue
-            print(memory_slot)
-            memory_slots.append(memory_slot)
+        return list(self._slot_collection.values())
 
-        return memory_slots
-
-    async def slot_data(self, memory_id: str) -> any:
+    def slot_data(self, memory_id: str) -> any:
         """
         Retrieves the data stored in a memory slot.
 
@@ -198,18 +205,9 @@ class MemoryManager:
         Returns:
             any: The data stored in the memory slot.
         """
-        memory_slot = self._data_cache.get_key(key=memory_id)
-        if memory_slot is not None:
-            return await memory_slot.data
+        return self._slot_collection[memory_id].data
 
-        memory_slot = MemorySlot(memory_id=memory_id, name="", data=None, db_path=self._db_path)
-        await memory_slot.setup()
-        data = await memory_slot.data
-        if data:
-            self._data_cache.set(key=memory_id, data=self.get_slot(memory_id=memory_id))
-        return data
-
-    async def slot_name(self, memory_id: str) -> str:
+    def slot_name(self, memory_id: str) -> str:
         """
         Retrieves the name of a memory slot.
 
@@ -219,16 +217,19 @@ class MemoryManager:
         Returns:
             str: The name of the memory slot.
         """
-        memory_slot = self._data_cache.get_key(key=memory_id)
-        if memory_slot:
-            return memory_slot.name
+        return self._slot_collection[memory_id].name
 
-        memory_slot = MemorySlot(memory_id=memory_id, name="", data=None, db_path=self._db_path)
-        await memory_slot.setup()
-        name = memory_slot.name
-        if name:
-            self._data_cache.set(key=memory_id, data=self.get_slot(memory_id=memory_id))
-        return name
+    def slot_type(self, memory_id: str) -> Type:
+        """
+        Retrieves the data type of a memory slot.
+
+        Args:
+            memory_id (str): The unique identifier for the memory slot.
+
+        Returns:
+            Type: The data type of the memory slot.
+        """
+        return self._slot_collection[memory_id].data_type
 
     @command
     def get_slot(self, memory_id: str) -> MemorySlot:
@@ -241,9 +242,9 @@ class MemoryManager:
         Returns:
             MemorySlot: The MemorySlot instance.
         """
-        return self._data_cache.get_key(key=memory_id)
+        return self._slot_collection[memory_id]
 
-    async def validate_slots(self, memory_ids: list, require_values: bool = True) -> (list, list):
+    def validate_slots(self, memory_ids: list, require_values: bool = True) -> (list, list):
         """
         Validates a list of memory slot identifiers and returns the valid and invalid slots.
 
@@ -256,7 +257,7 @@ class MemoryManager:
         """
         valid_slots = []
         for memory_id in memory_ids:
-            data = await self.slot_data(memory_id=memory_id)
+            data = self.slot_data(memory_id=memory_id)
             if data:
                 if require_values and not data:
                     continue

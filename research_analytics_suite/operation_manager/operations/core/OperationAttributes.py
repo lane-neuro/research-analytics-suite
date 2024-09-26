@@ -21,7 +21,7 @@ from research_analytics_suite.commands import command, link_class_commands
 @link_class_commands
 class OperationAttributes:
     _lock = asyncio.Lock()
-    _TYPES_DICT = {
+    TYPES_DICT = {
         'str': str,
         'int': int,
         'float': float,
@@ -33,6 +33,7 @@ class OperationAttributes:
     }
 
     def __init__(self, *args, **kwargs):
+        self._required_inputs = {}
         self.temp_kwargs = {}
 
         if args and isinstance(args[0], dict):
@@ -78,7 +79,7 @@ class OperationAttributes:
                     self.github = self.temp_kwargs.get('github', self.github or '[no-github]')
                     self.email = self.temp_kwargs.get('email', self.email or '[no-email]')
                     self.action = self.temp_kwargs.get('action', self.action or None)
-                    self.required_inputs = self.temp_kwargs.get('required_inputs', self.required_inputs)
+                    self.required_inputs = self.temp_kwargs.get('required_inputs', {})
                     self.parent_operation = self.temp_kwargs.get('parent_operation', self.parent_operation)
                     self.inheritance = self.temp_kwargs.get('inheritance', self.inheritance)
                     self.is_loop = self.temp_kwargs.get('is_loop', self.is_loop)
@@ -90,32 +91,13 @@ class OperationAttributes:
 
                     del self.temp_kwargs
 
-    def _process_required_inputs(self, inputs: dict) -> dict:
-        """Process required inputs by converting string values using a predefined dictionary.
-
-        Args:
-            inputs (dict): A dictionary of inputs to be processed.
-
-        Returns:
-            dict: A dictionary with processed inputs.
-        """
-        if not isinstance(inputs, dict):
-            self._logger.error(ValueError("Expected a dictionary as input"), self.__class__.__name__)
-            return {}
-
-        return {
-            k: self._TYPES_DICT.get(v.lower(), v) if isinstance(v, str) else v
-            for k, v in inputs.items()
-        }
-
     @command
-    def export_attributes(self) -> dict:
+    async def export_attributes(self) -> dict:
         """Export the attributes of the operation. This is used for saving the operation to disk."""
         from research_analytics_suite.operation_manager.operations.core.workspace.WorkspaceInteraction import \
             pack_as_local_reference
-        _required_inputs = {}
-        for k, v in self.required_inputs.items():
-            _required_inputs[k] = getattr(v, '__name__', v)
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        _memory_manager = MemoryManager()
 
         return {
             'name': self.name,
@@ -127,7 +109,7 @@ class OperationAttributes:
             'email': self.email,
             'unique_id': self.unique_id,
             'action': self.action,
-            'required_inputs': _required_inputs,
+            'required_inputs': self.required_inputs,
             'parent_operation': pack_as_local_reference(self.parent_operation) if self.parent_operation else None,
             'inheritance': [
                 pack_as_local_reference(child) for child in self.inheritance if self.inheritance is not []],
@@ -212,13 +194,54 @@ class OperationAttributes:
 
     @property
     def required_inputs(self) -> dict:
-        if not self._required_inputs:
-            return {}
-        return self._required_inputs
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        _memory_manager = MemoryManager()
+
+        _inputs = {}
+        for _name, slot_id in self._required_inputs.items():
+            _name = _memory_manager.slot_name(slot_id)
+            _d_type = _memory_manager.slot_type(slot_id)
+            _data = _memory_manager.slot_data(slot_id)
+            _inputs[_name] = _data if _data is not None else _d_type
+        return _inputs
 
     @required_inputs.setter
     def required_inputs(self, value: dict):
-        self._required_inputs = self._process_required_inputs(value) if value and isinstance(value, dict) else {}
+        """
+        Set the required inputs for the operation.
+
+        Args:
+            value (dict): The required inputs for the operation.
+        """
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        _memory_manager = MemoryManager()
+
+        if not isinstance(value, dict):
+            return
+
+        for name, d_type in value.items():
+            if isinstance(d_type, str):
+                d_type = self.TYPES_DICT.get(d_type, str)
+            if isinstance(d_type, type):
+                if asyncio.get_event_loop().is_running():
+                    asyncio.ensure_future(self._create_memory_slot(name, d_type))
+                else:
+                    asyncio.run(self._create_memory_slot(name, d_type))
+
+        self._logger.debug(f"Required inputs set for {self.name}: {self._required_inputs}")
+
+    async def _create_memory_slot(self, name: str, d_type: type):
+        """
+        Create a memory slot for the operation.
+
+        Args:
+            name (str): The name of the memory slot.
+            d_type (type): The data type of the memory slot.
+        """
+        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+        _memory_manager = MemoryManager()
+        _slot_id = await _memory_manager.create_slot(name=name, d_type=d_type)
+        self._required_inputs[name] = _slot_id
 
     @property
     def parent_operation(self):

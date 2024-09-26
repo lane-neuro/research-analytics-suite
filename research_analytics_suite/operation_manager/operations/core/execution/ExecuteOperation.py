@@ -113,7 +113,7 @@ async def execute_action(operation):
 
             # Update all memory output slots with the result of the operation
             for _slot_id in operation.memory_outputs:
-                _name = await memory_manager.slot_name(_slot_id)
+                _name = memory_manager.slot_name(_slot_id)
                 _value = _result.pop(_name, None)
                 if _value is not None:
                     await memory_manager.update_slot(_slot_id, _value)
@@ -123,7 +123,7 @@ async def execute_action(operation):
 
             for key, value in _result.copy().items() if _result is not None else {}:
                 for _slot_id in operation.memory_outputs:
-                    if key == await memory_manager.slot_name(_slot_id):
+                    if key == memory_manager.slot_name(_slot_id):
                         await memory_manager.update_slot(_slot_id, value)
                         _result.pop(key)
                         break

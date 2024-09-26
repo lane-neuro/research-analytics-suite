@@ -45,7 +45,7 @@ async def save_operation_in_workspace(operation_attributes: OperationAttributes,
         overwrite (bool, optional): Whether to overwrite the existing operation file. Defaults to False.
     """
     file_ext = ".json"
-    attributes_to_save = operation_attributes.export_attributes()
+    attributes_to_save = await operation_attributes.export_attributes()
 
     dir_path = os.path.join(Config().BASE_DIR, "workspaces", Config().WORKSPACE_NAME, Config().WORKSPACE_OPERATIONS_DIR)
     os.makedirs(dir_path, exist_ok=True)

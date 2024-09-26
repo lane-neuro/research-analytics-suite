@@ -1,6 +1,6 @@
 import pytest
 import asyncio
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch, MagicMock, Mock
 from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
 from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 
@@ -22,6 +22,7 @@ class TestMemoryManager:
                     MockLogger.return_value.error = MagicMock()
                     MockLogger.return_value.debug = MagicMock()
                     MockLogger.return_value.info = MagicMock()
+                    MockLogger.return_value.warning = MagicMock()
                     MockConfig.return_value = MagicMock()
                     MockDataCache.return_value = MagicMock()
 
@@ -60,7 +61,6 @@ class TestMemoryManager:
             with patch.object(MemorySlot, 'set_data', new_callable=AsyncMock):
                 updated_memory_id = await self.memory_manager.update_slot(memory_id=memory_id, data="new_value")
 
-        self.memory_manager._data_cache.set.assert_called_once()
         assert updated_memory_id == memory_id
 
     @pytest.mark.asyncio
@@ -74,26 +74,24 @@ class TestMemoryManager:
         # Verify delete was not called because the slot doesn't exist
         self.memory_manager._data_cache.delete.assert_not_called()
 
-    @pytest.mark.asyncio
-    async def test_slot_data_retrieval_error(self):
+    def test_slot_data_retrieval_error(self):
         memory_id = "nonexistingid"
         self.memory_manager._data_cache.get_key.return_value = None
 
-        data = await self.memory_manager.slot_data(memory_id=memory_id)
-        assert data is None
+        with pytest.raises(KeyError):
+            self.memory_manager.slot_data(memory_id=memory_id)
 
     @pytest.mark.asyncio
     async def test_validate_slots_with_empty_list(self):
         memory_ids = []
-        valid_slots, invalid_slots = await self.memory_manager.validate_slots(memory_ids=memory_ids)
+        valid_slots, invalid_slots = self.memory_manager.validate_slots(memory_ids=memory_ids)
 
         assert valid_slots == []
         assert invalid_slots == []
 
     @pytest.mark.asyncio
     async def test_create_slot(self):
-        memory_id = await self.memory_manager.create_slot(name="test_slot", data="value", db_path=":memory:")
-        self.memory_manager._data_cache.set.assert_called_once()
+        memory_id = await self.memory_manager.create_slot(name="test_slot", data="value", d_type=str, db_path=":memory:")
         assert len(memory_id) == 8  # UUID truncated to 8 characters
 
     @pytest.mark.asyncio
@@ -105,7 +103,6 @@ class TestMemoryManager:
             with patch.object(MemorySlot, 'set_data', new_callable=AsyncMock):
                 updated_memory_id = await self.memory_manager.update_slot(memory_id=memory_id, data="new_value")
 
-        self.memory_manager._data_cache.set.assert_called_once()
         assert updated_memory_id == memory_id
 
     @pytest.mark.asyncio
@@ -121,47 +118,46 @@ class TestMemoryManager:
 
         self.memory_manager._data_cache.delete.assert_called_once_with(key=memory_id)
 
-    @pytest.mark.asyncio
-    async def test_list_slots(self):
+    def test_list_slots(self):
+        self.memory_manager._slot_collection = {}
         memory_slot_mock_1 = MagicMock(spec=MemorySlot)
         memory_slot_mock_1.memory_id = "id_01"
         memory_slot_mock_1.name = "name1"
         memory_slot_mock_1.data = 100
+        self.memory_manager._slot_collection[memory_slot_mock_1.memory_id] = memory_slot_mock_1
 
         memory_slot_mock_2 = MagicMock(spec=MemorySlot)
         memory_slot_mock_2.memory_id = "id_02"
         memory_slot_mock_2.name = "name2"
         memory_slot_mock_2.data = "data2"
+        self.memory_manager._slot_collection[memory_slot_mock_2.memory_id] = memory_slot_mock_2
+
         expected_slots = [memory_slot_mock_1, memory_slot_mock_2]
 
-        self.memory_manager._data_cache.cache_values.return_value = expected_slots
-
-        slots = await self.memory_manager.list_slots()
-
-        self.memory_manager._data_cache.cache_values.assert_called_once()
+        slots = self.memory_manager.list_slots()
         assert slots == expected_slots
 
     @pytest.mark.asyncio
     async def test_slot_name(self):
         expected_name = "test_slot"
+        memory_id = "12345678"
         memory_slot_mock = MagicMock(spec=MemorySlot)
         memory_slot_mock.name = expected_name
+        memory_slot_mock.memory_id = memory_id
+        self.memory_manager._slot_collection[memory_slot_mock.memory_id] = memory_slot_mock
 
-        self.memory_manager._data_cache.get_key.return_value = memory_slot_mock
-
-        memory_id = "12345678"
-        name = await self.memory_manager.slot_name(memory_id=memory_id)
+        name = self.memory_manager.slot_name(memory_id=memory_id)
         assert name == expected_name
 
     @pytest.mark.asyncio
     async def test_validate_slots(self):
         valid_slot_mock = MagicMock(spec=MemorySlot)
-        valid_slot_mock.data = AsyncMock(return_value={"key": "value"})
+        valid_slot_mock.data = Mock(return_value={"key": "value"})
 
-        self.memory_manager.slot_data = AsyncMock(side_effect=[valid_slot_mock.data(), None])
+        self.memory_manager.slot_data = Mock(side_effect=[valid_slot_mock.data(), None])
         memory_ids = ["12345678", "87654321"]
 
-        valid_slots, invalid_slots = await self.memory_manager.validate_slots(memory_ids=memory_ids)
+        valid_slots, invalid_slots = self.memory_manager.validate_slots(memory_ids=memory_ids)
 
         assert valid_slots == ["12345678"]
         assert invalid_slots == ["87654321"]

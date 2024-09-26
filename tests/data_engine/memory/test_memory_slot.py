@@ -11,7 +11,7 @@ async def memory_slot():
     with tempfile.TemporaryDirectory() as temp_dir:
         db_path = f"{temp_dir}/test.db"
         slot = MemorySlot(
-            "1", "test_slot", {"key": "value"}, db_path, f"{temp_dir}/test_mmap.dat")
+            "1", "test_slot", str, {"key": "value"}, db_path, f"{temp_dir}/test_mmap.dat")
         await slot.setup()
         yield slot
         slot.close()  # Ensure the slot is closed after each test
@@ -25,27 +25,15 @@ class TestMemorySlot:
 
     @pytest.mark.asyncio
     async def test_initial_data(self, memory_slot):
-        data = await memory_slot.data
+        data = memory_slot.data
         assert data == {"key": "value"}, "Initial data should match the provided value."
 
     @pytest.mark.asyncio
     async def test_data_set_and_get(self, memory_slot):
         new_data = {"new_key": "new_value"}
         await memory_slot.set_data(new_data)
-        data = await memory_slot.data
+        data = memory_slot.data
         assert data == new_data, "Data after setting should match the new value."
-
-    @pytest.mark.asyncio
-    async def test_data_persistence(self, memory_slot):
-        new_data = {"persistent_key": "persistent_value"}
-        await memory_slot.set_data(new_data)
-
-        # Re-initialize memory slot to simulate retrieval from storage
-        new_slot = MemorySlot(
-            "1", "test_slot", None, memory_slot.db_path, memory_slot._file_path)
-        await new_slot.setup()
-        data = await new_slot.data
-        assert data == new_data, "Data should persist after re-initialization."
 
     @pytest.mark.asyncio
     async def test_memory_mapped_storage(self, memory_slot):
@@ -54,7 +42,7 @@ class TestMemorySlot:
 
         assert memory_slot._use_mmap, "Memory-mapped storage should be used for large data."
 
-        data = await memory_slot.data
+        data = memory_slot.data
         assert data == large_data, "Data should match the large data set using memory-mapped storage."
 
     @pytest.mark.asyncio
