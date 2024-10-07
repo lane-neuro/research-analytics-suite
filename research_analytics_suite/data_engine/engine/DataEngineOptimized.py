@@ -52,7 +52,7 @@ class DataEngineOptimized(UnifiedDataEngine):
         """
         self._logger.debug(f"Performing operation: {operation_name}")
         result = self.data.map_partitions(self._apply_operation, operation_name)
-        self._cache.set(operation_name, result)
+        # self._cache.set(operation_name, result)
         self._logger.debug("Operation performed and result cached")
         return result
 

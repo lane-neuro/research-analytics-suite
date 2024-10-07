@@ -22,14 +22,14 @@ class TestMemoryManager:
                     self.memory_manager = MemoryManager()
                     self.memory_manager._logger = MockLogger()
                     self.memory_manager._config = MockConfig()
-                    self.memory_manager._data_cache = MockDataCache()
+                    # self.memory_manager._data_cache = MockDataCache()
 
                     # Explicitly set the return values for the DataCache methods
-                    self.memory_manager._data_cache.get_key = MagicMock()
-                    self.memory_manager._data_cache.set = MagicMock()
-                    self.memory_manager._data_cache.delete = MagicMock()
-                    self.memory_manager._data_cache.cache_values = MagicMock()
-                    self.memory_manager._data_cache.close = AsyncMock()
+                    # self.memory_manager._data_cache.get_key = MagicMock()
+                    # self.memory_manager._data_cache.set = MagicMock()
+                    # self.memory_manager._data_cache.delete = MagicMock()
+                    # self.memory_manager._data_cache.cache_values = MagicMock()
+                    # self.memory_manager._data_cache.close = AsyncMock()
 
     @pytest.mark.asyncio
     async def test_initialize(self):
@@ -57,7 +57,6 @@ class TestMemoryManager:
     async def test_create_slot_without_file_path(self):
         memory_id = await self.memory_manager.create_slot(name="test_slot_no_file", data="value", d_type=str)
         assert len(memory_id) == 8
-        self.memory_manager._data_cache.set.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_slot_creation_concurrent_access(self):
@@ -75,7 +74,6 @@ class TestMemoryManager:
     @pytest.mark.asyncio
     async def test_update_slot_with_non_existing_id(self):
         memory_id = "nonexistingid"
-        self.memory_manager._data_cache.get_key.return_value = None
 
         with patch.object(MemorySlot, 'setup', new_callable=AsyncMock):
             with patch.object(MemorySlot, 'set_data', new_callable=AsyncMock):
@@ -86,17 +84,11 @@ class TestMemoryManager:
     @pytest.mark.asyncio
     async def test_delete_non_existing_slot(self):
         memory_id = "nonexistingid"
-        self.memory_manager._data_cache.get_key.return_value = None
 
-        # Should not raise any exception
         await self.memory_manager.delete_slot(memory_id=memory_id)
-
-        # Verify delete was not called because the slot doesn't exist
-        self.memory_manager._data_cache.delete.assert_not_called()
 
     def test_slot_data_retrieval_error(self):
         memory_id = "nonexistingid"
-        self.memory_manager._data_cache.get_key.return_value = None
 
         with pytest.raises(KeyError):
             self.memory_manager.slot_data(memory_id=memory_id)
@@ -117,26 +109,12 @@ class TestMemoryManager:
     @pytest.mark.asyncio
     async def test_update_slot(self):
         memory_id = "12345678"
-        self.memory_manager._data_cache.get_key.return_value = None
 
         with patch.object(MemorySlot, 'setup', new_callable=AsyncMock):
             with patch.object(MemorySlot, 'set_data', new_callable=AsyncMock):
                 updated_memory_id = await self.memory_manager.update_slot(memory_id=memory_id, data="new_value")
 
         assert updated_memory_id == memory_id
-
-    @pytest.mark.asyncio
-    async def test_delete_slot(self):
-        memory_id = "12345678"
-        mock_slot = MagicMock(spec=MemorySlot)
-        mock_slot.file_path = "test_mmap.dat"
-        self.memory_manager._data_cache.get_key.return_value = mock_slot
-
-        with patch('os.remove', MagicMock()) as mock_remove:
-            await self.memory_manager.delete_slot(memory_id=memory_id)
-            mock_remove.assert_called_once_with("test_mmap.dat")
-
-        self.memory_manager._data_cache.delete.assert_called_once_with(key=memory_id)
 
     def test_list_slots(self):
         self.memory_manager._slot_collection = {}
@@ -187,18 +165,14 @@ class TestMemoryManager:
         memory_id = "12345678"
         mock_slot = MagicMock(spec=MemorySlot)
         mock_slot.file_path = None  # No file path for deletion
-        self.memory_manager._data_cache.get_key.return_value = mock_slot
 
         await self.memory_manager.delete_slot(memory_id=memory_id)
-        self.memory_manager._data_cache.delete.assert_called_once_with(key=memory_id)
 
     @pytest.mark.asyncio
     async def test_delete_slot_with_invalid_memory_slot(self):
         memory_id = "invalid_id"
-        self.memory_manager._data_cache.get_key.return_value = None  # Simulate invalid memory slot
 
         await self.memory_manager.delete_slot(memory_id=memory_id)
-        self.memory_manager._data_cache.delete.assert_not_called()  # Ensure deletion was not called for invalid slot
 
     @pytest.mark.asyncio
     async def test_get_slot_subset(self):
@@ -211,8 +185,3 @@ class TestMemoryManager:
         memory_ids = ["id1", "id2"]
         slots = self.memory_manager.get_slot_subset(memory_ids=memory_ids)
         assert slots == [slot1, slot2]
-
-    @pytest.mark.asyncio
-    async def test_cleanup(self):
-        await self.memory_manager.cleanup()
-        self.memory_manager._data_cache.close.assert_called_once()

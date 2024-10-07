@@ -98,7 +98,8 @@ class UpdatedOperationModule(GUIBase):
                 dpg.add_text(default_value="Input", indent=10)
 
                 req_inputs_dict = self._attributes.required_inputs
-                dpg.add_listbox(items=list(req_inputs_dict.keys()), num_items=3)
+                _inputs = [f"{k} - {v}" for k, v in req_inputs_dict.items()]
+                dpg.add_listbox(items=_inputs, num_items=3)
 
             with dpg.group(label="Inherited Ops", width=width*.65):
                 dpg.add_text(default_value="Inherited Ops", indent=10)

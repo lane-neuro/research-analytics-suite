@@ -193,8 +193,12 @@ class MemoryManager:
         Returns:
             list: A dictionary of memory slots.
         """
-        return list(self._slot_collection.values())
+        _slots = []
+        for memory_id in self._slot_collection:
+            _slots.append(self._slot_collection[memory_id])
+        return _slots
 
+    @command
     def slot_data(self, memory_id: str) -> any:
         """
         Retrieves the data stored in a memory slot.
@@ -207,6 +211,7 @@ class MemoryManager:
         """
         return self._slot_collection[memory_id].data
 
+    @command
     def slot_name(self, memory_id: str) -> str:
         """
         Retrieves the name of a memory slot.
@@ -219,6 +224,7 @@ class MemoryManager:
         """
         return self._slot_collection[memory_id].name
 
+    @command
     def slot_type(self, memory_id: str) -> Type:
         """
         Retrieves the data type of a memory slot.
