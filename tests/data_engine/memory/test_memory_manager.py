@@ -5,13 +5,6 @@ from research_analytics_suite.data_engine.memory.MemoryManager import MemoryMana
 from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 
 
-@pytest.fixture(scope="function")
-def event_loop():
-    loop = asyncio.get_event_loop()
-    yield loop
-    loop.close()
-
-
 class TestMemoryManager:
     @pytest.fixture(autouse=True)
     def setup(self):
