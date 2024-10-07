@@ -125,7 +125,7 @@ class OperationAttributes:
 
     @name.setter
     def name(self, value):
-        self._name = value if value and isinstance(value, str) else "[no-name]"
+        self._name = value if (value and isinstance(value, str)) else "[no-name]"
 
     @property
     def version(self) -> str:
@@ -133,7 +133,7 @@ class OperationAttributes:
 
     @version.setter
     def version(self, value):
-        self._version = value if value and isinstance(value, str) else "0.0.1"
+        self._version = value if (value and isinstance(value, str)) else "0.0.1"
 
     @property
     def description(self) -> str:
@@ -141,7 +141,7 @@ class OperationAttributes:
 
     @description.setter
     def description(self, value):
-        self._description = value if value and isinstance(value, str) else "[no-description]"
+        self._description = value if (value and isinstance(value, str)) else "[no-description]"
 
     @property
     def category_id(self) -> int:
@@ -160,7 +160,7 @@ class OperationAttributes:
 
     @author.setter
     def author(self, value):
-        self._author = value if value and isinstance(value, str) else "[no-author]"
+        self._author = value if (value and isinstance(value, str)) else "[no-author]"
 
     @property
     def github(self) -> str:
@@ -170,7 +170,7 @@ class OperationAttributes:
     def github(self, value):
         if isinstance(value, str) and value.startswith("@"):
             value = value[1:]
-        self._github = value if value and isinstance(value, str) else "[no-github]"
+        self._github = value if (value and isinstance(value, str)) else "[no-github]"
 
     @property
     def email(self) -> str:
@@ -178,7 +178,7 @@ class OperationAttributes:
 
     @email.setter
     def email(self, value):
-        self._email = value if value and isinstance(value, str) else "[no-email]"
+        self._email = value if (value and isinstance(value, str)) else "[no-email]"
 
     @property
     def unique_id(self) -> str:
@@ -228,7 +228,7 @@ class OperationAttributes:
                 else:
                     asyncio.run(self._create_memory_slot(name, d_type))
 
-        self._logger.debug(f"Required inputs set for {self.name}: {self._required_inputs}")
+        self._logger.debug(f"Required inputs set for {self.name}")
 
     async def _create_memory_slot(self, name: str, d_type: type):
         """
@@ -242,6 +242,7 @@ class OperationAttributes:
         _memory_manager = MemoryManager()
         _slot_id = await _memory_manager.create_slot(name=name, d_type=d_type)
         self._required_inputs[name] = _slot_id
+        self._logger.debug(f"Created memory slot for {self.name}: [{_slot_id}] {name} ({d_type})")
 
     @property
     def parent_operation(self):
@@ -272,7 +273,7 @@ class OperationAttributes:
 
     @inheritance.setter
     def inheritance(self, value):
-        self._inheritance = value if value and isinstance(value, list) else []
+        self._inheritance = value if (value and isinstance(value, list)) else []
 
     @property
     def is_loop(self) -> bool:
@@ -280,7 +281,7 @@ class OperationAttributes:
 
     @is_loop.setter
     def is_loop(self, value):
-        self._is_loop = value if value and isinstance(value, bool) else False
+        self._is_loop = value if (value and isinstance(value, bool)) else False
 
     @property
     def is_cpu_bound(self) -> bool:
@@ -288,7 +289,7 @@ class OperationAttributes:
 
     @is_cpu_bound.setter
     def is_cpu_bound(self, value):
-        self._is_cpu_bound = value if value and isinstance(value, bool) else False
+        self._is_cpu_bound = value if (value and isinstance(value, bool)) else False
 
     @property
     def is_gpu_bound(self) -> bool:
@@ -296,7 +297,7 @@ class OperationAttributes:
 
     @is_gpu_bound.setter
     def is_gpu_bound(self, value):
-        self._is_gpu_bound = value if value and isinstance(value, bool) else False
+        self._is_gpu_bound = value if (value and isinstance(value, bool)) else False
 
     @property
     def parallel(self) -> bool:
@@ -304,4 +305,4 @@ class OperationAttributes:
 
     @parallel.setter
     def parallel(self, value):
-        self._parallel = value if value and isinstance(value, bool) else False
+        self._parallel = value if (value and isinstance(value, bool)) else False

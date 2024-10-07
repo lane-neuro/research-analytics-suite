@@ -244,6 +244,30 @@ class MemoryManager:
         """
         return self._slot_collection[memory_id]
 
+    @command
+    def get_slot_subset(self, memory_ids: list) -> list:
+        """
+        Retrieves a list of MemorySlot instances from the cache.
+
+        Args:
+            memory_ids (list): A list of memory slot identifiers.
+
+        Returns:
+            list: A list of MemorySlot instances.
+        """
+        return [self.get_slot(memory_id) for memory_id in memory_ids]
+
+    @command
+    def get_all_slots(self) -> dict:
+        """
+        Retrieves all MemorySlot instances from the cache.
+
+        Returns:
+            list: A list of MemorySlot instances.
+        """
+        for memory_id in self._slot_collection:
+            yield self.get_slot(memory_id)
+
     def validate_slots(self, memory_ids: list, require_values: bool = True) -> (list, list):
         """
         Validates a list of memory slot identifiers and returns the valid and invalid slots.
