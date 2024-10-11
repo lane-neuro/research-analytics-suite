@@ -105,7 +105,7 @@ class DataManagementDialog(GUIBase):
     async def add_variable(self, name, d_type, value) -> None:
         """Adds a user variable."""
         try:
-            _slot_id = await self._memory_manager.create_slot(name=name, d_type=d_type, data=value)
+            _slot_id, _, _ = await self._memory_manager.create_slot(name=name, d_type=d_type, data=value)
             self.add_memory_slot(_slot_id)
         except Exception as e:
             self._logger.error(Exception(f"Failed to add variable '{name}': {e}", self))

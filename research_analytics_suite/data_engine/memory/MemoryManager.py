@@ -88,7 +88,7 @@ class MemoryManager:
             self._logger = CustomLogger()
             self._config = Config()
 
-            await self._initialize_data_cache()
+            # await self._initialize_data_cache()
 
             self._logger.debug("MemoryManager initialized.")
             self._initialized = True
@@ -115,8 +115,8 @@ class MemoryManager:
         await self._data_cache.initialize()
 
     @command
-    async def create_slot(self, name: str, d_type: type, data: any = None, db_path: str = None, file_path: str = None) \
-            -> str:
+    async def create_slot(self, name: str, d_type: type = any, data: any = None, db_path: str = None, file_path: str = None) \
+            -> [str, str, any]:
         """
         Creates a new memory slot and stores it in both cache and SQLite storage.
 
@@ -129,6 +129,8 @@ class MemoryManager:
 
         Returns:
             str: The unique identifier for the created memory slot.
+            str: The name of the memory slot.
+            any: The data stored in the memory slot.
         """
         if file_path:
             try:
@@ -143,13 +145,10 @@ class MemoryManager:
         self._slot_collection[memory_slot.memory_id] = memory_slot
         await memory_slot.setup()
 
-        try:
-            self._data_cache.set(key=memory_slot.memory_id, data=lambda: self.get_slot(memory_id=_id))
-        finally:
-            return memory_slot.memory_id
+        return memory_slot.memory_id, memory_slot.name, memory_slot.data
 
     @command
-    async def update_slot(self, memory_id: str, data: any) -> str:
+    async def update_slot(self, memory_id: str, data: any) -> [str, any]:
         """
         Updates the data in an existing memory slot.
 
@@ -159,8 +158,9 @@ class MemoryManager:
 
         Returns:
             str: The memory slot identifier.
+            any: The updated data.
         """
-        memory_slot = self._data_cache.get_key(key=memory_id)
+        memory_slot = self._slot_collection.get(memory_id)
         if memory_slot:
             await memory_slot.set_data(data)
         else:
@@ -168,22 +168,24 @@ class MemoryManager:
             memory_slot = MemorySlot(memory_id=memory_id, name="", d_type=d_type, data=data, db_path=self._db_path)
             await memory_slot.setup()
             await memory_slot.set_data(data)
-        return memory_id
+        return memory_id, memory_slot.data
 
     @command
     async def delete_slot(self, memory_id: str) -> None:
         """
-        Deletes a memory slot from both cache and SQLite storage.
+        Deletes a memory slot from both SQLite storage.
 
         Args:
             memory_id (str): The unique identifier for the memory slot.
         """
-        memory_slot = self._data_cache.get_key(key=memory_id)
-        if memory_slot:
-            memory_slot.close()
-            if memory_slot.file_path:
-                os.remove(memory_slot.file_path)  # Remove memory-mapped file if it exists
-            self._data_cache.delete(key=memory_id)
+        try:
+            memory_slot = self._slot_collection.pop(memory_id)
+            if memory_slot:
+                memory_slot.close()
+                if memory_slot.file_path is not None:
+                    os.remove(memory_slot.file_path)  # Remove memory-mapped file if it exists
+        except KeyError or FileNotFoundError:
+            self._logger.warning(f"Memory slot with ID: {memory_id} does not exist.")
 
     @command
     def list_slots(self) -> list:
@@ -271,8 +273,10 @@ class MemoryManager:
         Returns:
             list: A list of MemorySlot instances.
         """
-        for memory_id in self._slot_collection:
-            yield self.get_slot(memory_id)
+        temp_output = {}
+        for memory_id, slot in self._slot_collection.items():
+            temp_output[memory_id] = slot
+        return temp_output
 
     def validate_slots(self, memory_ids: list, require_values: bool = True) -> (list, list):
         """

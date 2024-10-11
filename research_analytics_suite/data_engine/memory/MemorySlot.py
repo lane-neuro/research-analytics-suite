@@ -78,9 +78,7 @@ class MemorySlot:
         self._file = None
 
         self._check_data_size(data)
-        self._initial_data = data
-
-        self._data = None
+        self._data = data
         self._update_operation = None
 
     async def setup(self) -> None:
@@ -106,17 +104,16 @@ class MemorySlot:
                 (self._memory_id,)
             )
             row = await cursor.fetchone()
-            if not row and self._initial_data is not None:
-                await self.set_data(self._initial_data)
+            if not row and self.data:
+                await self.set_data(self._data)
 
-        # Create an update operation to update the data stored in the memory slot
-        try:
-            self._update_operation = await self._operation_control.operation_manager.create_operation(
-                operation_type=UpdateMonitor, name=f"slot_{self.memory_id}", action=self._update_data)
-            self._update_operation.is_ready = True
-        except Exception as e:
-            self._logger.error(e, self.__class__.__name__)
-
+            # Create an update operation to update the data stored in the memory slot
+            try:
+                self._update_operation = await self._operation_control.operation_manager.create_operation(
+                    operation_type=UpdateMonitor, name=f"slot_{self.memory_id}", action=self._update_data)
+                self._update_operation.is_ready = True
+            except Exception as e:
+                self._logger.error(e, self.__class__.__name__)
 
     @property
     def name(self) -> str:

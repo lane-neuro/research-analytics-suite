@@ -52,8 +52,7 @@ class DataEngineOptimized(UnifiedDataEngine):
         """
         self._logger.debug(f"Performing operation: {operation_name}")
         result = self.data.map_partitions(self._apply_operation, operation_name)
-        # self._cache.set(operation_name, result)
-        self._logger.debug("Operation performed and result cached")
+        self._logger.debug(f"Operation performed. Result: {result}")
         return result
 
     @command
@@ -80,10 +79,8 @@ class DataEngineOptimized(UnifiedDataEngine):
         Args:
             new_data: The new live data.
         """
-        self._logger.debug("Updating live data")
         self.data = self.data.append(new_data)
-        self._cache.set('live_data', self.data)
-        self._logger.debug("Live data updated and cached")
+        self._logger.debug(f"Live data updated. New data: {new_data}")
 
     def monitor_memory_usage(self):
         """

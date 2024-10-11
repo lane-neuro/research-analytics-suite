@@ -306,7 +306,7 @@ class BaseOperation(ABC):
         from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
         memory_manager = MemoryManager()
 
-        self.attributes.required_inputs = await memory_manager.create_slot(name=name, data=data, d_type=type(data))
+        self.attributes.required_inputs, _, _ = await memory_manager.create_slot(name=name, data=data, d_type=type(data))
         self.add_log_entry(f"[MEMORY] Added input slot: {name} with data: {data}")
         self.add_log_entry(f"[MEMORY] Memory inputs: {self.attributes.required_inputs}")
 
@@ -320,7 +320,8 @@ class BaseOperation(ABC):
         """
         from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
         memory_manager = MemoryManager()
-        self.memory_outputs.update(await memory_manager.create_slot(name=memory_id, data=None, d_type=type(None)))
+        _slot_id, _, _ = await memory_manager.create_slot(name=memory_id, data=None, d_type=type(None))
+        self.memory_outputs.update([_slot_id])
         self.add_log_entry(f"[MEMORY] Added output slot: {memory_id}")
         self.add_log_entry(f"[MEMORY] Memory outputs: {self.memory_outputs}")
 
@@ -338,7 +339,7 @@ class BaseOperation(ABC):
         for slot_id in self.attributes.required_inputs and self.memory_outputs:
             if slot_id.lower() == memory_id.lower():
                 if memory_id in self.attributes.required_inputs:
-                    self.attributes._required_input_ids.remove(memory_id)
+                    self.attributes.required_inputs.pop(memory_id)
                 if memory_id in self.memory_outputs:
                     self.memory_outputs.discard(memory_id)
                 await memory_manager.delete_slot(memory_id)

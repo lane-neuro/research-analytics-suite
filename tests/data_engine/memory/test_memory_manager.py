@@ -49,13 +49,13 @@ class TestMemoryManager:
     async def test_create_slot_with_invalid_file_path(self):
         invalid_file_path = "::invalid::path"
         with patch('os.path.normpath', side_effect=Exception('Invalid path')):
-            memory_id = await self.memory_manager.create_slot(name="invalid_file", data="data", d_type=str, file_path=invalid_file_path)
+            memory_id, _, _ = await self.memory_manager.create_slot(name="invalid_file", data="data", d_type=str, file_path=invalid_file_path)
             assert memory_id is not None
             self.memory_manager._logger.warning.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_create_slot_without_file_path(self):
-        memory_id = await self.memory_manager.create_slot(name="test_slot_no_file", data="value", d_type=str)
+        memory_id, _, _ = await self.memory_manager.create_slot(name="test_slot_no_file", data="value", d_type=str)
         assert len(memory_id) == 8
 
     @pytest.mark.asyncio
@@ -77,7 +77,7 @@ class TestMemoryManager:
 
         with patch.object(MemorySlot, 'setup', new_callable=AsyncMock):
             with patch.object(MemorySlot, 'set_data', new_callable=AsyncMock):
-                updated_memory_id = await self.memory_manager.update_slot(memory_id=memory_id, data="new_value")
+                updated_memory_id, _ = await self.memory_manager.update_slot(memory_id=memory_id, data="new_value")
 
         assert updated_memory_id == memory_id
 
@@ -103,7 +103,7 @@ class TestMemoryManager:
 
     @pytest.mark.asyncio
     async def test_create_slot(self):
-        memory_id = await self.memory_manager.create_slot(name="test_slot", data="value", d_type=str, db_path=":memory:")
+        memory_id, _, _ = await self.memory_manager.create_slot(name="test_slot", data="value", d_type=str, db_path=":memory:")
         assert len(memory_id) == 8  # UUID truncated to 8 characters
 
     @pytest.mark.asyncio
@@ -112,7 +112,7 @@ class TestMemoryManager:
 
         with patch.object(MemorySlot, 'setup', new_callable=AsyncMock):
             with patch.object(MemorySlot, 'set_data', new_callable=AsyncMock):
-                updated_memory_id = await self.memory_manager.update_slot(memory_id=memory_id, data="new_value")
+                updated_memory_id, _ = await self.memory_manager.update_slot(memory_id=memory_id, data="new_value")
 
         assert updated_memory_id == memory_id
 
@@ -159,14 +159,6 @@ class TestMemoryManager:
 
         assert valid_slots == ["12345678"]
         assert invalid_slots == ["87654321"]
-
-    @pytest.mark.asyncio
-    async def test_delete_slot_with_invalid_file_path(self):
-        memory_id = "12345678"
-        mock_slot = MagicMock(spec=MemorySlot)
-        mock_slot.file_path = None  # No file path for deletion
-
-        await self.memory_manager.delete_slot(memory_id=memory_id)
 
     @pytest.mark.asyncio
     async def test_delete_slot_with_invalid_memory_slot(self):

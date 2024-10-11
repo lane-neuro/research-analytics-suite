@@ -128,7 +128,7 @@ class UnifiedDataEngine:
         self._GENERATED_ID = uuid.uuid4()
         self._logger = CustomLogger()
         self._config = Config()
-        self.data_cache = DataCache()
+        # self.data_cache = DataCache()
 
         from research_analytics_suite.data_engine.Workspace import Workspace
         self._workspace = Workspace()
