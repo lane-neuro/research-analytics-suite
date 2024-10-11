@@ -52,6 +52,7 @@ class OperationAttributes:
         self.github = self.temp_kwargs.get('github', '[no-github]')
         self.email = self.temp_kwargs.get('email', '[no-email]')
         self.action = self.temp_kwargs.get('action', None)
+        self.active = self.temp_kwargs.get('active', False)
         self.required_inputs = self.temp_kwargs.get('required_inputs', {})
         self.parent_operation = self.temp_kwargs.get('parent_operation', None)
         self.inheritance = self.temp_kwargs.get('inheritance', [])
@@ -79,6 +80,7 @@ class OperationAttributes:
                     self.github = self.temp_kwargs.get('github', self.github or '[no-github]')
                     self.email = self.temp_kwargs.get('email', self.email or '[no-email]')
                     self.action = self.temp_kwargs.get('action', self.action or None)
+                    self.active = self.temp_kwargs.get('active', self.active or False)
                     self.required_inputs = self.temp_kwargs.get('required_inputs', {})
                     self.parent_operation = self.temp_kwargs.get('parent_operation', self.parent_operation)
                     self.inheritance = self.temp_kwargs.get('inheritance', self.inheritance)
@@ -194,15 +196,31 @@ class OperationAttributes:
 
     @property
     def required_inputs(self) -> dict:
-        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
-        _memory_manager = MemoryManager()
-
         _inputs = {}
-        for _name, slot_id in self._required_inputs.items():
-            _name = _memory_manager.slot_name(slot_id)
-            _d_type = _memory_manager.slot_type(slot_id)
-            _data = _memory_manager.slot_data(slot_id)
-            _inputs[_name] = _data if _data is not None else _d_type
+
+        if hasattr(self, '_active') and self._active:
+            from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+            _memory_manager = MemoryManager()
+
+            for _name, _value in self._required_inputs.items():
+                if isinstance(_value, type):
+                    _inputs[_name] = _value
+                else:
+                    _slot_id = _value
+                    _slot = _memory_manager.get_slot(_slot_id)
+                    if _slot is None:
+                        _inputs[_name] = None
+                        continue
+                    _slot_id = _slot.memory_id
+                    _slot_name = _slot.name
+                    _slot_type = _slot.data_type
+                    _slot_data = _slot.data
+
+                    _inputs[_slot_name] = _slot_data if _slot_data is not None else _slot_type
+        else:
+            for _name, d_type in self._required_inputs.items():
+                _inputs[_name] = d_type
+
         return _inputs
 
     @required_inputs.setter
@@ -238,11 +256,14 @@ class OperationAttributes:
             name (str): The name of the memory slot.
             d_type (type): The data type of the memory slot.
         """
-        from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
-        _memory_manager = MemoryManager()
-        _slot_id = await _memory_manager.create_slot(name=name, d_type=d_type)
-        self._required_inputs[name] = _slot_id
-        self._logger.debug(f"Created memory slot for {self.name}: [{_slot_id}] {name} ({d_type})")
+        if self.active:
+            from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+            _memory_manager = MemoryManager()
+            _slot_id, _, _ = await _memory_manager.create_slot(name=name, d_type=d_type)
+            self._required_inputs[name] = _slot_id
+            self._logger.debug(f"Created memory slot for {self.name}: [{_slot_id}] {name} ({d_type})")
+        else:
+            self._required_inputs[name] = d_type
 
     @property
     def parent_operation(self):
@@ -306,3 +327,16 @@ class OperationAttributes:
     @parallel.setter
     def parallel(self, value):
         self._parallel = value if (value and isinstance(value, bool)) else False
+
+    @property
+    def active(self) -> bool:
+        return self._active if self._active else False
+
+    @active.setter
+    def active(self, value):
+        if value and isinstance(value, bool):
+            req_inputs = self.required_inputs if self.required_inputs else {}
+            self._active = value
+            self.required_inputs = req_inputs
+        else:
+            self._active = False

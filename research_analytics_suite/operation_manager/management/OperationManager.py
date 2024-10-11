@@ -93,6 +93,7 @@ class OperationManager:
         """
         try:
             self._logger.debug(f"Creating operation of type: {operation_type.__name__}")
+            kwargs['active'] = True
             operation = operation_type(*args, **kwargs)
             await operation.initialize_operation()
             self._logger.debug(f"Initialized operation: {operation.name} with ID: {operation.runtime_id}"

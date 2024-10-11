@@ -11,6 +11,8 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
+from copy import deepcopy, copy
+
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
@@ -61,9 +63,10 @@ class Mapped2DSpace(GUIBase):
         Returns:
             tuple: The UUIDs of the node, input attribute, and output attribute.
         """
-        from research_analytics_suite.operation_manager import BaseOperation
         _operation = None
         node_id = dpg.generate_uuid()
+        operation_attributes = copy(operation_attributes)
+        operation_attributes.active = True
         with dpg.node(tag=node_id, parent=self._node_editor_id, label=operation_attributes.name, pos=pos):
             input_id = dpg.generate_uuid()
             output_id = dpg.generate_uuid()
