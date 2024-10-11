@@ -34,11 +34,7 @@ def translate_item(item):
     Returns:
         object: The Python object.
     """
-    if isinstance(item, ast.Str):
-        return item.s
-    elif isinstance(item, ast.Num):
-        return item.n
-    elif isinstance(item, ast.NameConstant):
+    if isinstance(item, ast.Constant):
         return item.value
     elif isinstance(item, ast.List):
         return [translate_item(e) for e in item.elts]
