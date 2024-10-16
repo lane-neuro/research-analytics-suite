@@ -101,4 +101,4 @@ class ConsoleMonitor(BaseOperation):
                 finally:
                     input_task = None  # Reset input task
 
-            await asyncio.sleep(0.01)  # Sleep for a short duration to avoid busy-waiting
+            await asyncio.sleep(0.001)  # Sleep for a short duration to avoid busy-waiting
