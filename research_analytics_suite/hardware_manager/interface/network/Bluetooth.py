@@ -12,8 +12,10 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-
+import asyncio
 import platform
+from concurrent.futures.thread import ThreadPoolExecutor
+
 from bleak import BleakScanner, BleakClient
 from typing import List, Dict
 
@@ -34,8 +36,8 @@ class Bluetooth:
             self.logger.error(f"Unsupported OS: {os_name}")
             return 'unsupported'
 
-    async def detect(self) -> List[Dict[str, str]]:
-        """Detect Bluetooth devices.
+    async def _discover_devices(self) -> List[Dict[str, str]]:
+        """Discover Bluetooth devices.
 
         Returns:
             list: Information about detected Bluetooth devices.
@@ -43,6 +45,23 @@ class Bluetooth:
         devices = await BleakScanner.discover()
         self.logger.debug(f"Detected Bluetooth devices: {devices}")
         return [{'address': device.address, 'name': device.name} for device in devices]
+
+    def _run_in_mta(self, loop, coro):
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(coro)
+
+    async def detect(self) -> List[Dict[str, str]]:
+        """Detect Bluetooth devices.
+
+        Returns:
+            list: Information about detected Bluetooth devices.
+        """
+        loop = asyncio.new_event_loop()
+        with ThreadPoolExecutor() as executor:
+            result = executor.submit(self._run_in_mta, loop, self._discover_devices())
+            devices = result.result()
+            self.logger.debug(f"Detected Bluetooth devices: {devices}")
+            return devices
 
     async def connect(self, address: str) -> BleakClient:
         """Connect to a Bluetooth device.

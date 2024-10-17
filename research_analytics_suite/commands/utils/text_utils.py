@@ -40,7 +40,10 @@ def get_function_body(func):
     """
     Get the body of a function as a string.
     """
-    source = inspect.getsource(func)
+    try:
+        source = inspect.getsource(func)
+    except TypeError:
+        return " "
 
     # Dedent the source code to remove leading spaces
     dedented_source = textwrap.dedent(source)

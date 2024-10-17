@@ -23,6 +23,7 @@ import dearpygui.dearpygui as dpg
 from research_analytics_suite.commands.utils.text_utils import get_function_body
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
+from research_analytics_suite.operation_manager.operations.system import UpdateMonitor
 
 
 class UpdatedOperationModule(GUIBase):
@@ -38,16 +39,24 @@ class UpdatedOperationModule(GUIBase):
         self.operation.attach_gui_module(self)
 
     async def initialize_gui(self) -> None:
-        pass
+        self._logger.debug("Initializing the operation module dialog.")
+        self._update_operation = await self._operation_control.operation_manager.create_operation(
+            operation_type=UpdateMonitor, name=f"gui_{self.operation.runtime_id}", action=self._update_async)
+        self._update_operation.is_ready = True
 
     async def _update_async(self) -> None:
-        pass
+        while self._update_operation.is_ready:
+            if self.operation.initialized:
+                self._logger.debug(f"Operation {self.operation.name} initialized.")
+                self.draw()
+            else:
+                self._logger.debug(f"Operation {self.operation.name} not initialized.")
 
     def draw(self):
         with dpg.group(tag=self._parent_id, parent=self._parent, height=self.height):
             self.draw_upper_region(self._parent_id, width=self.width)
             self.draw_details_region(self._parent_id, width=self.width)
-            asyncio.get_event_loop().run_until_complete(self.draw_middle_region(self._parent_id, width=self.width))
+            self.draw_middle_region(self._parent_id, width=self.width)
             self.draw_lower_region(self._parent_id, width=self.width)
 
     def draw_upper_region(self, parent, width=200):
@@ -62,6 +71,7 @@ class UpdatedOperationModule(GUIBase):
             dpg.add_text(default_value=self._attributes.author, indent=10)
             with dpg.group(height=-1):
                 dpg.add_input_text(default_value=self._attributes.github)
+
                 if self.operation.initialized:
                     dpg.add_input_text(default_value=self.operation.status if hasattr(
                             self.operation, "status") else "Not Initialized")
@@ -78,12 +88,12 @@ class UpdatedOperationModule(GUIBase):
                 dpg.add_text(default_value="Output", indent=5)
                 dpg.add_listbox(items=[], num_items=3)
 
-        if self.operation.initialized:
+        if self.operation.attributes.active:
             with dpg.group(horizontal=True, tag=f"execution_{self._runtime_id}", parent=parent, width=width*.40,
                            height=20):
-                dpg.add_button(label="Execute", callback=lambda: asyncio.create_task(self.execute_operation()))
-                dpg.add_button(label="Stop", callback=lambda: asyncio.create_task(self.stop_operation()))
-                dpg.add_button(label="Reset", callback=lambda: asyncio.create_task(self.reset_operation()))
+                dpg.add_button(label="Execute", callback=lambda: asyncio.run(self.execute_operation()))
+                dpg.add_button(label="Stop", callback=lambda: asyncio.run(self.stop_operation()))
+                dpg.add_button(label="Reset", callback=lambda: asyncio.run(self.reset_operation()))
 
         with dpg.group(horizontal=True, tag=f"options_{self._runtime_id}", horizontal_spacing=35, parent=parent,
                        width=width):
@@ -91,7 +101,7 @@ class UpdatedOperationModule(GUIBase):
             dpg.add_checkbox(label="GPU", default_value=self._attributes.is_gpu_bound)
             dpg.add_checkbox(label="Parallel", default_value=self._attributes.parallel)
 
-    async def draw_middle_region(self, parent, width=200):
+    def draw_middle_region(self, parent, width=200):
         with dpg.group(horizontal=True, tag=f"middle_{self._runtime_id}",
                        parent=parent, horizontal_spacing=5):
             with dpg.group(label="Required Inputs", parent=f"middle_{self._runtime_id}", width=width*.62):
@@ -111,7 +121,7 @@ class UpdatedOperationModule(GUIBase):
             dpg.add_input_text(default_value=get_function_body(self._attributes.action), multiline=True,
                                tab_input=True, height=100)
 
-        if self.operation.initialized:
+        if self.operation.attributes.active:
             with dpg.group(parent=parent, tag=f"state_mods_{self._runtime_id}"):
                 dpg.add_button(label="View Result", callback=self.view_result)
                 dpg.add_button(label="Reload Original Attributes", callback=self.reload_attributes)

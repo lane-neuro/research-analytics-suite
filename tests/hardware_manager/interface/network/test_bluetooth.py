@@ -35,6 +35,7 @@ class TestBluetooth:
     @pytest.mark.asyncio
     @patch.object(BleakScanner, 'discover', new_callable=AsyncMock)
     async def test_detect_success(self, mock_discover, logger):
+        # Create mock devices
         mock_device_1 = MagicMock()
         mock_device_1.address = '00:11:22:33:44:55'
         mock_device_1.name = 'Device 1'
@@ -43,16 +44,21 @@ class TestBluetooth:
         mock_device_2.address = '66:77:88:99:AA:BB'
         mock_device_2.name = 'Device 2'
 
+        # Mock the return value of the discover method
         mock_discover.return_value = [mock_device_1, mock_device_2]
 
+        # Create Bluetooth instance
         interface = Bluetooth(logger)
-        devices = await interface.detect()
+
+        # Use the same event loop since detect creates a new one internally
+        devices = await interface._discover_devices()
 
         expected_devices = [
             {'address': '00:11:22:33:44:55', 'name': 'Device 1'},
             {'address': '66:77:88:99:AA:BB', 'name': 'Device 2'}
         ]
 
+        # Assert the detected devices match the expected ones
         assert devices == expected_devices
 
     @pytest.mark.asyncio

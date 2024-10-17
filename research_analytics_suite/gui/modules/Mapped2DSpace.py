@@ -11,7 +11,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
-from copy import deepcopy, copy
+from copy import copy
 
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.gui.GUIBase import GUIBase
@@ -79,7 +79,6 @@ class Mapped2DSpace(GUIBase):
                     _operation_module = UpdatedOperationModule(operation_attributes, 200, 500,
                                                                node_id)
                     _operation = _operation_module.operation
-                    asyncio.run(_operation.initialize_operation())
                     _operation_module.draw_upper_region(parent=f"{node_id}_name_group", width=200)
 
             with dpg.node_attribute(tag=f"{node_id}_details", attribute_type=dpg.mvNode_Attr_Output):
@@ -88,8 +87,7 @@ class Mapped2DSpace(GUIBase):
 
             with dpg.node_attribute(tag=f"{node_id}_middle", attribute_type=dpg.mvNode_Attr_Input):
                 with dpg.group(tag=f"{node_id}_middle_group"):
-                    asyncio.get_event_loop().run_until_complete(
-                        _operation_module.draw_middle_region(parent=f"{node_id}_middle_group", width=200))
+                    _operation_module.draw_middle_region(parent=f"{node_id}_middle_group", width=200)
 
             with dpg.node_attribute(tag=f"{node_id}_lower", attribute_type=dpg.mvNode_Attr_Static):
                 with dpg.group(tag=f"{node_id}_lower_group", width=260):
