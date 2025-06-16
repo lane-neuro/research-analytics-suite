@@ -47,7 +47,7 @@ class Serial(Serial_Interface):
             elif self.os_info == 'windows':
                 return ['mode']
             else:
-                self.logger.error(f"Serial port detection not supported on {self.os_info} platform.")
+                self.logger.warning(f"Serial port detection not supported on {self.os_info} platform.")
                 return []
         else:
             self.logger.error(f"Unknown action: {action}")
@@ -67,18 +67,18 @@ class Serial(Serial_Interface):
         elif self.os_info == 'windows':
             return self._parse_serial_output_windows(output)
         else:
-            self.logger.error(f"Serial port detection not supported on {self.os_info} platform.")
+            self.logger.warning(f"Serial port detection not supported on {self.os_info} platform.")
             return []
 
     def _parse_serial_output_unix(self, output: str) -> List[Dict[str, str]]:
         """Parse the output of the dmesg command to find serial ports on Unix-like systems."""
-        return [{'description': line.strip()} for line in output.split('\n') if line.strip()]
+        return [{'description': line.strip()} for line in output.split('\n') if line.strip()] if output else []
 
     def _parse_serial_output_windows(self, output: str) -> List[Dict[str, str]]:
         """Parse the output of the mode command to find serial ports on Windows."""
         serial_ports = []
         current_port = []
-        for line in output.split('\n'):
+        for line in output.split('\n') if output else []:
             if 'Status for device' in line:
                 if current_port:
                     serial_ports.append({'description': '\n'.join(current_port).strip()})

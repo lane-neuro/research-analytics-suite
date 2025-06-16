@@ -12,6 +12,7 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+from __future__ import annotations
 
 import platform
 import subprocess
@@ -35,7 +36,7 @@ class Serial_Interface(ABC):
             self.logger.error(f"Unsupported OS: {os_name}")
             return 'unsupported'
 
-    def _execute_command(self, command: List[str]) -> str:
+    def _execute_command(self, command: List[str]) -> str | None:
         """Execute a system command.
 
         Args:
@@ -50,11 +51,10 @@ class Serial_Interface(ABC):
             self.logger.debug(f"Command output: {result.stdout}")
             self.logger.debug(f"Command stderr: {result.stderr}")
             return result.stdout
-        except subprocess.CalledProcessError as e:
-            self.logger.error(f"Command '{' '.join(command)}' failed with error: {e}")
-            self.logger.error(f"Command stdout: {e.stdout}")
-            self.logger.error(f"Command stderr: {e.stderr}")
-            raise e
+        except subprocess.CalledProcessError or Exception as e:
+            self.logger.warning(f"Command '{' '.join(command)}' failed, see debug logs for more information.")
+            self.logger.debug(f"Command '{' '.join(command)}' failed with exception: {e}")
+            return None
 
     @abstractmethod
     def detect(self) -> List[Dict[str, str]]:

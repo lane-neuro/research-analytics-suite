@@ -24,7 +24,7 @@ class TestTorchData:
     @pytest.fixture
     def sample_tensor(self):
         """Fixture for a sample PyTorch tensor."""
-        return torch.tensor([[1, 2], [3, 4], [5, 6]])
+        return torch.tensor([[1, 2], [3, 4], [5, 6]], dtype=torch.float32)
 
     @pytest.fixture
     def sample_list(self):
@@ -44,13 +44,13 @@ class TestTorchData:
     def test_initialization_with_pandas_df(self, sample_pandas_df):
         """Test initialization with a pandas DataFrame."""
         torch_data = TorchData(sample_pandas_df)
-        expected_tensor = torch.tensor(sample_pandas_df.values)
+        expected_tensor = torch.tensor(sample_pandas_df.values, dtype=torch.float32)
         assert torch.equal(torch_data.torch_tensor, expected_tensor)
 
     def test_initialization_with_numpy_array(self, sample_numpy_array):
         """Test initialization with a numpy array."""
         torch_data = TorchData(sample_numpy_array)
-        expected_tensor = torch.tensor(sample_numpy_array)
+        expected_tensor = torch.tensor(sample_numpy_array, dtype=torch.float32)
         assert torch.equal(torch_data.torch_tensor, expected_tensor)
 
     def test_initialization_with_tensor(self, sample_tensor):
@@ -61,7 +61,7 @@ class TestTorchData:
     def test_initialization_with_list(self, sample_list):
         """Test initialization with a list."""
         torch_data = TorchData(sample_list)
-        expected_tensor = torch.tensor(sample_list)
+        expected_tensor = torch.tensor(sample_list, dtype=torch.float32)
         assert torch.equal(torch_data.torch_tensor, expected_tensor)
 
     def test_initialization_with_dict(self, sample_dict):
@@ -85,7 +85,7 @@ class TestTorchData:
         """Test retrieving an item by index from the PyTorch tensor."""
         torch_data = TorchData(sample_pandas_df)
         for idx in range(len(sample_pandas_df)):
-            expected_item = torch.tensor(sample_pandas_df.values[idx])
+            expected_item = torch.tensor(sample_pandas_df.values[idx], dtype=torch.float32)
             assert torch.equal(torch_data[idx], expected_item)
 
     def test_set_tensor_with_pandas_df(self, sample_pandas_df):
@@ -93,7 +93,7 @@ class TestTorchData:
         torch_data = TorchData(sample_pandas_df)
         new_data = pd.DataFrame({'A': [10, 20], 'B': [30, 40]})
         torch_data.torch_tensor = torch_data.set_tensor(new_data)
-        expected_tensor = torch.tensor(new_data.values)
+        expected_tensor = torch.tensor(new_data.values, dtype=torch.float32)
         assert torch.equal(torch_data.torch_tensor, expected_tensor)
 
     def test_set_tensor_with_numpy_array(self, sample_numpy_array):
@@ -101,13 +101,13 @@ class TestTorchData:
         torch_data = TorchData(sample_numpy_array)
         new_data = np.array([[10, 20], [30, 40]])
         torch_data.torch_tensor = torch_data.set_tensor(new_data)
-        expected_tensor = torch.tensor(new_data)
+        expected_tensor = torch.tensor(new_data, dtype=torch.float32)
         assert torch.equal(torch_data.torch_tensor, expected_tensor)
 
     def test_set_tensor_with_tensor(self, sample_tensor):
         """Test setting the PyTorch tensor with a tensor."""
         torch_data = TorchData(sample_tensor)
-        new_data = torch.tensor([[10, 20], [30, 40]])
+        new_data = torch.tensor([[10, 20], [30, 40]], dtype=torch.float32)
         torch_data.torch_tensor = torch_data.set_tensor(new_data)
         assert torch.equal(torch_data.torch_tensor, new_data)
 
@@ -116,7 +116,7 @@ class TestTorchData:
         torch_data = TorchData(sample_list)
         new_data = [[10, 20], [30, 40]]
         torch_data.torch_tensor = torch_data.set_tensor(new_data)
-        expected_tensor = torch.tensor(new_data)
+        expected_tensor = torch.tensor(new_data, dtype=torch.float32)
         assert torch.equal(torch_data.torch_tensor, expected_tensor)
 
     def test_set_tensor_with_dict(self, sample_dict):

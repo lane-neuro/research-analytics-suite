@@ -72,8 +72,8 @@ class InterfaceManager:
                 detected_interfaces[interface_name] = await interface.detect() if iscoroutinefunction(
                     interface.detect) else interface.detect()
             except Exception as e:
-                self.logger.error(Exception(f"Error detecting {interface_name} interfaces: {e}"),
-                                  self.__class__.__name__)
+                self.logger.warning(f"Error detecting {interface_name} interfaces, see debug log for details.")
+                self.logger.debug(f"Error detecting {interface_name} interfaces: {e}", self.__class__.__name__)
                 detected_interfaces[interface_name] = None
         self.interfaces = detected_interfaces
 

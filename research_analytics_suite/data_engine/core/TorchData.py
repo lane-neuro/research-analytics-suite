@@ -75,14 +75,14 @@ class TorchData(BaseData, Dataset):
         if isinstance(data, torch.Tensor):
             tensor = data
         elif isinstance(data, pd.DataFrame):
-            tensor = torch.tensor(data.values)
+            tensor = torch.tensor(data.values, dtype=torch.float32)
         elif isinstance(data, np.ndarray):
-            tensor = torch.tensor(data)
+            tensor = torch.tensor(data, dtype=torch.float32)
         elif isinstance(data, list):
-            tensor = torch.tensor(data)
+            tensor = torch.tensor(data, dtype=torch.float32)
         elif isinstance(data, dict):
-            tensor = torch.tensor(list(data.values()))
+            tensor = torch.tensor(list(data.values()), dtype=torch.float32)
         elif isinstance(data, tuple):
-            tensor = torch.tensor(data)
+            tensor = torch.tensor(data, dtype=torch.float32)
 
         return tensor
