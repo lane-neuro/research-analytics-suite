@@ -115,15 +115,17 @@ class MemoryManager:
         await self._data_cache.initialize()
 
     @command
-    async def create_slot(self, name: str, d_type: type = any, data: any = None, db_path: str = None, file_path: str = None) \
-            -> [str, str, any]:
+    async def create_slot(self, name: str, d_type: type = any, data: any = None, pointer: MemorySlot = None,
+                          db_path: str = None, file_path: str = None) \
+            -> tuple[str, str, any]:
         """
-        Creates a new memory slot and stores it in both cache and SQLite storage.
+        Creates a new memory slot and stores it in SQLite storage.
 
         Args:
             name (str): The name of the memory slot.
             d_type (Type): The data type of the memory slot.
             data (any): The data to store in the memory slot.
+            pointer (MemorySlot): The pointer to the next memory slot, if any.
             db_path (str): The path to the SQLite database file.
             file_path (str): The file path for memory-mapped storage.
 
@@ -138,17 +140,20 @@ class MemoryManager:
             except Exception as e:
                 self._logger.warning(f"Invalid file path: {e} \nMemory slot will not be memory-mapped.")
                 file_path = None
+        if not db_path:
+            db_path = self._db_path
 
         _id = uuid.uuid4().hex[:8]
         memory_slot = MemorySlot(
-            memory_id=_id, name=name, d_type=d_type, data=data, db_path=db_path, file_path=file_path)
+            memory_id=_id, name=name, d_type=d_type, data=data, pointer=pointer, db_path=db_path, file_path=file_path)
         self._slot_collection[memory_slot.memory_id] = memory_slot
-        await memory_slot.setup()
+        if pointer is None:
+            await memory_slot.setup()
 
         return memory_slot.memory_id, memory_slot.name, memory_slot.data
 
     @command
-    async def update_slot(self, memory_id: str, data: any) -> [str, any]:
+    async def update_slot(self, memory_id: str, data: any) -> tuple[str, any]:
         """
         Updates the data in an existing memory slot.
 
@@ -165,7 +170,8 @@ class MemoryManager:
             await memory_slot.set_data(data)
         else:
             d_type = type(data)
-            memory_slot = MemorySlot(memory_id=memory_id, name="", d_type=d_type, data=data, db_path=self._db_path)
+            memory_slot = MemorySlot(memory_id=memory_id, name="", d_type=d_type, data=data, db_path=self._db_path,
+                                     pointer=None)
             await memory_slot.setup()
             await memory_slot.set_data(data)
         return memory_id, memory_slot.data
@@ -211,7 +217,9 @@ class MemoryManager:
         Returns:
             any: The data stored in the memory slot.
         """
-        return self._slot_collection[memory_id].data
+        data = self._slot_collection[memory_id].data
+        self._logger.info(f"Memory ID: {memory_id} - Data: {data}")
+        return data
 
     @command
     def slot_name(self, memory_id: str) -> str:
@@ -278,6 +286,15 @@ class MemoryManager:
             temp_output[memory_id] = slot
         return temp_output
 
+    def get_all_slot_ids(self) -> list:
+        """
+        Retrieves all MemorySlot identifiers from the cache.
+
+        Returns:
+            list: A list of MemorySlot identifiers.
+        """
+        return list(self._slot_collection.keys())
+
     def validate_slots(self, memory_ids: list, require_values: bool = True) -> (list, list):
         """
         Validates a list of memory slot identifiers and returns the valid and invalid slots.
@@ -292,11 +309,69 @@ class MemoryManager:
         valid_slots = []
         for memory_id in memory_ids:
             data = self.slot_data(memory_id=memory_id)
+            print(data)
             if data:
                 if require_values and not data:
                     continue
                 valid_slots.append(memory_id)
         return valid_slots, list(set(memory_ids) - set(valid_slots))
+
+    @command
+    async def clear_slots(self) -> None:
+        """
+        Clears all memory slots from the cache and SQLite storage.
+        """
+        async with MemoryManager._lock:
+            self._slot_collection.clear()
+            if self._data_cache:
+                await self._data_cache.clear()
+            self._logger.info("All memory slots cleared.")
+
+    @command
+    async def load_existing_database(self, db_path: str = None) -> None:
+        """
+        Loads all memory slots from the SQLite database into the MemoryManager.
+        """
+        if db_path:
+            self._db_path = os.path.normpath(db_path)
+        else:
+            self._db_path = os.path.normpath(os.path.join(
+                self._config.BASE_DIR, self._config.WORKSPACE_NAME,
+                self._config.DATA_DIR, "memory_manager.db"))
+
+        try:
+            import aiosqlite
+            async with aiosqlite.connect(self._db_path) as db:
+                await db.execute("""
+                   CREATE TABLE IF NOT EXISTS variables
+                   (
+                       memory_id TEXT PRIMARY KEY,
+                       name      TEXT,
+                       data      BLOB
+                   )
+                   """)
+
+                async with db.execute("SELECT memory_id, name, data FROM variables") as cursor:
+                    async for row in cursor:
+                        memory_id, name, data = row
+                        if isinstance(data, bytes):
+                            # Deserialize data if it's stored as bytes
+                            import pickle
+                            data = pickle.loads(data)
+
+                        memory_slot = MemorySlot(
+                            memory_id=memory_id,
+                            name=name,
+                            d_type=type(data),  # or use a default type if needed
+                            data=data,
+                            pointer=None,
+                            db_path=self._db_path
+                        )
+                        self._slot_collection[memory_id] = memory_slot
+                        await memory_slot.setup()
+            self._logger.info("Loaded all memory slots from database.")
+        except Exception as e:
+            self._logger.error(f"Failed to load existing database: {e}")
 
     async def cleanup(self):
         """

@@ -23,7 +23,7 @@ class DescriptiveStatistics(BaseOperation):
     """
     Generate descriptive statistics for a dataset.
 
-    Attributes:
+    Requires:
         data (List[float]): The dataset to generate descriptive statistics for.
 
     Returns:
@@ -38,7 +38,6 @@ class DescriptiveStatistics(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"data": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -46,16 +45,14 @@ class DescriptiveStatistics(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, data: List[float], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the dataset.
+        Initialize the operation.
 
         Args:
-            data (List[float]): The dataset to generate descriptive statistics for.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.data = data
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -70,7 +67,15 @@ class DescriptiveStatistics(BaseOperation):
         """
         # TODO: calculate the mean, median, and standard deviation of the dataset using operations
         #  created in the operation library
-        mean_value = mean(self.data)
-        median_value = median(self.data)
-        stdev_value = stdev(self.data)
-        print(f"Mean: {mean_value}, Median: {median_value}, Standard Deviation: {stdev_value}")
+        _inputs = self.get_inputs()
+        _data = _inputs.get("data", [])
+
+        mean_value = mean(_data)
+        median_value = median(_data)
+        stdev_value = stdev(_data)
+        self.add_log_entry(f"[RESULT] Mean: {mean_value}, Median: {median_value}, Standard Deviation: {stdev_value}")
+        return {
+            "mean_value": mean_value,
+            "median_value": median_value,
+            "stdev_value": stdev_value
+        }

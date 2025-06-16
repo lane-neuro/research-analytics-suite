@@ -22,7 +22,7 @@ class Tokenization(BaseOperation):
     """
     Tokenize a text into words or sentences.
 
-    Attributes:
+    Requires:
         text (str): The text to tokenize.
 
     Returns:
@@ -35,7 +35,6 @@ class Tokenization(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"text": str}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -43,16 +42,14 @@ class Tokenization(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, text: str, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the text.
+        Initialize the operation.
 
         Args:
-            text (str): The text to tokenize.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.text = text
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -65,5 +62,10 @@ class Tokenization(BaseOperation):
         """
         Execute the operation's logic: tokenize the text into words.
         """
-        tokens = self.text.split()
-        print(f"Tokens: {tokens}")
+        _inputs = self.get_inputs()
+        text = _inputs.get("text", "")
+
+        tokens = text.split()
+        self.add_log_entry(f"[RESULT] Tokens: {str(tokens)}")
+        return {"tokens": tokens}
+

@@ -35,8 +35,16 @@ class PlanningDialog(GUIBase):
 
     async def initialize_gui(self) -> None:
         ...
+        # self._logger.debug("Initializing the Planning dialog window.")
+        # from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
+        # self._update_operation = await self._operation_control.operation_manager.add_operation_with_parameters(
+        #     operation_type=UpdateMonitor, name="gui_PlanningUpdateMonitor", action=self._update_async,
+        #     is_loop=True, parallel=True)
+        # self._update_operation.is_ready = True
+        # self._logger.debug("Initialized the Planning dialog window.")
 
     async def _update_async(self) -> None:
+        """Continuously checks for new operations and updates the GUI."""
         ...
 
     def draw(self):

@@ -274,7 +274,7 @@ class TestOperationAttributes:
             parent_operation=None, inheritance=[], is_loop=True, is_cpu_bound=False, is_gpu_bound=True, parallel=True
         )
         await attrs.initialize()
-        exported_attrs = await attrs.export_attributes()
+        exported_attrs = attrs.export_attributes()
 
         assert exported_attrs['name'] == 'test_name'
         assert exported_attrs['version'] == '0.0.2'

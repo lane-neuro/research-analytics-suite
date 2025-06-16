@@ -163,6 +163,7 @@ class CustomLogger:
         Processes the log message queue asynchronously.
         """
         while True:
+            await asyncio.sleep(.001)
             message = await self.log_message_queue.get()
             print(message)
 

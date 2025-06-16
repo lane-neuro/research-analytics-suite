@@ -61,10 +61,11 @@ class NodeEditorManager:
     def cross_editor_links(self):
         return self._cross_editor_links
 
-    def add_editor(self, editor_id, width, height, parent):
+    async def add_editor(self, editor_id, width, height, parent):
 
         from research_analytics_suite.gui.modules.Mapped2DSpace import Mapped2DSpace
         editor = Mapped2DSpace(width, height, parent)
+        await editor.initialize_gui()
 
         self._editors[editor_id] = editor
         editor.draw()

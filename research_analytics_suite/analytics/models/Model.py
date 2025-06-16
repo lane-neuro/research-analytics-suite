@@ -1,9 +1,6 @@
 from sklearn.linear_model import LogisticRegression
 
-from research_analytics_suite.commands import command, link_class_commands
 
-
-@link_class_commands
 class Model:
     def __init__(self, model_type="logistic_regression"):
         if model_type == "logistic_regression":
@@ -11,10 +8,8 @@ class Model:
         else:
             raise ValueError(f"Model type {model_type} is not supported")
 
-    @command
-    def train(self, x_train, y_train):
-        self.model.fit(x_train, y_train)
+    def train(self, X_train, y_train):
+        self.model.fit(X_train, y_train)
 
-    @command
-    def predict(self, x_test):
-        return self.model.predict(x_test)
+    def predict(self, X_test):
+        return self.model.predict(X_test)

@@ -22,11 +22,11 @@ class FieldObservation(BaseOperation):
     """
     Collect data through field observations.
 
-    Attributes:
+    Requires:
         observations (List[dict]): The field observations to analyze.
 
     Returns:
-        None
+        observations (List[dict]): The list of observations that were analyzed.
     """
     name = "FieldObservation"
     version = "0.0.1"
@@ -35,7 +35,6 @@ class FieldObservation(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"observations": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -43,16 +42,14 @@ class FieldObservation(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, observations: List[dict], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the field observations.
+        Initialize the operation.
 
         Args:
-            observations (List[dict]): The field observations to analyze.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.observations = observations
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -65,5 +62,9 @@ class FieldObservation(BaseOperation):
         """
         Execute the operation's logic: analyze the field observations.
         """
+        _inputs = self.get_inputs()
+        _observations = _inputs.get("observations", [])
+
         # Placeholder for field observation analysis logic
-        print(f"Analyzing {len(self.observations)} observations")
+        self.add_log_entry(f"Adding {len(_observations)} observations to workspace database.")
+        return {"observations": _observations}

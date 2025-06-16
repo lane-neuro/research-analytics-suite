@@ -104,10 +104,11 @@ class OperationManager:
             return operation
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
+            raise
 
     @command
     async def add_operation_with_parameters(
-            self, operation_type: Type[BaseOperation] = BaseOperation, *args, **kwargs) -> BaseOperation:
+            self, operation_type: Type[BaseOperation], *args, **kwargs) -> BaseOperation:
         """
         Creates a new Operation object with the specified parameters and adds it to the sequencer.
 
@@ -121,6 +122,7 @@ class OperationManager:
         """
         try:
             self._logger.debug(f"Creating operation of type: {operation_type.__name__}")
+            kwargs['active'] = True
             operation = operation_type(*args, **kwargs)
             await operation.initialize_operation()
             self._logger.debug(f"Initialized operation: {operation.name} with ID: {operation.runtime_id}")
@@ -129,9 +131,11 @@ class OperationManager:
                 await operation.parent_operation.add_child_operation(operation)
                 self._logger.debug(f"Added operation {operation.name} as child of {operation.parent_operation.name}")
 
-            return await self.add_initialized_operation(operation)
+            _operation = await self.add_initialized_operation(operation)
+            return _operation
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
+            raise
 
     @command
     async def resume_operation(self, operation: BaseOperation) -> None:

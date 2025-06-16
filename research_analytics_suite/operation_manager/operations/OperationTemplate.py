@@ -31,9 +31,6 @@ class OperationTemplate(BaseOperation):
 
     Refer to ExampleOperation.py for an example of a concrete implementation of an operation.
 
-    Attributes:
-        custom_attribute: [Example of a custom attribute.]
-
     Methods:
         [custom_method]: [Example of a custom method.]
 
@@ -49,16 +46,15 @@ class OperationTemplate(BaseOperation):
     author: str = "Default Author"
     github: str = "[no-github]"
     email: str = "[no-email]"
-    required_inputs: dict[str, type] = {}
-    # output_parameters: Optional[dict[str, type]] = {}
+    required_inputs: dict[str, type] = {"text_in": str} # Example of a required input
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: list = []
     is_loop: bool = False
-    is_cpu_bound: bool = False
+    is_cpu_bound: bool = True
     is_gpu_bound: bool = False
     parallel: bool = False
 
-    def __init__(self, custom_attribute: Optional[any], *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         """
         Initialize the operation instance. Update kwargs with preset attributes and call the parent class constructor.
 
@@ -66,33 +62,8 @@ class OperationTemplate(BaseOperation):
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.action = self.execute   # Default action is execute()
-
-        # Update kwargs with preset attributes
-        kwargs.update({
-            'name': self.name,
-            'version': self.version,
-            'description': self.description,
-            'category_id': self.category_id,
-            'author': self.author,
-            'github': self.github,
-            'email': self.email,
-            'action': self.action,
-            'required_inputs': self.required_inputs,        # dict[str, type] of required input parameters
-            # 'output_parameters': self.output_parameters,   # dict[str, type] of output parameters
-            'parent_operation': self.parent_operation,
-            'inheritance': self.inheritance,                # list of unique IDs of child operations
-            'is_loop': self.is_loop,
-            'is_cpu_bound': self.is_cpu_bound,
-            'is_gpu_bound': self.is_gpu_bound,
-            'parallel': self.parallel
-        })
-
         # Call the parent class constructor
         super().__init__(*args, **kwargs)
-
-        # Custom attributes
-        self._custom_attribute = custom_attribute
 
     async def initialize_operation(self) -> None:
         """
@@ -100,23 +71,25 @@ class OperationTemplate(BaseOperation):
         """
         await super().initialize_operation()
 
-    async def pre_execute(self) -> None:
-        """
-        Logic to run before the main execution.
-            This optional method is an example; not required by BaseOperation.
-        """
-        pass
-
-    async def execute(self) -> None:
+    async def execute(self):
         """
         Execute the operation's logic.
         """
-        await self.pre_execute()
+        # Get the inputs for the operation and assign them to local variables
+        inputs = self.get_inputs()
+        _text_in = inputs["text_in"]
 
-        # Example: Print the template attribute
-        print(f"custom_attribute: {self._custom_attribute}")
+        # Example: Print the input value
+        print(f"text_in: {_text_in}")
 
+        # Example: Count the number of characters in the input string
+        _num_chars = len(_text_in)
+
+        # Example: Run post-execution logic
         await self.post_execute()
+
+        # Return the number of characters as the output
+        return {"num_chars": _num_chars}
 
     async def post_execute(self) -> None:
         """

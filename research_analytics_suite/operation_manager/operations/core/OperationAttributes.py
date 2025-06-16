@@ -34,6 +34,7 @@ class OperationAttributes:
 
     def __init__(self, *args, **kwargs):
         self._required_inputs = {}
+        self._outputs = {}
         self.temp_kwargs = {}
 
         if args and isinstance(args[0], dict):
@@ -54,6 +55,7 @@ class OperationAttributes:
         self.action = self.temp_kwargs.get('action', None)
         self.active = self.temp_kwargs.get('active', False)
         self.required_inputs = self.temp_kwargs.get('required_inputs', {})
+        self.outputs = self.temp_kwargs.get('outputs', {})
         self.parent_operation = self.temp_kwargs.get('parent_operation', None)
         self.inheritance = self.temp_kwargs.get('inheritance', [])
         self.is_loop = self.temp_kwargs.get('is_loop', False)
@@ -82,6 +84,7 @@ class OperationAttributes:
                     self.action = self.temp_kwargs.get('action', self.action or None)
                     self.active = self.temp_kwargs.get('active', self.active or False)
                     self.required_inputs = self.temp_kwargs.get('required_inputs', {})
+                    self.outputs = self.temp_kwargs.get('outputs', {})
                     self.parent_operation = self.temp_kwargs.get('parent_operation', self.parent_operation)
                     self.inheritance = self.temp_kwargs.get('inheritance', self.inheritance)
                     self.is_loop = self.temp_kwargs.get('is_loop', self.is_loop)
@@ -94,7 +97,7 @@ class OperationAttributes:
                     del self.temp_kwargs
 
     @command
-    async def export_attributes(self) -> dict:
+    def export_attributes(self) -> dict:
         """Export the attributes of the operation. This is used for saving the operation to disk."""
         from research_analytics_suite.operation_manager.operations.core.workspace.WorkspaceInteraction import \
             pack_as_local_reference
@@ -112,9 +115,9 @@ class OperationAttributes:
             'unique_id': self.unique_id,
             'action': self.action,
             'required_inputs': self.required_inputs,
+            'outputs': self.outputs,
             'parent_operation': pack_as_local_reference(self.parent_operation) if self.parent_operation else None,
-            'inheritance': [
-                pack_as_local_reference(child) for child in self.inheritance if self.inheritance is not []],
+            'inheritance': [pack_as_local_reference(child) for child in self.inheritance if self.inheritance is not []],
             'is_loop': self.is_loop,
             'is_cpu_bound': self.is_cpu_bound,
             'is_gpu_bound': self.is_gpu_bound,
@@ -203,9 +206,7 @@ class OperationAttributes:
             _memory_manager = MemoryManager()
 
             for _name, _value in self._required_inputs.items():
-                if isinstance(_value, type):
-                    _inputs[_name] = _value
-                else:
+                if isinstance(_value, str):
                     _slot_id = _value
                     _slot = _memory_manager.get_slot(_slot_id)
                     if _slot is None:
@@ -217,6 +218,8 @@ class OperationAttributes:
                     _slot_data = _slot.data
 
                     _inputs[_slot_name] = _slot_data if _slot_data is not None else _slot_type
+                elif isinstance(_value, type):
+                    _inputs[_name] = _value
         else:
             for _name, d_type in self._required_inputs.items():
                 _inputs[_name] = d_type
@@ -242,28 +245,155 @@ class OperationAttributes:
                 d_type = self.TYPES_DICT.get(d_type, str)
             if isinstance(d_type, type):
                 if asyncio.get_event_loop().is_running():
-                    asyncio.ensure_future(self._create_memory_slot(name, d_type))
+                    asyncio.ensure_future(self._create_input_slot(name, d_type))
                 else:
-                    asyncio.run(self._create_memory_slot(name, d_type))
+                    asyncio.run(self._create_input_slot(name, d_type))
 
         self._logger.debug(f"Required inputs set for {self.name}")
 
-    async def _create_memory_slot(self, name: str, d_type: type):
+    @property
+    def input_ids(self) -> dict:
         """
-        Create a memory slot for the operation.
+        Get the input IDs for the operation.
+
+        Returns:
+            dict: The input IDs for the operation.
+        """
+        _inputs = {}
+        if hasattr(self, '_active') and self._active:
+            for _name, _value in self._required_inputs.items():
+                if isinstance(_value, type):
+                    _inputs[_name] = _value
+                else:
+                    _slot_id = _value
+                    _inputs[_name] = _slot_id
+        else:
+            for _name, d_type in self._required_inputs.items():
+                if isinstance(d_type, type):
+                    _inputs[_name] = d_type
+
+        return _inputs
+
+    async def _create_input_slot(self, name: str, d_type: type):
+        """
+        Create an input memory slot for the operation.
 
         Args:
             name (str): The name of the memory slot.
             d_type (type): The data type of the memory slot.
         """
-        if self.active:
+        if hasattr(self, '_active') and self._active:
             from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
             _memory_manager = MemoryManager()
             _slot_id, _, _ = await _memory_manager.create_slot(name=name, d_type=d_type)
             self._required_inputs[name] = _slot_id
-            self._logger.debug(f"Created memory slot for {self.name}: [{_slot_id}] {name} ({d_type})")
+            self._logger.debug(f"Created input memory slot for {self.name}: [{_slot_id}] {name} ({d_type})")
         else:
             self._required_inputs[name] = d_type
+
+    @property
+    def outputs(self) -> dict:
+        """
+        Get the outputs for the operation.
+
+        Returns:
+            dict: The outputs for the operation.
+        """
+        _outputs = {}
+        if hasattr(self, '_active') and self._active:
+            from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+            _memory_manager = MemoryManager()
+
+            for _name, _value in self._outputs.items():
+                if isinstance(_value, type):
+                    _outputs[_name] = _value
+                else:
+                    _slot_id = _value
+                    _slot = _memory_manager.get_slot(_slot_id)
+                    if _slot is None:
+                        _outputs[_name] = None
+                        continue
+                    _slot_id = _slot.memory_id
+                    _slot_name = _slot.name
+                    _slot_type = _slot.data_type
+                    _slot_data = _slot.data
+
+                    _outputs[_slot_name] = _slot_data if _slot_data is not None else _slot_type
+        else:
+            for name, d_type in self._outputs.items():
+                if isinstance(d_type, type):
+                    _outputs[name] = d_type
+
+        return _outputs
+
+    @outputs.setter
+    def outputs(self, value: dict):
+        """
+        Set the outputs for the operation.
+
+        Args:
+            value (dict): The outputs for the operation.
+        """
+        if self._outputs is None:
+            self._outputs = {}
+
+        # Check if value is a memory slot ID
+        if isinstance(value, str):
+            from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+            _memory_manager = MemoryManager()
+
+            _slot = _memory_manager.get_slot(value)
+            _name = _slot.name
+            _slot_id = _slot.memory_id
+            self._outputs[_slot.name] = _slot.memory_id
+            return
+
+        for name, data in value.items():
+            if asyncio.get_event_loop().is_running():
+                asyncio.ensure_future(self._create_output_slot(name, data))
+            else:
+                asyncio.run(self._create_output_slot(name, data))
+
+    @property
+    def output_ids(self) -> dict:
+        """
+        Get the output IDs for the operation.
+
+        Returns:
+            list: The output IDs for the operation.
+        """
+        _outputs = {}
+        if hasattr(self, '_active') and self._active:
+            for _name, _value in self._outputs.items():
+                if isinstance(_value, type):
+                    _outputs[_name] = _value
+                else:
+                    _slot_id = _value
+                    _outputs[_name] = _slot_id
+        else:
+            for name, d_type in self._outputs.items():
+                if isinstance(d_type, type):
+                    _outputs[name] = d_type
+
+        return _outputs
+
+    async def _create_output_slot(self, name: str, data: any = None):
+        """
+        Create an output memory slot for the operation.
+
+        Args:
+            name (str): The name of the memory slot.
+            data (any, optional): The data for the memory slot. Defaults to None.
+        """
+        if hasattr(self, '_active') and self._active:
+            from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+            _memory_manager = MemoryManager()
+
+            _slot_id, _, _ = await _memory_manager.create_slot(name=name, d_type=type(data), data=data)
+            self._outputs[name] = _slot_id
+            self._logger.debug(f"Created output memory slot for {self.name}: [{_slot_id}] {name} ({data})")
+        else:
+            self._outputs[name] = data
 
     @property
     def parent_operation(self):
@@ -335,8 +465,8 @@ class OperationAttributes:
     @active.setter
     def active(self, value):
         if value and isinstance(value, bool):
-            req_inputs = self.required_inputs if self.required_inputs else {}
+            # req_inputs = self.required_inputs if self.required_inputs else {}
             self._active = value
-            self.required_inputs = req_inputs
+            # self.required_inputs = req_inputs
         else:
             self._active = False

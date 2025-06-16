@@ -13,12 +13,10 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
+
 import numpy as np
 
-from research_analytics_suite.commands.CommandDecorators import command, link_class_commands
 
-
-@link_class_commands
 class JitterTransform:
     """
     A class to apply a jitter transformation to a given datapoint.
@@ -36,12 +34,7 @@ class JitterTransform:
 
         Args:
             jitter_strength (float): The strength of the jitter transformation.
-
-        Raises:
-            ValueError: If jitter_strength is negative.
         """
-        if jitter_strength < 0:
-            raise ValueError("jitter_strength must be non-negative")
 
         self.jitter_strength = jitter_strength
 
@@ -54,9 +47,9 @@ class JitterTransform:
         Returns:
             str: A string representation of the JitterTransform object.
         """
+
         return f"JitterTransform, jitter_strength = {self.jitter_strength}"
 
-    @command
     def transform(self, datapoint):
         """
         Applies the jitter transformation to the given datapoint.
@@ -70,6 +63,7 @@ class JitterTransform:
         Returns:
             The transformed datapoint.
         """
+
         datapoint.x += np.random.uniform(-self.jitter_strength, self.jitter_strength)
         datapoint.y += np.random.uniform(-self.jitter_strength, self.jitter_strength)
         return datapoint

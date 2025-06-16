@@ -13,10 +13,8 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.commands import link_class_commands, command
 
 
-@link_class_commands
 class ScaleTransform:
     """
     A class to apply a scale transformation to a given datapoint.
@@ -50,7 +48,6 @@ class ScaleTransform:
 
         return f"ScaleTransform, scalar = {self.scale}"
 
-    @command
     def transform(self, datapoint):
         """
         Applies the scale transformation to the given datapoint.

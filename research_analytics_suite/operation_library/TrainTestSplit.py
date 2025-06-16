@@ -23,7 +23,7 @@ class TrainTestSplit(BaseOperation):
     """
     Split a dataset into training and testing sets.
 
-    Attributes:
+    Requires:
         x (List): The features.
         y (List): The target variable.
         test_size (float): The proportion of the dataset to include in the test split.
@@ -41,28 +41,21 @@ class TrainTestSplit(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
-    required_inputs = {"X": list, "y": list, "test_size": float}
+    required_inputs = {"x": list, "y": list, "test_size": float}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
     is_loop = False
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, x: List, y: List, test_size: float, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the features, target variable, and test size.
+        Initialize the operation.
 
         Args:
-            x (List): The features.
-            y (List): The target variable.
-            test_size (float): The proportion of the dataset to include in the test split.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.x = x
-        self.y = y
-        self.test_size = test_size
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -75,6 +68,16 @@ class TrainTestSplit(BaseOperation):
         """
         Execute the operation's logic: split the dataset into training and testing sets.
         """
-        x_train, x_test, y_train, y_test = train_test_split(self.x, self.y, test_size=self.test_size)
-        print(f"Training set: {x_train}, {y_train}")
-        print(f"Testing set: {x_test}, {y_test}")
+        _inputs = self.get_inputs()
+        _x = _inputs.get("x", [])
+        _y = _inputs.get("y", [])
+        _test_size = _inputs.get("test_size", 0.2)
+
+        x_train, x_test, y_train, y_test = train_test_split(_x, _y, test_size=_test_size, random_state=42)
+        self.add_log_entry(f"[RESULT] Dataset split into (reproducible) training and testing sets.")
+        return {
+            "x_train": x_train,
+            "x_test": x_test,
+            "y_train": y_train,
+            "y_test": y_test
+        }

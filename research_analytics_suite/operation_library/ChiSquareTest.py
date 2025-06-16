@@ -23,8 +23,8 @@ class ChiSquareTest(BaseOperation):
     """
     Perform a chi-square test for independence.
 
-    Attributes:
-        observed (List[List[int]]): The observed frequencies.
+    Requires:
+        observed (list): A 2D list of observed frequencies in a contingency table.
 
     Returns:
         chi2_stat (float): The chi-square statistic.
@@ -39,7 +39,6 @@ class ChiSquareTest(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"observed": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -47,16 +46,14 @@ class ChiSquareTest(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, observed: List[List[int]], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the observed frequencies.
+        Initialize the operation.
 
         Args:
-            observed (List[List[int]]): The observed frequencies.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.observed = observed
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -69,5 +66,15 @@ class ChiSquareTest(BaseOperation):
         """
         Execute the operation's logic: perform the chi-square test for independence.
         """
-        chi2_stat, p_value, dof, expected = stats.chi2_contingency(self.observed)
-        print(f"Chi-Square Statistic: {chi2_stat}, P-Value: {p_value}")
+        _inputs = self.get_inputs()
+        _observed = _inputs.get("observed", [])
+
+        chi2_stat, p_value, dof, expected = stats.chi2_contingency(_observed)
+        self.add_log_entry(f"[RESULT] Chi-Square Statistic: {chi2_stat}, P-Value: {p_value}, "
+                           f"Degrees of Freedom: {dof}, Expected Frequencies: {expected}")
+        return {
+            "chi2_stat": chi2_stat,
+            "p_value": p_value,
+            "dof": dof,
+            "expected": expected.tolist()  # Convert numpy array to list for JSON serialization
+        }

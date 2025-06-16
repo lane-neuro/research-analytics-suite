@@ -22,11 +22,11 @@ class SurveyResponseAnalysis(BaseOperation):
     """
     Analyze survey responses.
 
-    Attributes:
+    Requires:
         responses (List[dict]): The survey responses to analyze.
 
     Returns:
-        None
+        responses (List[dict]): The processed survey responses.
     """
     name = "SurveyResponseAnalysis"
     version = "0.0.1"
@@ -35,7 +35,6 @@ class SurveyResponseAnalysis(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"responses": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -43,16 +42,14 @@ class SurveyResponseAnalysis(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, responses: List[dict], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the survey responses.
+        Initialize the operation.
 
         Args:
-            responses (List[dict]): The survey responses to analyze.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.responses = responses
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -65,5 +62,9 @@ class SurveyResponseAnalysis(BaseOperation):
         """
         Execute the operation's logic: analyze the survey responses.
         """
+        _inputs = self.get_inputs()
+        responses = _inputs.get("responses")
+
         # Placeholder for survey response analysis logic
-        print(f"Analyzing {len(self.responses)} responses")
+        self.add_log_entry(f"[RESULT] Adding {len(responses)} responses to memory.")
+        return {"responses": responses}

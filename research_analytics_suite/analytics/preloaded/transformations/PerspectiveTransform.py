@@ -13,10 +13,8 @@ Maintainer: Lane
 Email: justlane@uw.edu
 Status: Prototype
 """
-from research_analytics_suite.commands import link_class_commands, command
 
 
-@link_class_commands
 class PerspectiveTransform:
     """
     A class to apply a perspective transformation to a given datapoint.
@@ -50,7 +48,6 @@ class PerspectiveTransform:
 
         return f"PerspectiveTransform, perspective_coeff = {self.perspective_coeff}"
 
-    @command
     def transform(self, datapoint):
         """
         Applies the perspective transformation to the given datapoint.

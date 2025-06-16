@@ -1,9 +1,10 @@
 from sklearn.model_selection import train_test_split
 
 from research_analytics_suite.analytics import Model
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
-class MLTrainingOperation():
+class MLTrainingOperation(BaseOperation):
     def __init__(self, model: Model, data, target, test_size=0.2, random_state=42):
         super().__init__(action=None, name="MLTrainingOperation")
         self.model = model
@@ -22,7 +23,7 @@ class MLTrainingOperation():
         self.train_data = (X_train, y_train)
         self.val_data = (X_val, y_val)
         self._status = "started"
-        #self.add_log_entry("Training operation started")
+        self.add_log_entry("Training operation started")
 
     async def execute(self):
         """Train the machine learning model."""
@@ -31,8 +32,8 @@ class MLTrainingOperation():
             X_train, y_train = self.train_data
             self.model.train(X_train, y_train)
             self._status = "completed"
-            #self.add_log_entry("Training completed successfully")
+            self.add_log_entry("Training completed successfully")
         except Exception as e:
-            #self._logger.error(e, self)
+            self._logger.error(e, self)
             self._status = "error"
-            #self.add_log_entry(f"Error during training: {e}")
+            self.add_log_entry(f"Error during training: {e}")

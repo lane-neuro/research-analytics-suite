@@ -23,7 +23,7 @@ class GroupByOperations(BaseOperation):
     """
     Perform group by operations on a dataset.
 
-    Attributes:
+    Requires:
         dataframe (pd.DataFrame): The pandas DataFrame to perform group by operations on.
         group_by_columns (List[str]): The columns to group by.
         agg_function (str): The aggregation function to apply (e.g., 'sum', 'mean').
@@ -38,7 +38,6 @@ class GroupByOperations(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"dataframe": pd.DataFrame, "group_by_columns": list, "agg_function": str}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -46,20 +45,14 @@ class GroupByOperations(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, dataframe: pd.DataFrame, group_by_columns: List[str], agg_function: str, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the DataFrame, group by columns, and aggregation function.
+        Initialize the operation.
 
         Args:
-            dataframe (pd.DataFrame): The pandas DataFrame to perform group by operations on.
-            group_by_columns (List[str]): The columns to group by.
-            agg_function (str): The aggregation function to apply (e.g., 'sum', 'mean').
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.dataframe = dataframe
-        self.group_by_columns = group_by_columns
-        self.agg_function = agg_function
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -72,5 +65,11 @@ class GroupByOperations(BaseOperation):
         """
         Execute the operation's logic: perform group by operations on the DataFrame.
         """
-        grouped_data = self.dataframe.groupby(self.group_by_columns).agg(self.agg_function)
-        print(f"Grouped Data:\n{grouped_data}")
+        _inputs = self.get_inputs()
+        dataframe = _inputs.get("dataframe")
+        group_by_columns = _inputs.get("group_by_columns", [])
+        agg_function = _inputs.get("agg_function", "sum")
+
+        grouped_data = dataframe.groupby(group_by_columns).agg(agg_function)
+        self.add_log_entry(f"[RESULT] Group by operations executed successfully. Resulting DataFrame: {str(grouped_data.head())}")
+        return {"grouped_data": grouped_data}

@@ -11,7 +11,7 @@ async def memory_slot():
     with tempfile.TemporaryDirectory() as temp_dir:
         db_path = f"{temp_dir}/test.db"
         slot = MemorySlot(
-            "1", "test_slot", str, {"key": "value"}, db_path, f"{temp_dir}/test_mmap.dat")
+            "1", "test_slot", str, None, {"key": "value"}, db_path, f"{temp_dir}/test_mmap.dat")
         await slot.setup()
         yield slot
         slot.close()  # Ensure the slot is closed after each test

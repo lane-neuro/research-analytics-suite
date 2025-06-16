@@ -93,7 +93,3 @@ class TestJitterTransform:
         # Checking if the jitter transformation is applied correctly
         assert mock_datapoint.x == 0
         assert mock_datapoint.y == 0
-
-    def test_invalid_jitter_strength(self):
-        with pytest.raises(ValueError):
-            JitterTransform(jitter_strength=-0.1)

@@ -23,8 +23,8 @@ class FrequencyCount(BaseOperation):
     """
     Count the frequency of each category in a dataset.
 
-    Attributes:
-        categories (List[str]): The list of categories to count the frequency.
+    Requires:
+        categories (list): A list of categories to count.
 
     Returns:
         frequency (Counter): The frequency of each category in the dataset.
@@ -36,7 +36,6 @@ class FrequencyCount(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"categories": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -44,16 +43,14 @@ class FrequencyCount(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, categories: List[str], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the list of categories.
+        Initialize the operation.
 
         Args:
-            categories (List[str]): The list of categories to count the frequency.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.categories = categories
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -66,5 +63,9 @@ class FrequencyCount(BaseOperation):
         """
         Execute the operation's logic: count the frequency of each category.
         """
-        frequency = Counter(self.categories)
-        print(f"Frequency: {frequency}")
+        _inputs = self.get_inputs()
+        _categories = _inputs.get("categories", [])
+
+        frequency = Counter(_categories)
+        self.add_log_entry(f"[RESULT] Frequency: {frequency}")
+        return {"frequency": frequency}

@@ -16,10 +16,9 @@ Status: Prototype
 
 from copy import deepcopy
 
-from research_analytics_suite.commands import command
+from matplotlib import pyplot as plt
 
 
-@command
 def display_transformations(data_in, transformations, cmap='viridis'):
     """
     Applies a series of transformations to a given dataset and visualizes the results.
@@ -34,7 +33,6 @@ def display_transformations(data_in, transformations, cmap='viridis'):
     Returns:
         None
     """
-    from matplotlib import pyplot as plt
 
     plt.figure(figsize=(10, 10))
 

@@ -23,34 +23,55 @@ import dearpygui.dearpygui as dpg
 from research_analytics_suite.commands.utils.text_utils import get_function_body
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
-from research_analytics_suite.operation_manager.operations.system import UpdateMonitor
+from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
 
 class UpdatedOperationModule(GUIBase):
 
     def __init__(self, operation_attributes: OperationAttributes, width: int, height: int, parent: str):
         super().__init__(width, height, parent)
+        self.initialized = False
         self._parent_id = f"parent_{self._runtime_id}"
 
         from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
         self.__attribute_reset = copy(operation_attributes)
         self._attributes = operation_attributes
         self.operation = BaseOperation(operation_attributes)
+
         self.operation.attach_gui_module(self)
 
     async def initialize_gui(self) -> None:
         self._logger.debug("Initializing the operation module dialog.")
         self._update_operation = await self._operation_control.operation_manager.create_operation(
             operation_type=UpdateMonitor, name=f"gui_{self.operation.runtime_id}", action=self._update_async)
+        self.operation = await self._operation_control.operation_manager.add_initialized_operation(self.operation)
+        self.initialized = True
+        self._logger.info(f"Operation {self.operation.name} initialized.")
         self._update_operation.is_ready = True
 
     async def _update_async(self) -> None:
+        """Asynchronous function to update the GUI elements."""
         while self._update_operation.is_ready:
-            if self.operation.initialized:
-                self._logger.debug(f"Operation {self.operation.name} initialized.")
-                self.draw()
-            else:
-                self._logger.debug(f"Operation {self.operation.name} not initialized.")
+            if not self.operation.initialized:
+                await self.operation.initialize_operation()
+
+            if dpg.does_item_exist(f"req_inputs_{self._runtime_id}"):
+                # Update the listbox with the current required inputs
+                req_inputs_dict = self._attributes.input_ids
+                _inputs = [f"{k} - {v}" for k, v in req_inputs_dict.items()]
+                dpg.configure_item(f"req_inputs_{self._runtime_id}", items=_inputs)
+
+            if dpg.does_item_exist(f"output_list_{self._runtime_id}"):
+                # Update the listbox with the current output values
+                outputs_dict = self._attributes.output_ids
+                _outputs = [f"{k} - {v}" for k, v in outputs_dict.items()]
+                dpg.configure_item(f"output_list_{self._runtime_id}", items=_outputs)
+
+            if dpg.does_item_exist(f"status_{self._runtime_id}"):
+                # Update the status text with the current operation status
+                dpg.configure_item(f"status_{self._runtime_id}", default_value=self.operation.status)
+
+            await asyncio.sleep(0.001)
 
     def draw(self):
         with dpg.group(tag=self._parent_id, parent=self._parent, height=self.height):
@@ -69,12 +90,8 @@ class UpdatedOperationModule(GUIBase):
         with dpg.group(horizontal=True, parent=parent, width=width, horizontal_spacing=20, height=65,
                        tag=f"details_{self._runtime_id}"):
             dpg.add_text(default_value=self._attributes.author, indent=10)
-            with dpg.group(height=-1):
+            with dpg.group(height=-1, width=-1):
                 dpg.add_input_text(default_value=self._attributes.github)
-
-                if self.operation.initialized:
-                    dpg.add_input_text(default_value=self.operation.status if hasattr(
-                            self.operation, "status") else "Not Initialized")
 
     def draw_details_region(self, parent, width=200):
         with dpg.group(horizontal=True, tag=f"more_details_{self._runtime_id}", width=width*.6,
@@ -83,12 +100,16 @@ class UpdatedOperationModule(GUIBase):
                 dpg.add_text(default_value="Description", indent=10)
                 dpg.add_text(default_value=self._attributes.description, wrap=width // 2 + 30)
 
-            with dpg.group(label="Output", tag=f"output_{self._runtime_id}", parent=f"more_details_{self._runtime_id}",
-                           width=width):
-                dpg.add_text(default_value="Output", indent=5)
-                dpg.add_listbox(items=[], num_items=3)
+            with dpg.group(label="Inherited Ops", width=width*.65):
+                dpg.add_text(default_value="Inherited Ops", indent=10)
+                dpg.add_listbox(items=self._attributes.inheritance, num_items=3)
 
         if self.operation.attributes.active:
+            with dpg.group(horizontal=True, parent=parent, width=width*.40, height=20, indent=10):
+                dpg.add_text(default_value="Status:")
+                dpg.add_text(tag=f"status_{self._runtime_id}",
+                    default_value=self.operation.status if hasattr(self.operation, "status") else "Not Initialized")
+
             with dpg.group(horizontal=True, tag=f"execution_{self._runtime_id}", parent=parent, width=width*.40,
                            height=20):
                 dpg.add_button(label="Execute", callback=lambda: asyncio.run(self.execute_operation()))
@@ -107,13 +128,14 @@ class UpdatedOperationModule(GUIBase):
             with dpg.group(label="Required Inputs", parent=f"middle_{self._runtime_id}", width=width*.62):
                 dpg.add_text(default_value="Input", indent=10)
 
-                req_inputs_dict = self._attributes.required_inputs
+                req_inputs_dict = self._attributes.input_ids
                 _inputs = [f"{k} - {v}" for k, v in req_inputs_dict.items()]
-                dpg.add_listbox(items=_inputs, num_items=3)
+                dpg.add_listbox(items=_inputs, num_items=3, tag=f"req_inputs_{self._runtime_id}")
 
-            with dpg.group(label="Inherited Ops", width=width*.65):
-                dpg.add_text(default_value="Inherited Ops", indent=10)
-                dpg.add_listbox(items=self._attributes.inheritance, num_items=3)
+            with dpg.group(label="Output", tag=f"output_{self._runtime_id}",
+                           width=width*.65):
+                dpg.add_text(default_value="Output", indent=5)
+                dpg.add_listbox(items=[], num_items=3, tag=f"output_list_{self._runtime_id}")
 
     def draw_lower_region(self, parent, width=200):
         dpg.add_text(default_value="Action", parent=parent, indent=10)

@@ -35,14 +35,20 @@ class MemorySlotPreview:
         with dpg.group(tag=self.slot_group_tag, parent=self.parent, horizontal=True):
             # Slot name
             dpg.add_text(f"Slot: {self.slot.name}", parent=self.slot_group_tag)
+            
+            # Memory ID
+            dpg.add_text(f"Memory ID: {self.slot.memory_id}", parent=self.slot_group_tag)
 
-            # Key-Value pairs preview
-            for key, value in self.slot.data.items():
-                dpg.add_text(f"{key}: {value}", parent=self.slot_group_tag)
+            # Slot type
+            dpg.add_text(f"Type: {self.slot.data_type}", parent=self.slot_group_tag)
+
+            # Data
+            dpg.add_text(f"Data: {self.slot.data}", parent=self.slot_group_tag)
+            
 
             # Operation required indicator
-            operation_status = "Yes" if self.slot.operation_required else "No"
-            dpg.add_text(f"Operation Required: {operation_status}", parent=self.slot_group_tag)
+            # operation_status = "Yes" if self.slot.operation_required else "No"
+            # dpg.add_text(f"Operation Required: {operation_status}", parent=self.slot_group_tag)
 
     def update(self, slot: MemorySlot):
         """Updates the slot preview elements."""

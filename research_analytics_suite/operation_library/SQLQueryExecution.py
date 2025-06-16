@@ -23,7 +23,7 @@ class SQLQueryExecution(BaseOperation):
     """
     Execute SQL queries on a database.
 
-    Attributes:
+    Requires:
         database (str): The path to the SQLite database file.
         query (str): The SQL query to execute.
 
@@ -39,7 +39,6 @@ class SQLQueryExecution(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"database": str, "query": str}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -49,16 +48,12 @@ class SQLQueryExecution(BaseOperation):
 
     def __init__(self, database: str, query: str, *args, **kwargs):
         """
-        Initialize the operation with the database and query.
+        Initialize the operation.
 
         Args:
-            database (str): The path to the SQLite database file.
-            query (str): The SQL query to execute.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.database = database
-        self.query = query
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -71,9 +66,18 @@ class SQLQueryExecution(BaseOperation):
         """
         Execute the operation's logic: execute the SQL query on the database.
         """
-        connection = sqlite3.connect(self.database)
+        _inputs = self.get_inputs()
+        database = _inputs.get("database")
+        query = _inputs.get("query")
+
+        connection = sqlite3.connect(database)
         cursor = connection.cursor()
-        cursor.execute(self.query)
+        cursor.execute(query)
         results = cursor.fetchall()
         connection.close()
-        print(f"Query Results: {results}")
+        self.add_log_entry("[RESULT] SQL query executed successfully. Results fetched: {}".format(results))
+        return {
+            "connection": connection,
+            "cursor": cursor,
+            "results": results
+        }

@@ -107,7 +107,6 @@ class OperationManagerDialog(GUIBase):
                                            f"{node.operation.runtime_id}")
                         await self.add_operation_tile(node.operation)
             await asyncio.sleep(self.SLEEP_DURATION)
-            self._logger.debug("Display operations loop sleeping...")
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         """Handles the resize event and adjusts the number of tiles per row."""
@@ -136,8 +135,9 @@ class OperationManagerDialog(GUIBase):
                                             parent=self.current_row_group, tag=tag)
         self._logger.debug(f"Created child window: {child_window} in row group: {self.current_row_group}")
 
-        self.operation_items[operation.runtime_id] = OperationModule(
-            operation=operation, width=self.TILE_WIDTH, height=self.TILE_HEIGHT, parent=tag)
+        from research_analytics_suite.gui.modules.UpdatedOperationModule import UpdatedOperationModule
+        self.operation_items[operation.runtime_id] = UpdatedOperationModule(
+            operation_attributes=operation.attributes, width=self.TILE_WIDTH, height=self.TILE_HEIGHT, parent=tag)
         await self.operation_items[operation.runtime_id].initialize_gui()
 
         self.operation_items[operation.runtime_id].draw()

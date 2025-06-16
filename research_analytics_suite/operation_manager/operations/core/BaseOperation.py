@@ -113,8 +113,6 @@ class BaseOperation(ABC):
             self._pause_event = asyncio.Event()
             self._pause_event.set()
 
-            self.memory_outputs = set()
-
             self._gui_module = None
 
             self._GENERATED_ID = uuid.uuid4()
@@ -306,24 +304,57 @@ class BaseOperation(ABC):
         from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
         memory_manager = MemoryManager()
 
-        self.attributes.required_inputs, _, _ = await memory_manager.create_slot(name=name, data=data, d_type=type(data))
+        _new_input, _, _ = await memory_manager.create_slot(name=name, data=data, d_type=type(data))
+        self.attributes.required_inputs[name] = _new_input
         self.add_log_entry(f"[MEMORY] Added input slot: {name} with data: {data}")
-        self.add_log_entry(f"[MEMORY] Memory inputs: {self.attributes.required_inputs}")
 
     @command
     @final
-    async def add_output(self, memory_id: str) -> None:
-        """Add a memory output slot by its ID.
+    async def add_output(self, name: str, data: any = None) -> None:
+        """Add a memory output slot.
 
         Args:
-            memory_id (str): The ID of the memory slot.
+            name (str): The name of the memory slot.
+            data (any, optional): The data to store in the memory slot. Defaults to None.
         """
         from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
         memory_manager = MemoryManager()
-        _slot_id, _, _ = await memory_manager.create_slot(name=memory_id, data=None, d_type=type(None))
-        self.memory_outputs.update([_slot_id])
-        self.add_log_entry(f"[MEMORY] Added output slot: {memory_id}")
-        self.add_log_entry(f"[MEMORY] Memory outputs: {self.memory_outputs}")
+
+        self.attributes.outputs, _, _ = await memory_manager.create_slot(name=name, data=data, d_type=type(data))
+        self.add_log_entry(f"[MEMORY] Added output slot: {name} with data: {data}")
+
+    @final
+    def get_input(self, name: str, default: any = None) -> any:
+        """
+        Retrieve input data by the logical slot name.
+
+        Args:
+            name (str): The name of the required input slot (as defined in `required_inputs`).
+            default (any, optional): Default value if the slot does not exist or has no data.
+
+        Returns:
+            any: The data from the memory slot or the default.
+        """
+        try:
+            data = self.attributes.required_inputs.get(name)
+            if not data:
+                self._logger.warning(f"Slot name '{name}' not found in required_inputs.")
+                return default
+
+            return data if data is not None else default
+        except Exception as e:
+            self.handle_error(e)
+            return default
+
+    @final
+    def get_inputs(self) -> dict:
+        """
+        Retrieve all required input values as a dictionary.
+
+        Returns:
+            dict: A mapping from logical names to memory slot data.
+        """
+        return {key: self.get_input(key) for key in self.attributes.required_inputs}
 
     @command
     @final
@@ -336,12 +367,12 @@ class BaseOperation(ABC):
         from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
         memory_manager = MemoryManager()
 
-        for slot_id in self.attributes.required_inputs and self.memory_outputs:
+        for slot_id in self.attributes.required_inputs and self.attributes.outputs:
             if slot_id.lower() == memory_id.lower():
                 if memory_id in self.attributes.required_inputs:
                     self.attributes.required_inputs.pop(memory_id)
-                if memory_id in self.memory_outputs:
-                    self.memory_outputs.discard(memory_id)
+                if memory_id in self.attributes.outputs:
+                    self.attributes.outputs.pop(memory_id)
                 await memory_manager.delete_slot(memory_id)
                 self.add_log_entry(f"[MEMORY] Removed slot: {memory_id}")
                 return
@@ -359,7 +390,7 @@ class BaseOperation(ABC):
         from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
         memory_manager = MemoryManager()
 
-        for slot_id in self.attributes.required_inputs and self.memory_outputs:
+        for slot_id in self.attributes.required_inputs and self.attributes.outputs:
             if slot_id.lower() == memory_id.lower():
                 try:
                     _data = memory_manager.slot_data(memory_id)
@@ -380,6 +411,7 @@ class BaseOperation(ABC):
 
         _valid, _invalid = memory_manager.validate_slots(memory_ids=list(self.attributes.required_inputs.values()),
                                                          require_values=True)
+        self._logger.debug(f"Valid memory slots: {_valid}; Invalid memory slots: {_invalid}")
         if _invalid and len(_invalid) > 0:
             for _id in _invalid:
                 _name = memory_manager.slot_name(_id)
@@ -395,11 +427,7 @@ class BaseOperation(ABC):
         Returns:
             dict: The name of the variable and its value.
         """
-        results = {}
-        for memory_slot in self.memory_outputs:
-            if memory_slot.data is not None:
-                results[memory_slot.name] = await self.get_slot_data(memory_slot)
-        return results
+        return self.attributes.outputs
 
     @command
     async def clear_inputs(self):
@@ -416,7 +444,7 @@ class BaseOperation(ABC):
     @command
     async def clear_outputs(self):
         """Clear all memory outputs."""
-        for memory_slot in self.memory_outputs:
+        for memory_slot in self.attributes.outputs:
             memory_slot.data = None
 
     async def save_in_workspace(self, overwrite: bool = False):

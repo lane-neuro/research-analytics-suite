@@ -42,7 +42,8 @@ async def load_from_disk(file_path: str, operation_group: Optional[dict]):
             data = await file.read()
             state = json.loads(data)
         except json.JSONDecodeError as e:
-            raise json.JSONDecodeError(f"Failed to decode JSON from file: {file_path}", data, e.pos)
+            CustomLogger().error(json.JSONDecodeError(f"Failed to decode JSON from file: {file_path}", data, e.pos),
+                                 'FileDiskOperations')
         except Exception as e:
             raise RuntimeError(f"Unexpected error when loading file: {file_path}") from e
 

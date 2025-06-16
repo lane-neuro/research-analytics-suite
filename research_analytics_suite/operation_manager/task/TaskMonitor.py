@@ -45,21 +45,21 @@ class TaskMonitor:
             if task.done():
                 operation = self.sequencer.find_operation_by_task(task)
                 try:
-                    self._logger.debug(f"handle_tasks: [OP] {task.get_name()}")
+                    # self._logger.debug(f"handle_tasks: [OP] {task.get_name()}")
                     if operation is not None:
                         if isinstance(operation, BaseOperation) and operation.is_complete:
                             output = await operation.get_results()
                             operation.add_log_entry(f"handle_tasks: [OUTPUT] {output}")
                             self._logger.debug(f"handle_tasks: [DONE] {task.get_name()}")
-                    else:
-                        self._logger.error(Exception(
-                            f"handle_tasks: [ERROR] No operations found for task {task.get_name()}"),
-                            self.__class__.__name__)
+                    # else:
+                    #     self._logger.error(Exception(
+                    #         f"handle_tasks: [ERROR] No operations found for task {task.get_name()}"),
+                    #         self.__class__.__name__)
                 except Exception as e:
                     self._logger.error(e, self.__class__.__name__)
                 finally:
-                    if operation and not operation.is_loop:
-                        self.sequencer.remove_operation_from_sequencer(operation)
+                    if operation.is_complete and not operation.is_loop:
+                        operation.status = "idle"
 
     def get_task_statuses(self):
         """Retrieves the status of all tasks."""

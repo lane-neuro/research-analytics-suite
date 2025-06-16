@@ -60,7 +60,3 @@ class TestOpticalDistortTransform:
 
         assert transformed_datapoint.x == self.mock_datapoint.x
         assert transformed_datapoint.y == self.mock_datapoint.y
-
-    def test_invalid_k1(self):
-        with pytest.raises(ValueError):
-            OpticalDistortTransform(self.mock_pose_frames, k1=-1e-5)

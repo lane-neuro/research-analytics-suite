@@ -23,13 +23,16 @@ class RegressionAnalysis(BaseOperation):
     """
     Perform regression analysis on a dataset.
 
-    Attributes:
-        y (list): The dependent variable.
+    Requires:
         x (list): The independent variables.
+        y (list): The dependent variable.
 
     Returns:
-        x_with_const (list): The independent variables with a constant added.
-        model (statsmodels.regression.linear_model.RegressionResultsWrapper): The regression model.
+        params (list): The estimated coefficients for the regression model.
+        rsquared (float): The R-squared value of the model.
+        pvalues (list): The p-values for the coefficients.
+        conf_int (list): The confidence intervals for the coefficients.
+        summary (str): A summary of the regression model.
     """
     name = "RegressionAnalysis"
     version = "0.0.1"
@@ -39,25 +42,21 @@ class RegressionAnalysis(BaseOperation):
     github = "lane-neuro"
     email = "justlane@uw.edu"
     unique_id = f"{github}_{name}_{version}"
-    required_inputs = {"y": list, "x": list}
+    required_inputs = {"x": list, "y": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
     is_loop = False
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, y: list, x: list, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the dependent and independent variables.
+        Initialize the operation.
 
         Args:
-            y (list): The dependent variable.
-            x (list): The independent variables.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.y = y
-        self.x = x
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -70,6 +69,19 @@ class RegressionAnalysis(BaseOperation):
         """
         Execute the operation's logic: perform regression analysis on the dataset.
         """
-        x_with_const = sm.add_constant(self.x)
-        model = sm.OLS(self.y, x_with_const).fit()
-        print(model.summary())
+        _inputs = self.get_inputs()
+        _x = _inputs.get("x", [])
+        _y = _inputs.get("y", [])
+
+        x_with_const = sm.add_constant(_x)
+        model = sm.OLS(_y, x_with_const).fit()
+        self.add_log_entry(f"[RESULT] Regression Model Summary:\n{model.summary()} \nCoefficients: {model.params} "
+                           f"\nR-squared: {model.rsquared} \nP-values: {model.pvalues} "
+                           f"\nConfidence Intervals: {model.conf_int()}")
+        return {
+            "params": model.params.tolist(),
+            "rsquared": model.rsquared,
+            "pvalues": model.pvalues.tolist(),
+            "conf_int": model.conf_int().tolist(),
+            "summary": str(model.summary())
+        }

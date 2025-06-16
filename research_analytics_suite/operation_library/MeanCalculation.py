@@ -1,7 +1,7 @@
 """
 Operation:      MeanCalculation
 Version:        0.0.1
-Description:    Calculate the mean of a list of numbers.
+Description:    Calculate the mean of a numerical list.
 
 Author:         Lane
 GitHub:         lane-neuro
@@ -20,17 +20,17 @@ from research_analytics_suite.operation_manager import BaseOperation
 
 class MeanCalculation(BaseOperation):
     """
-    Calculate the mean of a list of numbers.
+    Calculate the mean of a numerical list.
 
-    Attributes:
-        numbers (List[float]): The list of numbers to calculate the mean.
+    Requires:
+        numbers (list): A list of numerical values to calculate the mean from.
 
     Returns:
-        mean_value (float): The mean of the list of numbers.
+        mean_value (float): The mean value, which is the average of the numbers in the list.
     """
     name = "MeanCalculation"
     version = "0.0.1"
-    description = "Calculate the mean of a list of numbers."
+    description = "Calculate the mean of a numerical list."
     category_id = 101
     author = "Lane"
     github = "lane-neuro"
@@ -42,16 +42,14 @@ class MeanCalculation(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, numbers: List[float], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the list of numbers.
+        Initialize the operation.
 
         Args:
-            numbers (List[float]): The list of numbers to calculate the mean.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.numbers = numbers
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -62,7 +60,11 @@ class MeanCalculation(BaseOperation):
 
     async def execute(self):
         """
-        Execute the operation's logic: calculate the mean of the list of numbers.
+        Execute the operation to calculate the mean of the provided numbers.
         """
-        mean_value = sum(self.numbers) / len(self.numbers)
-        print(f"Mean: {mean_value}")
+        _inputs = self.get_inputs()
+        _numbers = _inputs.get("numbers", [])
+
+        mean_value = sum(_numbers) / len(_numbers)
+        self.add_log_entry(f"[RESULT] Mean: {mean_value}")
+        return {"mean_value": mean_value}

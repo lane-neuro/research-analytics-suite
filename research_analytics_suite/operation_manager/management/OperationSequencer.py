@@ -197,7 +197,7 @@ class OperationSequencer:
             for node in chain:
                 if isinstance(node.operation, operation_type):
                     return node.operation
-        self._logger.error(Exception(f"No operation found of type {operation_type.__name__}"), self.__class__.__name__)
+        # self._logger.error(Exception(f"No operation found of type {operation_type.__name__}"), self.__class__.__name__)
         return None
 
     @command
@@ -215,7 +215,7 @@ class OperationSequencer:
             for node in chain:
                 if node.operation.task == task:
                     return node.operation
-        self._logger.error(Exception(f"No operation found for task {task}"), self.__class__.__name__)
+        # self._logger.error(Exception(f"No operation found for task {task}"), self.__class__.__name__)
         return None
 
     @command

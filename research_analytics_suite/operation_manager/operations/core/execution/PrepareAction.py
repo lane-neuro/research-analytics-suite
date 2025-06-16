@@ -73,11 +73,15 @@ async def prepare_action_for_exec(operation):
             _action = _code_action
             CustomLogger().debug(f"Code prepared for execution: {operation.name}")
         elif callable(operation.action):
+            import types
+
+            if isinstance(operation.action, types.FunctionType):
+                # Possibly unbound function, rebind it
+                operation.action = operation.action.__get__(operation, operation.__class__)
+
             if asyncio.iscoroutinefunction(operation.action):
-                CustomLogger().debug(f"Action is a coroutine: {operation.action}")
                 _action = operation.action
             elif isinstance(operation.action, types.MethodType):
-                CustomLogger().debug(f"Action is a method: {operation.action}")
                 _action = operation.action
             else:
                 CustomLogger().debug(f"Action is a callable: {operation.action}")

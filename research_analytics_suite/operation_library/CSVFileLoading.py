@@ -23,11 +23,11 @@ class CSVFileLoading(BaseOperation):
     """
     Load data from a CSV file.
 
-    Attributes:
-        file_path (str): The path to the CSV file.
+    Requires:
+        file_path (str): The path to the CSV file to be loaded.
 
     Returns:
-        data (pd.DataFrame): The data loaded from the CSV file.
+        data (dict): The data loaded from the CSV file.
     """
     name = "CSVFileLoading"
     version = "0.0.1"
@@ -36,7 +36,6 @@ class CSVFileLoading(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"file_path": str}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -44,16 +43,14 @@ class CSVFileLoading(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, file_path: str, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the file path.
+        Initialize the operation.
 
         Args:
-            file_path (str): The path to the CSV file.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.file_path = file_path
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -64,7 +61,11 @@ class CSVFileLoading(BaseOperation):
 
     async def execute(self):
         """
-        Execute the operation's logic: load data from the CSV file.
+        Execute the operation's logic: load data from the CSV file and return it as a dictionary.
         """
-        data = pd.read_csv(self.file_path)
-        print(f"Loaded data: {data.head()}")
+        _inputs = self.get_inputs()
+        _file_path = _inputs.get("file_path", "")
+
+        data = pd.read_csv(_file_path)
+        self.add_log_entry(f"[RESULT] Loaded data: {data}")
+        return {"csv_data": data.to_dict()}

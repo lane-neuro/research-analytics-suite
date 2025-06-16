@@ -67,9 +67,10 @@ class OperationExecutor:
                     )
                 else:
                     await operation.execute()
-                    return operation.task
+                return operation.task
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
+            raise
 
     async def execute_ready_operations(self) -> None:
         """
@@ -93,9 +94,6 @@ class OperationExecutor:
 
             for operation in chain_operations:
                 if not operation.task or operation.task.done():
-                    self._logger.debug(f"execute_all: [OP] name:{operation.name}, status:{operation.status}, "
-                                       f"task:{operation.task}")
-
                     if not operation.task and operation.is_ready:
                         try:
                             operation.task = self.task_creator.create_task(

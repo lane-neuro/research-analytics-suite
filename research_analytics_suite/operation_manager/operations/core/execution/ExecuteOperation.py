@@ -15,11 +15,11 @@ async def execute_operation(operation):
         if operation.inheritance:
             await execute_inherited_operations(operation)
 
-        try:
-            await operation.validate_inputs()
-        except ValueError or Exception as e:
-            operation.handle_error(e)
-            return
+        # try:
+        #     await operation.validate_inputs()
+        # except ValueError or Exception as e:
+        #     operation.handle_error(e)
+        #     return
 
         await prepare_action_for_exec(operation)
         await run_operations(operation, [operation])
@@ -100,35 +100,23 @@ async def execute_action(operation):
             _exec_output = await asyncio.get_event_loop().run_in_executor(
                 None, gpu_computation, operation.action_callable)
         else:
-            _exec_output = operation.action_callable
-            _exec_output = await _exec_output() if asyncio.iscoroutinefunction(_exec_output) else _exec_output()
+            _exec_output = await operation.action_callable() if asyncio.iscoroutinefunction(operation.action_callable) else operation.action_callable()
 
         if _exec_output is not None:
             _result = _exec_output.result() if asyncio.isfuture(_exec_output) else _exec_output
+            CustomLogger().info(_result)
 
             # Ensure the result is a dictionary
             if not isinstance(_result, dict):
                 CustomLogger().error(Exception(f"Operation {operation.name} did not return a dictionary."),
                                      operation.name)
 
-            # Update all memory output slots with the result of the operation
-            for _slot_id in operation.memory_outputs:
-                _name = memory_manager.slot_name(_slot_id)
-                _value = _result.pop(_name, None)
-                if _value is not None:
-                    await memory_manager.update_slot(_slot_id, _value)
-                else:
-                    CustomLogger().error(Exception(f"Operation {operation.name} did not return a value for {_name}"),
-                                         operation.name)
-
+            # Update memory slots with the result
             for key, value in _result.copy().items() if _result is not None else {}:
-                for _slot_id in operation.memory_outputs:
-                    if key == memory_manager.slot_name(_slot_id):
-                        await memory_manager.update_slot(_slot_id, value)
-                        _result.pop(key)
-                        break
-            operation.add_log_entry(f"[OUTPUT IDs] {operation.memory_outputs}")
-        # operation.status = "completed"
+                await operation.add_output(key, value)
+                _result.pop(key)
+
+        operation.status = "completed"
 
     except Exception as e:
         operation.handle_error(e)

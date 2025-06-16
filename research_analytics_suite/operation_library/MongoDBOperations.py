@@ -23,8 +23,8 @@ class MongoDBOperations(BaseOperation):
     """
     Perform CRUD operations on a MongoDB database.
 
-    Attributes:
-        connection_string (str): The connection string for the MongoDB database.
+    Requires:
+        connection_string (str): The MongoDB connection string.
         database_name (str): The name of the MongoDB database.
         collection_name (str): The name of the MongoDB collection.
 
@@ -41,7 +41,6 @@ class MongoDBOperations(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"connection_string": str, "database_name": str, "collection_name": str}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -49,20 +48,14 @@ class MongoDBOperations(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, connection_string: str, database_name: str, collection_name: str, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the connection string, database name, and collection name.
+        Initialize the operation.
 
         Args:
-            connection_string (str): The connection string for the MongoDB database.
-            database_name (str): The name of the MongoDB database.
-            collection_name (str): The name of the MongoDB collection.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.connection_string = connection_string
-        self.database_name = database_name
-        self.collection_name = collection_name
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -75,12 +68,19 @@ class MongoDBOperations(BaseOperation):
         """
         Execute the operation's logic: perform CRUD operations on the MongoDB database.
         """
-        client = MongoClient(self.connection_string)
-        database = client[self.database_name]
-        collection = database[self.collection_name]
+        _inputs = self.get_inputs()
+        connection_string = _inputs.get("connection_string", "")
+        database_name = _inputs.get("database_name", "")
+        collection_name = _inputs.get("collection_name", "")
 
-        # Placeholder for CRUD operations
+        client = MongoClient(connection_string)
+        database = client[database_name]
+        collection = database[collection_name]
 
-        documents = collection.find()
-        for document in documents:
-            print(document)
+        documents = list(collection.find())
+        return {
+            "client": client,
+            "database": database,
+            "collection": collection,
+            "documents": documents
+        }

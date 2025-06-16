@@ -64,8 +64,7 @@ class DataManagementDialog(GUIBase):
                        callback=lambda: asyncio.create_task(self.open_add_var_dialog()))
         dpg.add_button(label="Data Import", parent="slots_window",
                        callback=self.show_data_import)
-        dpg.add_group(tag="management_tools_group", parent="slots_window", width=-1, height=-1,
-                      horizontal=True)
+        dpg.add_group(tag="management_tools_group", parent="slots_window", width=-1, height=-1)
 
     async def _update_async(self) -> None:
         """Updates the collection dropdown list and the GUI display of variables."""
@@ -73,14 +72,32 @@ class DataManagementDialog(GUIBase):
             await asyncio.sleep(.1)
 
         while True:
-            await asyncio.sleep(.001)
+            await asyncio.sleep(.01)
 
             slots = self._memory_manager.list_slots()
-            dpg.delete_item("management_tools_group")
 
-            with dpg.group(tag="management_tools_group", parent="slots_window", width=-1, height=-1):
-                for slot_info in slots:
-                    dpg.add_text(f"Slot ID: {slot_info.memory_id}, Name: {slot_info.name}, Data: {slot_info.data}")
+            for slot_info in slots:
+                # TODO: Dynamically update the slot view
+                if not dpg.does_alias_exist(f"{slot_info.memory_id}_data_man"):
+                    dpg.add_text(label=f"Slot ID: {slot_info.memory_id}, Name: {slot_info.name}, Data: {slot_info.data}",
+                                 parent="management_tools_group", tag=f"{slot_info.memory_id}_data_man")
+                    dpg.add_combo(label="Pointer", items=self._memory_manager.get_all_slot_ids(),
+                                  tag=f"{slot_info.memory_id}_data_man_pointer", parent="management_tools_group",
+                                  callback=self.combo_callback, user_data=slot_info.memory_id)
+                else:
+                    dpg.set_value(item=f"{slot_info.memory_id}_data_man",
+                                  value=f"Slot ID: {slot_info.memory_id}, Name: {slot_info.name}, Data: {slot_info.data}")
+                    dpg.configure_item(item=f"{slot_info.memory_id}_data_man_pointer",
+                                       items=self._memory_manager.get_all_slot_ids())
+
+    def combo_callback(self, sender, app_data, user_data):
+        """Callback function for the combo box."""
+        _sender = user_data
+        _selected_slot_id = dpg.get_value(sender)
+        self._logger.debug(f"Updating slot {_sender} with pointer to slot {_selected_slot_id}")
+        _slot = self._memory_manager.get_slot(_sender)
+        _slot.pointer = self._memory_manager.get_slot(_selected_slot_id)
+        self._logger.debug(f"Slot: {_slot.memory_id}  Pointer: {_slot.pointer}  Data: {_slot.data}")
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         """Resizes the GUI."""
@@ -125,7 +142,7 @@ class DataManagementDialog(GUIBase):
         with dpg.file_dialog(show=True,
                              default_path=f"{self._config.BASE_DIR}/{self._config.WORKSPACE_NAME}/"
                                           f"{self._config.DATA_DIR}",
-                             callback=asyncio.create_task(self._import_data),
+                             callback=self._import_data,
                              tag="selected_file",
                              width=500, height=500, modal=True):
             dpg.add_file_extension(".json", color=(255, 255, 255, 255))
@@ -236,7 +253,7 @@ class DataManagementDialog(GUIBase):
         except Exception as e:
             self._logger.error(Exception(f"Error adding user variable: {e}", self))
 
-    async def _import_data(self, sender, app_data, user_data):
+    def _import_data(self, sender, app_data, user_data):
         """
         Imports data from the selected file into the data engine.
 
@@ -250,8 +267,8 @@ class DataManagementDialog(GUIBase):
             return
 
         for file in _selected_files:
-            file_path = file
+            file_path = os.path.normpath(file)
             data, d_type = self._workspace.get_default_data_engine().load_data(file_path)
             if data:
-                _name = os.path.basename(file_path)
-                await self.add_variable(name=file_path, d_type=d_type, value=data)
+                _name = os.path.normpath(file_path)
+                asyncio.run(self.add_variable(name=file_path, d_type=d_type, value=data))

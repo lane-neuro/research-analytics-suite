@@ -1,7 +1,7 @@
 """
 Operation:      ModeCalculation
 Version:        0.0.1
-Description:    Calculate the mode of a list of categories.
+Description:    Calculate the mode of a list.
 
 Author:         Lane
 GitHub:         lane-neuro
@@ -21,13 +21,13 @@ from research_analytics_suite.operation_manager import BaseOperation
 
 class ModeCalculation(BaseOperation):
     """
-    Calculate the mode of a list of categories.
+    Calculate the mode of a categorical list.
 
-    Attributes:
-        categories (List[str]): The list of categories to calculate the mode.
+    Requires:
+        categories (list): A list of categorical values to calculate the mode from.
 
     Returns:
-        mode_value (str): The mode of the list of categories.
+        mode_value (str): The mode value, which is the most frequently occurring category.
     """
     name = "ModeCalculation"
     version = "0.0.1"
@@ -36,7 +36,6 @@ class ModeCalculation(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"categories": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -44,16 +43,14 @@ class ModeCalculation(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, categories: List[str], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the list of categories.
+        Initialize the operation.
 
         Args:
-            categories (List[str]): The list of categories to calculate the mode.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.categories = categories
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -64,7 +61,11 @@ class ModeCalculation(BaseOperation):
 
     async def execute(self):
         """
-        Execute the operation's logic: calculate the mode of the list of categories.
+        Execute the operation's logic: calculate the mode.
         """
-        mode_value = mode(self.categories)
-        print(f"Mode: {mode_value}")
+        _inputs = self.get_inputs()
+        _categories = _inputs.get("categories", [])
+
+        mode_value = mode(_categories)
+        self.add_log_entry(f"[RESULT] Mode: {mode_value}")
+        return {"mode_value": mode_value}

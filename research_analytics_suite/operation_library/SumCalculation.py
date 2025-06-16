@@ -22,7 +22,7 @@ class SumCalculation(BaseOperation):
     """
     Calculate the sum of a list of numbers.
 
-    Attributes:
+    Requires:
         numbers (List[float]): The list of numbers to calculate the sum.
 
     Returns:
@@ -35,7 +35,6 @@ class SumCalculation(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"numbers": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -43,16 +42,14 @@ class SumCalculation(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, numbers: List[float], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the list of numbers.
+        Initialize the operation.
 
         Args:
-            numbers (List[float]): The list of numbers to calculate the sum.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.numbers = numbers
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -65,5 +62,9 @@ class SumCalculation(BaseOperation):
         """
         Execute the operation's logic: calculate the sum of the list of numbers.
         """
-        sum_value = sum(self.numbers)
-        print(f"Sum: {sum_value}")
+        _inputs = self.get_inputs()
+        numbers = _inputs.get("numbers", [])
+
+        sum_value = sum(numbers)
+        self.add_log_entry(f"[RESULT] Sum: {sum_value}")
+        return {"sum_value": sum_value}

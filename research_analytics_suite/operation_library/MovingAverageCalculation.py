@@ -22,7 +22,7 @@ class MovingAverageCalculation(BaseOperation):
     """
     Calculate the moving average of a time series.
 
-    Attributes:
+    Requires:
         time_series (List[float]): The time series data to calculate the moving average.
         window_size (int): The size of the moving window.
 
@@ -36,7 +36,6 @@ class MovingAverageCalculation(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"time_series": list, "window_size": int}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -44,18 +43,14 @@ class MovingAverageCalculation(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, time_series: List[float], window_size: int, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the time series data and window size.
+        Initialize the operation.
 
         Args:
-            time_series (List[float]): The time series data to calculate the moving average.
-            window_size (int): The size of the moving window.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.time_series = time_series
-        self.window_size = window_size
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -68,9 +63,15 @@ class MovingAverageCalculation(BaseOperation):
         """
         Execute the operation's logic: calculate the moving average of the time series data.
         """
+        _inputs = self.get_inputs()
+        time_series = _inputs.get("time_series", [])
+        window_size = _inputs.get("window_size", 1)
+
         moving_averages = []
-        for i in range(len(self.time_series) - self.window_size + 1):
-            this_window = self.time_series[i : i + self.window_size]
-            window_average = sum(this_window) / self.window_size
+        for i in range(len(time_series) - window_size + 1):
+            this_window = time_series[i : i + window_size]
+            window_average = sum(this_window) / window_size
             moving_averages.append(window_average)
-        print(f"Moving Averages: {moving_averages}")
+
+        self.add_log_entry(f"[RESULT] Moving Averages: {moving_averages}")
+        return {"moving_averages": moving_averages}

@@ -201,8 +201,12 @@ class UnifiedDataEngine:
     @command
     def load_data(self, file_path, return_type='dict') :
         data = None
+        file_path = os.path.normpath(file_path)
         data_type = os.path.splitext(file_path)[1][1:]
         self._logger.info(f"Loading data from {file_path} as {data_type}")
+        if not os.path.exists(file_path):
+            self._logger.error(FileNotFoundError(f"File not found: {file_path}"), self.__class__.__name__)
+            raise FileNotFoundError(f"File not found: {file_path}")
 
         try:
             if data_type == 'csv':

@@ -23,9 +23,9 @@ class InferentialStatistics(BaseOperation):
     """
     Perform inferential statistical analysis on a dataset.
 
-    Attributes:
-        sample1 (List[float]): The first sample for inferential analysis.
-        sample2 (List[float]): The second sample for inferential analysis.
+    Requires:
+        sample1 (list): A list of numerical values representing the first sample.
+        sample2 (list): A list of numerical values representing the second sample.
 
     Returns:
         t_stat (float): The t-statistic value.
@@ -38,7 +38,6 @@ class InferentialStatistics(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"sample1": list, "sample2": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -46,18 +45,14 @@ class InferentialStatistics(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, sample1: List[float], sample2: List[float], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the samples.
+        Initialize the operation.
 
         Args:
-            sample1 (List[float]): The first sample for inferential analysis.
-            sample2 (List[float]): The second sample for inferential analysis.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.sample1 = sample1
-        self.sample2 = sample2
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -70,5 +65,10 @@ class InferentialStatistics(BaseOperation):
         """
         Execute the operation's logic: perform inferential statistical analysis on the samples.
         """
-        t_stat, p_value = stats.ttest_ind(self.sample1, self.sample2)
-        print(f"T-Statistic: {t_stat}, P-Value: {p_value}")
+        _inputs = self.get_inputs()
+        _sample1 = _inputs.get("sample1", [])
+        _sample2 = _inputs.get("sample2", [])
+
+        t_stat, p_value = stats.ttest_ind(_sample1, _sample2)
+        self.add_log_entry(f"[RESULT] T-Statistic: {t_stat}, P-Value: {p_value}")
+        return {"t_stat": t_stat, "p_value": p_value}

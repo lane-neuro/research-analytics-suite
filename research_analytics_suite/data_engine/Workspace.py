@@ -189,8 +189,6 @@ class Workspace:
                 await data_engine.save_engine(
                     os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME))
 
-            await self.save_memory_manager(os.path.normpath(
-                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, 'user_variables.db')))
             config_path = os.path.normpath(
                 os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, 'config.json'))
             await self._config.save_to_file(config_path)
@@ -222,7 +220,7 @@ class Workspace:
                 workspace_path = os.path.dirname(workspace_path)
 
             # Clear existing data
-            self._clear_existing_data()
+            self._reset_workspace()
 
             self._config = await self._config.reload_from_file(os.path.join(workspace_path, 'config.json'))
 
@@ -247,23 +245,13 @@ class Workspace:
         except Exception as e:
             self._logger.error(Exception(f"Failed to load workspace: {e}"), self.__class__.__name__)
 
-    def _clear_existing_data(self) -> None:
+    def _reset_workspace(self) -> None:
         """
         Clears existing data in the workspace to ensure a clean load.
         """
         self._data_engines = {}
         self._dependencies = defaultdict(list)
         self._initialized = False
-
-    @command
-    async def save_memory_manager(self, file_path: str) -> None:  # pragma: no cover
-        """
-        Saves the user variables database to the specified file.
-
-        Args:
-            file_path (str): The path to the save file.
-        """
-        ...
 
     @command
     async def restore_memory_manager(self, file_path: str) -> None:  # pragma: no cover
@@ -273,4 +261,8 @@ class Workspace:
         Args:
             file_path (str): The path to the save file.
         """
-        ...
+        try:
+            await self._memory_manager.load_existing_database(file_path)
+            self._logger.debug(f"Memory manager restored successfully from {file_path}")
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to restore memory manager: {e}"), self.__class__.__name__)

@@ -206,7 +206,7 @@ class GuiLauncher:
             self._planning_dialog = PlanningDialog(width=-1, height=-1, parent="planning_pane")
             await self._planning_dialog.initialize_gui()
             self._planning_dialog.draw()
-            self._node_manager.add_editor(editor_id="planning_editor", width=-1, height=-1, parent="plan_space")
+            await self._node_manager.add_editor(editor_id="planning_editor", width=-1, height=-1, parent="plan_space")
 
         with dpg.child_window(tag="data_collection_pane", parent="middle_pane", show=False, border=False):
             await self.setup_data_collection_pane()
@@ -216,14 +216,14 @@ class GuiLauncher:
             self._analyze_data_dialog = AnalyzeDataDialog(width=-1, height=-1, parent="analyze_data_pane")
             await self._analyze_data_dialog.initialize_gui()
             self._analyze_data_dialog.draw()
-            self._node_manager.add_editor(editor_id="analyze_data_editor", width=-1, height=-1,
+            await self._node_manager.add_editor(editor_id="analyze_data_editor", width=-1, height=-1,
                                           parent="analyze_space")
 
         with dpg.child_window(tag="visualize_data_pane", parent="middle_pane", show=False, border=False):
             self._visualize_data_dialog = VisualizeDataDialog(width=-1, height=-1, parent="visualize_data_pane")
             await self._visualize_data_dialog.initialize_gui()
             self._visualize_data_dialog.draw()
-            self._node_manager.add_editor(editor_id="visualize_data_editor", width=-1, height=-1,
+            await self._node_manager.add_editor(editor_id="visualize_data_editor", width=-1, height=-1,
                                           parent="visualize_space")
 
         with dpg.child_window(tag="manage_projects_pane", parent="middle_pane", show=False, border=False):
@@ -235,7 +235,7 @@ class GuiLauncher:
             self._reports_dialog = ReportsDialog(width=-1, height=-1, parent="reports_pane")
             await self._reports_dialog.initialize_gui()
             self._reports_dialog.draw()
-            self._node_manager.add_editor(editor_id="reports_editor", width=-1, height=-1, parent="reports_space")
+            await self._node_manager.add_editor(editor_id="reports_editor", width=-1, height=-1, parent="reports_space")
 
         with dpg.child_window(tag="settings_pane", parent="middle_pane", show=False, border=False):
             dpg.add_text("Settings Pane")

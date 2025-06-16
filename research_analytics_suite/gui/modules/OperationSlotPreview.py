@@ -68,7 +68,7 @@ class OperationSlotPreview(GUIBase):
                            horizontal=True, horizontal_spacing=10):
                 dpg.add_button(label="+", width=25, height=25, parent=f"slot_preview_{self.runtime_id}",
                                callback=lambda: self._node_manager.editors["planning_editor"].add_node(
-                                   self._attributes), indent=5)
+                                   OperationAttributes(**self._attributes.export_attributes())), indent=5)
                 dpg.add_text(default_value=f"{self._name}", parent=f"slot_preview_{self.runtime_id}")
 
                 # with dpg.child_window(height=30, width=55, no_scrollbar=True, pos=(self.width - 115, 5)):

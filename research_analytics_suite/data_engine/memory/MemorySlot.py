@@ -32,6 +32,7 @@ class MemorySlot:
         memory_id (str): A unique identifier for the memory slot.
         name (str): A name for the memory slot.
         data_type (type): The data type for the memory slot. Defaults to any.
+        pointer (MemorySlot): A pointer to the next memory slot, if any.
         data (any): The data stored in the memory slot.
         metadata (dict): A dictionary to store additional metadata.
         created_at (float): The timestamp of when the memory slot was created.
@@ -45,7 +46,8 @@ class MemorySlot:
     """
     DATA_SIZE_THRESHOLD = 2e6  # 2MB
 
-    def __init__(self, memory_id: str, name: str, d_type: type, data: any, db_path: str, file_path: str = None):
+    def __init__(self, memory_id: str, name: str, d_type: type, pointer: any, data: any, db_path: str,
+                 file_path: str = None):
         """
         Initialize the MemorySlot instance.
 
@@ -53,6 +55,7 @@ class MemorySlot:
             memory_id (str): A unique identifier for the memory slot.
             name (str): A name for the memory slot.
             d_type (type): The data type for the memory slot.
+            pointer (MemorySlot): A pointer to the next memory slot, if any.
             data (any): The data stored in the memory slot.
             db_path (str): The path to the SQLite database file.
             file_path (str): The file path for memory-mapped storage.
@@ -65,8 +68,10 @@ class MemorySlot:
         self._memory_id = memory_id
         self.name = name
         self.data_type = d_type
+        self._pointer = pointer
         self._metadata = {}
         self._created_at = time.time()
+        self._modified_at = None
         self._modified_at = self._created_at
         self._last_modified = None
         self._lock = asyncio.Lock()
@@ -95,7 +100,7 @@ class MemorySlot:
                 )
             """)
             await conn.execute(
-                "CREATE UNIQUE INDEX IF NOT EXISTS idx_name ON variables (name)"
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_id ON variables (memory_id)"
             )
             await conn.commit()
 
@@ -170,13 +175,42 @@ class MemorySlot:
         self._data_type = value
 
     @property
+    def pointer(self) -> any:
+        """Gets the pointer to the next memory slot.
+
+        Returns:
+            any: The pointer to the next memory slot.
+        """
+        return self._pointer
+
+    @pointer.setter
+    def pointer(self, value: any) -> None:
+        """Sets the pointer to the next memory slot.
+
+        Args:
+            value (any): The pointer to the next memory slot.
+        """
+        if isinstance(value, MemorySlot):
+            self._pointer = value
+        else:
+            self._pointer = None
+
+    @property
     def data(self) -> any:
         """Gets the data stored in the memory slot.
 
         Returns:
             any: The data stored in the memory slot.
         """
+        if self._pointer:
+            return self._pointer.data
         return self._data
+
+    @data.setter
+    def data(self, value: any) -> None:
+        """Sets the data stored in the memory slot."""
+        self._data = value
+        self._update_modified_time()
 
     async def set_data(self, value: any) -> None:
         """Stores the data within SQLite or memory-mapped file."""
@@ -184,19 +218,20 @@ class MemorySlot:
             self._check_data_size(value)
             if self._use_mmap:
                 self._init_mmap(value)
+            elif self._pointer is not None:
+                self._pointer.data = value
             else:
                 try:
                     async with aiosqlite.connect(self.db_path) as conn:
-                        await conn.execute(
-                            "INSERT OR REPLACE INTO variables (memory_id, name, data) VALUES (?, ?, ?)",
-                            (self._memory_id, self._name, pickle.dumps(value))
+                        await conn.execute("INSERT OR REPLACE INTO variables (memory_id, name, data) VALUES (?, ?, ?)",
+                            (self._memory_id, self.name, pickle.dumps(value))
                         )
                         await conn.commit()
                 except Exception as e:
                     self._logger.error(Exception(f"[SQLite] Add variable error: {e}"), self.__class__.__name__)
+                    return
 
-            self._data = value
-            self._update_modified_time()
+            self.data = value
 
     async def _update_data(self) -> None:
         """Updates the data stored in the memory slot."""
@@ -213,6 +248,9 @@ class MemorySlot:
                             serialized_data = self._mmapped_file.read()
                             self._data = pickle.loads(serialized_data)
                             self._last_modified = self._modified_at
+                    elif self._pointer:
+                        self.data = self._pointer.data
+                        self._last_modified = self._modified_at
                     else:
                         try:
                             async with aiosqlite.connect(self.db_path) as conn:
@@ -223,7 +261,16 @@ class MemorySlot:
                                 row = await cursor.fetchone()
                                 if row:
                                     data = row[0]
-                                    self._data = pickle.loads(data)
+
+                                    # Deserialize the data, if necessary
+                                    if isinstance(data, bytes):
+                                        data = pickle.loads(data)
+                                    elif not isinstance(data, self.data_type):
+                                        self._logger.warning(
+                                            f"Data type mismatch: expected {self.data_type}, got {type(data)}")
+                                        data = None
+
+                                    self._data = data if data else None
                                     self._last_modified = self._modified_at
                         except Exception as e:
                             self._logger.error(Exception(f"[SQLite] Get variable error: {e}"), self.__class__.__name__)

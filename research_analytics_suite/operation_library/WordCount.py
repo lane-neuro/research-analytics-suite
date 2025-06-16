@@ -22,7 +22,7 @@ class WordCount(BaseOperation):
     """
     Count the number of words in a text.
 
-    Attributes:
+    Requires:
         text (str): The text to count the words.
 
     Returns:
@@ -35,7 +35,6 @@ class WordCount(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"text": str}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -43,12 +42,11 @@ class WordCount(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, text: str, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the text.
+        Initialize the operation.
 
         Args:
-            text (str): The text to count the words.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
@@ -65,5 +63,9 @@ class WordCount(BaseOperation):
         """
         Execute the operation's logic: count the number of words in the text.
         """
-        word_count = len(self.text.split())
-        print(f"Word Count: {word_count}")
+        _inputs = self.get_inputs()
+        _text = _inputs.get("text", "")
+
+        word_count = len(_text.split())
+        self.add_log_entry(f"[RESULT] Word Count: {word_count}")
+        return {"word_count": word_count}

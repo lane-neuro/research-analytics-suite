@@ -22,7 +22,7 @@ class StandardDeviationCalculation(BaseOperation):
     """
     Calculate the standard deviation of a list of numbers.
 
-    Attributes:
+    Requires:
         numbers (List[float]): The list of numbers to calculate the standard deviation.
 
     Returns:
@@ -37,7 +37,6 @@ class StandardDeviationCalculation(BaseOperation):
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"
-    unique_id = f"{github}_{name}_{version}"
     required_inputs = {"numbers": list}
     parent_operation: Optional[Type[BaseOperation]] = None
     inheritance: Optional[list] = []
@@ -45,16 +44,14 @@ class StandardDeviationCalculation(BaseOperation):
     is_cpu_bound = False
     parallel = False
 
-    def __init__(self, numbers: List[float], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
-        Initialize the operation with the list of numbers.
+        Initialize the operation.
 
         Args:
-            numbers (List[float]): The list of numbers to calculate the standard deviation.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        self.numbers = numbers
         super().__init__(*args, **kwargs)
 
     async def initialize_operation(self):
@@ -67,7 +64,15 @@ class StandardDeviationCalculation(BaseOperation):
         """
         Execute the operation's logic: calculate the standard deviation of the list of numbers.
         """
-        mean_value = sum(self.numbers) / len(self.numbers)
-        variance = sum((x - mean_value) ** 2 for x in self.numbers) / len(self.numbers)
+        _inputs = self.get_inputs()
+        numbers: List[float] = _inputs.get("numbers", [])
+
+        mean_value = sum(numbers) / len(numbers)
+        variance = sum((x - mean_value) ** 2 for x in numbers) / len(numbers)
         std_dev_value = variance ** 0.5
-        print(f"Standard Deviation: {std_dev_value}")
+        self.add_log_entry(f"[RESULT] Mean: {mean_value}; Variance: {variance}; Standard Deviation: {std_dev_value}")
+        return {
+            "mean_value": mean_value,
+            "variance": variance,
+            "std_dev_value": std_dev_value
+        }

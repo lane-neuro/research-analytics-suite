@@ -1,14 +1,14 @@
-from research_analytics_suite.operation_manager.operations.core import BaseOperation
+from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 
 
 class MLEvaluationOperation(BaseOperation):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, model, test_data, test_target):
         super().__init__(action=None, name="MLEvaluationOperation")
-        self.model = args[0]
-        self.test_data = args[1]
-        self.test_target = args[2]
+        self.model = model
+        self.test_data = test_data
+        self.test_target = test_target
 
-    def start_operation(self):
+    def start(self):
         """Initialize evaluation parameters."""
         self.status = "started"
         self.add_log_entry("Evaluation operation started")
