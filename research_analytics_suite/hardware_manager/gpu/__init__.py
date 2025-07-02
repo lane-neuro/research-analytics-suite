@@ -13,4 +13,4 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from .GPUInstaller import GPUInstaller
+from .GPUManager import GPUManager

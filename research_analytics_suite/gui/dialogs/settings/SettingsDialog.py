@@ -53,6 +53,7 @@ class SettingsDialog(GUIBase):
                                tag="workspace_operations_dir")
             dpg.add_input_text(label="Engine Directory", default_value=self._config.ENGINE_DIR, tag="engine_dir")
             dpg.add_input_text(label="Backup Directory", default_value=self._config.BACKUP_DIR, tag="backup_dir")
+            dpg.add_input_text(label="Export Directory", default_value=self._config.EXPORT_DIR, tag="export_dir")
 
             dpg.add_separator()
 
@@ -148,6 +149,7 @@ class SettingsDialog(GUIBase):
         self._config.WORKSPACE_DIR = dpg.get_value("workspace_dir")
         self._config.WORKSPACE_OPERATIONS_DIR = dpg.get_value("workspace_operations_dir")
         self._config.BACKUP_DIR = dpg.get_value("backup_dir")
+        self._config.EXPORT_DIR = dpg.get_value("export_dir")
         self._config.ENGINE_DIR = dpg.get_value("engine_dir")
 
         self._config.MEMORY_LIMIT = dpg.get_value("memory_limit")

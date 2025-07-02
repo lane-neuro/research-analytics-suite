@@ -42,6 +42,7 @@ class Config:
             self.WORKSPACE_DIR = None
             self.WORKSPACE_OPERATIONS_DIR = None
             self.BACKUP_DIR = None
+            self.EXPORT_DIR = None
             self.ENGINE_DIR = None
             self.CACHE_DIR = None
             self.DISTRIBUTED = None
@@ -97,6 +98,7 @@ class Config:
         self.WORKSPACE_DIR = 'workspace'
         self.WORKSPACE_OPERATIONS_DIR = os.path.normpath(os.path.join(self.WORKSPACE_DIR, 'operations'))
         self.BACKUP_DIR = 'backup'
+        self.EXPORT_DIR = 'export'
         self.ENGINE_DIR = 'engine'
         self.CACHE_DIR = 'cache'
 
@@ -228,3 +230,17 @@ class Config:
                 await f.write(json.dumps(_copy, indent=4))
             except Exception as e:
                 raise e
+
+    def repr_path(self, folder_name: str) -> str:
+        """
+        Returns the absolute path for a given folder name within the workspace.
+
+        Args:
+            folder_name (str): The name of the folder.
+
+        Returns:
+            str: The absolute path to the folder.
+        """
+        if not self.WORKSPACE_DIR:
+            raise ValueError("WORKSPACE_DIR is not set. Please initialize the configuration first.")
+        return os.path.normpath(os.path.join(self.BASE_DIR, 'workspaces', self.WORKSPACE_NAME, folder_name))

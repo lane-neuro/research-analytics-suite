@@ -25,8 +25,9 @@ class TemperatureInfo:
         Returns:
             dict: Information about the system's component temperatures.
         """
-        self.logger.info("Getting temperature information...")
+        if not hasattr(psutil, "sensors_temperatures"):
+            return {}
+
         temps = psutil.sensors_temperatures()
         temperature_info = {sensor: temps[sensor] for sensor in temps if temps[sensor]}
-        self.logger.info(f"Temperature information: {temperature_info}")
         return temperature_info

@@ -25,14 +25,37 @@ class MemoryInfo:
         Returns:
             dict: Information about the system's memory.
         """
-        self.logger.info("Getting memory information...")
-        mem = psutil.virtual_memory()
         memory_info = {
-            "total": mem.total,
-            "available": mem.available,
-            "percent": mem.percent,
-            "used": mem.used,
-            "free": mem.free
+            "total": self.total_memory,
+            "available": self.available_memory,
+            "percent": self.memory_percent,
+            "used": self.used_memory,
+            "free": self.free_memory
         }
-        self.logger.info(f"Memory information: {memory_info}")
         return memory_info
+
+    @property
+    def total_memory(self):
+        """Get total memory in bytes."""
+        return psutil.virtual_memory().total
+
+    @property
+    def available_memory(self):
+        """Get available memory in bytes."""
+        return psutil.virtual_memory().available
+
+    @property
+    def used_memory(self):
+        """Get used memory in bytes."""
+        return psutil.virtual_memory().used
+
+    @property
+    def free_memory(self):
+        """Get free memory in bytes."""
+        return psutil.virtual_memory().free
+
+    @property
+    def memory_percent(self):
+        """Get memory usage percentage."""
+        return psutil.virtual_memory().percent
+

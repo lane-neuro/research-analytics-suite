@@ -25,11 +25,9 @@ class PeripheralsInfo:
         Returns:
             list: Information about the system's connected peripherals.
         """
-        self.logger.info("Getting peripherals information...")
         try:
             result = subprocess.run(['lsusb'], capture_output=True, text=True, check=True)
             peripherals = result.stdout.split('\n')
-            self.logger.info(f"Peripherals information: {peripherals}")
             return peripherals
         except subprocess.CalledProcessError as e:
             self.logger.error(f"Failed to get peripherals information: {e}")

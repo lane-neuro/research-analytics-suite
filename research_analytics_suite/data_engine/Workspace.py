@@ -126,6 +126,13 @@ class Workspace:
         Returns:
             UnifiedDataEngine: The default data engine.
         """
+        if not self._data_engines:
+            # Create a new default data engine if none exist
+            self._logger.warning("No data engines found, creating a new default data engine.")
+            default_engine = UnifiedDataEngine()
+            self.add_data_engine(data_engine=default_engine)
+            return default_engine
+
         return next(iter(self._data_engines.values()), None)
 
     @command
@@ -176,6 +183,9 @@ class Workspace:
                              self._config.WORKSPACE_OPERATIONS_DIR), exist_ok=True)
             os.makedirs(
                 os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.BACKUP_DIR),
+                exist_ok=True)
+            os.makedirs(
+                os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.EXPORT_DIR),
                 exist_ok=True)
             os.makedirs(
                 os.path.join(self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME, self._config.ENGINE_DIR),

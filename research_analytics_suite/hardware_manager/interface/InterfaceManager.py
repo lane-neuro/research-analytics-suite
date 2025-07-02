@@ -59,7 +59,7 @@ class InterfaceManager:
             self._initialized = True
 
     @command
-    async def detect_interfaces(self):
+    def detect_interfaces(self):
         """Detect all hardware interfaces.
 
         Returns:
@@ -69,8 +69,7 @@ class InterfaceManager:
         for interface_name, interface in self.base_interfaces.items():
             try:
                 self.logger.debug(f"Detecting {interface_name} interfaces...", self.__class__.__name__)
-                detected_interfaces[interface_name] = await interface.detect() if iscoroutinefunction(
-                    interface.detect) else interface.detect()
+                detected_interfaces[interface_name] = interface.detect()
             except Exception as e:
                 self.logger.warning(f"Error detecting {interface_name} interfaces, see debug log for details.")
                 self.logger.debug(f"Error detecting {interface_name} interfaces: {e}", self.__class__.__name__)
@@ -94,7 +93,7 @@ class InterfaceManager:
             name (str): The name of the interface.
         """
         if name in self.interfaces:
-            self.logger.info(f"Removing {name} interface from detection.", self.__class__.__name__)
+            self.logger.debug(f"Removing {name} interface from detection.", self.__class__.__name__)
             del self.base_interfaces[name]
         else:
             self.logger.warning(f"Interface {name} not found in the list of interfaces.")
@@ -110,6 +109,18 @@ class InterfaceManager:
             BaseInterface: The interface instance.
         """
         return self.interfaces.get(name, None)
+
+    @command
+    def get_interfaces_by_type(self, interface_type):
+        """Get interfaces by type.
+
+        Args:
+            interface_type (str): The type of the interface.
+
+        Returns:
+            list: List of interfaces of the specified type.
+        """
+        return self.interfaces.get(interface_type, [])
 
     @command
     def list_interfaces(self):

@@ -50,14 +50,14 @@ class PlanningDialog(GUIBase):
     def draw(self):
         """Draws the GUI elements for the Planning section."""
         with dpg.group(parent=self._parent, tag=self._runtime_id):
-            dpg.add_text("Planning Tools")
-            dpg.add_separator()
-
-            with dpg.group(horizontal=True):
-                dpg.add_button(label="Project Overview", callback=self.show_project_overview)
-                dpg.add_button(label="Objectives", callback=self.show_objectives)
-                dpg.add_button(label="Timeline", callback=self.show_timeline)
-                dpg.add_button(label="Resources", callback=self.show_resources)
+            # dpg.add_text("Planning Tools")
+            # dpg.add_separator()
+            #
+            # with dpg.group(horizontal=True):
+            #     dpg.add_button(label="Project Overview", callback=self.show_project_overview)
+            #     dpg.add_button(label="Objectives", callback=self.show_objectives)
+            #     dpg.add_button(label="Timeline", callback=self.show_timeline)
+            #     dpg.add_button(label="Resources", callback=self.show_resources)
 
             dpg.add_child_window(width=-1, height=-1, border=True, tag="plan_space", parent=self._runtime_id)
 

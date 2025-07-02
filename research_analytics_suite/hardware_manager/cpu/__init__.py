@@ -13,4 +13,4 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from .CPUInstaller import CPUInstaller
+from .CPUManager import CPUManager

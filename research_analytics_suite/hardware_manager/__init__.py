@@ -13,4 +13,4 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 
-from .HardwareInstaller import HardwareInstaller
+from .HardwareManager import HardwareManager

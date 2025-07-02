@@ -13,6 +13,7 @@ Email: justlane@uw.edu
 Status: Prototype
 """
 import asyncio
+import os
 import pickle
 import sys
 import time
@@ -20,7 +21,7 @@ from mmap import mmap
 from typing import Type
 
 import aiosqlite
-from research_analytics_suite.utils import CustomLogger
+from research_analytics_suite.utils import CustomLogger, Config
 from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
 
@@ -321,6 +322,57 @@ class MemorySlot:
         self._mmapped_file.flush()
         self._update_modified_time()
         self._logger.debug(f"Data dumped to memory-mapped file: {self._file_path}")
+
+    def export_as_csv(self):
+        """
+        Exports the data to a CSV file located
+        """
+        import csv
+
+        if not self.data:
+            self._logger.warning("No data to export.")
+            return
+
+        _config = Config()
+        _path = os.path.join(_config.repr_path(_config.EXPORT_DIR), f"{self.name}-{self.memory_id}.csv")
+        try:
+            with open(_path, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                data = self.data
+
+                if isinstance(data, list):
+                    if data and isinstance(data[0], dict):
+                        # List of dicts
+                        fieldnames = set()
+                        for entry in data:
+                            fieldnames.update(entry.keys())
+                        fieldnames = list(fieldnames)
+                        dict_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                        dict_writer.writeheader()
+                        dict_writer.writerows(data)
+                    elif data and isinstance(data[0], (list, tuple)):
+                        # List of lists/tuples
+                        writer.writerows(data)
+                    else:
+                        # List of simple values
+                        for item in data:
+                            writer.writerow([item])
+                elif isinstance(data, dict):
+                    _data = {}
+                    for k, v in data.items():
+                        if isinstance(v, (list, dict)):
+                            _data[k] = ', '.join(map(str, v)) if isinstance(v, list) else str(v)
+                        else:
+                            _data[k] = v
+                    writer.writerow(_data.keys())
+                    writer.writerow(_data.values())
+                else:
+                    # Single value
+                    writer.writerow([data])
+
+            self._logger.info(f"Data exported to {_path}")
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to export data to CSV: {e}"), self.__class__.__name__)
 
     def _update_modified_time(self):
         """

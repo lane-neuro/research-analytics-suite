@@ -21,6 +21,7 @@ import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
 from research_analytics_suite.data_engine import Workspace
 from research_analytics_suite.gui.NodeEditorManager import NodeEditorManager
+from research_analytics_suite.gui.dialogs.management.HardwareDialog import HardwareDialog
 from research_analytics_suite.gui.dialogs.management.LibraryPane import LibraryPane
 from research_analytics_suite.gui.dialogs.management.ResourceMonitorDialog import ResourceMonitorDialog
 from research_analytics_suite.gui.dialogs.data_handling.DataManagementDialog import DataManagementDialog
@@ -28,6 +29,7 @@ from research_analytics_suite.gui.dialogs.management.ConsoleDialog import Consol
 from research_analytics_suite.gui.dialogs.settings.SettingsDialog import SettingsDialog
 from research_analytics_suite.gui.modules.TimelineModule import TimelineModule
 from research_analytics_suite.gui.modules.WorkspaceModule import WorkspaceModule
+from research_analytics_suite.hardware_manager import HardwareManager
 from research_analytics_suite.operation_manager.control import OperationControl
 from research_analytics_suite.utils import CustomLogger
 from research_analytics_suite.gui.dialogs.management.PlanningDialog import PlanningDialog
@@ -40,7 +42,7 @@ from research_analytics_suite.gui.dialogs.management.ReportsDialog import Report
 class GuiLauncher:
     """Class to launch the GUI for the Research Analytics Suite."""
 
-    def __init__(self):
+    def __init__(self, hardware_manager: HardwareManager):
         """
         Initializes the GUI launcher with necessary components.
         """
@@ -51,6 +53,9 @@ class GuiLauncher:
         self._workspace = Workspace()
         self._node_manager = NodeEditorManager()
 
+        self._hardware_manager = hardware_manager
+
+        self._hardware_dialog = None
         self._timeline_dialog = None
         self._visualization_dialog = None
         self._data_engine_dialog = None
@@ -68,20 +73,7 @@ class GuiLauncher:
         self._planning_dialog = None
         self._analyze_data_dialog = None
 
-        self._splitter_height = 150
-
-    async def setup_navigation_menu(self) -> None:
-        """Sets up the navigation menu on the left pane."""
-        with dpg.group(parent="left_pane"):
-            dpg.add_button(label="Planning", callback=lambda: self.switch_pane("planning"))
-            dpg.add_button(label="Data Collection", callback=lambda: self.switch_pane("data_collection"))
-            dpg.add_button(label="Data Analysis", callback=lambda: self.switch_pane("analyze_data"))
-            dpg.add_button(label="Data Visualization", callback=lambda: self.switch_pane("visualize_data"))
-            dpg.add_button(label="Project Management", callback=lambda: self.switch_pane("manage_projects"))
-            dpg.add_button(label="Reports", callback=lambda: self.switch_pane("reports"))
-            dpg.add_button(label="Configuration", callback=self.settings_popup)
-            dpg.add_button(label="Logs", callback=lambda: self.switch_pane("console_log_output"))
-            dpg.add_button(label="Exit", callback=lambda: dpg.stop_dearpygui())
+        self._splitter_height = 300
 
     def switch_pane(self, pane_name: str) -> None:
         """
@@ -162,14 +154,34 @@ class GuiLauncher:
 
         with dpg.window(label="Research Analytics Suite", tag="main_window",
                         width=dpg.get_viewport_width(), height=dpg.get_viewport_height()):
+            with dpg.menu_bar(tag="primary_menu_bar", parent="main_window"):
+                with dpg.menu(label="File"):
+                    dpg.add_menu_item(label="New Workspace", callback=lambda: self._workspace.create_workspace())
+                    dpg.add_menu_item(label="Open Workspace", callback=lambda: self._workspace.load_workspace())
+                    dpg.add_menu_item(label="Exit", callback=lambda: dpg.stop_dearpygui())
+
+                with dpg.menu(label="Edit"):
+                    dpg.add_menu_item(label="Settings", callback=self.settings_popup)
+
+                with dpg.menu(label="View"):
+                    dpg.add_menu_item(label="Scratchpad", tag="planning_menu",
+                                      callback=lambda: self.switch_pane("planning"))
+                    dpg.add_menu_item(label="Console/Logs", tag="console_log_output_menu",
+                                      callback=lambda: self.switch_pane("console_log_output"))
+
+                with dpg.menu(label="Help"):
+                    dpg.add_menu_item(label="Documentation", callback=lambda: dpg.show_documentation())
+                    dpg.add_menu_item(label="About", callback=lambda: dpg.show_about())
+
             with dpg.group(horizontal=True, tag="upper_pane_group",
-                           height=dpg.get_viewport_height() - self._splitter_height - 25,
+                           height=dpg.get_viewport_height() - self._splitter_height - 25 - dpg.get_item_height("primary_menu_bar"),
                            horizontal_spacing=5, parent="main_window"):
+
                 with dpg.child_window(tag="left_pane", width=180):
-                    await self.setup_navigation_menu()
+                    await self.setup_hardware_pane()
 
                 with dpg.child_window(tag="middle_pane", width=int(dpg.get_viewport_width() - 480)):
-                    await self.setup_panes()
+                    await self.setup_dynamic_panes()
 
                 with dpg.child_window(tag="right_pane", width=250, border=False):
                     await self.setup_library_pane()
@@ -180,10 +192,11 @@ class GuiLauncher:
                     await self.setup_workspace_pane()
 
                 with dpg.child_window(tag="bottom_middle_pane", height=-1, width=int(dpg.get_viewport_width() - 480),
-                                      border=False):
-                    await self.setup_timeline_module()
-                    dpg.add_button(label="^^^", callback=self.splitter_callback,
-                                   tag="splitter_resize", before="print_sequencer_module")
+                                      border=True):
+                    await self.setup_data_collection_pane()
+                    self._collection_view_dialog.draw()
+                    dpg.add_button(label="vvv", callback=self.splitter_callback,
+                                   tag="splitter_resize", before="slots_window")
 
                 with dpg.child_window(tag="bottom_right_pane", width=250, height=-1, border=True):
                     await self.setup_resource_monitor()
@@ -200,7 +213,7 @@ class GuiLauncher:
         await self._workspace.save_current_workspace()
         dpg.destroy_context()
 
-    async def setup_panes(self) -> None:
+    async def setup_dynamic_panes(self) -> None:
         """Sets up asynchronous panes."""
         with dpg.child_window(tag="planning_pane", parent="middle_pane", show=True, border=False):
             self._planning_dialog = PlanningDialog(width=-1, height=-1, parent="planning_pane")
@@ -209,8 +222,7 @@ class GuiLauncher:
             await self._node_manager.add_editor(editor_id="planning_editor", width=-1, height=-1, parent="plan_space")
 
         with dpg.child_window(tag="data_collection_pane", parent="middle_pane", show=False, border=False):
-            await self.setup_data_collection_pane()
-            self._collection_view_dialog.draw()
+            ...
 
         with dpg.child_window(tag="analyze_data_pane", parent="middle_pane", show=False, border=False):
             self._analyze_data_dialog = AnalyzeDataDialog(width=-1, height=-1, parent="analyze_data_pane")
@@ -243,6 +255,28 @@ class GuiLauncher:
         with dpg.child_window(tag="console_log_output_pane", parent="middle_pane", show=False, border=False):
             await self.setup_console_log_viewer_pane()
 
+    async def setup_navigation_menu(self) -> None:
+        """Sets up the navigation menu on the left pane.
+        Currently, it contains placeholders for buttons that will switch between different panes."""
+        with dpg.group(parent="left_pane"):
+            ...
+            # dpg.add_button(label="Workspace", callback=lambda: self.switch_pane("planning"))
+            # dpg.add_button(label="Data Collection", callback=lambda: self.switch_pane("data_collection"))
+            # dpg.add_button(label="Data Analysis", callback=lambda: self.switch_pane("analyze_data"))
+            # dpg.add_button(label="Data Visualization", callback=lambda: self.switch_pane("visualize_data"))
+            # dpg.add_button(label="Project Management", callback=lambda: self.switch_pane("manage_projects"))
+            # dpg.add_button(label="Reports", callback=lambda: self.switch_pane("reports"))
+            # dpg.add_button(label="Configuration", callback=self.settings_popup)
+            # dpg.add_button(label="Logs", callback=lambda: self.switch_pane("console_log_output"))
+            # dpg.add_button(label="Exit", callback=lambda: dpg.stop_dearpygui())
+
+    async def setup_hardware_pane(self) -> None:
+        """Sets up the hardware management pane."""
+        self._hardware_dialog = HardwareDialog(width=-1, height=-1, parent="left_pane",
+                                               hardware_manager=self._hardware_manager)
+        await self._hardware_dialog.initialize_gui()
+        self._hardware_dialog.draw()
+
     async def setup_library_pane(self) -> None:
         """Sets up the library pane."""
         with dpg.child_window(tag="library_pane", width=-1, height=-1, parent="right_pane", border=False):
@@ -267,10 +301,10 @@ class GuiLauncher:
 
     async def setup_data_collection_pane(self) -> None:
         """Sets up the data collection pane."""
-        with dpg.group(parent="data_collection_pane"):
-            self._collection_view_dialog = DataManagementDialog(width=-1, height=-1, parent="data_collection_pane")
-            dpg.add_text("Data Collection Tools")
-            await self._collection_view_dialog.initialize_gui()
+        # with dpg.group(parent="slots_window"):
+        self._collection_view_dialog = DataManagementDialog(width=-1, height=-1, parent="slots_window")
+        dpg.add_text("Data Management")
+        await self._collection_view_dialog.initialize_gui()
 
     async def settings_popup(self) -> None:
         """Sets up the settings popup."""
@@ -310,7 +344,7 @@ class GuiLauncher:
         bottom_middle_width = parent_width - (bottom_left_width + bottom_right_width + 25)
 
         bottom_height = dpg.get_item_configuration("bottom_pane_group")["height"]
-        top_middle_height = parent_height - (bottom_height + 20)
+        top_middle_height = parent_height - bottom_height - dpg.get_item_height("primary_menu_bar") - 25
 
         dpg.configure_item("middle_pane", width=top_middle_width)
         dpg.configure_item("upper_pane_group", height=top_middle_height)

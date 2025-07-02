@@ -41,14 +41,12 @@ class ResearchAnalyticsSuite:
 
     def __init__(self):
         from research_analytics_suite.commands import CommandRegistry
-        from research_analytics_suite.hardware_manager.HardwareInstaller import HardwareInstaller
-        from research_analytics_suite.hardware_manager.interface.InterfaceManager import InterfaceManager
+        from research_analytics_suite.hardware_manager.HardwareManager import HardwareManager
         self._config = Config()
         self._logger = CustomLogger()
         self._workspace = Workspace()
         self._memory_manager = MemoryManager()
-        self._hardware_installer = HardwareInstaller()
-        self._interface_manager = InterfaceManager()
+        self._hardware_manager = HardwareManager()
         self._library_manifest = LibraryManifest()
         self._command_registry = CommandRegistry()
         self._operation_control = OperationControl()
@@ -80,12 +78,13 @@ class ResearchAnalyticsSuite:
         await self._operation_control.initialize()
         await self._memory_manager.initialize()
         await self._setup_workspace()
+        self._hardware_manager.detect()
 
         self._launch_tasks.append(self._operation_control.exec_loop())
 
         await self._library_manifest.initialize()
         await self._command_registry.initialize()
-        await self._hardware_installer.interface_manager.detect_interfaces()
+        # await self._hardware_manager.interface_manager.detect_interfaces()
 
     async def _setup_workspace(self):
         """
@@ -110,7 +109,7 @@ class ResearchAnalyticsSuite:
 
         if self._args.gui.lower() == 'true':
             try:
-                gui_launcher = GuiLauncher()
+                gui_launcher = GuiLauncher(self._hardware_manager)
                 self._launch_tasks.append(gui_launcher.setup_main_window())
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)

@@ -21,24 +21,24 @@ class CPUDetector:
     def __init__(self, logger):
         self.logger = logger
 
-    def detect_cpus(self) -> List[Dict[str, str]]:
-        """Detect CPUs using psutil.
+    def detect_cpu(self) -> dict:
+        """Detect CPU using psutil.
 
         Returns:
-            list: Information about detected CPUs.
+            list: Information about detected CPU.
         """
-        cpu_info = []
         try:
             physical_cores = psutil.cpu_count(logical=False)
             logical_cores = psutil.cpu_count(logical=True)
         except Exception as e:
-            self.logger.error(f"Error detecting CPUs: {e}")
+            self.logger.error(f"Error detecting CPU: {e}")
             physical_cores = None
             logical_cores = None
 
-        cpu_info.append({
+        return {
+            "name": platform.processor(),
             "physical_cores": physical_cores,
             "logical_cores": logical_cores,
-            "architecture": platform.machine()
-        })
-        return cpu_info
+            "architecture": platform.machine(),
+            "frequency": psutil.cpu_freq().current if psutil.cpu_freq() else "Unknown"
+        }

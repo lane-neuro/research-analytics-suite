@@ -25,7 +25,6 @@ class BatteryInfo:
         Returns:
             dict: Information about the system's battery.
         """
-        self.logger.info("Getting battery information...")
         battery = psutil.sensors_battery()
         if battery:
             battery_info = {
@@ -35,5 +34,4 @@ class BatteryInfo:
             }
         else:
             battery_info = "No battery detected"
-        self.logger.info(f"Battery information: {battery_info}")
         return battery_info

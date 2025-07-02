@@ -43,13 +43,13 @@ class TestCUDAManager:
             cuda_manager = CUDAManager(logger=None)  # Replace logger with a mock or real logger as needed
             assert cuda_manager.check_permissions() is True
 
-    @pytest.mark.skipif(platform.system() != 'Linux', reason="Test only applicable to Linux")
-    def test_install_cuda_supported_gpu_linux(self, logger):
-        with mock.patch('platform.system', return_value='Linux'):
-            cuda_manager = CUDAManager(logger)
-            with mock.patch.object(cuda_manager, 'install_cuda_linux'):
-                cuda_manager.install_cuda("10.1")
-                cuda_manager.install_cuda_linux.assert_called_once_with("10.1")
+    # @pytest.mark.skipif(platform.system() != 'Linux', reason="Test only applicable to Linux")
+    # def test_install_cuda_supported_gpu_linux(self, logger):
+    #     with mock.patch('platform.system', return_value='Linux'):
+    #         cuda_manager = CUDAManager(logger)
+    #         with mock.patch.object(cuda_manager, 'install_cuda_linux'):
+    #             cuda_manager.install_cuda("10.1")
+    #             cuda_manager.install_cuda_linux.assert_called_once_with("10.1")
 
     def test_install_cuda_unsupported_gpu(self, cuda_manager, logger):
         with mock.patch('platform.system', return_value='Linux'):

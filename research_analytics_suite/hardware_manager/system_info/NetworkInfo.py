@@ -25,12 +25,10 @@ class NetworkInfo:
         Returns:
             dict: Information about the system's network interfaces.
         """
-        self.logger.info("Getting network information...")
         net_if_addrs = psutil.net_if_addrs()
         net_if_stats = psutil.net_if_stats()
         network_info = {
             "interfaces": net_if_addrs,
             "stats": net_if_stats
         }
-        self.logger.info(f"Network information: {network_info}")
         return network_info

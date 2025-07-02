@@ -35,36 +35,37 @@ class DataManagementDialog(GUIBase):
             self._logger.error(e, self.__class__.__name__)
 
     def draw(self) -> None:
-        with dpg.child_window(tag="data_man_dialog",
-                              parent=self._parent, width=-1, height=125, border=True):
-            from research_analytics_suite.gui import left_aligned_input_field
-            left_aligned_input_field(label="Search", tag="search_input", parent="data_man_dialog",
-                                     callback=self.search, value="")
-            dpg.add_separator()
+        # with dpg.child_window(tag="data_man_dialog",
+        #                       parent=self._parent, width=-1, height=125, border=True):
+        #     from research_analytics_suite.gui import left_aligned_input_field
+        #     left_aligned_input_field(label="Search", tag="search_input", parent="data_man_dialog",
+        #                              callback=self.search, value="")
+        #     dpg.add_separator()
+        #
+        #     with dpg.group(horizontal=True):
+        #         with dpg.group(horizontal=False, width=200):
+        #             dpg.add_text("Save and Restore")
+        #             dpg.add_separator()
+        #             dpg.add_button(label="Save Memory Slots",
+        #                            callback=lambda: asyncio.create_task(self.save_memory_slots()))
+        #             dpg.add_button(label="Restore Memory Slots",
+        #                            callback=lambda: asyncio.create_task(self.restore_memory_slots()))
+        #         with dpg.group(horizontal=False, width=200):
+        #             dpg.add_text("Filename")
+        #             dpg.add_separator()
+        #             dpg.add_input_text(tag="save_path_input", default_value=os.path.join('memory_manager.db'), width=-1)
+        #         with dpg.group(horizontal=False, width=-1):
+        #             self.notification_area = dpg.add_text("Notifications: [in the future]")
+        #             dpg.add_separator()
 
-            with dpg.group(horizontal=True):
-                with dpg.group(horizontal=False, width=200):
-                    dpg.add_text("Save and Restore")
-                    dpg.add_separator()
-                    dpg.add_button(label="Save Memory Slots",
-                                   callback=lambda: asyncio.create_task(self.save_memory_slots()))
-                    dpg.add_button(label="Restore Memory Slots",
-                                   callback=lambda: asyncio.create_task(self.restore_memory_slots()))
-                with dpg.group(horizontal=False, width=200):
-                    dpg.add_text("Filename")
-                    dpg.add_separator()
-                    dpg.add_input_text(tag="save_path_input", default_value=os.path.join('memory_manager.db'), width=-1)
-                with dpg.group(horizontal=False, width=-1):
-                    self.notification_area = dpg.add_text("Notifications: [in the future]")
-                    dpg.add_separator()
-
+        dpg.add_button(label="Add Variable", parent=self._parent,
+                       callback=lambda: asyncio.create_task(self.open_add_var_dialog()))
+        dpg.add_button(label="Data Import", parent=self._parent, callback=self.show_data_import)
         dpg.add_child_window(label="Memory Slots", parent=self._parent, width=-1, height=-1,
                              border=True, tag="slots_window")
-        dpg.add_button(label="Add Variable", parent="slots_window",
-                       callback=lambda: asyncio.create_task(self.open_add_var_dialog()))
-        dpg.add_button(label="Data Import", parent="slots_window",
-                       callback=self.show_data_import)
-        dpg.add_group(tag="management_tools_group", parent="slots_window", width=-1, height=-1)
+        dpg.add_child_window(tag="slot_container", parent="slots_window", height=-1, width=-1,
+                             horizontal_scrollbar=True)
+        dpg.add_group(tag="slot_group", parent="slot_container", width=220, height=-1, horizontal=True)
 
     async def _update_async(self) -> None:
         """Updates the collection dropdown list and the GUI display of variables."""
@@ -77,27 +78,12 @@ class DataManagementDialog(GUIBase):
             slots = self._memory_manager.list_slots()
 
             for slot_info in slots:
-                # TODO: Dynamically update the slot view
-                if not dpg.does_alias_exist(f"{slot_info.memory_id}_data_man"):
-                    dpg.add_text(label=f"Slot ID: {slot_info.memory_id}, Name: {slot_info.name}, Data: {slot_info.data}",
-                                 parent="management_tools_group", tag=f"{slot_info.memory_id}_data_man")
-                    dpg.add_combo(label="Pointer", items=self._memory_manager.get_all_slot_ids(),
-                                  tag=f"{slot_info.memory_id}_data_man_pointer", parent="management_tools_group",
-                                  callback=self.combo_callback, user_data=slot_info.memory_id)
-                else:
-                    dpg.set_value(item=f"{slot_info.memory_id}_data_man",
-                                  value=f"Slot ID: {slot_info.memory_id}, Name: {slot_info.name}, Data: {slot_info.data}")
-                    dpg.configure_item(item=f"{slot_info.memory_id}_data_man_pointer",
-                                       items=self._memory_manager.get_all_slot_ids())
-
-    def combo_callback(self, sender, app_data, user_data):
-        """Callback function for the combo box."""
-        _sender = user_data
-        _selected_slot_id = dpg.get_value(sender)
-        self._logger.debug(f"Updating slot {_sender} with pointer to slot {_selected_slot_id}")
-        _slot = self._memory_manager.get_slot(_sender)
-        _slot.pointer = self._memory_manager.get_slot(_selected_slot_id)
-        self._logger.debug(f"Slot: {_slot.memory_id}  Pointer: {_slot.pointer}  Data: {_slot.data}")
+                if not dpg.does_alias_exist(f"adv_slot_{slot_info.memory_id}"):
+                    from research_analytics_suite.gui.modules.AdvancedSlotView import AdvancedSlotView
+                    adv_slot_view = AdvancedSlotView(width=100, height=self.height, parent="slot_group",
+                                                     slot=slot_info)
+                    await adv_slot_view.initialize_gui()
+                    adv_slot_view.draw()
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         """Resizes the GUI."""

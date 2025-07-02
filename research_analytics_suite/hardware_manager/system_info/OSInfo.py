@@ -25,7 +25,6 @@ class OSInfo:
         Returns:
             dict: Information about the system's operating system.
         """
-        self.logger.info("Getting operating system information...")
         os_info = {
             "system": platform.system(),
             "node": platform.node(),
@@ -34,5 +33,4 @@ class OSInfo:
             "machine": platform.machine(),
             "processor": platform.processor()
         }
-        self.logger.info(f"Operating system information: {os_info}")
         return os_info

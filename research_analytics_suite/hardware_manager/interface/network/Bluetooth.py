@@ -50,7 +50,7 @@ class Bluetooth:
         asyncio.set_event_loop(loop)
         loop.run_until_complete(coro)
 
-    async def detect(self) -> List[Dict[str, str]]:
+    def detect(self) -> List[Dict[str, str]]:
         """Detect Bluetooth devices.
 
         Returns:

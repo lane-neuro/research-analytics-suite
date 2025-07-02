@@ -25,7 +25,6 @@ class StorageInfo:
         Returns:
             list: Information about the system's storage devices.
         """
-        self.logger.info("Getting storage information...")
         partitions = psutil.disk_partitions()
         storage_info = []
         for partition in partitions:
@@ -39,5 +38,4 @@ class StorageInfo:
                 "free": usage.free,
                 "percent": usage.percent
             })
-        self.logger.info(f"Storage information: {storage_info}")
         return storage_info

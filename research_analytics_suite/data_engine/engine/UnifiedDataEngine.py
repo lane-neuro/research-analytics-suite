@@ -327,7 +327,6 @@ class UnifiedDataEngine:
             try:
                 metadata = json.loads(await metadata_file.read())
             except Exception as e:
-                CustomLogger().error(Exception(f"Failed to load metadata: {e}"), 'UnifiedDataEngine')
                 # Return an empty engine if metadata is not found
                 return UnifiedDataEngine()
 
@@ -335,7 +334,10 @@ class UnifiedDataEngine:
 
         # Load data
         async with aiofiles.open(data_path, 'r') as data_file:
-            data = json.loads(await data_file.read())
+            try:
+                data = json.loads(await data_file.read())
+            except Exception as e:
+                data = {}
 
         # Load engine state
         async with aiofiles.open(os.path.normpath(

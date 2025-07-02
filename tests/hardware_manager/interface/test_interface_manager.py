@@ -1,6 +1,6 @@
 import pytest
 import asyncio
-from unittest.mock import MagicMock, patch, AsyncMock, call
+from unittest.mock import MagicMock, patch, AsyncMock, call, Mock
 from research_analytics_suite.hardware_manager.interface.InterfaceManager import InterfaceManager
 
 
@@ -26,16 +26,16 @@ def mock_interfaces(mock_logger):
             patch('research_analytics_suite.hardware_manager.interface.display.VGA.VGA', autospec=True) as MockVGA, \
             patch('research_analytics_suite.hardware_manager.interface.display.PCI.PCI', autospec=True) as MockPCI, \
             patch('research_analytics_suite.hardware_manager.interface.serial.Serial.Serial', autospec=True) as MockSerial:
-        MockUSB.return_value.detect = AsyncMock(return_value=[{'device': 'USB1'}])
-        MockEthernet.return_value.detect = AsyncMock(return_value=[{'device': 'Ethernet1'}])
-        MockWireless.return_value.detect = AsyncMock(return_value=[{'device': 'Wireless1'}])
-        MockBluetooth.return_value.detect = AsyncMock(return_value=[{'device': 'Bluetooth1'}])
-        MockThunderbolt.return_value.detect = AsyncMock(return_value=[{'device': 'Thunderbolt1'}])
-        MockDisplayPort.return_value.detect = AsyncMock(return_value=[{'device': 'DisplayPort1'}])
-        MockHDMI.return_value.detect = AsyncMock(return_value=[{'device': 'HDMI1'}])
-        MockVGA.return_value.detect = AsyncMock(return_value=[{'device': 'VGA1'}])
-        MockPCI.return_value.detect = AsyncMock(return_value=[{'device': 'PCI1'}])
-        MockSerial.return_value.detect = AsyncMock(return_value=[{'device': 'Serial1'}])
+        MockUSB.return_value.detect = Mock(return_value=[{'device': 'USB1'}])
+        MockEthernet.return_value.detect = Mock(return_value=[{'device': 'Ethernet1'}])
+        MockWireless.return_value.detect = Mock(return_value=[{'device': 'Wireless1'}])
+        MockBluetooth.return_value.detect = Mock(return_value=[{'device': 'Bluetooth1'}])
+        MockThunderbolt.return_value.detect = Mock(return_value=[{'device': 'Thunderbolt1'}])
+        MockDisplayPort.return_value.detect = Mock(return_value=[{'device': 'DisplayPort1'}])
+        MockHDMI.return_value.detect = Mock(return_value=[{'device': 'HDMI1'}])
+        MockVGA.return_value.detect = Mock(return_value=[{'device': 'VGA1'}])
+        MockPCI.return_value.detect = Mock(return_value=[{'device': 'PCI1'}])
+        MockSerial.return_value.detect = Mock(return_value=[{'device': 'Serial1'}])
 
         yield {
             'USB': MockUSB,
@@ -51,10 +51,9 @@ def mock_interfaces(mock_logger):
         }
 
 
-@pytest.mark.asyncio
 class TestInterfaceManager:
     @pytest.fixture(autouse=True)
-    async def setup(self, mock_logger, mock_interfaces):
+    def setup(self, mock_logger, mock_interfaces):
         self.manager = InterfaceManager()
         self.manager.logger = mock_logger
         self.mock_interfaces = mock_interfaces
@@ -72,13 +71,13 @@ class TestInterfaceManager:
             'Serial': mock_interfaces['Serial'](mock_logger)
         }
 
-    async def test_singleton(self):
+    def test_singleton(self):
         manager1 = InterfaceManager()
         manager2 = InterfaceManager()
         assert manager1 is manager2
 
-    async def test_detect_interfaces(self):
-        await self.manager.detect_interfaces()
+    def test_detect_interfaces(self):
+        self.manager.detect_interfaces()
         assert self.manager.interfaces == {
             'USB': [{'device': 'USB1'}],
             'Ethernet': [{'device': 'Ethernet1'}],
@@ -92,32 +91,32 @@ class TestInterfaceManager:
             'Serial': [{'device': 'Serial1'}]
         }
 
-    async def test_add_interface(self):
+    def test_add_interface(self):
         mock_new_interface = MagicMock()
-        mock_new_interface.detect = AsyncMock(return_value=[{'device': 'NewInterface1'}])
+        mock_new_interface.detect = Mock(return_value=[{'device': 'NewInterface1'}])
         self.manager.add_interface('NewInterface', mock_new_interface)
-        await self.manager.detect_interfaces()
+        self.manager.detect_interfaces()
         assert self.manager.interfaces['NewInterface'] == [{'device': 'NewInterface1'}]
 
-    async def test_remove_interface(self):
+    def test_remove_interface(self):
         mock_new_interface = MagicMock()
-        mock_new_interface.detect = AsyncMock(return_value=[{'device': 'NewInterface1'}])
+        mock_new_interface.detect = Mock(return_value=[{'device': 'NewInterface1'}])
         self.manager.add_interface('NewInterface', mock_new_interface)
-        await self.manager.detect_interfaces()
+        self.manager.detect_interfaces()
         assert 'NewInterface' in self.manager.interfaces
         self.manager.remove_interface('NewInterface')
-        await self.manager.detect_interfaces()
+        self.manager.detect_interfaces()
         assert 'NewInterface' not in self.manager.interfaces
 
-    async def test_list_interfaces(self):
-        await self.manager.detect_interfaces()
+    def test_list_interfaces(self):
+        self.manager.detect_interfaces()
         interfaces_list = self.manager.list_interfaces()
         assert interfaces_list == [
             'USB', 'Ethernet', 'Wireless', 'Bluetooth', 'Thunderbolt',
             'DisplayPort', 'HDMI', 'VGA', 'PCI', 'Serial'
         ]
 
-    async def test_get_interface(self):
-        await self.manager.detect_interfaces()
+    def test_get_interface(self):
+        self.manager.detect_interfaces()
         usb_interface = self.manager.get_interface('USB')
         assert usb_interface == [{'device': 'USB1'}]
