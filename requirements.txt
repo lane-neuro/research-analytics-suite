@@ -52,8 +52,8 @@ requests-toolbelt
 rich
 s3transfer
 scikit-learn
-scipy
-statsmodels
+scipy>=1.10.0
+statsmodels>=0.13.0
 torch
 torchaudio
 torchvision

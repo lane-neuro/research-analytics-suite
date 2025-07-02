@@ -25,7 +25,7 @@ class TestResearchAnalyticsSuite:
         self.suite._args.open_workspace = '/tmp/test_workspace'
 
         with patch.object(self.suite._logger, 'initialize', new=AsyncMock()) as logger_initialize, \
-                patch.object(self.suite._hardware_manager.interface_manager, 'detect_interfaces', new=AsyncMock()) as hardware_initialize, \
+                patch.object(self.suite._hardware_manager.interface_manager, 'detect_interfaces', new=Mock()) as hardware_initialize, \
                 patch.object(self.suite._memory_manager, 'initialize', new=AsyncMock()) as memory_initialize, \
                 patch.object(self.suite._config, 'initialize', new=AsyncMock()) as config_initialize, \
                 patch.object(self.suite._operation_control, 'initialize', new=AsyncMock()) as operation_initialize, \
