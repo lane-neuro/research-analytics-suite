@@ -295,6 +295,15 @@ class MemoryManager:
         """
         return list(self._slot_collection.keys())
 
+    def format_slot_name_id(self):
+        """
+        Formats the memory slot identifiers and names into a list of strings.
+
+        Returns:
+            list: A list of formatted strings containing memory slot identifiers and names.
+        """
+        return [f"{slot.name} [{slot.memory_id}]" for slot in self._slot_collection.values()]
+
     def validate_slots(self, memory_ids: list, require_values: bool = True) -> (list, list):
         """
         Validates a list of memory slot identifiers and returns the valid and invalid slots.

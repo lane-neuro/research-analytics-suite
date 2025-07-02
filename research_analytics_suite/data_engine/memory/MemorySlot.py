@@ -254,27 +254,10 @@ class MemorySlot:
                         self._last_modified = self._modified_at
                     else:
                         try:
-                            async with aiosqlite.connect(self.db_path) as conn:
-                                cursor = await conn.execute(
-                                    "SELECT data FROM variables WHERE memory_id = ?",
-                                    (self._memory_id,)
-                                )
-                                row = await cursor.fetchone()
-                                if row:
-                                    data = row[0]
-
-                                    # Deserialize the data, if necessary
-                                    if isinstance(data, bytes):
-                                        data = pickle.loads(data)
-                                    elif not isinstance(data, self.data_type):
-                                        self._logger.warning(
-                                            f"Data type mismatch: expected {self.data_type}, got {type(data)}")
-                                        data = None
-
-                                    self._data = data if data else None
-                                    self._last_modified = self._modified_at
+                            await self.set_data(self._data)
+                            self._last_modified = self._modified_at
                         except Exception as e:
-                            self._logger.error(Exception(f"[SQLite] Get variable error: {e}"), self.__class__.__name__)
+                            self._logger.error(Exception(f"Failed to update data: {e}"), self.__class__.__name__)
 
     def _check_data_size(self, _data) -> None:
         """
