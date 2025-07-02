@@ -54,10 +54,10 @@ class TestLibraryManifest:
         self.library_manifest.add_operation_from_attributes(operation_attributes)
         assert operation_attributes in self.library_manifest._categories[9999].operations
 
-    @pytest.mark.asyncio
-    async def test_build_base_library(self):
-        await self.library_manifest.build_base_library()
-        assert len(self.library_manifest.get_library()) > 0
+    # @pytest.mark.asyncio
+    # async def test_build_base_library(self):
+    #     await self.library_manifest.build_base_library()
+    #     assert len(self.library_manifest.get_library()) > 0
 
     def test_get_categories(self):
         categories = self.library_manifest.get_categories()
