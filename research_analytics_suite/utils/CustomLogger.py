@@ -164,8 +164,8 @@ class CustomLogger:
         """
         while True:
             await asyncio.sleep(.001)
-            message = await self.log_message_queue.get()
-            print(message)
+            async for line in await self.log_message_queue.get():
+                print(line)
 
     def info(self, message: str or list, context: str = None) -> None:
         """

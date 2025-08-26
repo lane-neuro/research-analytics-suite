@@ -256,5 +256,5 @@ class DataManagementDialog(GUIBase):
             file_path = os.path.normpath(file)
             data, d_type = self._workspace.get_default_data_engine().load_data(file_path)
             if data:
-                _name = os.path.normpath(file_path)
+                _name = os.path.basename(file_path)
                 asyncio.run(self.add_variable(name=file_path, d_type=d_type, value=data))

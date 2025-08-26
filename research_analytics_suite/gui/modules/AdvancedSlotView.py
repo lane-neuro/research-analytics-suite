@@ -14,13 +14,14 @@ from research_analytics_suite.operation_manager.operations.system.UpdateMonitor 
 class AdvancedSlotView(GUIBase):
     """A class to manage the detailed GUI representation of individual slots."""
 
-    def __init__(self, width: int, height: int, parent, slot: MemorySlot):
+    def __init__(self, width: int, height: int, parent, slot: MemorySlot, temp_view: bool = False):
         """
         Initializes the AdvancedSlotView with the given slot.
 
         Args:
             parent (str): The parent GUI element ID.
             slot (MemorySlot): The memory slot to represent.
+            temp_view (bool): Whether this is a temporary view.
         """
         super().__init__(width, height, parent)
 
@@ -29,6 +30,9 @@ class AdvancedSlotView(GUIBase):
 
         self._slot = slot
         self._slot_group_tag = f"adv_slot_{slot.memory_id}"
+        self._temp_view = temp_view
+        if self._temp_view:
+            self._slot_group_tag += "_temp"
         self._is_editing = False
 
     async def initialize_gui(self) -> None:
@@ -47,35 +51,35 @@ class AdvancedSlotView(GUIBase):
 
         dpg.add_child_window(tag=self._slot_group_tag, parent=self._parent, height=self.height, width=self.width,
                              border=True, horizontal_scrollbar=True)
-        dpg.add_text(f"{self._slot.name} [{self._slot.memory_id}]", parent=self._slot_group_tag,
-                     tag=f"slot_name_{self._slot.memory_id}")
+        dpg.add_text(f"{self._slot.name} [{self._format_memory_id()}]", parent=self._slot_group_tag,
+                     tag=f"slot_name_{self._format_memory_id()}")
 
         dpg.add_collapsing_header(label="Slot Details", parent=self._slot_group_tag,
-                                  tag=f"slot_details_{self._slot.memory_id}")
-        dpg.add_text(f"Name: {self._slot.name}", tag=f"details_name_{self._slot.memory_id}",
-                     parent=f"slot_details_{self._slot.memory_id}")
-        dpg.add_text(f"Memory ID: {self._slot.memory_id}", tag=f"slot_id_{self._slot.memory_id}",
-                     parent=f"slot_details_{self._slot.memory_id}")
-        dpg.add_text(f"Type: {self._slot.data_type}", parent=f"slot_details_{self._slot.memory_id}",
-                     tag=f"slot_type_{self._slot.memory_id}")
+                                  tag=f"slot_details_{self._format_memory_id()}")
+        dpg.add_text(f"Name: {self._slot.name}", tag=f"details_name_{self._format_memory_id()}",
+                     parent=f"slot_details_{self._format_memory_id()}")
+        dpg.add_text(f"Memory ID: {self._format_memory_id()}", tag=f"slot_id_{self._format_memory_id()}",
+                     parent=f"slot_details_{self._format_memory_id()}")
+        dpg.add_text(f"Type: {self._slot.data_type}", parent=f"slot_details_{self._format_memory_id()}",
+                     tag=f"slot_type_{self._format_memory_id()}")
 
-        dpg.add_collapsing_header(label="Data", parent=self._slot_group_tag, tag=f"data_drop_{self._slot.memory_id}")
-        left_aligned_combo(label="Pointer", tag=f"gui_pointer_{self._slot.memory_id}",  callback=self.combo_callback,
-                           parent=f"data_drop_{self._slot.memory_id}", items=self._memory_manager.format_slot_name_id(),
+        dpg.add_collapsing_header(label="Data", parent=self._slot_group_tag, tag=f"data_drop_{self._format_memory_id()}")
+        left_aligned_combo(label="Pointer", tag=f"gui_pointer_{self._format_memory_id()}",  callback=self.combo_callback,
+                           parent=f"data_drop_{self._format_memory_id()}", items=self._memory_manager.format_slot_name_id(),
                            user_data=self._slot.memory_id, width=100)
-        with dpg.group(horizontal=True, parent=f"data_drop_{self._slot.memory_id}"):
+        with dpg.group(horizontal=True, parent=f"data_drop_{self._format_memory_id()}"):
             dpg.add_text("Data: ")
             dpg.add_button(label="Edit", callback=self.edit_data)
 
-        dpg.add_text(f"{self._slot.data}", tag=f"slot_data_{self._slot.memory_id}",
-                     parent=f"data_drop_{self._slot.memory_id}")
-        dpg.add_input_text(tag=f"edit_data_{self._slot.memory_id}", show=False,
-                           parent=f"data_drop_{self._slot.memory_id}")
+        dpg.add_text(f"{self._slot.data}", tag=f"slot_data_{self._format_memory_id()}",
+                     parent=f"data_drop_{self._format_memory_id()}")
+        dpg.add_input_text(tag=f"edit_data_{self._format_memory_id()}", show=False,
+                           parent=f"data_drop_{self._format_memory_id()}")
 
         dpg.add_collapsing_header(label="Backup & Export", parent=self._slot_group_tag,
-                                  tag=f"backup_export_{self._slot.memory_id}")
+                                  tag=f"backup_export_{self._format_memory_id()}")
         # Export functionality
-        with dpg.group(horizontal=True, parent=f"backup_export_{self._slot.memory_id}"):
+        with dpg.group(horizontal=True, parent=f"backup_export_{self._format_memory_id()}"):
             dpg.add_button(label="Export as CSV", callback=self.export_csv)
             dpg.add_button(label="Export as JSON", callback=self.export_json)
 
@@ -86,12 +90,12 @@ class AdvancedSlotView(GUIBase):
 
         while True:
             await asyncio.sleep(.01)
-            dpg.set_value(item=f"slot_name_{self._slot.memory_id}", value=f"{self._slot.name} [{self._slot.memory_id}]")
-            dpg.set_value(item=f"details_name_{self._slot.memory_id}", value=f"Name: {self._slot.name}")
-            dpg.set_value(item=f"slot_id_{self._slot.memory_id}", value=f"Memory ID: {self._slot.memory_id}")
-            dpg.set_value(item=f"slot_type_{self._slot.memory_id}", value=f"Type: {self._slot.data_type}")
+            dpg.set_value(item=f"slot_name_{self._format_memory_id()}", value=f"{self._slot.name} [{self._slot.memory_id}]")
+            dpg.set_value(item=f"details_name_{self._format_memory_id()}", value=f"Name: {self._slot.name}")
+            dpg.set_value(item=f"slot_id_{self._format_memory_id()}", value=f"Memory ID: {self._slot.memory_id}")
+            dpg.set_value(item=f"slot_type_{self._format_memory_id()}", value=f"Type: {self._slot.data_type}")
             if not self._is_editing:
-                dpg.set_value(item=f"slot_data_{self._slot.memory_id}", value=f"{self._slot.data}")
+                dpg.set_value(item=f"slot_data_{self._format_memory_id()}", value=f"{self._slot.data}")
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         """Resizes the GUI."""
@@ -110,16 +114,16 @@ class AdvancedSlotView(GUIBase):
     def edit_data(self, sender, app_data, user_data):
         """Callback function for editing slot data."""
         if not self._is_editing:
-            dpg.configure_item(f"slot_data_{self._slot.memory_id}", show=False)
-            dpg.set_value(f"edit_data_{self._slot.memory_id}", self._slot.data)
-            dpg.configure_item(f"edit_data_{self._slot.memory_id}", show=True)
+            dpg.configure_item(f"slot_data_{self._format_memory_id()}", show=False)
+            dpg.set_value(f"edit_data_{self._format_memory_id()}", self._slot.data)
+            dpg.configure_item(f"edit_data_{self._format_memory_id()}", show=True)
             dpg.set_item_label(sender, "Done")
             self._is_editing = True
         else:
-            new_data = dpg.get_value(f"edit_data_{self._slot.memory_id}")
+            new_data = dpg.get_value(f"edit_data_{self._format_memory_id()}")
             self._slot.data = new_data
-            dpg.configure_item(f"slot_data_{self._slot.memory_id}", show=True)
-            dpg.configure_item(f"edit_data_{self._slot.memory_id}", show=False)
+            dpg.configure_item(f"slot_data_{self._format_memory_id()}", show=True)
+            dpg.configure_item(f"edit_data_{self._format_memory_id()}", show=False)
             dpg.set_item_label(sender, "Edit")
             self._is_editing = False
 
@@ -136,3 +140,7 @@ class AdvancedSlotView(GUIBase):
     def export_json(self):
         """Callback function for exporting slot data as JSON."""
         ...
+
+    def _format_memory_id(self) -> str:
+        """Formats the memory ID for display."""
+        return f"{self._slot.memory_id}" if not self._temp_view else f"{self._slot.memory_id}_temp"

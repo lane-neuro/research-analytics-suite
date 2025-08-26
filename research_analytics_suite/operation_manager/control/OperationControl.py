@@ -29,7 +29,7 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 class OperationControl:
     """A class for handling the lifecycle of Operation instances."""
-    SLEEP_TIME = 0.001
+    SLEEP_TIME = 0.0001
     _instance = None
     _lock = asyncio.Lock()
 

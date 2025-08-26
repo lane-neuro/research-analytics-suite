@@ -15,7 +15,6 @@ Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         In Progress
 """
 from typing import List, Optional, Type
-from scipy import stats
 from research_analytics_suite.operation_manager import BaseOperation
 
 
@@ -65,6 +64,7 @@ class T_test(BaseOperation):
         """
         Execute the operation's logic: perform the t-test on the samples.
         """
+        from scipy import stats
         _inputs = self.get_inputs()
         sample1 = _inputs.get("sample1", [])
         sample2 = _inputs.get("sample2", [])

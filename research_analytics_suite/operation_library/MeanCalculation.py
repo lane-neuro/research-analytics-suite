@@ -14,7 +14,7 @@ License:        BSD 3-Clause License
 Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         In Progress
 """
-from typing import List, Optional, Type
+from typing import Optional, Type
 from research_analytics_suite.operation_manager import BaseOperation
 
 
@@ -62,9 +62,12 @@ class MeanCalculation(BaseOperation):
         """
         Execute the operation to calculate the mean of the provided numbers.
         """
+        import pyarrow as pa
+        import pyarrow.compute as pc
         _inputs = self.get_inputs()
         _numbers = _inputs.get("numbers", [])
 
-        mean_value = sum(_numbers) / len(_numbers)
+        mean_value = pc.mean(_numbers)
+
         self.add_log_entry(f"[RESULT] Mean: {mean_value}")
         return {"mean_value": mean_value}

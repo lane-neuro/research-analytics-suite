@@ -73,7 +73,7 @@ class GuiLauncher:
         self._planning_dialog = None
         self._analyze_data_dialog = None
 
-        self._splitter_height = 300
+        self._splitter_height = 150
 
     def switch_pane(self, pane_name: str) -> None:
         """
@@ -195,7 +195,7 @@ class GuiLauncher:
                                       border=True):
                     await self.setup_data_collection_pane()
                     self._collection_view_dialog.draw()
-                    dpg.add_button(label="vvv", callback=self.splitter_callback,
+                    dpg.add_button(label="^^^", callback=self.splitter_callback,
                                    tag="splitter_resize", before="slots_window")
 
                 with dpg.child_window(tag="bottom_right_pane", width=250, height=-1, border=True):

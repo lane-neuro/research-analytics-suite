@@ -21,6 +21,7 @@ from copy import copy
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.commands.utils.text_utils import get_function_body
+from research_analytics_suite.data_engine import MemoryManager
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
 from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
@@ -71,6 +72,18 @@ class UpdatedOperationModule(GUIBase):
                 # Update the status text with the current operation status
                 dpg.configure_item(f"status_{self._runtime_id}", default_value=self.operation.status)
 
+            if dpg.does_item_exist(f"loop_{self._runtime_id}"):
+                # Update the loop checkbox state
+                dpg.configure_item(f"loop_{self._runtime_id}", default_value=self._attributes.is_loop)
+
+            if dpg.does_item_exist(f"gpu_{self._runtime_id}"):
+                # Update the GPU checkbox state
+                dpg.configure_item(f"gpu_{self._runtime_id}", default_value=self._attributes.is_gpu_bound)
+
+            if dpg.does_item_exist(f"parallel_{self._runtime_id}"):
+                # Update the parallel checkbox state
+                dpg.configure_item(f"parallel_{self._runtime_id}", default_value=self._attributes.parallel)
+
             await asyncio.sleep(0.001)
 
     def draw(self):
@@ -118,9 +131,25 @@ class UpdatedOperationModule(GUIBase):
 
         with dpg.group(horizontal=True, tag=f"options_{self._runtime_id}", horizontal_spacing=35, parent=parent,
                        width=width):
-            dpg.add_checkbox(label="Loop", default_value=self._attributes.is_loop, indent=10)
-            dpg.add_checkbox(label="GPU", default_value=self._attributes.is_gpu_bound)
-            dpg.add_checkbox(label="Parallel", default_value=self._attributes.parallel)
+            dpg.add_checkbox(
+                label="Loop",
+                default_value=self._attributes.is_loop,
+                indent=10,
+                tag=f"loop_{self._runtime_id}",
+                callback=lambda s, a, u: self.set_loop(a)
+            )
+            dpg.add_checkbox(
+                label="GPU",
+                default_value=self._attributes.is_gpu_bound,
+                tag=f"gpu_{self._runtime_id}",
+                callback=lambda s, a, u: self.set_gpu(a)
+            )
+            dpg.add_checkbox(
+                label="Parallel",
+                default_value=self._attributes.parallel,
+                tag=f"parallel_{self._runtime_id}",
+                callback=lambda s, a, u: self.set_parallel(a)
+            )
 
     def draw_middle_region(self, parent, width=200):
         with dpg.group(horizontal=True, tag=f"middle_{self._runtime_id}",
@@ -130,12 +159,14 @@ class UpdatedOperationModule(GUIBase):
 
                 req_inputs_dict = self._attributes.input_ids
                 _inputs = [f"{k} - {v}" for k, v in req_inputs_dict.items()]
-                dpg.add_listbox(items=_inputs, num_items=3, tag=f"req_inputs_{self._runtime_id}")
+                dpg.add_listbox(items=_inputs, num_items=3, tag=f"req_inputs_{self._runtime_id}",
+                                callback=self.memory_listbox_callback)
 
             with dpg.group(label="Output", tag=f"output_{self._runtime_id}",
                            width=width*.65):
                 dpg.add_text(default_value="Output", indent=5)
-                dpg.add_listbox(items=[], num_items=3, tag=f"output_list_{self._runtime_id}")
+                dpg.add_listbox(items=[], num_items=3, tag=f"output_list_{self._runtime_id}",
+                                callback=self.memory_listbox_callback)
 
     def draw_lower_region(self, parent, width=200):
         dpg.add_text(default_value="Action", parent=parent, indent=10)
@@ -211,3 +242,47 @@ class UpdatedOperationModule(GUIBase):
         _output_dict = await self.operation.get_results()
         self._logger.debug(f"Viewing result: {_output_dict}")
 
+    def set_loop(self, value: bool) -> None:
+        """Sets the loop attribute of the operation."""
+        self._attributes.is_loop = value
+        self.operation.attributes.is_loop = value
+        self.operation.add_log_entry(f"Loop set to {value}.")
+
+    def set_gpu(self, value: bool) -> None:
+        """Sets the GPU attribute of the operation."""
+        self._attributes.is_gpu_bound = value
+        self.operation.attributes.is_gpu_bound = value
+        self.operation.add_log_entry(f"GPU bound set to {value}.")
+
+    def set_parallel(self, value: bool) -> None:
+        """Sets the parallel attribute of the operation."""
+        self._attributes.parallel = value
+        self.operation.attributes.parallel = value
+        self.operation.add_log_entry(f"Parallel execution set to {value}.")
+
+    def memory_listbox_callback(self, sender, app_data, user_data):
+        """Callback function for the memory listbox."""
+        # Parse the runtime ID from the selected string (format: "name - runtime_id")
+        if " - " in app_data:
+            selected_runtime_id = app_data.split(" - ")[1]
+            if dpg.does_item_exist(f"popup_view_slot_{selected_runtime_id}"):
+                dpg.delete_item(f"popup_view_slot_{selected_runtime_id}")
+
+            pos = dpg.get_mouse_pos()
+            with dpg.window(label=f"Slot Details - {selected_runtime_id}", width=200, height=200, pos=pos,
+                            show=True, tag=f"popup_view_slot_{selected_runtime_id}", no_resize=True):
+                asyncio.create_task(self.render_popup(selected_runtime_id))
+
+    async def render_popup(self, selected_runtime_id: str) -> None:
+        """Renders the popup for viewing slot details."""
+        _memory_manager = MemoryManager()
+        slot = _memory_manager.get_slot(selected_runtime_id)
+        if slot is None:
+            self._logger.error(f"Slot with runtime ID {selected_runtime_id} not found.")
+            return
+
+        from research_analytics_suite.gui.modules.AdvancedSlotView import AdvancedSlotView
+        adv_slot_view = AdvancedSlotView(slot=slot, temp_view=True, width=184, height=160,
+                                         parent=f"popup_view_slot_{selected_runtime_id}")
+        await adv_slot_view.initialize_gui()
+        adv_slot_view.draw()

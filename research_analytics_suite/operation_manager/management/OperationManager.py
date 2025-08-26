@@ -25,7 +25,7 @@ from research_analytics_suite.utils.CustomLogger import CustomLogger
 @link_class_commands
 class OperationManager:
     """
-    A class to manage operations within the research analytics suite.
+    A class to manage operations within the Research Analytics Suite.
 
     This class provides methods to add operations to the sequencer, and to resume, pause, and stop operations.
     """
