@@ -179,7 +179,7 @@ class MemoryManager:
     @command
     async def delete_slot(self, memory_id: str) -> None:
         """
-        Deletes a memory slot from both SQLite storage.
+        Deletes a memory slot from SQLite storage.
 
         Args:
             memory_id (str): The unique identifier for the memory slot.
@@ -188,8 +188,6 @@ class MemoryManager:
             memory_slot = self._slot_collection.pop(memory_id)
             if memory_slot:
                 memory_slot.close()
-                if memory_slot.file_path is not None:
-                    os.remove(memory_slot.file_path)  # Remove memory-mapped file if it exists
         except KeyError or FileNotFoundError:
             self._logger.warning(f"Memory slot with ID: {memory_id} does not exist.")
 

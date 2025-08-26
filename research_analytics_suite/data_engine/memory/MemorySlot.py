@@ -364,10 +364,47 @@ class MemorySlot:
         self._modified_at = time.time()
         self._logger.debug(f"Memory slot modified at: {self._modified_at}")
 
+    async def _delete_from_db(self) -> None:
+        """Remove this slot's row from SQLite."""
+        try:
+            async with aiosqlite.connect(self.db_path) as conn:
+                await conn.execute(
+                    "DELETE FROM variables WHERE memory_id = ?",
+                    (self._memory_id,)
+                )
+                await conn.commit()
+            self._logger.debug(f"[SQLite] Deleted slot {self._memory_id}")
+        except Exception as e:
+            self._logger.error(Exception(f"[SQLite] Delete error: {e}"), self.__class__.__name__)
+
     def close(self):
         """
-        Closes the memory-mapped file.
+        Closes resources and removes this slot's data from SQLite.
         """
+        # Best-effort stop of the update monitor
+        try:
+            if self._update_operation:
+                self._update_operation.is_running = False
+        except Exception:
+            pass
+
+        # Delete row from SQLite
+        try:
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+
+            if loop and loop.is_running():
+                # We're inside an active event loop: schedule the delete, don't block
+                loop.create_task(self._delete_from_db())
+            else:
+                # No loop running here: run the coroutine to completion
+                asyncio.run(self._delete_from_db())
+        except Exception as e:
+            self._logger.warning(f"Failed to delete slot {self._memory_id} during close: {e}")
+
+        # Close mmap/file handles
         try:
             if self._mmapped_file:
                 self._mmapped_file.close()

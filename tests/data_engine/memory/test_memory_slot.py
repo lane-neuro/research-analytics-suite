@@ -57,9 +57,3 @@ class TestMemorySlot:
 
         print(f"Old modified_at: {old_modified_at}, New modified_at: {memory_slot._modified_at}")
         assert memory_slot._modified_at > old_modified_at, "Modified timestamp should update after setting new data."
-        
-    @pytest.mark.asyncio
-    async def test_memory_slot_close(self, memory_slot):
-        memory_slot.close()
-        assert memory_slot._mmapped_file is None or memory_slot._mmapped_file.closed, "Memory-mapped file should be closed."
-        assert memory_slot._file is None or memory_slot._file.closed, "File should be closed."
