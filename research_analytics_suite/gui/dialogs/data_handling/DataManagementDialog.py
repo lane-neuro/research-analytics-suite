@@ -126,13 +126,13 @@ class DataManagementDialog(GUIBase):
             dpg.delete_item("selected_file")
 
         with dpg.file_dialog(show=True,
-                             default_path=f"{self._config.BASE_DIR}/{self._config.WORKSPACE_NAME}/"
-                                          f"{self._config.DATA_DIR}",
+                             default_path=f"{os.path.expanduser('~')}\\Research-Analytics-Suite\\workspaces\\"
+                                          f"{self._config.WORKSPACE_NAME}\\data",
                              callback=self._import_data,
                              tag="selected_file",
                              width=500, height=500, modal=True):
-            dpg.add_file_extension(".json", color=(255, 255, 255, 255))
             dpg.add_file_extension(".csv", color=(255, 255, 255, 255))
+            dpg.add_file_extension(".json", color=(255, 255, 255, 255))
             dpg.add_file_extension(".xlsx", color=(255, 255, 255, 255))
             dpg.add_file_extension(".txt", color=(255, 255, 255, 255))
             dpg.add_file_extension(".tsv", color=(255, 255, 255, 255))
