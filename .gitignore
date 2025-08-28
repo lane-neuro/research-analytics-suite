@@ -221,3 +221,4 @@ identifier.sqlite
 *.db
 */None
 None
+/.venv-build
