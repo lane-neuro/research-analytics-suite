@@ -7,9 +7,6 @@ Author: Lane
 """
 import asyncio
 import os
-import importlib
-import pkgutil
-
 from research_analytics_suite.commands import command, link_class_commands
 from research_analytics_suite.library_manifest.Category import Category
 from research_analytics_suite.library_manifest.CategoryID import CategoryID
@@ -122,21 +119,16 @@ class LibraryManifest:
     async def _populate_verified_operations(self):
         self._logger.debug("Starting _populate_verified_operations")
         try:
-            package = importlib.import_module('operation_library')
-            for _, module_name, _ in pkgutil.iter_modules(package.__path__):
-                if module_name == '__init__':
-                    continue
+            from research_analytics_suite.operation_library import OPERATIONS
+            from research_analytics_suite.operation_manager.operations.core.utils import get_attributes_from_module
 
-                self._logger.debug(f"Importing module: {module_name}")
-                module = importlib.import_module(f'operation_library.{module_name}').__dict__.get(module_name)
-
-                from research_analytics_suite.operation_manager.operations.core.utils import \
-                    get_attributes_from_module
-                _operation = await get_attributes_from_module(module)
+            for op_cls in OPERATIONS:
+                _operation = await get_attributes_from_module(op_cls)
                 self.add_operation_from_attributes(_operation)
-        except ModuleNotFoundError:
-            self._logger.error(Exception("operation_library module not found"), self.__class__.__name__)
-        self._logger.debug("Completed _populate_verified_operations")
+        except Exception as e:
+            self._logger.error(e, self.__class__.__name__)
+        finally:
+            self._logger.debug("Completed _populate_verified_operations")
 
     @command
     async def load_user_library(self) -> None:

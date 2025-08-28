@@ -15,10 +15,7 @@ Status: Prototype
 """
 
 import ast
-import inspect
-import textwrap
 from typing import Optional
-
 from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
 from research_analytics_suite.operation_manager.operations.core.workspace import load_from_disk
 from research_analytics_suite.utils import CustomLogger
@@ -73,70 +70,28 @@ async def get_attributes_from_disk(file_path: str) -> Optional[OperationAttribut
 async def get_attributes_from_module(module) -> OperationAttributes:
     """
     Gets the attributes from the module.
-
-    Args:
-        module: The module to load the attributes from.
-
-    Returns:
-        OperationAttributes: The operation attributes.
     """
-    # Get the source code of the class
-    source = inspect.getsource(module)
-    source = textwrap.dedent(source)
-
-    # Parse the source code into an AST
-    tree = ast.parse(source)
-
-    # Initialize variables to hold the class body and properties
-    class_body = None
     _op_props = OperationAttributes()
     await _op_props.initialize()
 
-    # Traverse the AST to find the class definition
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ClassDef):
-            # Assuming the first class definition matches the module's class
-            class_body = node.body
-            break
+    try:
+        cls = module
+        for name, value in vars(cls).items():
+            # skip dunders, callables (methods), and any explicit exclusions
+            if name.startswith("__") or callable(value) or name == "unique_id":
+                continue
+            setattr(_op_props, name, value)
 
-    # If class body is found, process its nodes
-    if class_body:
-        for node in class_body:
-            # Stop when encountering the __init__ method
-            if isinstance(node, ast.FunctionDef) and node.name == '__init__':
-                break
+    except Exception as e:
+        pass
 
-            # Collect properties (assignments) before the __init__ method
-            if isinstance(node, ast.Assign):
-                for target in node.targets:
-                    if isinstance(target, ast.Name) and target.id != 'unique_id':
-                        prop_name = target.id
-
-                        try:
-                            if isinstance(node.value, ast.Dict):
-                                dict_items = {translate_item(k): translate_item(v) for k, v in
-                                              zip(node.value.keys, node.value.values)}
-                                setattr(_op_props, prop_name, dict_items)
-                            elif isinstance(node.value, ast.List):
-                                list_items = [translate_item(v) for v in node.value.elts]
-                                setattr(_op_props, prop_name, list_items)
-                            elif isinstance(node.value, ast.Tuple):
-                                tuple_items = tuple(translate_item(v) for v in node.value.elts)
-                                setattr(_op_props, prop_name, tuple_items)
-                            else:
-                                # Direct value assignment for simple types
-                                setattr(_op_props, prop_name, translate_item(node.value))
-                        except AttributeError:
-                            CustomLogger().error(AttributeError(f"Invalid attribute: {prop_name}"),
-                                                 OperationAttributes.__name__)
     if _op_props.action is None:
-        # Check if the module has an execute method and if it is callable
-        if hasattr(module, 'execute') and callable(getattr(module, 'execute', None)):
-            _op_props.action = module.execute
+        execute = getattr(module, "execute", None)
+        if callable(execute):
+            _op_props.action = execute
         else:
-            # If no execute method, set action to None or handle accordingly
             _op_props.action = None
-            CustomLogger().warning(f"{module.__name__} has no 'execute' method")
+            CustomLogger().warning(f"{getattr(module, '__name__', module)} has no 'execute' method")
 
     return _op_props
 

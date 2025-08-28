@@ -37,6 +37,7 @@ from research_analytics_suite.gui.dialogs.data_handling.AnalyzeDataDialog import
 from research_analytics_suite.gui.dialogs.visualization.VisualizeDataDialog import VisualizeDataDialog
 from research_analytics_suite.gui.dialogs.management.ProjectManagerDialog import ProjectManagerDialog
 from research_analytics_suite.gui.dialogs.management.ReportsDialog import ReportsDialog
+from research_analytics_suite.utils.Resources import resource_path
 
 
 class GuiLauncher:
@@ -104,10 +105,10 @@ class GuiLauncher:
 
         dpg.bind_theme(global_theme)
 
+        font_directory = resource_path("./gui/assets/fonts")
         font_paths = []
-        font_directory = "./gui/assets/fonts"
 
-        if os.path.exists(font_directory) and os.path.isdir(font_directory):
+        if font_directory.exists() and font_directory.is_dir():
             for root, _, files in os.walk(font_directory):
                 for file in files:
                     if file.endswith(".ttf"):
@@ -143,8 +144,8 @@ class GuiLauncher:
 
         dpg.create_context()
         dpg.create_viewport(title='Research Analytics Suite - Main Window', width=1366, height=768,
-                            large_icon="gui/assets/images/logo_extra_large_dark.ico",
-                            small_icon="gui/assets/images/logo_large_icon_dark.ico")
+                            large_icon=str(resource_path("./gui/assets/images/logo_taskbar_icon_light_transparent.ico")),
+                            small_icon=str(resource_path("./gui/assets/images/logo_taskbar_icon_light_transparent.ico")))
         dpg.setup_dearpygui()
         await self.apply_theme()
         # dpg.show_metrics()

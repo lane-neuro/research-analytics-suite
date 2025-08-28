@@ -17,7 +17,12 @@ import ast
 import re
 import textwrap
 from collections import Counter
+from pathlib import Path
+
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+
+from research_analytics_suite.utils import CustomLogger
+from research_analytics_suite.utils.Resources import resource_path
 
 CUSTOM_STOP_WORDS = {"the", "a", "an", "and", "or", "but", "if", "then", "else", "when", "where", "why", "how", "all",
                      "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only",
@@ -38,34 +43,73 @@ VALID_WORDS = {"name", "description", "command", "operation", "data", "value", "
 
 def get_function_body(func):
     """
-    Get the body of a function as a string.
+    Return just the body of a function/method as source.
+    Works in dev (inspect) and frozen (reads bundled source).
     """
+    # 1) Dev path
     try:
-        source = inspect.getsource(func)
-    except TypeError:
+        src = inspect.getsource(func)
+        return _extract_body_from_source(src)
+    except (OSError, TypeError):
+        pass
+
+    # 2) Frozen fallback: read bundled source file
+    mod_name = getattr(func, "__module__", None)
+    fn_name  = getattr(func, "__name__", None)
+    if not mod_name or not fn_name:
         return " "
 
-    # Dedent the source code to remove leading spaces
-    dedented_source = textwrap.dedent(source)
+    py_filename = mod_name.rsplit(".", 1)[-1] + ".py"
+    src_path = resource_path(f"./operation_library_src/{py_filename}")
 
-    # Parse the dedented source code
-    parsed = ast.parse(dedented_source)
+    try:
+        text = Path(src_path).read_text(encoding="utf-8", errors="ignore")
+        return _extract_body_from_module_text(text, fn_name)
+    except Exception as e:
+        CustomLogger().error(e, "get_function_body fallback failed")
+        return " "
 
-    function_node = parsed.body[0]  # Get the function node
+def _extract_body_from_source(source: str) -> str:
+    dedented = textwrap.dedent(source)
+    parsed   = ast.parse(dedented)
+    node     = parsed.body[0]
+    return _body_from_def_node(node)
 
-    # Extract the body of the function
-    function_body = function_node.body
+def _extract_body_from_module_text(text: str, fn_name: str) -> str:
+    """Find fn_name either at module level or inside any class (sync/async)."""
+    parsed = ast.parse(text)
 
-    # Remove the docstring if it's present
-    if isinstance(function_body[0], ast.Expr) and isinstance(function_body[0].value, ast.Str):
-        function_body = function_body[1:]
+    # 1) module-level function
+    for node in parsed.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == fn_name:
+            return _body_from_def_node(node)
 
-    # Convert the AST nodes of the function body back to source code
-    body_lines = [ast.unparse(node) for node in function_body]
+    # 2) methods inside classes
+    for node in parsed.body:
+        if isinstance(node, ast.ClassDef):
+            for item in node.body:
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and item.name == fn_name:
+                    return _body_from_def_node(item)
 
-    # Join the lines of the function body
-    body_code = "\n".join(body_lines)
-    return body_code
+    return " "
+
+def _body_from_def_node(def_node) -> str:
+    """Return the body of a (async) function/method def as source, minus docstring."""
+    body_nodes = list(def_node.body)
+    # drop docstring if present
+    if body_nodes and isinstance(body_nodes[0], ast.Expr):
+        val = getattr(body_nodes[0], "value", None)
+        if isinstance(val, ast.Constant) and isinstance(val.value, str):
+            body_nodes = body_nodes[1:]
+    try:
+        return "\n".join(ast.unparse(n) for n in body_nodes)
+    except Exception:
+        # Fallback: at least return dedented original function source (if available)
+        try:
+            import inspect
+            return textwrap.dedent(inspect.getsource(def_node))
+        except Exception:
+            return " "
 
 
 class CustomTextWrapper(textwrap.TextWrapper):
