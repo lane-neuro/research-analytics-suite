@@ -43,7 +43,11 @@ class Serial(Serial_Interface):
         """
         if action == 'detect':
             if self.os_info in ['linux', 'darwin']:
-                return ['dmesg | grep tty']
+                if self.os_info == 'darwin':  # macOS
+                    return ['bash', '-lc', 'ls -1 /dev/tty.* /dev/cu.* 2>/dev/null']
+                else:  # linux
+                    # may want /dev/ttyS*, /dev/ttyUSB*, /dev/ttyACM*, etc.
+                    return ['bash', '-lc', 'ls -1 /dev/ttyS* /dev/ttyUSB* /dev/ttyACM* 2>/dev/null']
             elif self.os_info == 'windows':
                 return ['mode']
             else:

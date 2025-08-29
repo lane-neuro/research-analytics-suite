@@ -27,6 +27,7 @@ from .system_info.OSInfo import OSInfo
 from .system_info.TemperatureInfo import TemperatureInfo
 from .system_info.PeripheralsInfo import PeripheralsInfo
 from research_analytics_suite.utils import CustomLogger
+from .utils import _to_gib
 
 
 class HardwareManager:
@@ -90,11 +91,14 @@ class HardwareManager:
 
     @property
     def gpu_size(self, index: int = 0):
-        """Get the size of the GPU at the specified index, converted to gigabytes and rounded to two decimal places."""
+        """Return GPU memory as GiB (rounded to 2 decimals), or 'Unknown GPU Size'."""
         if index < len(self.gpu_mgr.gpus):
             gpu = self.gpu_mgr.gpus[index]
             if 'memory' in gpu:
-                return round(gpu['memory'] / (1024 ** 2), 2)
+                try:
+                    return round(_to_gib(gpu['memory']), 2)
+                except Exception as e:
+                    self.logger.warning(f"Unable to parse GPU memory: {gpu.get('memory')!r} ({e})")
         return 'Unknown GPU Size'
 
     @property
