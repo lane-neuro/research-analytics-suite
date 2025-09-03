@@ -221,6 +221,3 @@ identifier.sqlite
 *.db
 */None
 None
-/.venv-build
-requirements-build.txt
-build-exe.bat
