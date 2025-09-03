@@ -19,14 +19,42 @@ import textwrap
 from collections import Counter
 from pathlib import Path
 
-from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
-
 from research_analytics_suite.utils import CustomLogger
 from research_analytics_suite.utils.Resources import resource_path
 
-CUSTOM_STOP_WORDS = {"the", "a", "an", "and", "or", "but", "if", "then", "else", "when", "where", "why", "how", "all",
-                     "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only",
-                     "own", "same", "so", "than", "too", "very", "can", "will", "just", "should", "now"}
+# Original Authors: The scikit-learn developers
+# ENGLISH_STOP_WORDS is taken from the "Glasgow Information
+# Retrieval Group". The original list can be found at
+# http://ir.dcs.gla.ac.uk/resources/linguistic_utils/stop_words
+ENGLISH_STOP_WORDS = frozenset(
+    ["a", "about", "above", "across", "after", "afterwards", "again", "against", "all", "almost", "alone", "along",
+     "already", "also", "although", "always", "am", "among", "amongst", "amoungst", "amount", "an", "and", "another",
+     "any", "anyhow", "anyone", "anything", "anyway", "anywhere", "are", "around", "as", "at", "back", "be", "became",
+     "because", "become", "becomes", "becoming", "been", "before", "beforehand", "behind", "being", "below", "beside",
+     "besides", "between", "beyond", "bill", "both", "bottom", "but", "by", "call", "can", "cannot", "cant", "co",
+     "con", "could", "couldnt", "cry", "de", "describe", "detail", "do", "done", "down", "due", "during", "each", "eg",
+     "eight", "either", "eleven", "else", "elsewhere", "empty", "enough", "etc", "even", "ever", "every", "everyone",
+     "everything", "everywhere", "except", "few", "fifteen", "fifty", "fill", "find", "fire", "first", "five", "for",
+     "former", "formerly", "forty", "found", "four", "from", "front", "full", "further", "get", "give", "go", "had",
+     "has", "hasnt", "have", "he", "hence", "her", "here", "hereafter", "hereby", "herein", "hereupon", "hers",
+     "herself", "him", "himself", "his", "how", "however", "hundred", "i", "ie", "if", "in", "inc", "indeed",
+     "interest", "into", "is", "it", "its", "itself", "keep", "last", "latter", "latterly", "least", "less", "ltd",
+     "made", "many", "may", "me", "meanwhile", "might", "mill", "mine", "more", "moreover", "most", "mostly", "move",
+     "much", "must", "my", "myself", "name", "namely", "neither", "never", "nevertheless", "next", "nine", "no",
+     "nobody", "none", "noone", "nor", "not", "nothing", "now", "nowhere", "of", "off", "often", "on", "once", "one",
+     "only", "onto", "or", "other", "others", "otherwise", "our", "ours", "ourselves", "out", "over", "own", "part",
+     "per", "perhaps", "please", "put", "rather", "re", "same", "see", "seem", "seemed", "seeming", "seems", "serious",
+     "several", "she", "should", "show", "side", "since", "sincere", "six", "sixty", "so", "some", "somehow", "someone",
+     "something", "sometime", "sometimes", "somewhere", "still", "such", "system", "take", "ten", "than", "that", "the",
+     "their", "them", "themselves", "then", "thence", "there", "thereafter", "thereby", "therefore", "therein",
+     "thereupon", "these", "they", "thick", "thin", "third", "this", "those", "though", "three", "through",
+     "throughout", "thru", "thus", "to", "together", "too", "top", "toward", "towards", "twelve", "twenty", "two", "un",
+     "under", "until", "up", "upon", "us", "very", "via", "was", "we", "well", "were", "what", "whatever", "when",
+     "whence", "whenever", "where", "whereafter", "whereas", "whereby", "wherein", "whereupon", "wherever", "whether",
+     "which", "while", "whither", "who", "whoever", "whole", "whom", "whose", "why", "will", "with", "within",
+     "without", "would", "yet", "you", "your", "yours", "yourself", "yourselves",
+     ]
+)
 
 VALID_WORDS = {"name", "description", "command", "operation", "data", "value", "input", "output", "file", "save",
                "load", "get", "set", "add", "remove", "update", "clear", "library", "category", "tag", "tags",
@@ -55,7 +83,7 @@ def get_function_body(func):
 
     # 2) Frozen fallback: read bundled source file
     mod_name = getattr(func, "__module__", None)
-    fn_name  = getattr(func, "__name__", None)
+    fn_name = getattr(func, "__name__", None)
     if not mod_name or not fn_name:
         return " "
 
@@ -69,11 +97,13 @@ def get_function_body(func):
         CustomLogger().error(e, "get_function_body fallback failed")
         return " "
 
+
 def _extract_body_from_source(source: str) -> str:
     dedented = textwrap.dedent(source)
-    parsed   = ast.parse(dedented)
-    node     = parsed.body[0]
+    parsed = ast.parse(dedented)
+    node = parsed.body[0]
     return _body_from_def_node(node)
+
 
 def _extract_body_from_module_text(text: str, fn_name: str) -> str:
     """Find fn_name either at module level or inside any class (sync/async)."""
@@ -92,6 +122,7 @@ def _extract_body_from_module_text(text: str, fn_name: str) -> str:
                     return _body_from_def_node(item)
 
     return " "
+
 
 def _body_from_def_node(def_node) -> str:
     """Return the body of a (async) function/method def as source, minus docstring."""
@@ -171,7 +202,7 @@ def extract_keywords(text: str) -> list:
             continue
         if word in VALID_WORDS:
             _words.append(word)
-        elif word not in ENGLISH_STOP_WORDS and word not in CUSTOM_STOP_WORDS:
+        elif word not in ENGLISH_STOP_WORDS:
             _words.append(word)
     return _words
 
@@ -253,7 +284,7 @@ def get_class_from_method(func) -> (str, str):
         tuple(cls, func): The class name and the callable name as a set.
     """
     func_name = func.__name__ if (
-                inspect.ismethod(func) or inspect.isfunction(func) or inspect.iscoroutinefunction(func)) else None
+            inspect.ismethod(func) or inspect.isfunction(func) or inspect.iscoroutinefunction(func)) else None
     if not func_name:
         return None
 
