@@ -1,84 +1,39 @@
 # Research Analytics Suite (RAS) Requirements
 # platform: win-64 | osx-64 | linux-64
-# python: 3.11
+# python: 3.12
 
 # This file may be used to install the required packages using:
 # $ pip install -r requirements.txt
 
 # Requirements --------------------------------------------------------------------
-# Common dependencies
 aioconsole
 aiofiles
 aiosqlite
-asttokens
 bleak
 boto3
-botocore
 cachetools
 dask
-dask-expr
+dearpygui
+dearpygui-async
 diskcache
-distributed
 fastavro
-fastparquet
-importlib-metadata
-importlib_resources
-jupyter_core
-keras
 matplotlib
 nest-asyncio
-numexpr
 numpy
 openpyxl
 pandas
 paramiko
-pip
-pipreqs
 prettytable
 psutil
 pyarrow
 pymongo
 pynvml
-pyopenssl
-pyparsing
-tables
 pytest
 pytest-asyncio
 pytest-cov
 pyserial
-pyserial-asyncio
-requests
-requests-toolbelt
-rich
-s3transfer
 scikit-learn
 scipy>=1.10.0
 statsmodels>=0.13.0
+tables
 torch
-torchaudio
-torchvision
-tornado
-wheel
-dearpygui
-dearpygui-async
-jupyter-client
-pure-eval
-tensorflow
-
-# Windows-specific dependencies
-pyaudio; sys_platform == 'win32'
-mkl; sys_platform == 'win32'
-mkl-service; sys_platform == 'win32'
-mkl_fft; sys_platform == 'win32'
-mkl_random; sys_platform == 'win32'
-
-# Linux-specific dependencies
-pyaudio; sys_platform == 'linux'
-mkl; sys_platform == 'linux'
-mkl-service; sys_platform == 'linux'
-mkl_fft; sys_platform == 'linux'
-mkl_random; sys_platform == 'linux'
-
-# macOS-specific dependencies
-pyaudio; sys_platform == 'darwin'
-# Exclude MKL packages as they are not available for macOS
