@@ -46,7 +46,7 @@ class InterfaceManager:
                 'USB': USB(self.logger),
                 'Ethernet': Ethernet(self.logger),
                 'Wireless': Wireless(self.logger),
-                'Bluetooth': Bluetooth(self.logger),
+                # 'Bluetooth': Bluetooth(self.logger),
                 'Thunderbolt': Thunderbolt(self.logger),
                 'DisplayPort': DisplayPort(self.logger),
                 'HDMI': HDMI(self.logger),

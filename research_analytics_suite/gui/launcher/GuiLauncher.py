@@ -144,8 +144,8 @@ class GuiLauncher:
 
         dpg.create_context()
         dpg.create_viewport(title='Research Analytics Suite - Main Window', width=1366, height=768,
-                            large_icon=str(resource_path("./gui/assets/images/logo_taskbar_icon_light_transparent.ico")),
-                            small_icon=str(resource_path("./gui/assets/images/logo_taskbar_icon_light_transparent.ico")))
+                            large_icon=str(resource_path("./gui/assets/images/icon_512x512.png")),
+                            small_icon=str(resource_path("./gui/assets/images/icon_32x32.png")))
         dpg.setup_dearpygui()
         await self.apply_theme()
         # dpg.show_metrics()
@@ -157,8 +157,8 @@ class GuiLauncher:
                         width=dpg.get_viewport_width(), height=dpg.get_viewport_height()):
             with dpg.menu_bar(tag="primary_menu_bar", parent="main_window"):
                 with dpg.menu(label="File"):
-                    dpg.add_menu_item(label="New Workspace", callback=lambda: self._workspace.create_workspace())
-                    dpg.add_menu_item(label="Open Workspace", callback=lambda: self._workspace.load_workspace())
+                    dpg.add_menu_item(label="New Workspace", callback=self.new_workspace_dialog)
+                    dpg.add_menu_item(label="Open Workspace", callback=self.open_workspace_dialog)
                     dpg.add_menu_item(label="Exit", callback=lambda: dpg.stop_dearpygui())
 
                 with dpg.menu(label="Edit"):
@@ -196,7 +196,7 @@ class GuiLauncher:
                                       border=True, no_scrollbar=True):
                     await self.setup_data_collection_pane()
                     self._collection_view_dialog.draw()
-                    dpg.add_button(label="^^^", callback=self.splitter_callback,
+                    dpg.add_button(label="vvv", callback=self.splitter_callback,
                                    tag="splitter_resize", before="slots_window")
 
                 with dpg.child_window(tag="bottom_right_pane", width=250, height=-1, border=True):
@@ -296,9 +296,11 @@ class GuiLauncher:
 
     async def setup_workspace_pane(self) -> None:
         """Sets up the workspace pane."""
-        self._workspace_dialog = WorkspaceModule(height=-1, width=-1, parent="bottom_left_pane")
-        await self._workspace_dialog.initialize_gui()
-        self._workspace_dialog.draw()
+        # Empty for now
+        pass
+        # self._workspace_dialog = WorkspaceModule(height=-1, width=-1, parent="bottom_left_pane")
+        # await self._workspace_dialog.initialize_gui()
+        # self._workspace_dialog.draw()
 
     async def setup_data_collection_pane(self) -> None:
         """Sets up the data collection pane."""
@@ -363,3 +365,61 @@ class GuiLauncher:
             dpg.configure_item("splitter_resize", label="^^^")
 
         self.adjust_main_window()
+
+    async def new_workspace_dialog(self, sender=None, app_data=None, user_data=None):
+        """Opens a file dialog to create a new workspace."""
+        with dpg.file_dialog(
+            directory_selector=True,
+            show=True,
+            callback=self._create_workspace_callback,
+            default_path=os.path.expanduser(f"~/Research-Analytics-Suite/workspaces/"),
+            tag="new_workspace_file_dialog",
+            width=700,
+            height=400
+        ):
+            dpg.add_file_extension("", color=(150, 255, 150, 255))
+
+    def _create_workspace_callback(self, sender, app_data):
+        """
+        Callback after selecting folder for new workspace.
+        app_data contains {'file_path_name': str, 'current_path': str, ...}
+        """
+        folder_path = app_data["file_path_name"]
+        # Ask for a name (popup input)
+        with dpg.window(label="Workspace Name", modal=True, width=350, height=120, tag="workspace_name_popup"):
+            dpg.add_input_text(label="Workspace Name", tag="workspace_name_input")
+            dpg.add_button(label="Create", callback=lambda: self._finalize_new_workspace(folder_path))
+
+    def _finalize_new_workspace(self, folder_path: str):
+        name = dpg.get_value("workspace_name_input")
+        if not name:
+            self._logger.error(Exception("Workspace name cannot be empty."), self.__class__.__name__)
+            return
+        asyncio.run(self._workspace.create_workspace(workspace_name=name, workspace_directory=folder_path))
+        dpg.delete_item("new_workspace_file_dialog")
+        dpg.delete_item("workspace_name_popup")
+        self._logger.debug(f"Workspace created at {folder_path} with name {name}.")
+
+    async def open_workspace_dialog(self, sender=None, app_data=None, user_data=None):
+        """Opens a file dialog to load an existing workspace config.json."""
+        with dpg.file_dialog(
+            directory_selector=False,
+            show=True,
+            callback=self._open_workspace_callback,
+            default_path=os.path.expanduser(f"~/Research-Analytics-Suite/workspaces/"),
+            tag="open_workspace_file_dialog",
+            width=700,
+            height=400
+        ):
+            dpg.add_file_extension(".json", color=(0, 255, 255, 255), custom_text="[Config Files]")
+
+    def _open_workspace_callback(self, sender, app_data):
+        """Callback after selecting workspace config.json"""
+        config_file = app_data["file_path_name"]
+        if not config_file.endswith("config.json"):
+            self._logger.error(Exception("Please select a valid config.json file."), self.__class__.__name__)
+            return
+        asyncio.run(self._workspace.load_workspace(config_file))
+        dpg.delete_item("open_workspace_file_dialog")
+        self._logger.debug(f"Workspace loaded from {config_file}.")
+

@@ -20,7 +20,7 @@ import asyncio
 import logging
 import os
 import traceback
-from typing import List
+from typing import List, Union
 from logging.handlers import TimedRotatingFileHandler
 
 
@@ -50,6 +50,9 @@ class CustomLogger:
         if not hasattr(self, '_initialized'):
             self._config = None
 
+            self._stream_handler = None
+            self._file_handlers = []
+
             self._info_logger = None
             self._error_logger = None
             self._debug_logger = None
@@ -66,7 +69,7 @@ class CustomLogger:
         if not self._initialized:
             async with CustomLogger._lock:
                 if not self._initialized:
-                    from research_analytics_suite.utils import Config
+                    from research_analytics_suite.utils.Config import Config
                     self._config = Config()
 
                     # Set up the loggers
@@ -85,26 +88,25 @@ class CustomLogger:
                     self._critical_logger = logging.getLogger('RAS - CRITICAL')
                     self._critical_logger.setLevel(logging.CRITICAL)
 
+                    for lg in self._all_loggers():
+                        if lg:
+                            lg.propagate = False  # avoid duplicate emission via root
+
                     # Set up the log message queue
                     self.log_message_queue = asyncio.Queue()
-                    stream_handler = logging.StreamHandler()
-                    formatter = logging.Formatter(
-                        '(%(asctime)s) [[%(name)s]]: %(message)s',
-                        datefmt='%y-%m-%d %H:%M:%S'
-                    )
-                    stream_handler.setFormatter(formatter)
+                    if self._stream_handler is None:
+                        self._stream_handler = logging.StreamHandler()
+                        formatter = logging.Formatter('(%(asctime)s) [[%(name)s]]: %(message)s',
+                                                      datefmt='%y-%m-%d %H:%M:%S')
+                        self._stream_handler.setFormatter(formatter)
+                        for lg in self._all_loggers():
+                            if not lg:
+                                continue
+                            if lg.level != logging.DEBUG or self._config.DEBUG_CONSOLE is True:
+                                lg.addHandler(self._stream_handler)
+                            lg.addFilter(self._log_message)
 
-                    for logger in [
-                        self._info_logger,
-                        self._error_logger,
-                        self._debug_logger,
-                        self._warning_logger,
-                        self._critical_logger
-                    ]:
-                        if logger.level != logging.DEBUG or self._config.DEBUG_CONSOLE is True:
-                            logger.addHandler(stream_handler)
-                        logger.addFilter(self._log_message)
-
+                    # Print a message for each logger to indicate that logging has been initialized
                     self._info_logger.info(f"[{self._info_logger.name}] logging initialized")
                     self._error_logger.error(f"[{self._error_logger.name}] logging initialized")
                     self._debug_logger.debug(f"[{self._debug_logger.name}] logging initialized")
@@ -113,39 +115,83 @@ class CustomLogger:
 
                     self._initialized = True
 
+    def set_config(self, config) -> None:
+        self._config = config
+
+    def reconfigure_for_workspace(self, config) -> None:
+        """
+        Point the logger at a new workspace (singleton-safe) and retarget file handlers.
+        """
+        self.set_config(config)
+        self.add_file_handlers()
+
+    def _all_loggers(self):
+        return [
+            self._info_logger,
+            self._error_logger,
+            self._debug_logger,
+            self._warning_logger,
+            self._critical_logger,
+        ]
+
     def add_file_handlers(self):
         """
-        Adds file handlers to the loggers if LOG_DIR is a valid directory.
+        (Re)attach per-workspace file handlers for current self._config.
+        Clears old file handlers first so logs don't go to previous workspace.
         """
         if not self._config:
-            from research_analytics_suite.utils import Config
+            from research_analytics_suite.utils.Config import Config  # ensure correct import path
             self._config = Config()
 
+        # Compute log_dir for current workspace
         try:
-            log_dir = os.path.normpath(os.path.join(self._config.BASE_DIR, 'workspaces', self._config.WORKSPACE_NAME,
-                                                    self._config.LOG_DIR))
-        except Exception as e:
+            log_dir = os.path.normpath(os.path.join(
+                self._config.BASE_DIR, 'workspaces', self._config.WORKSPACE_NAME, self._config.LOG_DIR
+            ))
+        except Exception:
             log_dir = None
 
-        if log_dir and os.path.exists(log_dir):
-            formatter = logging.Formatter(
-                '(%(asctime)s) [[%(name)s]]: %(message)s',
-                datefmt='%y-%m-%d %H:%M:%S'
+        # Remove old file handlers unconditionally
+        self.clear_file_handlers()
+
+        if not (log_dir and os.path.exists(log_dir)):
+            # Keep streaming to console; just inform
+            if self._info_logger:
+                self._info_logger.warning("Log directory not found. File logging not enabled for this session.")
+            return
+
+        def _to_int(v, default):
+            try:
+                return int(v)
+            except (TypeError, ValueError):
+                return default
+
+        interval = _to_int(getattr(self._config, "LOG_ROTATION", 1), 1)
+        backup = _to_int(getattr(self._config, "LOG_RETENTION", 4), 4)
+
+        formatter = logging.Formatter('(%(asctime)s) [[%(name)s]]: %(message)s', datefmt='%y-%m-%d %H:%M:%S')
+        plan = [
+            ('info', self._info_logger),
+            ('error', self._error_logger),
+            ('debug', self._debug_logger),
+            ('warning', self._warning_logger),
+            ('critical', self._critical_logger),
+        ]
+
+        for logger_name, lg in plan:
+            if not lg:
+                continue
+            fh = TimedRotatingFileHandler(
+                os.path.join(log_dir, f'{logger_name}.log'),
+                when='W0',
+                interval=interval,
+                backupCount=backup,
             )
-            for logger_name, logger in [('info', self._info_logger), ('error', self._error_logger),
-                                        ('debug', self._debug_logger), ('warning', self._warning_logger),
-                                        ('critical', self._critical_logger)]:
-                file_handler = TimedRotatingFileHandler(
-                    os.path.join(log_dir, f'{logger_name}.log'),
-                    when='W0',
-                    interval=self._config.LOG_ROTATION,
-                    backupCount=self._config.LOG_RETENTION
-                )
-                file_handler.setFormatter(formatter)
-                logger.addHandler(file_handler)
-                self._info_logger.info(f"[{logger.name}] file logging initialized")
-        else:
-            self._info_logger.warning("Log directory not found. File logging not enabled for this session.")
+            fh.setFormatter(formatter)
+            lg.addHandler(fh)
+            self._file_handlers.append(fh)
+            if self._info_logger:
+                self._info_logger.info(f"[{lg.name}] file logging initialized")
 
     def _log_message(self, record: logging.LogRecord) -> bool:
         """
@@ -167,7 +213,7 @@ class CustomLogger:
             async for line in await self.log_message_queue.get():
                 print(line)
 
-    def info(self, message: str or list, context: str = None) -> None:
+    def info(self, message: Union[str, list], context: str = None) -> None:
         """
         Logs an info message.
 
@@ -272,3 +318,34 @@ class CustomLogger:
                 self._critical_logger.critical(part)
         else:
             self._critical_logger.critical(message)
+
+    def clear_file_handlers(self) -> None:
+        """
+        Remove and close any existing file handlers from all loggers.
+        Safe to call multiple times.
+        """
+        # First, remove anything we previously attached
+        for h in self._file_handlers:
+            try:
+                for lg in self._all_loggers():
+                    if lg and h in lg.handlers:
+                        lg.removeHandler(h)
+                h.close()
+            except Exception:
+                pass
+        self._file_handlers.clear()
+
+        # Defensive: also strip any TimedRotatingFileHandler that slipped in
+        for lg in self._all_loggers():
+            if not lg:
+                continue
+            keep = []
+            for h in list(lg.handlers):
+                if isinstance(h, TimedRotatingFileHandler):
+                    try:
+                        lg.removeHandler(h)
+                        h.close()
+                    except Exception:
+                        pass
+                else:
+                    keep.append(h)

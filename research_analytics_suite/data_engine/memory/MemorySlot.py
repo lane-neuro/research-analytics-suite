@@ -388,22 +388,6 @@ class MemorySlot:
         except Exception:
             pass
 
-        # Delete row from SQLite
-        try:
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                loop = None
-
-            if loop and loop.is_running():
-                # We're inside an active event loop: schedule the delete, don't block
-                loop.create_task(self._delete_from_db())
-            else:
-                # No loop running here: run the coroutine to completion
-                asyncio.run(self._delete_from_db())
-        except Exception as e:
-            self._logger.warning(f"Failed to delete slot {self._memory_id} during close: {e}")
-
         # Close mmap/file handles
         try:
             if self._mmapped_file:

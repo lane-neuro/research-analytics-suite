@@ -179,7 +179,7 @@ class Config:
         Returns:
             Config: The updated configuration settings.
         """
-        from research_analytics_suite.utils import CustomLogger
+        from research_analytics_suite.utils.CustomLogger import CustomLogger
         custom_logger = CustomLogger()
         custom_logger.info("Reloading configuration settings...")
 
@@ -188,7 +188,6 @@ class Config:
 
         custom_logger.info("Configuration settings reloaded.")
         custom_logger.debug(f"New configuration settings: {new_config}")
-        custom_logger.add_file_handlers()
         return self
 
     @command
@@ -244,3 +243,30 @@ class Config:
         if not self.WORKSPACE_DIR:
             raise ValueError("WORKSPACE_DIR is not set. Please initialize the configuration first.")
         return os.path.normpath(os.path.join(self.BASE_DIR, 'workspaces', self.WORKSPACE_NAME, folder_name))
+
+    def to_dict(self, *, exclude_privates: bool = True) -> dict:
+        """
+        Return a JSON-serializable snapshot of the current config.
+        """
+        d = {}
+        for k, v in self.__dict__.items():
+            if exclude_privates and k.startswith('_'):
+                continue
+            d[k] = v
+        return d
+
+    def copy_with(self, **overrides) -> dict:
+        """
+        Return a dict snapshot with selected keys overridden. Does not mutate self.
+        """
+        d = self.to_dict()
+        d.update(overrides)
+        return d
+
+    @staticmethod
+    async def save_dict_to_file(file_path: str, data: dict) -> None:
+        """
+        Write an arbitrary config dict to disk (without touching the singleton).
+        """
+        async with aiofiles.open(file_path, 'w') as f:
+            await f.write(json.dumps(data, indent=4))

@@ -93,7 +93,6 @@ class ResearchAnalyticsSuite:
         workspace_path = os.path.normpath(self._args.open_workspace)
         if not os.path.exists(workspace_path):
             self._logger.info(f"Workspace '{workspace_path}' does not exist. Creating a new workspace...")
-            os.makedirs(workspace_path, exist_ok=True)
             workspace_name = os.path.basename(workspace_path)
             parent_path = os.path.dirname(workspace_path)
             await self._workspace.create_workspace(parent_path, workspace_name)

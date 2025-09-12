@@ -93,6 +93,9 @@ class MemoryManager:
             self._logger.debug("MemoryManager initialized.")
             self._initialized = True
 
+    def is_initialized(self) -> bool:
+        return getattr(self, "_initialized", False)
+
     async def _initialize_data_cache(self):
         """
         Initializes the data cache for the MemoryManager.
@@ -113,6 +116,10 @@ class MemoryManager:
 
         self._data_cache = DataCache(backend=self._cache_backend, directory=self._cache_directory)
         await self._data_cache.initialize()
+
+    def set_config(self, config: Config) -> None:
+        """Attach the current Config singleton (used for default path resolution)."""
+        self._config = config
 
     @command
     async def create_slot(self, name: str, d_type: type = any, data: any = None, pointer: MemorySlot = None,
@@ -313,15 +320,16 @@ class MemoryManager:
         Returns:
             tuple: A tuple containing the valid and invalid memory slot identifiers.
         """
-        valid_slots = []
+        valid = []
         for memory_id in memory_ids:
-            data = self.slot_data(memory_id=memory_id)
-            print(data)
-            if data:
-                if require_values and not data:
-                    continue
-                valid_slots.append(memory_id)
-        return valid_slots, list(set(memory_ids) - set(valid_slots))
+            slot = self._slot_collection.get(memory_id)
+            if not slot:
+                continue
+            data = slot.data
+            if require_values and data is None:
+                continue
+            valid.append(memory_id)
+        return valid, list(set(memory_ids) - set(valid))
 
     @command
     async def clear_slots(self) -> None:
@@ -339,46 +347,59 @@ class MemoryManager:
         """
         Loads all memory slots from the SQLite database into the MemoryManager.
         """
-        if db_path:
-            self._db_path = os.path.normpath(db_path)
-        else:
-            self._db_path = os.path.normpath(os.path.join(
-                self._config.BASE_DIR, self._config.WORKSPACE_NAME,
-                self._config.DATA_DIR, "memory_manager.db"))
-
         try:
+            if db_path:
+                self._db_path = os.path.normpath(db_path)
+            else:
+                # fall back to config-derived default
+                self._db_path = os.path.normpath(os.path.join(
+                    self._config.BASE_DIR, "workspaces", self._config.WORKSPACE_NAME,
+                    self._config.DATA_DIR, "memory_manager.db"))
+
             import aiosqlite
             async with aiosqlite.connect(self._db_path) as db:
                 await db.execute("""
-                   CREATE TABLE IF NOT EXISTS variables
-                   (
-                       memory_id TEXT PRIMARY KEY,
-                       name      TEXT,
-                       data      BLOB
-                   )
-                   """)
+                     CREATE TABLE IF NOT EXISTS variables
+                     (
+                         memory_id TEXT PRIMARY KEY,
+                         name      TEXT,
+                         data      BLOB
+                     )
+                                 """)
 
                 async with db.execute("SELECT memory_id, name, data FROM variables") as cursor:
                     async for row in cursor:
                         memory_id, name, data = row
                         if isinstance(data, bytes):
-                            # Deserialize data if it's stored as bytes
                             import pickle
                             data = pickle.loads(data)
 
                         memory_slot = MemorySlot(
                             memory_id=memory_id,
                             name=name,
-                            d_type=type(data),  # or use a default type if needed
+                            d_type=type(data),
                             data=data,
                             pointer=None,
                             db_path=self._db_path
                         )
                         self._slot_collection[memory_id] = memory_slot
                         await memory_slot.setup()
+
             self._logger.info("Loaded all memory slots from database.")
         except Exception as e:
             self._logger.error(f"Failed to load existing database: {e}")
+
+    async def rebind_to_db(self, db_path: str) -> None:
+        """
+        Hot-swap the MemoryManager to a new SQLite DB and load all slots.
+        """
+        await self.initialize()
+        async with MemoryManager._lock:
+            await self.reset()
+            self._db_path = os.path.normpath(db_path)
+            await self.load_existing_database(self._db_path)
+            if self._logger:
+                self._logger.debug(f"MemoryManager rebound to DB: {self._db_path}")
 
     async def cleanup(self):
         """
@@ -386,3 +407,16 @@ class MemoryManager:
         """
         if self._data_cache:
             await self._data_cache.close()
+
+    async def reset(self) -> None:
+        """
+        Clear in-memory state and close slots (does not touch on-disk DB).
+        """
+        # Close any open slot resources
+        for slot in list(self._slot_collection.values()):
+            try:
+                slot.close()
+            except Exception as e:
+                if self._logger:
+                    self._logger.warning(f"Error closing slot {getattr(slot,'memory_id','?')}: {e}")
+        self._slot_collection.clear()

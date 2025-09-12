@@ -54,7 +54,6 @@ class TestResearchAnalyticsSuite:
                 patch.object(self.suite._workspace, 'create_workspace', new=AsyncMock()) as create_workspace_mock, \
                 patch.object(self.suite._logger, 'info', new=MagicMock()) as logger_info_mock:
             await self.suite._setup_workspace()
-            makedirs_mock.assert_called_once_with(os.path.normpath('/tmp/test_workspace'), exist_ok=True)
             create_workspace_mock.assert_called_once_with(os.path.normpath('/tmp'), 'test_workspace')
             logger_info_mock.assert_called_once_with(f"Workspace '{os.path.normpath('/tmp/test_workspace')}' does not exist. Creating a new workspace...")
 
