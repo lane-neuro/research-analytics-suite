@@ -37,6 +37,8 @@ from research_analytics_suite.gui.dialogs.data_handling.AnalyzeDataDialog import
 from research_analytics_suite.gui.dialogs.visualization.VisualizeDataDialog import VisualizeDataDialog
 from research_analytics_suite.gui.dialogs.management.ProjectManagerDialog import ProjectManagerDialog
 from research_analytics_suite.gui.dialogs.management.ReportsDialog import ReportsDialog
+from research_analytics_suite.gui.dialogs.info.DocumentationDialog import DocumentationDialog
+from research_analytics_suite.gui.dialogs.info.AboutDialog import AboutDialog
 from research_analytics_suite.utils.Resources import resource_path
 
 
@@ -72,6 +74,8 @@ class GuiLauncher:
         self._reports_dialog = None
         self._manage_project_dialog = None
         self._planning_dialog = None
+        self._documentation_dialog = None
+        self._about_dialog = None
         self._analyze_data_dialog = None
 
         self._splitter_height = 300
@@ -171,8 +175,8 @@ class GuiLauncher:
                                       callback=lambda: self.switch_pane("console_log_output"))
 
                 with dpg.menu(label="Help"):
-                    dpg.add_menu_item(label="Documentation", callback=lambda: dpg.show_documentation())
-                    dpg.add_menu_item(label="About", callback=lambda: dpg.show_about())
+                    dpg.add_menu_item(label="Documentation", callback=self.show_documentation)
+                    dpg.add_menu_item(label="About", callback=self.show_about)
 
             with dpg.group(horizontal=True, tag="upper_pane_group",
                            height=dpg.get_viewport_height() - self._splitter_height - 25 - dpg.get_item_height("primary_menu_bar"),
@@ -422,4 +426,16 @@ class GuiLauncher:
         asyncio.run(self._workspace.load_workspace(config_file))
         dpg.delete_item("open_workspace_file_dialog")
         self._logger.debug(f"Workspace loaded from {config_file}.")
+
+    def show_documentation(self, sender=None, app_data=None, user_data=None):
+        """Shows the documentation dialog."""
+        if self._documentation_dialog is None:
+            self._documentation_dialog = DocumentationDialog()
+        self._documentation_dialog.show()
+
+    def show_about(self, sender=None, app_data=None, user_data=None):
+        """Shows the about dialog."""
+        if self._about_dialog is None:
+            self._about_dialog = AboutDialog()
+        self._about_dialog.show()
 

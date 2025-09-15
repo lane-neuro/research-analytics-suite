@@ -30,38 +30,34 @@ class TestConfig:
         config_instance = config
         assert config_instance.WORKSPACE_NAME == 'default_workspace'
         assert config_instance.MEMORY_LIMIT == psutil.virtual_memory().total * 0.5
-        assert config_instance.DEBUG_CONSOLE is False
-        assert config_instance.DB_HOST == 'localhost'
 
     @pytest.mark.asyncio
     async def test_update_setting(self, config):
         config_instance = config
-        await config_instance.update_setting('DEBUG_CONSOLE', 'DEBUG')
-        assert config_instance.DEBUG_CONSOLE == 'DEBUG'
+        await config_instance.update_setting('CACHE_DIR', 'test')
+        assert config_instance.CACHE_DIR == 'test'
 
-        with pytest.raises(AttributeError):
-            await config_instance.update_setting('NON_EXISTENT_SETTING', 'value')
+        # Test that non-existent settings are silently ignored
+        await config_instance.update_setting('NON_EXISTENT_SETTING', 'value')
+        assert not hasattr(config_instance, 'NON_EXISTENT_SETTING')
 
     @pytest.mark.asyncio
     async def test_reload(self, config):
         with patch('research_analytics_suite.utils.CustomLogger', MagicMock()) as mock_logger:
             config_instance = config
             new_config = {
-                'DEBUG_CONSOLE': 'DEBUG',
-                'DB_HOST': '127.0.0.1',
+                'CACHE_DIR': 'test',
             }
 
             await config_instance.reload(new_config)
-            assert config_instance.DEBUG_CONSOLE == 'DEBUG'
-            assert config_instance.DB_HOST == '127.0.0.1'
+            assert config_instance.CACHE_DIR == 'test'
 
     @pytest.mark.asyncio
     async def test_reload_from_file(self, config, tmp_path):
         config_instance = config
         file_path = tmp_path / "config.json"
         new_config = {
-            'DEBUG_CONSOLE': 'DEBUG',
-            'DB_HOST': '127.0.0.1',
+                'CACHE_DIR': 'test',
         }
         async with aiofiles.open(file_path, 'w') as f:
             await f.write(json.dumps(new_config))
@@ -69,8 +65,7 @@ class TestConfig:
         with patch('research_analytics_suite.utils.CustomLogger', MagicMock()) as mock_logger:
             mock_logger.add_file_handlers = MagicMock()
             await config_instance.reload_from_file(str(file_path))
-            assert config_instance.DEBUG_CONSOLE == 'DEBUG'
-            assert config_instance.DB_HOST == '127.0.0.1'
+            assert config_instance.CACHE_DIR == 'test'
 
     @pytest.mark.asyncio
     async def test_save_to_file(self, config, tmp_path):
@@ -85,7 +80,7 @@ class TestConfig:
             saved_config = json.loads(await f.read())
 
         assert saved_config['WORKSPACE_NAME'] == 'default_workspace'
-        assert saved_config['DEBUG_CONSOLE'] is False
+        assert saved_config['DATA_DIR'] == 'data'
 
     @pytest.mark.asyncio
     async def test_reload_non_existent_setting(self, config):
@@ -93,8 +88,9 @@ class TestConfig:
         new_config = {
             'NON_EXISTENT_SETTING': 'value',
         }
-        with pytest.raises(AttributeError):
-            await config_instance.reload(new_config)
+        # Test that non-existent settings are silently ignored during reload
+        await config_instance.reload(new_config)
+        assert not hasattr(config_instance, 'NON_EXISTENT_SETTING')
 
     @pytest.mark.asyncio
     async def test_reload_file_path_no_json_extension(self, config, tmp_path):
@@ -107,15 +103,13 @@ class TestConfig:
 
             file_path = dir_path / "config.json"
             new_config = {
-                'DEBUG_CONSOLE': 'DEBUG',
-                'DB_HOST': '127.0.0.1',
+                'CACHE_DIR': 'test',
             }
             async with aiofiles.open(file_path, 'w') as f:
                 await f.write(json.dumps(new_config))
 
             await config_instance.reload_from_file(str(dir_path))
-            assert config_instance.DEBUG_CONSOLE == 'DEBUG'
-            assert config_instance.DB_HOST == '127.0.0.1'
+            assert config_instance.CACHE_DIR == 'test'
 
     @pytest.mark.asyncio
     async def test_reload_file_not_exists(self, config):

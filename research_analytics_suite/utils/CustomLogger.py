@@ -59,6 +59,7 @@ class CustomLogger:
             self._warning_logger = None
             self._critical_logger = None
             self.log_message_queue = None
+            self.info_message_queue = None
 
             self._initialized = False
 
@@ -94,6 +95,7 @@ class CustomLogger:
 
                     # Set up the log message queue
                     self.log_message_queue = asyncio.Queue()
+                    self.info_message_queue = asyncio.Queue()
                     if self._stream_handler is None:
                         self._stream_handler = logging.StreamHandler()
                         formatter = logging.Formatter('(%(asctime)s) [[%(name)s]]: %(message)s',
@@ -102,9 +104,12 @@ class CustomLogger:
                         for lg in self._all_loggers():
                             if not lg:
                                 continue
-                            if lg.level != logging.DEBUG or self._config.DEBUG_CONSOLE is True:
+                            if lg.level != logging.DEBUG:
                                 lg.addHandler(self._stream_handler)
-                            lg.addFilter(self._log_message)
+                            if lg == self._info_logger:
+                                lg.addFilter(self._info_log_message)
+                            else:
+                                lg.addFilter(self._log_message)
 
                     # Print a message for each logger to indicate that logging has been initialized
                     self._info_logger.info(f"[{self._info_logger.name}] logging initialized")
@@ -190,8 +195,8 @@ class CustomLogger:
             fh.setFormatter(formatter)
             lg.addHandler(fh)
             self._file_handlers.append(fh)
-            if self._info_logger:
-                self._info_logger.info(f"[{lg.name}] file logging initialized")
+
+        self._debug_logger.debug(f"File logging initialized")
 
     def _log_message(self, record: logging.LogRecord) -> bool:
         """
@@ -202,6 +207,17 @@ class CustomLogger:
         """
         message = f"{record.levelname}: {record.getMessage()}"
         self.log_message_queue.put_nowait(message)
+        return True
+
+    def _info_log_message(self, record: logging.LogRecord) -> bool:
+        """
+        Sends an info log message to the info-specific queue.
+
+        Args:
+            record (logging.LogRecord): The log record to send to the queue.
+        """
+        message = f"{record.levelname}: {record.getMessage()}"
+        self.info_message_queue.put_nowait(message)
         return True
 
     async def _process_log_queue(self):

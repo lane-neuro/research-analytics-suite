@@ -130,7 +130,12 @@ class ResearchAnalyticsSuite:
         try:
             nest_asyncio.apply()
             self._parse_launch_args()
-            asyncio.run(self._launch())
+            try:
+                asyncio.get_event_loop().run_until_complete(self._launch())
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(self._launch())
         except KeyboardInterrupt:
             print('Exiting Research Analytics Suite..')
         except Exception as e:

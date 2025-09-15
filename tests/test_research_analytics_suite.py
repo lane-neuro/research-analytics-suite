@@ -115,15 +115,17 @@ class TestResearchAnalyticsSuite:
         """
         Test the run method.
         """
+        mock_loop = MagicMock()
+        mock_loop.run_until_complete = MagicMock()
+        mock_loop.close = MagicMock()
+
         with patch.object(self.suite, '_parse_launch_args', new=MagicMock()) as parse_args_mock, \
-                patch('asyncio.run', new=MagicMock()) as asyncio_run_mock, \
+                patch('asyncio.get_event_loop', return_value=mock_loop) as event_loop_mock, \
                 patch('nest_asyncio.apply', new=MagicMock()) as nest_asyncio_apply_mock, \
-                patch('asyncio.get_event_loop',
-                      return_value=MagicMock(run_forever=MagicMock(), close=MagicMock())) as event_loop_mock, \
                 patch('sys.exit', new=MagicMock()) as sys_exit_mock:
             self.suite.run()
             parse_args_mock.assert_called_once()
-            asyncio_run_mock.assert_called_once()
+            mock_loop.run_until_complete.assert_called_once()
             nest_asyncio_apply_mock.assert_called_once()
             sys_exit_mock.assert_called_once()
 
@@ -173,10 +175,13 @@ class TestResearchAnalyticsSuite:
         """
         Test the run method handling KeyboardInterrupt.
         """
+        mock_loop = MagicMock()
+        mock_loop.run_until_complete = MagicMock(side_effect=KeyboardInterrupt)
+        mock_loop.close = MagicMock()
+
         with patch.object(self.suite, '_parse_launch_args', new=MagicMock()), \
-             patch('asyncio.run', side_effect=KeyboardInterrupt), \
-             patch('nest_asyncio.apply', new=MagicMock()), \
-             patch('asyncio.get_event_loop', return_value=MagicMock(run_forever=MagicMock(), close=MagicMock())):
+             patch('asyncio.get_event_loop', return_value=mock_loop), \
+             patch('nest_asyncio.apply', new=MagicMock()):
             with patch('builtins.print') as mocked_print:
                 with pytest.raises(SystemExit):
                     self.suite.run()
@@ -186,11 +191,14 @@ class TestResearchAnalyticsSuite:
         """
         Test the run method handling general Exception.
         """
+        mock_loop = MagicMock()
+        mock_loop.run_until_complete = MagicMock(side_effect=Exception('Test Exception'))
+        mock_loop.close = MagicMock()
+
         with patch.object(self.suite, '_parse_launch_args', new=MagicMock()), \
-             patch('asyncio.run', side_effect=Exception('Test Exception')), \
-             patch('nest_asyncio.apply', new=MagicMock()), \
-             patch('asyncio.get_event_loop', return_value=MagicMock(run_forever=MagicMock(), close=MagicMock())):
-            with patch('research_analytics_suite.utils.CustomLogger', new=MagicMock(error=MagicMock())) as logger_mock,\
+             patch('asyncio.get_event_loop', return_value=mock_loop), \
+             patch('nest_asyncio.apply', new=MagicMock()):
+            with patch.object(self.suite._logger, 'error', new=MagicMock()) as logger_error_mock,\
                     pytest.raises(SystemExit):
                 self.suite.run()
-                logger_mock.error.assert_called_once()
+                logger_error_mock.assert_called_once()
