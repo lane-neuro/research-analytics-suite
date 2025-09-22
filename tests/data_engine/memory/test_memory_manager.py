@@ -10,26 +10,16 @@ class TestMemoryManager:
     def setup(self):
         with patch('research_analytics_suite.utils.CustomLogger') as MockLogger:
             with patch('research_analytics_suite.utils.Config') as MockConfig:
-                with patch('research_analytics_suite.data_engine.memory.DataCache') as MockDataCache:
-                    MockLogger.return_value = MagicMock()
-                    MockLogger.return_value.error = MagicMock()
-                    MockLogger.return_value.debug = MagicMock()
-                    MockLogger.return_value.info = MagicMock()
-                    MockLogger.return_value.warning = MagicMock()
-                    MockConfig.return_value = MagicMock()
-                    MockDataCache.return_value = MagicMock()
+                MockLogger.return_value = MagicMock()
+                MockLogger.return_value.error = MagicMock()
+                MockLogger.return_value.debug = MagicMock()
+                MockLogger.return_value.info = MagicMock()
+                MockLogger.return_value.warning = MagicMock()
+                MockConfig.return_value = MagicMock()
 
-                    self.memory_manager = MemoryManager()
-                    self.memory_manager._logger = MockLogger()
-                    self.memory_manager._config = MockConfig()
-                    # self.memory_manager._data_cache = MockDataCache()
-
-                    # Explicitly set the return values for the DataCache methods
-                    # self.memory_manager._data_cache.get_key = MagicMock()
-                    # self.memory_manager._data_cache.set = MagicMock()
-                    # self.memory_manager._data_cache.delete = MagicMock()
-                    # self.memory_manager._data_cache.cache_values = MagicMock()
-                    # self.memory_manager._data_cache.close = AsyncMock()
+                self.memory_manager = MemoryManager()
+                self.memory_manager._logger = MockLogger()
+                self.memory_manager._config = MockConfig()
 
     @pytest.mark.asyncio
     async def test_initialize(self):

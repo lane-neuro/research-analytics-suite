@@ -21,7 +21,6 @@ from typing import Type
 
 from research_analytics_suite.commands import link_class_commands, command
 from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
-from research_analytics_suite.data_engine.memory.DataCache import DataCache
 from research_analytics_suite.utils import CustomLogger
 from research_analytics_suite.utils import Config
 
@@ -114,8 +113,8 @@ class MemoryManager:
                 os.path.join(self._config.BASE_DIR, self._config.WORKSPACE_NAME,
                              self._config.DATA_DIR, self._config.CACHE_DIR))
 
-        self._data_cache = DataCache(backend=self._cache_backend, directory=self._cache_directory)
-        await self._data_cache.initialize()
+        # self._data_cache = DataCache(backend=self._cache_backend, directory=self._cache_directory)
+        # await self._data_cache.initialize()
 
     def set_config(self, config: Config) -> None:
         """Attach the current Config singleton (used for default path resolution)."""
@@ -194,6 +193,7 @@ class MemoryManager:
         try:
             memory_slot = self._slot_collection.pop(memory_id)
             if memory_slot:
+                await memory_slot.delete_from_db()
                 memory_slot.close()
         except KeyError or FileNotFoundError:
             self._logger.warning(f"Memory slot with ID: {memory_id} does not exist.")

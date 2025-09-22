@@ -110,7 +110,7 @@ class MemorySlot:
                 (self._memory_id,)
             )
             row = await cursor.fetchone()
-            if not row and self.data:
+            if not row and self.data is not None:
                 await self.set_data(self._data)
 
             # Create an update operation to update the data stored in the memory slot
@@ -198,14 +198,38 @@ class MemorySlot:
 
     @property
     def data(self) -> any:
-        """Gets the data stored in the memory slot.
+        """Gets the data values extracted from the stored object using UniversalDataEngine.
 
         Returns:
-            any: The data stored in the memory slot.
+            any: The extracted data values (e.g., DataFrame.values, array data, etc.)
         """
-        if self._pointer:
-            return self._pointer.data
-        return self._data
+        raw_data = self._pointer.data if self._pointer else self._data
+
+        # Use UniversalDataEngine to extract data values
+        try:
+            from research_analytics_suite.data_engine.UniversalDataEngine import UniversalDataEngine
+            from research_analytics_suite.data_engine.core.DataProfile import DataProfile
+
+            # Create data profile to understand the data type
+            profile = DataProfile.from_data(raw_data)
+
+            # Create temporary engine
+            engine = UniversalDataEngine()
+
+            # Get data info to understand structure
+            import asyncio
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If already in async context, we need to handle this differently
+                # For now, return raw data and let the caller handle extraction
+                return self._extract_values_sync(raw_data)
+            else:
+                # Run async operation to get data info and extract values
+                return loop.run_until_complete(self._extract_values_async(raw_data, engine))
+
+        except Exception as e:
+            self._logger.warning(f"Failed to extract data using UniversalDataEngine, returning raw data: {e}")
+            return self._extract_values_sync(raw_data)
 
     @data.setter
     def data(self, value: any) -> None:
@@ -233,6 +257,11 @@ class MemorySlot:
                     return
 
             self.data = value
+
+    @property
+    def data_object(self) -> any:
+        """Returns the raw data object stored in the memory slot."""
+        return self._data
 
     async def _update_data(self) -> None:
         """Updates the data stored in the memory slot."""
@@ -312,7 +341,7 @@ class MemorySlot:
         """
         import csv
 
-        if not self.data:
+        if self.data is None:
             self._logger.warning("No data to export.")
             return
 
@@ -364,7 +393,100 @@ class MemorySlot:
         self._modified_at = time.time()
         self._logger.debug(f"Memory slot modified at: {self._modified_at}")
 
-    async def _delete_from_db(self) -> None:
+    async def _extract_values_async(self, raw_data: any, engine) -> any:
+        """
+        Extract data values using UniversalDataEngine asynchronously.
+
+        Args:
+            raw_data: The raw data object
+            engine: UniversalDataEngine instance
+
+        Returns:
+            Extracted data values
+        """
+        try:
+            # Get comprehensive data info
+            data_info = await engine.get_data_info(raw_data)
+
+            # Extract values based on data type
+            if 'pandas' in data_info.get('data_type', '').lower():
+                return raw_data.values if hasattr(raw_data, 'values') else raw_data
+            elif 'numpy' in data_info.get('data_type', '').lower():
+                return raw_data if hasattr(raw_data, 'shape') else raw_data
+            elif 'torch' in data_info.get('data_type', '').lower():
+                return raw_data.detach().cpu().numpy() if hasattr(raw_data, 'detach') else raw_data
+            else:
+                return raw_data
+        except Exception as e:
+            self._logger.warning(f"Async data extraction failed: {e}")
+            return self._extract_values_sync(raw_data)
+
+    def _extract_values_sync(self, raw_data: any) -> any:
+        """
+        Extract data values synchronously using basic type checking.
+
+        Args:
+            raw_data: The raw data object
+
+        Returns:
+            Extracted data values
+        """
+        if raw_data is None:
+            return None
+
+        # Handle basic Python types first - return as is
+        if isinstance(raw_data, (list, tuple, dict, str, int, float, bool)):
+            return raw_data
+
+        # Handle pandas DataFrame/Series (check for pandas-specific attributes)
+        if hasattr(raw_data, 'values') and hasattr(raw_data, 'index'):
+            values = raw_data.values
+            # If it's a single column DataFrame, flatten to 1D array
+            if hasattr(values, 'shape') and len(values.shape) == 2 and values.shape[1] == 1:
+                values = values.flatten()
+            return values
+
+        # Handle numpy arrays (already are data values)
+        if hasattr(raw_data, 'shape') and hasattr(raw_data, 'dtype'):
+            return raw_data
+
+        # Handle PyTorch tensors
+        if hasattr(raw_data, 'detach') and hasattr(raw_data, 'cpu'):
+            return raw_data.detach().cpu().numpy()
+
+        # For unknown types, try to extract common attributes
+        if hasattr(raw_data, 'data'):
+            return raw_data.data
+        elif hasattr(raw_data, 'array'):
+            return raw_data.array
+        elif hasattr(raw_data, 'value'):
+            return raw_data.value
+
+        # Fallback: return original data
+        return raw_data
+
+    async def _load_data_from_db(self) -> None:
+        """Load data from SQLite database if not already in memory."""
+        try:
+            async with aiosqlite.connect(self.db_path) as conn:
+                cursor = await conn.execute(
+                    "SELECT data FROM variables WHERE memory_id = ?",
+                    (self._memory_id,)
+                )
+                row = await cursor.fetchone()
+                if row and row[0]:
+                    data_blob = row[0]
+                    if isinstance(data_blob, bytes):
+                        self._data = pickle.loads(data_blob)
+                    else:
+                        self._data = data_blob
+                    self._logger.debug(f"Loaded data for slot {self._memory_id}")
+                else:
+                    self._logger.warning(f"No data found in database for slot {self._memory_id}")
+        except Exception as e:
+            self._logger.error(f"Failed to load data from database for slot {self._memory_id}: {e}")
+
+    async def delete_from_db(self) -> None:
         """Remove this slot's row from SQLite."""
         try:
             async with aiosqlite.connect(self.db_path) as conn:

@@ -53,11 +53,3 @@ class LiveDataHandler:
         """Stops all live data inputs."""
         for live_input in self.live_inputs:
             live_input.stop()
-
-    def update_data_engine(self):
-        """Updates the data engine with data from all live inputs."""
-        for live_input in self.live_inputs:
-            new_data = live_input.read()
-            if new_data is not None:
-                self.data_engine.update_live_data(new_data)
-                self._logger.info("Data engine updated with new live data")

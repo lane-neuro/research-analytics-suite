@@ -10,7 +10,7 @@ import asyncio
 
 import dearpygui.dearpygui as dpg
 
-from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
+from research_analytics_suite.data_engine import UniversalDataEngine
 from research_analytics_suite.gui.GUIBase import GUIBase
 
 
@@ -19,12 +19,12 @@ class DataImportWizard(GUIBase):
     A class to guide users through the process of importing data.
     """
 
-    def __init__(self, data_engine: UnifiedDataEngine, parent, width: int = 600, height: int = 400):
+    def __init__(self, data_engine: UniversalDataEngine, parent, width: int = 600, height: int = 400):
         """
         Initializes the DataImportWizard instance.
 
         Args:
-            data_engine (UnifiedDataEngine): The data engine for handling data operations.
+            data_engine (UniversalDataEngine): The data engine for handling data operations.
         """
         super().__init__(width, height, parent)
         self._data_engine = data_engine

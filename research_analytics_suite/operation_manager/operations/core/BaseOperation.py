@@ -324,6 +324,36 @@ class BaseOperation(ABC):
         self.add_log_entry(f"[MEMORY] Added output slot: {name} with data: {data}")
 
     @final
+    def _is_empty_data(self, data: any) -> bool:
+        """
+        Safely check if data is empty/None across all data types.
+
+        Args:
+            data: Data to check
+
+        Returns:
+            bool: True if data is considered empty, False otherwise
+        """
+        if data is None:
+            return True
+
+        # Check for pandas DataFrame
+        if hasattr(data, 'empty'):
+            return data.empty
+
+        # Check for numpy arrays
+        if hasattr(data, 'size'):
+            return data.size == 0
+
+        # Check for standard containers (list, dict, tuple, set, str)
+        try:
+            return len(data) == 0
+        except TypeError:
+            # If len() fails, it's likely a non-container type
+            # Use standard truthiness for numbers, custom objects, etc.
+            return not bool(data)
+
+    @final
     def get_input(self, name: str, default: any = None) -> any:
         """
         Retrieve input data by the logical slot name.
@@ -337,7 +367,7 @@ class BaseOperation(ABC):
         """
         try:
             data = self.attributes.required_inputs.get(name)
-            if not data:
+            if self._is_empty_data(data):
                 self._logger.warning(f"Slot name '{name}' not found in required_inputs.")
                 return default
 

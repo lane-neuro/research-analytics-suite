@@ -148,6 +148,7 @@ class DataManagementDialog(GUIBase):
                                    row_background=False):
                         dpg.add_table_column(init_width_or_weight=0.0, width_fixed=True)  # drag
                         dpg.add_table_column(init_width_or_weight=1.0)  # label/selectable
+                        dpg.add_table_column(init_width_or_weight=0.0, width_fixed=True)  # subset
                         dpg.add_table_column(init_width_or_weight=0.0, width_fixed=True)  # delete
 
                         for s in items:
@@ -171,7 +172,17 @@ class DataManagementDialog(GUIBase):
                                 if s.memory_id == self._selected_slot_id:
                                     dpg.set_value(select_tag, True)
 
-                                # COL 3: delete x button + tooltip
+                                # COL 3: subset button + tooltip
+                                subset_btn_tag = f"dm_slot_subset_{s.memory_id}"
+                                dpg.add_button(label="s",
+                                               tag=subset_btn_tag,
+                                               width=22, height=22,
+                                               callback=self._on_click_subset,
+                                               user_data=s.memory_id)
+                                with dpg.tooltip(subset_btn_tag):
+                                    dpg.add_text(f"Create subset of '{s.name}'")
+
+                                # COL 4: delete x button + tooltip
                                 del_btn_tag = f"dm_slot_del_{s.memory_id}"
                                 dpg.add_button(label="x",
                                                tag=del_btn_tag,
@@ -243,6 +254,136 @@ class DataManagementDialog(GUIBase):
         except Exception as e:
             self._logger.error(Exception(f"Failed to delete slot '{slot_id}': {e}", self))
 
+    def _on_click_subset(self, sender, app_data, user_data):
+        """Open subset creation dialog for a slot."""
+        slot_id = str(user_data)
+        slot = self._memory_manager.get_slot(slot_id)
+        name = slot.name if slot else slot_id
+
+        modal_tag = f"dm_subset_modal_{slot_id}"
+        if dpg.does_item_exist(modal_tag):
+            dpg.delete_item(modal_tag)
+
+        with dpg.window(tag=modal_tag, label=f"Create Subset - {name}", modal=True,
+                        width=600, height=400, no_resize=True, show=True):
+
+            dpg.add_text(f"Create a subset of '{name}'")
+            dpg.add_separator()
+
+            # New slot name
+            dpg.add_text("New Slot Name:")
+            name_input_tag = f"subset_name_{slot_id}"
+            dpg.add_input_text(tag=name_input_tag, default_value=f"{name}_subset", width=200)
+
+            dpg.add_separator()
+
+            # Column selection
+            dpg.add_text("Select Columns (leave empty for all):")
+            columns_input_tag = f"subset_columns_{slot_id}"
+            dpg.add_input_text(tag=columns_input_tag,
+                              hint="e.g., column1,column2,column3",
+                              multiline=True, height=60, width=400)
+
+            dpg.add_separator()
+
+            # Row filtering
+            dpg.add_text("Row Filter Condition (optional):")
+            filter_input_tag = f"subset_filter_{slot_id}"
+            dpg.add_input_text(tag=filter_input_tag,
+                              hint="e.g., price > 100 or column_name == 'value'",
+                              multiline=True, height=60, width=400)
+
+            dpg.add_separator()
+
+            # Row range selection
+            with dpg.group(horizontal=True):
+                dpg.add_text("Row Range (optional):")
+                start_row_tag = f"subset_start_{slot_id}"
+                end_row_tag = f"subset_end_{slot_id}"
+                dpg.add_input_int(tag=start_row_tag, label="Start", default_value=0, width=80)
+                dpg.add_input_int(tag=end_row_tag, label="End", default_value=100, width=80)
+                dpg.add_checkbox(tag=f"subset_use_range_{slot_id}", label="Use Range")
+
+            dpg.add_separator()
+
+            # Buttons
+            with dpg.group(horizontal=True):
+                dpg.add_button(label="Create Subset",
+                               callback=lambda: asyncio.create_task(
+                                   self._create_subset(slot_id, modal_tag, name_input_tag,
+                                                     columns_input_tag, filter_input_tag,
+                                                     start_row_tag, end_row_tag,
+                                                     f"subset_use_range_{slot_id}")
+                               ))
+                dpg.add_button(label="Cancel", callback=lambda: dpg.hide_item(modal_tag))
+
+    async def _create_subset(self, source_slot_id: str, modal_tag: str,
+                           name_input_tag: str, columns_input_tag: str,
+                           filter_input_tag: str, start_row_tag: str,
+                           end_row_tag: str, use_range_tag: str):
+        """Create a new memory slot with subset data."""
+        try:
+            # Get input values
+            new_name = dpg.get_value(name_input_tag).strip()
+            columns_text = dpg.get_value(columns_input_tag).strip()
+            filter_condition = dpg.get_value(filter_input_tag).strip()
+            start_row = dpg.get_value(start_row_tag)
+            end_row = dpg.get_value(end_row_tag)
+            use_range = dpg.get_value(use_range_tag)
+
+            if not new_name:
+                new_name = f"subset_{source_slot_id[:8]}"
+
+            # Get original data
+            source_slot = self._memory_manager.get_slot(source_slot_id)
+            if not source_slot:
+                raise ValueError(f"Source slot {source_slot_id} not found")
+
+            original_data = source_slot.data
+
+            # Get workspace engine for subset operations
+            from research_analytics_suite.data_engine.Workspace import Workspace
+            workspace = Workspace()
+            engine = workspace.get_engine()
+
+            # Parse columns
+            columns = None
+            if columns_text:
+                columns = [col.strip() for col in columns_text.split(',') if col.strip()]
+
+            # Create subset parameters
+            subset_params = {
+                'rows': filter_condition if filter_condition else None,
+                'columns': columns
+            }
+
+            # Add row range if specified
+            if use_range:
+                subset_params['start_row'] = start_row
+                subset_params['end_row'] = end_row
+
+            # Create subset using UniversalDataEngine
+            subset_data = await engine.subset_data(original_data, **subset_params)
+
+            # Create new memory slot with subset data
+            await self._memory_manager.create_slot(
+                name=new_name,
+                data=subset_data,
+                d_type=type(subset_data)
+            )
+
+            # Close modal and refresh
+            if dpg.does_item_exist(modal_tag):
+                dpg.hide_item(modal_tag)
+
+            self._force_list_refresh = True
+
+            self._logger.info(f"Created subset '{new_name}' from '{source_slot.name}'")
+
+        except Exception as e:
+            self._logger.error(f"Failed to create subset: {e}")
+            # Could add error popup here
+
     def _render_inspector(self, slot_id: str | None) -> None:
         """Clears inspector mount and installs the selected slot view."""
         # Clear mount except the placeholder
@@ -297,10 +438,10 @@ class DataManagementDialog(GUIBase):
         async def _do():
             for file in selections:
                 file_path = os.path.normpath(file)
-                data, d_type = self._workspace.get_default_data_engine().load_data(file_path)
+                data, d_profile = await self._workspace.load_data(file_path)
                 if data is not None:
                     name = os.path.basename(file_path)
-                    await self.add_variable(name=name, d_type=d_type, value=data)
+                    await self.add_variable(name=name, d_type=d_profile.data_type, value=data)
         asyncio.run(_do())
 
     async def add_variable(self, name, d_type, value) -> None:

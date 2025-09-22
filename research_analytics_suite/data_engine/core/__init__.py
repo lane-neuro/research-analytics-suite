@@ -1,8 +1,7 @@
 """
-Core classes for data handling.
+Core data handling classes - now unified under the adapter system.
+Legacy data classes have been migrated to the new Universal Data Engine.
 """
 
-from .BaseData import BaseData
-from .DaskData import DaskData
-from .TorchData import TorchData
-from .DataPipeline import DataPipeline
+# DataProfile is the only remaining core class, now available from adapters
+from .DataProfile import DataProfile

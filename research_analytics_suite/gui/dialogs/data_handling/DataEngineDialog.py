@@ -9,7 +9,7 @@ Author: Lane
 """
 import dearpygui.dearpygui as dpg
 
-from research_analytics_suite.data_engine.engine.UnifiedDataEngine import UnifiedDataEngine
+from research_analytics_suite.data_engine import UniversalDataEngine
 from research_analytics_suite.utils.CustomLogger import CustomLogger
 
 
@@ -17,12 +17,12 @@ class DataEngineDialog:
     """
     A class to create a dialog for interacting with the DataEngine.
     """
-    def __init__(self, data_engine: UnifiedDataEngine):
+    def __init__(self, data_engine: UniversalDataEngine):
         """
         Initializes the DataEngineDialog instance.
 
         Args:
-            data_engine (UnifiedDataEngine): The data engine for handling data operations.
+            data_engine (UniversalDataEngine): The data engine for handling data operations.
         """
         self._data_engine = data_engine
         self._logger = CustomLogger()

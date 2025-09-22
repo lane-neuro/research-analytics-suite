@@ -8,19 +8,19 @@ Author: Lane
 """
 import dearpygui.dearpygui as dpg
 
-from research_analytics_suite.data_engine.engine.DataEngineOptimized import DataEngineOptimized
+from research_analytics_suite.data_engine import UniversalDataEngine
 from research_analytics_suite.gui.GUIBase import GUIBase
 
 
 class RealTimeDataVisualization(GUIBase):
     """Class to create and manage the Real-Time Data Visualization pane."""
 
-    def __init__(self, data_engine: DataEngineOptimized, width: int, height: int, parent):
+    def __init__(self, data_engine: UniversalDataEngine, width: int, height: int, parent):
         """
         Initializes the RealTimeDataVisualization instance.
 
         Args:
-            data_engine (DataEngineOptimized): The data engine with real-time data.
+            data_engine (UniversalDataEngine): The data engine with real-time data.
         """
         super().__init__(width, height, parent)
         self._data_engine = data_engine

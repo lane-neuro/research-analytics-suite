@@ -58,9 +58,9 @@ class AdvancedSlotView(GUIBase):
                 )
 
                 # Preview text (lightweight). If you want a table, plug a renderer here.
-                dpg.add_text(tag=f"{self._root}_preview", default_value=self._preview_text(self._slot.data), wrap=0)
+                dpg.add_text(tag=f"{self._root}_preview", default_value=self._preview_text(self._slot.data_object), wrap=0)
                 with dpg.group(horizontal=True):
-                    dpg.add_button(label="Edit…", callback=self._open_edit_modal)
+                    dpg.add_button(label="Edit...", callback=self._open_edit_modal)
                     dpg.add_button(label="Validate", callback=self._validate)
                     dpg.add_button(label="Snapshot", callback=self._snapshot)
 
@@ -96,7 +96,7 @@ class AdvancedSlotView(GUIBase):
             dpg.set_value(f"{self._root}_dtype", f"Type: {slot.data_type}")
             dpg.set_value(f"{self._root}_shape", self._shape_text(slot.data))
             dpg.set_value(f"{self._root}_pointer", self._pointer_text(slot))
-            dpg.set_value(f"{self._root}_preview", self._preview_text(slot.data))
+            dpg.set_value(f"{self._root}_preview", self._preview_text(slot.data_object))
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         """Resizes the GUI."""
@@ -207,7 +207,7 @@ class AdvancedSlotView(GUIBase):
         try:
             import pandas as pd
             if hasattr(data, "head") and isinstance(data, pd.DataFrame):
-                return str(data.head(12))
+                return str(data.head(20))
             txt = str(data)
             return txt if len(txt) < 4000 else txt[:4000] + " …"
         except Exception:
