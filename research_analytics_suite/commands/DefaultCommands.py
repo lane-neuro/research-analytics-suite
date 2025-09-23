@@ -28,8 +28,8 @@ def _help() -> None:
 async def _exit() -> None:
     """Exits the Research Analytics Suite."""
     try:
-        from research_analytics_suite.data_engine import Workspace
-        await Workspace().save_current_workspace()
+        from research_analytics_suite.data_engine.Workspace import Workspace
+        await Workspace().close()
     except Exception as e:
         from research_analytics_suite.utils.CustomLogger import CustomLogger
         CustomLogger().error(Exception(f"Error saving workspace: {e}"), 'exit')
@@ -48,6 +48,47 @@ async def clear() -> None:
 def registry() -> dict:
     """Displays the command registry."""
     return CommandRegistry().registry
+
+
+# @command
+async def export_commands_db() -> dict:
+    """
+    Exports all registered commands to database files for documentation.
+
+    Returns:
+        Dictionary with paths to created files.
+    """
+    from research_analytics_suite.utils.CustomLogger import CustomLogger
+    logger = CustomLogger()
+    output_path = "./command_exports"
+    format_type = "all"  # Options: "sqlite", "json", "csv
+
+    try:
+        registry = CommandRegistry()
+
+        if format_type.lower() == "all":
+            results = await registry.export_commands_all_formats(output_path)
+            logger.info(f"Commands exported to all formats: {results}")
+            return results
+        elif format_type.lower() == "sqlite":
+            path = await registry.export_commands_to_sqlite(output_path)
+            logger.info(f"Commands exported to SQLite: {path}")
+            return {"sqlite": path}
+        elif format_type.lower() == "json":
+            path = await registry.export_commands_to_json(output_path)
+            logger.info(f"Commands exported to JSON: {path}")
+            return {"json": path}
+        elif format_type.lower() == "csv":
+            path = await registry.export_commands_to_csv(output_path)
+            logger.info(f"Commands exported to CSV: {path}")
+            return {"csv": path}
+        else:
+            logger.error(ValueError(f"Unsupported format: {format_type}. Use 'sqlite', 'json', 'csv', or 'all'."), "export_commands_db")
+            return {}
+
+    except Exception as e:
+        logger.error(e, "export_commands_db")
+        return {}
 
 
 @command

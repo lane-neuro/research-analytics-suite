@@ -138,3 +138,20 @@ class Mapped2DSpace(GUIBase):
             dpg.show_item(node[0])
         for link in self._links:
             dpg.show_item(link)
+
+    def clear_elements(self):
+        """
+        Clears all elements from the node editor.
+        """
+        for node in self._nodes:
+            dpg.delete_item(node[0])
+        self._nodes = []
+
+        for link in self._links:
+            dpg.delete_item(link)
+        self._links = []
+
+        for op_module in self._active_operation_modules:
+            dpg.delete_item(op_module.gui_id)
+
+        self._active_operation_modules = []

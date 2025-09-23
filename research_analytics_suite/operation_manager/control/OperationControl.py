@@ -116,3 +116,26 @@ class OperationControl:
 
         self.main_loop.stop()
         self._logger.info("OperationControl: Main loop stopped.")
+
+    async def reset_for_workspace(self, config=None):
+        """
+        Reset OperationControl for workspace loading.
+
+        Args:
+            config: Optional new configuration to use
+        """
+        async with OperationControl._lock:
+            # Reset components to None for clean re-initialization
+            self.sequencer = None
+            self.task_creator = None
+            self.task_monitor = None
+            self.operation_manager = None
+            self.operation_executor = None
+            self.user_input_manager = None
+            self.system_op_checker = None
+            self.lifecycle_manager = None
+
+            # Reset initialization flag and re-initialize
+            self._initialized = False
+
+        await self.initialize()

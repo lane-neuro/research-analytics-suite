@@ -191,7 +191,7 @@ class MemorySlot:
         Args:
             value (any): The pointer to the next memory slot.
         """
-        if isinstance(value, MemorySlot):
+        if isinstance(value, MemorySlot) and value.memory_id != self.memory_id:
             self._pointer = value
         else:
             self._pointer = None
@@ -203,6 +203,9 @@ class MemorySlot:
         Returns:
             any: The extracted data values (e.g., DataFrame.values, array data, etc.)
         """
+        if self._pointer:
+            return self._pointer.data
+
         raw_data = self._pointer.data if self._pointer else self._data
 
         # Use UniversalDataEngine to extract data values

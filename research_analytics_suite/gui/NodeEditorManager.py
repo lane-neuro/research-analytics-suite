@@ -62,7 +62,6 @@ class NodeEditorManager:
         return self._cross_editor_links
 
     async def add_editor(self, editor_id, width, height, parent):
-
         from research_analytics_suite.gui.modules.Mapped2DSpace import Mapped2DSpace
         editor = Mapped2DSpace(width, height, parent)
         await editor.initialize_gui()
@@ -94,3 +93,18 @@ class NodeEditorManager:
     def update_cross_editor_links(self):
         dpg.delete_item("cross_editor_drawlist", children_only=True)
         self.draw_cross_editor_links()
+
+    async def reset_for_workspace(self, config=None):
+        """
+        Reset NodeEditorManager for workspace loading.
+
+        Args:
+            config: Optional new configuration (unused by NodeEditorManager)
+        """
+        async with NodeEditorManager._lock:
+            for _editor in self._editors.values():
+                _editor.clear_elements()
+
+            # Reset state
+            self._editors.clear()
+            self._cross_editor_links.clear()

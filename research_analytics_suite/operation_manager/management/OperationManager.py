@@ -56,7 +56,7 @@ class OperationManager:
             ResourceMonitor, cpu_threshold=90, memory_threshold=95)
         self._logger.debug("Resource monitor initialized.")
         self.console_monitor = await self.create_operation(
-            ConsoleMonitor, prompt="\n\t>>\t")
+            ConsoleMonitor, prompt="")
         self._logger.debug("Console monitor initialized.")
 
     @command

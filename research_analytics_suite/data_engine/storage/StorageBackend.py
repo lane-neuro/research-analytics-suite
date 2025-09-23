@@ -606,7 +606,7 @@ class TemporaryStorage(StorageBackend):
         try:
             shutil.rmtree(self._temp_dir)
         except Exception as e:
-            self._logger.warning(f"Failed to cleanup temp directory {self._temp_dir}: {e}")
+            pass
 
     def __del__(self):
         """Cleanup on destruction."""

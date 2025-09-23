@@ -19,6 +19,7 @@ from research_analytics_suite.commands.registry.CommandExecutor import CommandEx
 from research_analytics_suite.commands.registry.DisplayManager import DisplayManager
 from research_analytics_suite.commands.registry.PaginationManager import PaginationManager
 from research_analytics_suite.commands.registry.RegistrationManager import RegistrationManager
+from research_analytics_suite.commands.registry.CommandExporter import CommandExporter
 
 
 class CommandRegistry:
@@ -45,6 +46,7 @@ class CommandRegistry:
             self._command_executor = None
             self._display_manager = None
             self._pagination_manager = None
+            self._command_exporter = None
 
             self._initialized = False
 
@@ -76,6 +78,9 @@ class CommandRegistry:
 
                     self._display_manager = DisplayManager(self._registration_manager)
                     self._pagination_manager = PaginationManager(self._display_manager)
+
+                    self._command_exporter = CommandExporter(self._registration_manager.registry)
+                    await self._command_exporter.initialize()
 
                     self._initialized = True
 
@@ -256,3 +261,110 @@ class CommandRegistry:
     def current_category(self, category):
         """Set the current category."""
         self._display_manager.current_category = category
+
+    async def export_commands_to_sqlite(self, output_path: str = None) -> str:
+        """
+        Export all registered commands to SQLite database.
+
+        Args:
+            output_path: Optional path for the output file. If None, uses default location.
+
+        Returns:
+            Path to the created database file
+        """
+        if not self._command_exporter:
+            self._command_exporter = CommandExporter(self._registration_manager.registry)
+            await self._command_exporter.initialize()
+
+        return await self._command_exporter.export_to_sqlite(output_path)
+
+    async def export_commands_to_json(self, output_path: str = None) -> str:
+        """
+        Export all registered commands to JSON file.
+
+        Args:
+            output_path: Optional path for the output file. If None, uses default location.
+
+        Returns:
+            Path to the created JSON file
+        """
+        if not self._command_exporter:
+            self._command_exporter = CommandExporter(self._registration_manager.registry)
+            await self._command_exporter.initialize()
+
+        return await self._command_exporter.export_to_json(output_path)
+
+    async def export_commands_to_csv(self, output_path: str = None) -> str:
+        """
+        Export all registered commands to CSV file.
+
+        Args:
+            output_path: Optional path for the output file. If None, uses default location.
+
+        Returns:
+            Path to the created CSV file
+        """
+        if not self._command_exporter:
+            self._command_exporter = CommandExporter(self._registration_manager.registry)
+            await self._command_exporter.initialize()
+
+        return await self._command_exporter.export_to_csv(output_path)
+
+    async def export_commands_all_formats(self, base_path: str = None) -> dict:
+        """
+        Export all registered commands to all supported formats (SQLite, JSON, CSV).
+
+        Args:
+            base_path: Base directory for exports. If None, uses default location.
+
+        Returns:
+            Dictionary mapping format names to file paths
+        """
+        if not self._command_exporter:
+            self._command_exporter = CommandExporter(self._registration_manager.registry)
+            await self._command_exporter.initialize()
+
+        return await self._command_exporter.export_all_formats(base_path)
+
+    def get_command_count(self) -> int:
+        """Get the total number of registered commands."""
+        return len(self._registration_manager.registry)
+
+    def get_categories_summary(self) -> dict:
+        """Get a summary of commands by category."""
+        return self._registration_manager.categories
+
+    async def reset_for_workspace(self, config=None):
+        """
+        Reset CommandRegistry for workspace loading.
+
+        Args:
+            config: Optional new configuration to use
+        """
+        async with self._lock:
+            # Update config reference if provided
+            if config:
+                self._config = config
+
+            # Reset to None for clean re-initialization
+            self._registration_manager = None
+            self._command_executor = None
+            self._display_manager = None
+            self._pagination_manager = None
+            self._command_exporter = None
+
+            # Update singleton references
+            if config:
+                from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
+                self._operation_control = OperationControl()
+
+                from research_analytics_suite.library_manifest import LibraryManifest
+                self._library_manifest = LibraryManifest()
+
+                from research_analytics_suite.data_engine import Workspace
+                self._workspace = Workspace()
+
+            # Reset initialization flag and re-initialize
+            self._initialized = False
+
+        await self.initialize()

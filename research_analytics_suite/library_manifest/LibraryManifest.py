@@ -164,3 +164,29 @@ class LibraryManifest:
     async def _update_user_manifest(self):  # pragma: no cover
         ...
 
+    async def reset_for_workspace(self, config=None):
+        """
+        Reset LibraryManifest for workspace loading.
+
+        Args:
+            config: Optional new configuration to use
+        """
+        async with LibraryManifest._lock:
+            # Update config reference if provided
+            if config:
+                from research_analytics_suite.utils import Config
+                self._config = config
+            else:
+                # Reload config to ensure it's current
+                from research_analytics_suite.utils import Config
+                self._config = Config()
+
+            # Clear existing library data
+            self._categories.clear()
+            self._library.clear()
+
+            # Reset initialization flag and re-initialize
+            self._initialized = False
+
+        await self.initialize()
+

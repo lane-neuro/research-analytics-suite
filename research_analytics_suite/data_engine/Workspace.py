@@ -434,14 +434,13 @@ class Workspace:
             with open(engine_config_path, 'w') as f:
                 json.dump(engine_config, f, indent=2, default=str)
 
-            self._logger.info("Universal Data Engine configured for new workspace")
+            self._logger.info(f"Workspace created at {work_root}")
 
         except Exception as e:
             self._logger.warning(f"Failed to create engine configuration for new workspace: {e}")
 
         # Switch workspaces
         await self.switch_to_workspace(str(config_path))
-        self._logger.info(f"Workspace created at {work_root}")
         return self
 
     @command
@@ -525,22 +524,17 @@ class Workspace:
                                    self.__class__.__name__)
                 return None
 
-
-            # Initialize logger
-            if not hasattr(self, "_logger"):
+            # Reconfigure logger for the new workspace
+            if not hasattr(self, '_logger'):
                 self._logger = CustomLogger()
             await self._logger.initialize()
             self._logger.reconfigure_for_workspace(self._config)
 
-            from research_analytics_suite.library_manifest.LibraryManifest import LibraryManifest
-            self._library_manifest = LibraryManifest()
+            # Reset all singleton instances for workspace loading
+            await self._reset_all_singletons()
 
             self._logger.debug(f"Loading memory manager for workspace at {work_root}")
 
-            from research_analytics_suite.data_engine.memory import MemoryManager as MM
-            self._memory_manager = MM()  # get the singleton (same instance)
-            await self._memory_manager.initialize()
-            self._memory_manager.set_config(self._config)  # ensure it points at the *current* Config
             mm_db_path = str(work_root / self._config.DATA_DIR / "memory_manager.db")
             await self._memory_manager.rebind_to_db(mm_db_path)
 
@@ -593,7 +587,8 @@ class Workspace:
             await self._library_manifest.load_user_library()
 
             self._active_workspace_path = work_root
-            self._logger.info(f"Workspace loaded from {work_root}")
+            self._logger.info(f"Workspace loaded from \'{work_root}\'. You can now interact with the GUI or enter "
+                              f"commands in this console. Type \'_help\' for a table of available commands.")
             return self
 
         except Exception as e:
@@ -613,6 +608,47 @@ class Workspace:
         Clears existing data in the workspace to ensure a clean load.
         """
         self._initialized = False
+
+    async def _reset_all_singletons(self) -> None:
+        """
+        Reset all singleton instances for workspace loading.
+        """
+        try:
+            # Reset and configure MemoryManager
+            if not hasattr(self, '_memory_manager') or not self._memory_manager:
+                self._memory_manager = MemoryManager()
+            await self._memory_manager.reset()
+            await self._memory_manager.initialize()
+            self._memory_manager.set_config(self._config)
+
+            # Reset NodeEditorManager
+            from research_analytics_suite.gui.NodeEditorManager import NodeEditorManager
+            node_manager = NodeEditorManager()
+            await node_manager.reset_for_workspace(self._config)
+
+            # Reset OperationControl
+            from research_analytics_suite.operation_manager.control.OperationControl import OperationControl
+            operation_control = OperationControl()
+            await operation_control.reset_for_workspace(self._config)
+
+            # Reset CommandRegistry
+            from research_analytics_suite.commands.registry.CommandRegistry import CommandRegistry
+            command_registry = CommandRegistry()
+            await command_registry.reset_for_workspace(self._config)
+
+            # Reset and get fresh LibraryManifest
+            if not hasattr(self, '_library_manifest') or not self._library_manifest:
+                from research_analytics_suite.library_manifest.LibraryManifest import LibraryManifest
+                self._library_manifest = LibraryManifest()
+            await self._library_manifest.reset_for_workspace(self._config)
+
+            self._logger.debug("All singleton instances reset for workspace loading")
+
+        except Exception as e:
+            if self._logger:
+                self._logger.error(e, self.__class__.__name__)
+            else:
+                print(f"Warning: Error during singleton reset: {e}")
 
     async def close(self) -> None:
         """

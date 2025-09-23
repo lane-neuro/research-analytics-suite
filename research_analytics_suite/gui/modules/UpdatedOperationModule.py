@@ -86,6 +86,10 @@ class UpdatedOperationModule(GUIBase):
 
             await asyncio.sleep(0.001)
 
+    @property
+    def gui_id(self) -> str:
+        return self._parent_id
+
     def draw(self):
         with dpg.group(tag=self._parent_id, parent=self._parent, height=self.height):
             self.draw_upper_region(self._parent_id, width=self.width)

@@ -215,7 +215,7 @@ class GuiLauncher:
             await asyncio.sleep(0.001)
 
         self._logger.debug("Shutting down GUI...")
-        await self._workspace.save_current_workspace()
+        await self._workspace.close()
         dpg.destroy_context()
 
     async def setup_dynamic_panes(self) -> None:
