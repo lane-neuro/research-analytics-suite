@@ -62,8 +62,6 @@ class AdapterRegistry:
         if is_fallback:
             self._fallback_adapters.append(adapter)
 
-        self._logger.debug(f"Registered adapter: {adapter.name}")
-
     def unregister_adapter(self, adapter_name: str) -> bool:
         """
         Unregister an adapter.

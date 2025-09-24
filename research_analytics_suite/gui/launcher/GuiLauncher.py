@@ -16,6 +16,7 @@ Status: Prototype
 """
 import asyncio
 import os
+import sys
 
 import dearpygui.dearpygui as dpg
 from dearpygui_async import DearPyGuiAsync
@@ -57,6 +58,10 @@ class GuiLauncher:
         self._node_manager = NodeEditorManager()
 
         self._hardware_manager = hardware_manager
+
+        # GUI relaunch control
+        self._should_relaunch = False
+        self._is_shutting_down = False
 
         self._hardware_dialog = None
         self._timeline_dialog = None
@@ -146,13 +151,18 @@ class GuiLauncher:
         """Sets up the main window of the GUI and runs the event loop."""
         await self._node_manager.initialize()
 
+        # Ensure clean context creation
+        try:
+            dpg.destroy_context()
+        except:
+            pass  # Context might not exist
+
         dpg.create_context()
         dpg.create_viewport(title='Research Analytics Suite - Main Window', width=1366, height=768,
                             large_icon=str(resource_path("./gui/assets/images/icon_512x512.png")),
                             small_icon=str(resource_path("./gui/assets/images/icon_32x32.png")))
         dpg.setup_dearpygui()
         await self.apply_theme()
-        # dpg.show_metrics()
 
         dpg.show_viewport()
         await self._dpg_async.start()
@@ -163,7 +173,7 @@ class GuiLauncher:
                 with dpg.menu(label="File"):
                     dpg.add_menu_item(label="New Workspace", callback=self.new_workspace_dialog)
                     dpg.add_menu_item(label="Open Workspace", callback=self.open_workspace_dialog)
-                    dpg.add_menu_item(label="Exit", callback=lambda: dpg.stop_dearpygui())
+                    dpg.add_menu_item(label="Exit", callback=lambda: asyncio.create_task(self._exit()))
 
                 with dpg.menu(label="Edit"):
                     dpg.add_menu_item(label="Settings", callback=self.settings_popup)
@@ -211,12 +221,17 @@ class GuiLauncher:
         self.adjust_main_window()
 
         while dpg.is_dearpygui_running():
-            dpg.render_dearpygui_frame()
-            await asyncio.sleep(0.001)
+            # Check for relaunch requests
+            if self._should_relaunch:
+                self._logger.info("Relaunch requested, shutting down GUI...")
+                await self.shutdown_gui()
+                break
 
-        self._logger.debug("Shutting down GUI...")
-        await self._workspace.close()
-        dpg.destroy_context()
+            dpg.render_dearpygui_frame()
+            await asyncio.sleep(0.0001)
+
+        if not self._should_relaunch:
+            await self._exit()
 
     async def setup_dynamic_panes(self) -> None:
         """Sets up asynchronous panes."""
@@ -404,6 +419,9 @@ class GuiLauncher:
         dpg.delete_item("workspace_name_popup")
         self._logger.debug(f"Workspace created at {folder_path} with name {name}.")
 
+        # Trigger GUI relaunch for new workspace
+        self.request_relaunch()
+
     async def open_workspace_dialog(self, sender=None, app_data=None, user_data=None):
         """Opens a file dialog to load an existing workspace config.json."""
         with dpg.file_dialog(
@@ -427,6 +445,9 @@ class GuiLauncher:
         dpg.delete_item("open_workspace_file_dialog")
         self._logger.debug(f"Workspace loaded from {config_file}.")
 
+        # Trigger GUI relaunch for workspace change
+        self.request_relaunch()
+
     def show_documentation(self, sender=None, app_data=None, user_data=None):
         """Shows the documentation dialog."""
         if self._documentation_dialog is None:
@@ -439,3 +460,69 @@ class GuiLauncher:
             self._about_dialog = AboutDialog()
         self._about_dialog.show()
 
+    async def shutdown_gui(self):
+        """Cleanly shuts down the GUI for relaunch or exit."""
+        if self._is_shutting_down:
+            return
+
+        self._is_shutting_down = True
+        self._logger.debug("Shutting down GUI...")
+
+        try:
+            # Stop specific GUI update operations by finding them in the sequencer
+            if hasattr(self._operation_control, 'sequencer'):
+                gui_operation_names = ['gui_ResourceUpdate', 'gui_ConsoleUpdate', 'gui_DataManUpdate']
+                for op_name in gui_operation_names:
+                    try:
+                        # Find and stop the operation by iterating through chains and nodes
+                        found = False
+                        for chain in self._operation_control.sequencer.sequencer:
+                            for node in chain:
+                                if hasattr(node.operation, 'name') and node.operation.name == op_name:
+                                    await node.operation.stop()
+                                    self._logger.debug(f"Stopped {op_name}")
+                                    found = True
+                                    break
+                            if found:
+                                break
+                    except Exception as e:
+                        self._logger.warning(f"Failed to stop {op_name}: {e}")
+
+            # Give operations time to finish stopping
+            await asyncio.sleep(0.2)
+
+            # Stop DearPyGui async operations
+            if hasattr(self._dpg_async, 'stop'):
+                await self._dpg_async.stop()
+
+            # Clean up node managers
+            if self._node_manager:
+                await self._node_manager.reset_for_workspace()
+
+            # Stop DearPyGui context
+            if dpg.is_dearpygui_running():
+                dpg.stop_dearpygui()
+
+            # Give DearPyGui time to cleanup properly
+            await asyncio.sleep(0.1)
+
+            # Destroy DearPyGui context completely
+            try:
+                dpg.destroy_context()
+            except Exception as ctx_error:
+                self._logger.debug(f"Context already destroyed or error during cleanup: {ctx_error}")
+
+        except Exception as e:
+            self._logger.warning(f"Error during GUI shutdown: {e}")
+        finally:
+            self._is_shutting_down = False
+
+    def request_relaunch(self):
+        """Request GUI relaunch for workspace changes."""
+        self._should_relaunch = True
+        self._logger.info("GUI relaunch requested")
+
+    async def _exit(self):
+        """Exits the application."""
+        await self.shutdown_gui()
+        await self._workspace.close()

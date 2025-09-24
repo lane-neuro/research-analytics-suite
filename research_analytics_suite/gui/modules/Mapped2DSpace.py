@@ -95,8 +95,8 @@ class Mapped2DSpace(GUIBase):
                 with dpg.group(tag=f"{node_id}_name_group"):
                     _operation_module = UpdatedOperationModule(operation_attributes, 200, 500,
                                                                node_id)
-                    _operation = _operation_module.operation
-                    dpg.configure_item(node_id, label=f"{_operation.name} [rID: {_operation.runtime_id[-6:]}]")
+                    # Use operation attributes directly since operation isn't created yet
+                    dpg.configure_item(node_id, label=f"{operation_attributes.name} [rID: {operation_attributes.unique_id[-6:]}]")
                     _operation_module.draw_upper_region(parent=f"{node_id}_name_group", width=200)
 
             with dpg.node_attribute(tag=f"{node_id}_details", attribute_type=dpg.mvNode_Attr_Static):
@@ -143,6 +143,7 @@ class Mapped2DSpace(GUIBase):
         """
         Clears all elements from the node editor.
         """
+        # TODO: fix reset state for gui elements when switching workspaces. currently works but for some reason the middle group's listbox is empty when I try to create a new operation
         for node in self._nodes:
             dpg.delete_item(node[0])
         self._nodes = []

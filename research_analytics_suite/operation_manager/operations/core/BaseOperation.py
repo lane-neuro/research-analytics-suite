@@ -851,6 +851,7 @@ class BaseOperation(ABC):
         Clean up any resources or perform any necessary teardown after the operation has completed
         or been stopped.
         """
+        self.is_loop = False
         self._progress = 0
         self._status = "idle"
         self._task = None

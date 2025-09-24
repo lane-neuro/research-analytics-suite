@@ -58,7 +58,7 @@ class TaskMonitor:
                 except Exception as e:
                     self._logger.error(e, self.__class__.__name__)
                 finally:
-                    if operation.is_complete and not operation.is_loop:
+                    if operation is not None and  operation.is_complete and not operation.is_loop:
                         operation.status = "idle"
 
     def get_task_statuses(self):

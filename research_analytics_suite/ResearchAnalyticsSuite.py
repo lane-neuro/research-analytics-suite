@@ -52,6 +52,7 @@ class ResearchAnalyticsSuite:
         self._operation_control = OperationControl()
 
         self._launch_tasks = []
+        self._gui_launcher = None
 
         self._args = None
 
@@ -108,8 +109,7 @@ class ResearchAnalyticsSuite:
 
         if self._args.gui.lower() == 'true':
             try:
-                gui_launcher = GuiLauncher(self._hardware_manager)
-                self._launch_tasks.append(gui_launcher.setup_main_window())
+                self._launch_tasks.append(self._run_gui_with_relaunch())
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)
 
@@ -144,6 +144,30 @@ class ResearchAnalyticsSuite:
         finally:
             asyncio.get_event_loop().close()
             sys.exit(0)
+
+    async def _run_gui_with_relaunch(self):
+        """Runs the GUI with automatic relaunch support for workspace changes."""
+        while True:
+            try:
+                self._gui_launcher = GuiLauncher(self._hardware_manager)
+                await self._gui_launcher.setup_main_window()
+
+                # If we reach here, GUI was closed normally (not a relaunch)
+                if not self._gui_launcher._should_relaunch:
+                    self._logger.info("GUI closed normally, exiting...")
+                    break
+
+                # GUI requested relaunch, restart the GUI
+                self._logger.info("Relaunching GUI...")
+                self._gui_launcher._should_relaunch = False
+
+            except Exception as e:
+                self._logger.error(f"Error in GUI: {e}", self.__class__.__name__)
+                break
+
+    def get_gui_launcher(self):
+        """Get the current GUI launcher instance."""
+        return self._gui_launcher
 
 
 def main():  # pragma: no cover

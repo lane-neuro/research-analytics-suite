@@ -50,6 +50,7 @@ class NodeEditorManager:
         if not self._initialized:
             async with NodeEditorManager._lock:
                 if not self._initialized:
+                    self._cross_editor_links = []
 
                     self._initialized = True
 
@@ -106,5 +107,7 @@ class NodeEditorManager:
                 _editor.clear_elements()
 
             # Reset state
-            self._editors.clear()
-            self._cross_editor_links.clear()
+            # self._editors.clear()
+            # self._cross_editor_links.clear()
+            self._initialized = False
+        await self.initialize()

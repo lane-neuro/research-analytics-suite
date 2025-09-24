@@ -122,8 +122,6 @@ class ExecutionEngine:
             except ImportError:
                 self._backend_availability[backend] = False
 
-        self._logger.debug(f"Backend availability: {self._backend_availability}")
-
     def select_optimal_backend(self, data_profile: DataProfile,
                              operation: str,
                              execution_context: Optional[ExecutionContext] = None) -> ExecutionBackend:

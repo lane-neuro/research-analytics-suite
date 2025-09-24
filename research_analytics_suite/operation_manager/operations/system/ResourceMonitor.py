@@ -92,6 +92,11 @@ class ResourceMonitor(BaseOperation):
 
             await asyncio.sleep(0.01)
 
+    def cleanup_operation(self):
+        """Cleans up the operation by disabling the profiler."""
+        self.profiler.disable()
+        super().cleanup_operation()
+
     @command
     def get_cpu_formatted(self) -> str:
         return (f"Total CPU Usage:\t{round(self.cpu_usage, 2)}%\n"

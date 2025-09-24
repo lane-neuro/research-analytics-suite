@@ -244,6 +244,28 @@ class OperationSequencer:
         self.sequencer.clear()
 
     @command
+    def cleanup_all_operations(self) -> None:
+        """
+        Cleanup all operations in the sequencer by calling cleanup_operation() on each operation,
+        then clear the sequencer.
+        """
+        self._logger.debug("Cleaning up all operations in sequencer")
+
+        for chain in self.sequencer:
+            current_node = chain.head
+            while current_node:
+                if current_node.operation:
+                    try:
+                        current_node.operation.cleanup_operation()
+                        self._logger.debug(f"Cleaned up operation: {current_node.operation.name}")
+                    except Exception as e:
+                        self._logger.error(e, self.__class__.__name__)
+                current_node = current_node.next_node
+
+        self.clear()
+        self._logger.debug("All operations cleaned up and sequencer cleared")
+
+    @command
     def contains(self, operation) -> bool:
         """
         Checks if the sequencer contains a specific operation.

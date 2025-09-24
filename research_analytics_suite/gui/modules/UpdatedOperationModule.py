@@ -37,14 +37,22 @@ class UpdatedOperationModule(GUIBase):
         from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
         self.__attribute_reset = copy(operation_attributes)
         self._attributes = operation_attributes
-        self.operation = BaseOperation(operation_attributes)
-
-        self.operation.attach_gui_module(self)
+        # Don't create BaseOperation here - let add_initialized_operation handle it
+        self.operation = None
 
     async def initialize_gui(self) -> None:
         self._logger.debug("Initializing the operation module dialog.")
+
+        # Create the operation from attributes first
+        from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
+        self.operation = BaseOperation(self._attributes)
+        self.operation.attach_gui_module(self)
+
+        # Create the update monitor
         self._update_operation = await self._operation_control.operation_manager.create_operation(
             operation_type=UpdateMonitor, name=f"gui_{self.operation.runtime_id}", action=self._update_async)
+
+        # Add to operation manager (this should not create a duplicate)
         self.operation = await self._operation_control.operation_manager.add_initialized_operation(self.operation)
         self.initialized = True
         self._logger.info(f"Operation {self.operation.name} initialized.")
@@ -53,7 +61,7 @@ class UpdatedOperationModule(GUIBase):
     async def _update_async(self) -> None:
         """Asynchronous function to update the GUI elements."""
         while self._update_operation.is_ready:
-            if not self.operation.initialized:
+            if self.operation and not self.operation.initialized:
                 await self.operation.initialize_operation()
 
             if dpg.does_item_exist(f"req_inputs_{self._runtime_id}"):
@@ -70,7 +78,8 @@ class UpdatedOperationModule(GUIBase):
 
             if dpg.does_item_exist(f"status_{self._runtime_id}"):
                 # Update the status text with the current operation status
-                dpg.configure_item(f"status_{self._runtime_id}", default_value=self.operation.status)
+                dpg.configure_item(f"status_{self._runtime_id}",
+                                   default_value=self.operation.status if self.operation else "Initializing...")
 
             if dpg.does_item_exist(f"loop_{self._runtime_id}"):
                 # Update the loop checkbox state
@@ -121,11 +130,11 @@ class UpdatedOperationModule(GUIBase):
                 dpg.add_text(default_value="Inherited Ops", indent=10)
                 dpg.add_listbox(items=self._attributes.inheritance, num_items=3)
 
-        if self.operation.attributes.active:
+        if self._attributes.active:
             with dpg.group(horizontal=True, parent=parent, width=width*.40, height=20, indent=10):
                 dpg.add_text(default_value="Status:")
                 dpg.add_text(tag=f"status_{self._runtime_id}",
-                    default_value=self.operation.status if hasattr(self.operation, "status") else "Not Initialized")
+                    default_value=self.operation.status if self.operation and hasattr(self.operation, "status") else "Not Initialized")
 
             with dpg.group(horizontal=True, tag=f"execution_{self._runtime_id}", parent=parent, width=width*.40,
                            height=20):
@@ -178,11 +187,12 @@ class UpdatedOperationModule(GUIBase):
             dpg.add_input_text(default_value=get_function_body(self._attributes.action), multiline=True,
                                tab_input=True, height=100)
 
-        if self.operation.attributes.active:
+        if self._attributes.active:
             with dpg.group(parent=parent, tag=f"state_mods_{self._runtime_id}"):
                 dpg.add_button(label="View Result", callback=self.view_result)
                 dpg.add_button(label="Reload Original Attributes", callback=self.reload_attributes)
-                dpg.add_button(label="Save Operation Settings", callback=self.operation.save_in_workspace,
+                dpg.add_button(label="Save Operation Settings",
+                               callback=lambda: self.operation.save_in_workspace() if self.operation else None,
                                tag=f"save_{self._runtime_id}")
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:

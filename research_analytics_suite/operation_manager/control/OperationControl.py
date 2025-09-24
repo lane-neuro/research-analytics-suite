@@ -125,6 +125,11 @@ class OperationControl:
             config: Optional new configuration to use
         """
         async with OperationControl._lock:
+            # Cleanup all operations in the sequencer before resetting
+            if self.sequencer is not None:
+                self.sequencer.cleanup_all_operations()
+                self._logger.debug("OperationControl.reset_for_workspace: Cleaned up sequencer operations")
+
             # Reset components to None for clean re-initialization
             self.sequencer = None
             self.task_creator = None

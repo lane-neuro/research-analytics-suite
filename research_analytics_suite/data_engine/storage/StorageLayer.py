@@ -60,7 +60,6 @@ class StorageLayer:
             backend: Storage backend to register
         """
         self._backends[backend.scheme] = backend
-        self._logger.debug(f"Registered storage backend: {backend.name} ({backend.scheme})")
 
     def unregister_backend(self, scheme: str) -> bool:
         """
@@ -74,7 +73,6 @@ class StorageLayer:
         """
         if scheme in self._backends:
             backend = self._backends.pop(scheme)
-            self._logger.debug(f"Unregistered storage backend: {backend.name}")
             return True
         return False
 

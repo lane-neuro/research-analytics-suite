@@ -39,9 +39,9 @@ class ConsoleDialog(GUIBase):
 
     async def _update_async(self) -> None:
         """Continuously updates the logger output with new messages."""
-        while True:
+        while self._update_operation.is_loop:
             new_log = await self._logger.info_message_queue.get()
-            current_logs = dpg.get_value("logger_output")
+            current_logs = dpg.get_value("logger_output") or ""
             updated_logs = new_log + "\n" + current_logs
             dpg.set_value("logger_output", updated_logs)
             await asyncio.sleep(0.0001)

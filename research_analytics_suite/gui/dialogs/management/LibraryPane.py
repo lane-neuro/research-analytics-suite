@@ -61,14 +61,41 @@ class LibraryPane(GUIBase):
         while not dpg.does_item_exist("library_view"):
             await asyncio.sleep(0.1)
 
+        current_workspace = None
         while True:
             await asyncio.sleep(self.SLEEP_DURATION)
             async with self._lock:
+                # Check if workspace changed
+                new_workspace = getattr(self._config, 'WORKSPACE_NAME', None) if hasattr(self, '_config') else None
+                if new_workspace != current_workspace:
+                    current_workspace = new_workspace
+                    await self._handle_workspace_change()
+
                 if self._library_manifest:
                     for _id, _category in self._library_manifest.get_categories():
                         if _id not in self._categories:
                             self._categories[_id] = _category
                             await self._create_category_node(_category, self._child_window_id)
+
+    async def _handle_workspace_change(self) -> None:
+        """Handle workspace change by refreshing LibraryManifest and clearing UI state."""
+        self._logger.debug("LibraryPane: Workspace changed, refreshing library manifest and UI")
+
+        # Clear cached UI state
+        self._categories.clear()
+        self._cell_ids.clear()
+
+        # Clear existing UI elements in library view
+        if dpg.does_item_exist("library_view"):
+            dpg.delete_item("library_view", children_only=True)
+
+        # Refresh LibraryManifest reference (singleton will have been reset)
+        from research_analytics_suite.library_manifest.LibraryManifest import LibraryManifest
+        self._library_manifest = LibraryManifest()
+
+        # Refresh config reference
+        from research_analytics_suite.utils import Config
+        self._config = Config()
 
     async def _create_category_node(self, category, parent):
         """Recursively creates category tree nodes."""

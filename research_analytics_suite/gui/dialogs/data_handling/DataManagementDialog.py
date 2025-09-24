@@ -103,7 +103,8 @@ class DataManagementDialog(GUIBase):
                 self._last_rendered_slot_id = self._selected_slot_id
 
             # Keep the slot count text fresh
-            dpg.set_value("dm_slot_count_text", f"{slot_count} slot(s) loaded")
+            if dpg.does_item_exist("dm_slot_count_text"):
+                dpg.set_value("dm_slot_count_text", f"{slot_count} slot(s) loaded")
 
     # ------------------------------- UI HELPERS -------------------------------
 

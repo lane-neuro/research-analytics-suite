@@ -169,3 +169,4 @@ class OperationManager:
             child_operations (bool): Flag to stop child operations as well.
         """
         await operation.stop(child_operations=child_operations)
+        operation.cleanup_operation()
