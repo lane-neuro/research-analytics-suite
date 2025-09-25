@@ -33,7 +33,7 @@ class StandardDeviationCalculation(BaseOperation):
     name = "StandardDeviationCalculation"
     version = "0.0.1"
     description = "Calculate the standard deviation of a list of numbers."
-    category_id = 101
+    category_id = 102
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"

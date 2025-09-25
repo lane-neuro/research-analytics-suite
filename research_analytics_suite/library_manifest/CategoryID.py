@@ -17,74 +17,46 @@ from enum import Enum
 
 
 class CategoryID(Enum):
-    NUMERICAL = (1, "Numerical Data", {
-        "Basic": (101, "Basic", {}),
-        "Intermediate": (102, "Intermediate", {}),
-        "Advanced": (103, "Advanced", {})
+    DESCRIPTIVE_STATS = (1, "Descriptive Statistics", {
+        "Central_Tendency": (101, "Central Tendency", {}),
+        "Variability": (102, "Variability", {}),
+        "Distribution": (103, "Distribution", {})
     })
 
-    CATEGORICAL = (2, "Categorical Data", {
-        "Basic": (201, "Basic", {}),
-        "Intermediate": (202, "Intermediate", {}),
-        "Advanced": (203, "Advanced", {})
+    INFERENTIAL_STATS = (2, "Inferential Statistics", {
+        "Parametric": (201, "Parametric Tests", {}),
+        "Nonparametric": (202, "Non-parametric Tests", {}),
+        "Confidence_Intervals": (203, "Confidence Intervals", {})
     })
 
-    TEXT = (3, "Text Data", {
-        "Basic": (301, "Basic", {}),
-        "Intermediate": (302, "Intermediate", {}),
-        "Advanced": (303, "Advanced", {})
+    HYPOTHESIS_TESTING = (3, "Hypothesis Testing", {
+        "T_Tests": (301, "T-Tests", {}),
+        "Chi_Square": (302, "Chi-Square Tests", {}),
+        "ANOVA": (303, "ANOVA", {})
     })
 
-    TIME_SERIES = (4, "Time Series Data", {
-        "Basic": (401, "Basic", {}),
-        "Intermediate": (402, "Intermediate", {}),
-        "Advanced": (403, "Advanced", {})
+    REGRESSION = (4, "Regression & Correlation", {
+        "Linear_Regression": (401, "Linear Regression", {}),
+        "Multiple_Regression": (402, "Multiple Regression", {}),
+        "Correlation": (403, "Correlation Analysis", {})
     })
 
-    BIG_DATA = (5, "Big Data", {
-        "Hadoop": (501, "Hadoop", {}),
-        "Spark": (502, "Spark", {})
+    TIME_SERIES = (5, "Time Series Analysis", {
+        "Trend_Analysis": (501, "Trend Analysis", {}),
+        "Seasonal_Analysis": (502, "Seasonal Analysis", {}),
+        "Forecasting": (503, "Forecasting", {})
     })
 
-    CLOUD_COMPUTING = (6, "Cloud Computing", {
-        "AWS": (601, "AWS", {}),
-        "Azure": (602, "Azure", {}),
-        "Google": (603, "Google Cloud", {})
+    DATA_PREPROCESSING = (6, "Data Preprocessing", {
+        "Cleaning": (601, "Data Cleaning", {}),
+        "Transformation": (602, "Data Transformation", {}),
+        "Normalization": (603, "Data Normalization", {})
     })
 
-    DATABASE = (7, "Database", {
-        "SQL": (701, "SQL Queries", {}),
-        "NoSQL": (702, "NoSQL", {})
-    })
-
-    HYPOTHESIS_TESTING = (8, "Hypothesis Testing", {
-        "Statistical": (801, "Statistical Tests", {}),
-        "Experimental": (802, "Experimental Design", {})
-    })
-
-    DATA_COLLECTION = (9, "Data Collection", {
-        "Surveys": (901, "Surveys", {}),
-        "Observational": (902, "Observational Studies", {})
-    })
-
-    ANALYSIS_TECHNIQUES = (10, "Analysis Techniques", {
-        "Quantitative": (1001, "Quantitative Analysis", {}),
-        "Qualitative": (1002, "Qualitative Analysis", {})
-    })
-
-    BASIC_OPERATIONS = (11, "Basic", {
-        "Data Loading": (1101, "Data Loading", {}),
-        "Simple Calculations": (1102, "Simple Calculations", {})
-    })
-
-    INTERMEDIATE_OPERATIONS = (12, "Intermediate", {
-        "Data Aggregation": (1201, "Data Aggregation", {}),
-        "Intermediate Analysis": (1202, "Intermediate Analysis", {})
-    })
-
-    ADVANCED_OPERATIONS = (13, "Advanced", {
-        "Machine Learning Models": (1301, "Machine Learning Models", {}),
-        "Deep Learning": (1302, "Deep Learning", {})
+    VISUALIZATION = (7, "Data Visualization", {
+        "Basic_Plots": (701, "Basic Plots", {}),
+        "Statistical_Plots": (702, "Statistical Plots", {}),
+        "Advanced_Visualization": (703, "Advanced Visualization", {})
     })
 
     def __init__(self, u_id, name, subcategories):

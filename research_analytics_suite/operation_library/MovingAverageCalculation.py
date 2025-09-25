@@ -32,7 +32,7 @@ class MovingAverageCalculation(BaseOperation):
     name = "MovingAverageCalculation"
     version = "0.0.1"
     description = "Calculate the moving average of a time series."
-    category_id = 401
+    category_id = 501
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"

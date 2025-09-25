@@ -34,7 +34,7 @@ class DescriptiveStatistics(BaseOperation):
     name = "DescriptiveStatistics"
     version = "0.0.1"
     description = "Generate descriptive statistics for a dataset."
-    category_id = 1001
+    category_id = 101
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"

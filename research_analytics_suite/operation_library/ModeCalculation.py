@@ -32,7 +32,7 @@ class ModeCalculation(BaseOperation):
     name = "ModeCalculation"
     version = "0.0.1"
     description = "Calculate the mode of a list of categories."
-    category_id = 201
+    category_id = 101
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"

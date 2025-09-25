@@ -35,7 +35,7 @@ class ChiSquareTest(BaseOperation):
     name = "ChiSquareTest"
     version = "0.0.1"
     description = "Perform a chi-square test for independence."
-    category_id = 801
+    category_id = 302
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"

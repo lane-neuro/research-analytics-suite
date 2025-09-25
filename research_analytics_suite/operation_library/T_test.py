@@ -33,7 +33,7 @@ class T_test(BaseOperation):
     name = "T_test"
     version = "0.0.1"
     description = "Perform a t-test on a dataset."
-    category_id = 801
+    category_id = 301
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"

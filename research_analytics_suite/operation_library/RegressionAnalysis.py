@@ -37,7 +37,7 @@ class RegressionAnalysis(BaseOperation):
     name = "RegressionAnalysis"
     version = "0.0.1"
     description = "Perform regression analysis on a dataset."
-    category_id = 1202
+    category_id = 401
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"

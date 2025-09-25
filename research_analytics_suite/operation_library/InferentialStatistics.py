@@ -34,7 +34,7 @@ class InferentialStatistics(BaseOperation):
     name = "InferentialStatistics"
     version = "0.0.1"
     description = "Perform inferential statistical analysis on a dataset."
-    category_id = 1001
+    category_id = 201
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"

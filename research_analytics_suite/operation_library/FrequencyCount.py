@@ -32,7 +32,7 @@ class FrequencyCount(BaseOperation):
     name = "FrequencyCount"
     version = "0.0.1"
     description = "Count the frequency of each category in a dataset."
-    category_id = 201
+    category_id = 103
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"

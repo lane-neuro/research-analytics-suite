@@ -119,10 +119,16 @@ class LibraryManifest:
     async def _populate_verified_operations(self):
         self._logger.debug("Starting _populate_verified_operations")
         try:
-            from research_analytics_suite.operation_library import OPERATIONS
+            # Use dynamic operation discovery
+            from research_analytics_suite.library_manifest.operation_loader import discover_operations
             from research_analytics_suite.operation_manager.operations.core.utils import get_attributes_from_module
 
-            for op_cls in OPERATIONS:
+            # Discover operations dynamically
+            operations = discover_operations()
+            self._logger.debug(f"Discovered {len(operations)} operations")
+
+            # Process each discovered operation using existing infrastructure
+            for op_cls in operations:
                 _operation = await get_attributes_from_module(op_cls)
                 self.add_operation_from_attributes(_operation)
         except Exception as e:
