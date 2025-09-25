@@ -21,8 +21,8 @@ from copy import copy
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.commands.utils.text_utils import get_function_body
-from research_analytics_suite.data_engine import MemoryManager
 from research_analytics_suite.gui.GUIBase import GUIBase
+from research_analytics_suite.gui.utils import format_input_output_entry
 from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
 from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
@@ -34,10 +34,8 @@ class UpdatedOperationModule(GUIBase):
         self.initialized = False
         self._parent_id = f"parent_{self._runtime_id}"
 
-        from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
         self.__attribute_reset = copy(operation_attributes)
         self._attributes = operation_attributes
-        # Don't create BaseOperation here - let add_initialized_operation handle it
         self.operation = None
 
     async def initialize_gui(self) -> None:
@@ -67,13 +65,13 @@ class UpdatedOperationModule(GUIBase):
             if dpg.does_item_exist(f"req_inputs_{self._runtime_id}"):
                 # Update the listbox with the current required inputs
                 req_inputs_dict = self._attributes.input_ids
-                _inputs = [f"{k} - {v}" for k, v in req_inputs_dict.items()]
+                _inputs = [format_input_output_entry(k, v) for k, v in req_inputs_dict.items()]
                 dpg.configure_item(f"req_inputs_{self._runtime_id}", items=_inputs)
 
             if dpg.does_item_exist(f"output_list_{self._runtime_id}"):
                 # Update the listbox with the current output values
                 outputs_dict = self._attributes.output_ids
-                _outputs = [f"{k} - {v}" for k, v in outputs_dict.items()]
+                _outputs = [format_input_output_entry(k, v) for k, v in outputs_dict.items()]
                 dpg.configure_item(f"output_list_{self._runtime_id}", items=_outputs)
 
             if dpg.does_item_exist(f"status_{self._runtime_id}"):
@@ -171,15 +169,13 @@ class UpdatedOperationModule(GUIBase):
                 dpg.add_text(default_value="Input", indent=10)
 
                 req_inputs_dict = self._attributes.input_ids
-                _inputs = [f"{k} - {v}" for k, v in req_inputs_dict.items()]
-                dpg.add_listbox(items=_inputs, num_items=3, tag=f"req_inputs_{self._runtime_id}",
-                                callback=self.memory_listbox_callback)
+                _inputs = [format_input_output_entry(k, v) for k, v in req_inputs_dict.items()]
+                dpg.add_listbox(items=_inputs, num_items=3, tag=f"req_inputs_{self._runtime_id}")
 
             with dpg.group(label="Output", tag=f"output_{self._runtime_id}",
                            width=width*.65):
                 dpg.add_text(default_value="Output", indent=5)
-                dpg.add_listbox(items=[], num_items=3, tag=f"output_list_{self._runtime_id}",
-                                callback=self.memory_listbox_callback)
+                dpg.add_listbox(items=[], num_items=3, tag=f"output_list_{self._runtime_id}")
 
     def draw_lower_region(self, parent, width=200):
         dpg.add_text(default_value="Action", parent=parent, indent=10)
@@ -273,30 +269,3 @@ class UpdatedOperationModule(GUIBase):
         self._attributes.parallel = value
         self.operation.attributes.parallel = value
         self.operation.add_log_entry(f"Parallel execution set to {value}.")
-
-    def memory_listbox_callback(self, sender, app_data, user_data):
-        """Callback function for the memory listbox."""
-        # Parse the runtime ID from the selected string (format: "name - runtime_id")
-        if " - " in app_data:
-            selected_runtime_id = app_data.split(" - ")[1]
-            if dpg.does_item_exist(f"popup_view_slot_{selected_runtime_id}"):
-                dpg.delete_item(f"popup_view_slot_{selected_runtime_id}")
-
-            pos = dpg.get_mouse_pos()
-            with dpg.window(label=f"Slot Details - {selected_runtime_id}", width=200, height=200, pos=pos,
-                            show=True, tag=f"popup_view_slot_{selected_runtime_id}", no_resize=True):
-                asyncio.create_task(self.render_popup(selected_runtime_id))
-
-    async def render_popup(self, selected_runtime_id: str) -> None:
-        """Renders the popup for viewing slot details."""
-        _memory_manager = MemoryManager()
-        slot = _memory_manager.get_slot(selected_runtime_id)
-        if slot is None:
-            self._logger.error(f"Slot with runtime ID {selected_runtime_id} not found.")
-            return
-
-        from research_analytics_suite.gui.modules.AdvancedSlotView import AdvancedSlotView
-        adv_slot_view = AdvancedSlotView(slot=slot, temp_view=True, width=184, height=160,
-                                         parent=f"popup_view_slot_{selected_runtime_id}")
-        await adv_slot_view.initialize_gui()
-        adv_slot_view.draw()

@@ -5,6 +5,7 @@ import asyncio
 import dearpygui.dearpygui as dpg
 
 from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
+from research_analytics_suite.gui.utils.type_formatting import format_type_for_display
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
@@ -42,7 +43,8 @@ class AdvancedSlotView(GUIBase):
 
             # Details
             with dpg.collapsing_header(label="Details", default_open=True):
-                dpg.add_text(tag=f"{self._root}_dtype", default_value=f"Type: {self._slot.data_type}")
+                dpg.add_text(tag=f"{self._root}_dtype",
+                             default_value=f"Type: {format_type_for_display(self._slot.data_type)}")
                 dpg.add_text(tag=f"{self._root}_shape", default_value=self._shape_text(self._slot.data))
                 dpg.add_text(tag=f"{self._root}_pointer", default_value=self._pointer_text(self._slot))
 
@@ -95,7 +97,7 @@ class AdvancedSlotView(GUIBase):
                 continue
 
             dpg.set_value(f"{self._root}_title", f"Slot: {slot.name} [{slot.memory_id}]")
-            dpg.set_value(f"{self._root}_dtype", f"Type: {slot.data_type}")
+            dpg.set_value(f"{self._root}_dtype", f"Type: {format_type_for_display(slot.data_type)}")
             dpg.set_value(f"{self._root}_shape", self._shape_text(slot.data))
             dpg.set_value(f"{self._root}_pointer", self._pointer_text(slot))
             dpg.set_value(f"{self._root}_preview", self._preview_text(slot.data_object))

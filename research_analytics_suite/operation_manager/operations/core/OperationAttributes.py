@@ -14,6 +14,8 @@ Status: Prototype
 """
 from __future__ import annotations
 import asyncio
+from typing import Union, List, Dict, Tuple, Set, Optional, Any, get_origin, get_args
+import typing
 
 from research_analytics_suite.commands import command, link_class_commands
 
@@ -22,6 +24,7 @@ from research_analytics_suite.commands import command, link_class_commands
 class OperationAttributes:
     _lock = asyncio.Lock()
     TYPES_DICT = {
+        # Basic built-in types
         'str': str,
         'int': int,
         'float': float,
@@ -29,7 +32,23 @@ class OperationAttributes:
         'dict': dict,
         'tuple': tuple,
         'set': set,
-        'bool': bool
+        'bool': bool,
+        # Typing module types
+        'Union': Union,
+        'List': List,
+        'Dict': Dict,
+        'Tuple': Tuple,
+        'Set': Set,
+        'Optional': Optional,
+        'Any': Any,
+        # Python 3.9+ generics support
+        'typing.Union': Union,
+        'typing.List': List,
+        'typing.Dict': Dict,
+        'typing.Tuple': Tuple,
+        'typing.Set': Set,
+        'typing.Optional': Optional,
+        'typing.Any': Any,
     }
 
     def __init__(self, *args, **kwargs):
@@ -95,6 +114,93 @@ class OperationAttributes:
                     self._initialized = True
 
                     del self.temp_kwargs
+
+    def _resolve_type(self, type_spec):
+        """
+        Resolve a type specification to an actual type object.
+
+        Args:
+            type_spec: Can be a type object, string name, or complex type annotation
+
+        Returns:
+            The resolved type object, or None if resolution fails
+        """
+        try:
+            # If it's already a type or typing construct, return as-is
+            if hasattr(type_spec, '__origin__') or isinstance(type_spec, type):
+                return type_spec
+
+            # Handle string type specifications
+            if isinstance(type_spec, str):
+                # Check if it's in our basic types dictionary
+                if type_spec in self.TYPES_DICT:
+                    return self.TYPES_DICT[type_spec]
+
+                # Handle complex type expressions like "Union[int, str]" or "List[float]"
+                if '[' in type_spec and ']' in type_spec:
+                    try:
+                        # Safely evaluate the type expression
+                        # Create a safe namespace with typing constructs
+                        safe_namespace = {
+                            'Union': Union, 'List': List, 'Dict': Dict, 'Tuple': Tuple,
+                            'Set': Set, 'Optional': Optional, 'Any': Any,
+                            'str': str, 'int': int, 'float': float, 'bool': bool,
+                            'list': list, 'dict': dict, 'tuple': tuple, 'set': set
+                        }
+
+                        # Use eval with restricted namespace for safety
+                        resolved_type = eval(type_spec, {"__builtins__": {}}, safe_namespace)
+                        return resolved_type
+                    except (SyntaxError, NameError, TypeError) as e:
+                        self._logger.warning(f"Failed to parse complex type '{type_spec}': {e}")
+                        return None
+
+                # Try to resolve from typing module directly
+                if hasattr(typing, type_spec):
+                    return getattr(typing, type_spec)
+
+                # Try to resolve from builtins
+                if hasattr(__builtins__, type_spec):
+                    return getattr(__builtins__, type_spec)
+
+                # Log unknown type and return None
+                self._logger.warning(f"Unknown type specification: '{type_spec}'")
+                return None
+
+            # If we can't resolve it, return None
+            self._logger.warning(f"Unable to resolve type specification: {type_spec}")
+            return None
+
+        except Exception as e:
+            self._logger.error(e, f"{self.name}")
+            return None
+
+    def _is_valid_type(self, type_obj):
+        """
+        Check if a type object is valid for operation use.
+
+        Args:
+            type_obj: The type object to validate
+
+        Returns:
+            bool: True if the type is valid, False otherwise
+        """
+        if type_obj is None:
+            return False
+
+        # Built-in types are always valid
+        if isinstance(type_obj, type):
+            return True
+
+        # Typing constructs are valid if they have __origin__
+        if hasattr(type_obj, '__origin__'):
+            return True
+
+        # Special handling for typing module constructs
+        if hasattr(type_obj, '__module__') and type_obj.__module__ == 'typing':
+            return True
+
+        return False
 
     @command
     def export_attributes(self) -> dict:
@@ -217,7 +323,7 @@ class OperationAttributes:
                     _slot_type = _slot.data_type
                     _slot_data = _slot.data
 
-                    _inputs[_slot_name] = _slot_data if _slot_data is not None else _slot_type
+                    _inputs[_name] = _slot_data if _slot_data is not None else self._get_default_value(_slot_type)
                 elif isinstance(_value, type):
                     _inputs[_name] = _value
         else:
@@ -238,18 +344,39 @@ class OperationAttributes:
         _memory_manager = MemoryManager()
 
         if not isinstance(value, dict):
+            self._logger.warning(f"Required inputs must be a dictionary, got {type(value)}")
             return
 
+        processed_inputs = {}
         for name, d_type in value.items():
-            if isinstance(d_type, str):
-                d_type = self.TYPES_DICT.get(d_type, str)
-            if isinstance(d_type, type):
-                if asyncio.get_event_loop().is_running():
-                    asyncio.ensure_future(self._create_input_slot(name, d_type))
-                else:
-                    asyncio.run(self._create_input_slot(name, d_type))
+            # Resolve the type using our enhanced type resolution
+            resolved_type = self._resolve_type(d_type)
 
-        self._logger.debug(f"Required inputs set for {self.name}")
+            if resolved_type is not None and self._is_valid_type(resolved_type):
+                processed_inputs[name] = resolved_type
+
+                # Create memory slots for valid types
+                if asyncio.get_event_loop().is_running():
+                    asyncio.ensure_future(self._create_input_slot(name, resolved_type))
+                else:
+                    asyncio.run(self._create_input_slot(name, resolved_type))
+
+                self._logger.debug(f"Processed input '{name}': {d_type} -> {resolved_type}")
+            else:
+                # For failed type resolution, log but don't completely discard
+                self._logger.warning(f"Could not resolve type '{d_type}' for input '{name}', storing as-is")
+                processed_inputs[name] = d_type
+
+                # Still try to create a slot with the original type spec
+                try:
+                    if asyncio.get_event_loop().is_running():
+                        asyncio.ensure_future(self._create_input_slot(name, d_type))
+                    else:
+                        asyncio.run(self._create_input_slot(name, d_type))
+                except Exception as e:
+                    self._logger.error(e, f"{self.name}")
+
+        self._logger.debug(f"Required inputs set for {self.name}: {list(processed_inputs.keys())}")
 
     @property
     def input_ids(self) -> dict:
@@ -262,32 +389,83 @@ class OperationAttributes:
         _inputs = {}
         if hasattr(self, '_active') and self._active:
             for _name, _value in self._required_inputs.items():
-                if isinstance(_value, type):
+                if self._is_valid_type(_value):
                     _inputs[_name] = _value
                 else:
                     _slot_id = _value
                     _inputs[_name] = _slot_id
         else:
             for _name, d_type in self._required_inputs.items():
-                if isinstance(d_type, type):
+                if self._is_valid_type(d_type):
+                    _inputs[_name] = d_type
+                else:
+                    # For unresolved types, still include them
                     _inputs[_name] = d_type
 
         return _inputs
 
-    async def _create_input_slot(self, name: str, d_type: type):
+    def _get_default_value(self, data_type):
+        """
+        Get appropriate default value for a given data type.
+
+        Args:
+            data_type: The data type to get default value for
+
+        Returns:
+            Default value for the type
+        """
+        if data_type == int:
+            return 0
+        elif data_type == float:
+            return 0.0
+        elif data_type == str:
+            return ""
+        elif data_type == list:
+            return []
+        elif data_type == dict:
+            return {}
+        elif data_type == bool:
+            return False
+        elif data_type == tuple:
+            return ()
+        elif data_type == set:
+            return set()
+        else:
+            # For complex types or unknown types, return None
+            return None
+
+    async def _create_input_slot(self, name: str, d_type):
         """
         Create an input memory slot for the operation.
 
         Args:
             name (str): The name of the memory slot.
-            d_type (type): The data type of the memory slot.
+            d_type: The data type of the memory slot (can be complex type annotation).
         """
         if hasattr(self, '_active') and self._active:
             from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
             _memory_manager = MemoryManager()
-            _slot_id, _, _ = await _memory_manager.create_slot(name=name, d_type=d_type)
-            self._required_inputs[name] = _slot_id
-            self._logger.debug(f"Created input memory slot for {self.name}: [{_slot_id}] {name} ({d_type})")
+
+            try:
+                # For memory slot creation, we may need to simplify complex types
+                slot_type = d_type
+                if hasattr(d_type, '__origin__'):
+                    # For Union types, use the origin or first arg as the slot type
+                    origin = get_origin(d_type)
+                    if origin is Union:
+                        args = get_args(d_type)
+                        if args:
+                            slot_type = args[0]  # Use first type in Union
+                    else:
+                        slot_type = origin or d_type
+
+                _slot_id, _, _ = await _memory_manager.create_slot(name=name, d_type=slot_type)
+                self._required_inputs[name] = _slot_id
+                self._logger.debug(f"Created input memory slot for {self.name}: [{_slot_id}] {name} ({d_type})")
+            except Exception as e:
+                self._logger.warning(f"Failed to create memory slot for {name} with type {d_type}: {e}")
+                # Fall back to storing the type directly
+                self._required_inputs[name] = d_type
         else:
             self._required_inputs[name] = d_type
 
@@ -318,7 +496,7 @@ class OperationAttributes:
                     _slot_type = _slot.data_type
                     _slot_data = _slot.data
 
-                    _outputs[_slot_name] = _slot_data if _slot_data is not None else _slot_type
+                    _outputs[_name] = _slot_data if _slot_data is not None else self._get_default_value(_slot_type)
         else:
             for name, d_type in self._outputs.items():
                 if isinstance(d_type, type):
@@ -360,19 +538,22 @@ class OperationAttributes:
         Get the output IDs for the operation.
 
         Returns:
-            list: The output IDs for the operation.
+            dict: The output IDs for the operation.
         """
         _outputs = {}
         if hasattr(self, '_active') and self._active:
             for _name, _value in self._outputs.items():
-                if isinstance(_value, type):
+                if self._is_valid_type(_value):
                     _outputs[_name] = _value
                 else:
                     _slot_id = _value
                     _outputs[_name] = _slot_id
         else:
             for name, d_type in self._outputs.items():
-                if isinstance(d_type, type):
+                if self._is_valid_type(d_type):
+                    _outputs[name] = d_type
+                else:
+                    # For unresolved types, still include them
                     _outputs[name] = d_type
 
         return _outputs

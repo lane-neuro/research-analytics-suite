@@ -384,7 +384,7 @@ class BaseOperation(ABC):
         Returns:
             dict: A mapping from logical names to memory slot data.
         """
-        return {key: self.get_input(key) for key in self.attributes.required_inputs}
+        return self.attributes.required_inputs
 
     @command
     @final

@@ -240,7 +240,7 @@ class OperationDetailPanel(GUIBase):
                             dpg.add_button(
                                 label=f"View {name}",
                                 width=-1,
-                                callback=lambda: self._view_memory_slot(slot_id)
+                                callback=(lambda captured_slot_id: lambda: self._view_memory_slot(captured_slot_id))(slot_id)
                             )
                             dpg.add_spacer(height=5)
                     else:
@@ -262,7 +262,7 @@ class OperationDetailPanel(GUIBase):
                             dpg.add_button(
                                 label=f"View {name}",
                                 width=-1,
-                                callback=lambda:self._view_memory_slot(slot_id)
+                                callback=(lambda captured_slot_id: lambda: self._view_memory_slot(captured_slot_id))(slot_id)
                             )
                             dpg.add_spacer(height=5)
                     else:
