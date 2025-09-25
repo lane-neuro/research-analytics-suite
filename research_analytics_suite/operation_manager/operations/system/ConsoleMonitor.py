@@ -31,7 +31,7 @@ class ConsoleMonitor(BaseOperation):
     name = "sys_ConsoleMonitor"
     version = "0.0.1"
     description = "Handles user input from the console."
-    category_id = -1
+    category_id = 0
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"

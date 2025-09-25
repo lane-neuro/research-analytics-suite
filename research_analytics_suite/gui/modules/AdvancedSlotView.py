@@ -47,14 +47,16 @@ class AdvancedSlotView(GUIBase):
                 dpg.add_text(tag=f"{self._root}_pointer", default_value=self._pointer_text(self._slot))
 
             # Data (preview + pointer combo)
-            with dpg.collapsing_header(label="Data", default_open=True):
-                dpg.add_combo(
+            with dpg.collapsing_header(label="Data", default_open=True, tag=f"{self._root}_data_header"):
+                from research_analytics_suite.gui import left_aligned_combo
+                left_aligned_combo(
                     label="Pointer",
                     tag=f"{self._root}_pointer_combo",
                     items=self._memory_manager.format_slot_name_id(),
                     callback=self._on_pointer_changed,
                     user_data=self._slot.memory_id,
-                    width=240
+                    width=-1,
+                    parent=f"{self._root}_data_header"
                 )
 
                 # Preview text (lightweight). If you want a table, plug a renderer here.

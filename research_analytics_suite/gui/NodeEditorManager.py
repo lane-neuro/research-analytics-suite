@@ -16,6 +16,8 @@ import asyncio
 
 import dearpygui.dearpygui as dpg
 
+from research_analytics_suite.utils import CustomLogger
+
 
 class NodeEditorManager:
     """
@@ -41,6 +43,8 @@ class NodeEditorManager:
 
     def __init__(self):
         if not hasattr(self, '_initialized'):
+            self._logger = CustomLogger()
+
             self._editors = {}
             self._cross_editor_links = []
 
@@ -69,6 +73,8 @@ class NodeEditorManager:
 
         self._editors[editor_id] = editor
         editor.draw()
+
+        self._logger.debug(f"Added new operation manager editor: {editor_id}")
 
     def get_editor(self, editor_id):
         if editor_id not in self._editors or self._editors.get(editor_id) is None:
@@ -105,9 +111,5 @@ class NodeEditorManager:
         async with NodeEditorManager._lock:
             for _editor in self._editors.values():
                 _editor.clear_elements()
-
-            # Reset state
-            # self._editors.clear()
-            # self._cross_editor_links.clear()
             self._initialized = False
         await self.initialize()

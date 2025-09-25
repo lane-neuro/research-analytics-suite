@@ -1,3 +1,18 @@
+"""
+DataManagementDialog Module
+
+The DataManagementDialog class provides a user interface for managing memory slots, including adding, deleting, and
+inspecting slots. It features a searchable list of slots and an inspector panel for detailed views.
+
+Author: Lane
+Copyright: Lane
+Credits: Lane
+License: BSD 3-Clause License
+Version: 0.0.0.1
+Maintainer: Lane
+Email: justlane@uw.edu
+Status: Prototype
+"""
 from __future__ import annotations
 
 import asyncio

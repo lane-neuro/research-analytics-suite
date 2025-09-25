@@ -3,7 +3,6 @@
 Dialogs package containing all dialog modules.
 """
 
-from .data_handling import *
-from .visualization import *
+from .info import *
 from .settings import *
 from .management import *

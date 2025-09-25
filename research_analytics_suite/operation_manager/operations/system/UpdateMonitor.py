@@ -22,7 +22,7 @@ class UpdateMonitor(BaseOperation):
     """
     version = "0.0.1"
     description = "Executes an update function."
-    category_id = -1
+    category_id = 0
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"

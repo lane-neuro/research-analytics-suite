@@ -30,7 +30,7 @@ class ResourceMonitor(BaseOperation):
     name = "sys_ResourceMonitor"
     version = "0.0.1"
     description = "Monitors the usage of CPU and memory."
-    category_id = -1
+    category_id = 0
     author = "Lane"
     github = "lane-neuro"
     email = "justlane@uw.edu"

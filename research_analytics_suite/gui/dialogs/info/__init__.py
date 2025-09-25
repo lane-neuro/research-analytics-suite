@@ -15,5 +15,8 @@ Status: Prototype
 
 from .DocumentationDialog import DocumentationDialog
 from .AboutDialog import AboutDialog
+from .HardwareDialog import HardwareDialog
+from .LibraryPane import LibraryPane
+from .ResourceMonitorDialog import ResourceMonitorDialog
 
-__all__ = ['DocumentationDialog', 'AboutDialog']
+__all__ = ['DocumentationDialog', 'AboutDialog', 'HardwareDialog', 'LibraryPane', 'ResourceMonitorDialog']

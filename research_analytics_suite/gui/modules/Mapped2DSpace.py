@@ -1,6 +1,9 @@
 """
 Mapped2DSpace Module
 
+This module now serves as a wrapper around the new OperationManagerLayout,
+maintaining backward compatibility while providing the improved hierarchical interface.
+
 Author: Lane
 Copyright: Lane
 Credits: Lane
@@ -8,151 +11,131 @@ License: BSD 3-Clause License
 Version: 0.0.0.1
 Maintainer: Lane
 Email: justlane@uw.edu
-Status: Prototype
+Status: Prototype - Refactored to use OperationManagerLayout
 """
 import asyncio
-from copy import copy
 
 import dearpygui.dearpygui as dpg
 from research_analytics_suite.gui.GUIBase import GUIBase
+from research_analytics_suite.gui.modules.OperationManagerLayout import OperationManagerLayout
 from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
 
 
 class Mapped2DSpace(GUIBase):
     """
-    Mapped2DSpace class is used to create a 2D space to utilize DearPyGui node editor.
+    Mapped2DSpace class now uses the new OperationManagerLayout for improved operation management.
 
-    Attributes:
-        _lock (asyncio.Lock): The lock to ensure thread safety.
+    This class maintains backward compatibility with existing code while providing
+    the new hierarchical tree-based interface internally.
     """
     _lock = asyncio.Lock()
 
     def __init__(self, width: int, height: int, parent):
         """
-        Initialize the Mapped2DSpace class.
+        Initialize the Mapped2DSpace class with new OperationManagerLayout.
 
         Args:
-            width (int): The width of the 2D space.
-            height (int): The height of the 2D space.
+            width (int): The width of the space.
+            height (int): The height of the space.
             parent (Any): The parent object.
         """
         super().__init__(width, height, parent)
-        self._node_editor_id = dpg.generate_uuid()
-        self._active_operation_modules = []
-        self._nodes = []
-        self._links = []
+
+        # New operation manager layout
+        self._operation_manager_layout = None
 
     async def initialize_gui(self) -> None:
         """
-        Initializes the GUI resources and sets up the node editor.
+        Initialize the GUI using the new OperationManagerLayout.
         """
-        self._logger.debug("Initializing the node editor.")
+        # Create and initialize the new operation manager layout
+        container_id = f"mapped_space_container_{self._runtime_id}"
+        self._operation_manager_layout = OperationManagerLayout(
+            width=self.width,
+            height=self.height,
+            parent=container_id
+        )
 
-        from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
-        self._update_operation = await self._operation_control.operation_manager.create_operation(
-            operation_type=UpdateMonitor, name=f"gui_{self._runtime_id}", action=self._update_async)
-        self._update_operation.is_ready = True
-
-    async def resize_gui(self, new_width: int, new_height: int) -> None:
-        # Placeholder for resizing logic
-        pass
+        await self._operation_manager_layout.initialize_gui()
 
     async def _update_async(self) -> None:
-        """Asynchronously updates the node editor and initializes node elements."""
-        while not self._update_operation.is_running:
-            await asyncio.sleep(0.1)
+        pass
 
-        while self._update_operation.is_running:
-            for op_module in self._active_operation_modules:
-                if not op_module.initialized:
-                    await op_module.initialize_gui()
+    async def resize_gui(self, new_width: int, new_height: int) -> None:
+        """Resize the GUI components."""
+        self.width = new_width
+        self.height = new_height
 
-            await asyncio.sleep(0.0001)
+        if self._operation_manager_layout:
+            await self._operation_manager_layout.resize_gui(new_width, new_height)
 
-    def add_node(self, operation_attributes: OperationAttributes, pos=(0, 0)) -> tuple:
+    def add_node(self, operation_attributes: OperationAttributes) -> None:
         """
-        Adds a node to the node editor.
+        Add an operation to the hierarchical manager.
+
+        Creates an actual BaseOperation from the attributes and adds it to the operation manager,
+        then adds it to the hierarchical display.
 
         Args:
-            operation_attributes (OperationAttributes): The dictionary containing the operation information.
-            pos (tuple): The position of the node.
-
-        Returns:
-            tuple: The UUIDs of the node, input attribute, and output attribute.
+            operation_attributes (OperationAttributes): The operation attributes
         """
-        _operation = None
-        node_id = dpg.generate_uuid()
-        operation_attributes = copy(operation_attributes)
-        operation_attributes.active = True
-        _operation_module = None
-        with dpg.node(tag=node_id, parent=self._node_editor_id, label=operation_attributes.name, pos=pos):
-            input_id = dpg.generate_uuid()
-            output_id = dpg.generate_uuid()
+        asyncio.create_task(self._create_and_add_operation(operation_attributes))
 
-            from research_analytics_suite.gui.modules.UpdatedOperationModule import UpdatedOperationModule
+    async def _create_and_add_operation(self, operation_attributes: OperationAttributes) -> None:
+        """Create and register a new operation from attributes."""
+        try:
+            # Set attributes as active for proper initialization
+            operation_attributes.active = True
 
-            with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static, tag=f"{node_id}_name"):
-                with dpg.group(tag=f"{node_id}_name_group"):
-                    _operation_module = UpdatedOperationModule(operation_attributes, 200, 500,
-                                                               node_id)
-                    # Use operation attributes directly since operation isn't created yet
-                    dpg.configure_item(node_id, label=f"{operation_attributes.name} [rID: {operation_attributes.unique_id[-6:]}]")
-                    _operation_module.draw_upper_region(parent=f"{node_id}_name_group", width=200)
+            # Create BaseOperation from attributes
+            from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
+            operation = BaseOperation(operation_attributes)
 
-            with dpg.node_attribute(tag=f"{node_id}_details", attribute_type=dpg.mvNode_Attr_Static):
-                with dpg.group(tag=f"{node_id}_details_group"):
-                    _operation_module.draw_details_region(parent=f"{node_id}_details_group", width=200)
+            # Initialize the operation
+            await operation.initialize_operation()
 
-            with dpg.node_attribute(tag=f"{node_id}_middle", attribute_type=dpg.mvNode_Attr_Static):
-                with dpg.group(tag=f"{node_id}_middle_group"):
-                    _operation_module.draw_middle_region(parent=f"{node_id}_middle_group", width=200)
+            # Add to operation manager (this handles sequencer registration)
+            operation = await self._operation_control.operation_manager.add_initialized_operation(operation)
 
-            with dpg.node_attribute(tag=f"{node_id}_lower", attribute_type=dpg.mvNode_Attr_Static):
-                with dpg.group(tag=f"{node_id}_lower_group", width=260):
-                    _operation_module.draw_lower_region(parent=f"{node_id}_lower_group", width=200)
+            # Refresh the tree display to show the new operation
+            if self._operation_manager_layout:
+                await self._operation_manager_layout.refresh_operations()
 
-        self._nodes.append((node_id, input_id, output_id))
-        self._active_operation_modules.append(_operation_module)
-        return node_id, input_id, output_id
+            self._logger.info(f"Created and added operation: {operation.name}")
 
-    def link_nodes(self, output_attr, input_attr):
-        """
-        Links two nodes together.
-
-        Args:
-            output_attr (int): The UUID of the output attribute.
-            input_attr (int): The UUID of the input attribute.
-        """
-        link_id = dpg.generate_uuid()
-        dpg.add_node_link(output_attr, input_attr, parent=self._node_editor_id, id=link_id)
-        self._links.append(link_id)
+        except Exception as e:
+            self._logger.error(f"Error creating operation from attributes: {e}")
 
     def draw(self) -> None:
         """
-        Draws the node editor and its nodes.
+        Draw the new operation manager layout.
         """
-        with dpg.node_editor(tag=self._node_editor_id, parent=self._parent):
-            pass
-        dpg.show_item(self._node_editor_id)
-        for node in self._nodes:
-            dpg.show_item(node[0])
-        for link in self._links:
-            dpg.show_item(link)
+        with dpg.child_window(tag=f"mapped_space_container_{self._runtime_id}",
+                             parent=self._parent,
+                             width=self.width,
+                             height=self.height,
+                             border=False):
+            if self._operation_manager_layout:
+                self._operation_manager_layout.draw()
 
     def clear_elements(self):
         """
-        Clears all elements from the node editor.
+        Clear all elements from the operation manager.
         """
-        # TODO: fix reset state for gui elements when switching workspaces. currently works but for some reason the middle group's listbox is empty when I try to create a new operation
-        for node in self._nodes:
-            dpg.delete_item(node[0])
-        self._nodes = []
+        if self._operation_manager_layout:
+            self._operation_manager_layout.clear_selection()
 
-        for link in self._links:
-            dpg.delete_item(link)
-        self._links = []
+    def get_operation_manager_layout(self) -> OperationManagerLayout:
+        """Get the underlying OperationManagerLayout instance."""
+        return self._operation_manager_layout
 
-        for op_module in self._active_operation_modules:
-            dpg.delete_item(op_module.gui_id)
+    def get_selected_operation(self):
+        """Get the currently selected operation."""
+        if self._operation_manager_layout:
+            return self._operation_manager_layout.get_selected_operation()
+        return None
 
-        self._active_operation_modules = []
+    async def refresh_operations(self):
+        """Refresh the operation display."""
+        if self._operation_manager_layout:
+            await self._operation_manager_layout.refresh_operations()
