@@ -9,6 +9,7 @@ import asyncio
 from pathlib import Path
 
 from research_analytics_suite.data_engine import UniversalDataEngine, DataProfile
+from research_analytics_suite.data_engine.core.DataContext import DataContext
 
 
 class TestUniversalDataEngine:
@@ -53,23 +54,28 @@ class TestUniversalDataEngine:
     @pytest.mark.asyncio
     async def test_load_data_from_dataframe(self, engine, sample_dataframe):
         """Test loading data from pandas DataFrame."""
-        data, profile = await engine.load_data(sample_dataframe)
+        context = await engine.load_data(sample_dataframe)
 
-        assert data is not None
-        assert isinstance(profile, DataProfile)
-        assert profile.data_type == "tabular"
-        assert profile.storage_location == "memory"
+        assert context is not None
+        assert isinstance(context, DataContext)
+        assert context.data is not None
+        assert isinstance(context.profile, DataProfile)
+        assert context.profile.data_type == "tabular"
+        assert context.profile.storage_location == "memory"
+        assert context.schema is not None
+        assert 'columns' in context.schema
 
     @pytest.mark.asyncio
     async def test_load_data_from_file(self, engine, sample_csv_file):
         """Test loading data from CSV file."""
-        data, profile = await engine.load_data(sample_csv_file)
+        context = await engine.load_data(sample_csv_file)
 
-        assert data is not None
-        assert isinstance(profile, DataProfile)
-        assert profile.data_type == "tabular"
-        assert profile.format == "csv"
-        assert profile.storage_location == "local"
+        assert context is not None
+        assert isinstance(context, DataContext)
+        assert context.data is not None
+        assert isinstance(context.profile, DataProfile)
+        assert context.profile.data_type == "tabular"
+        assert context.schema is not None
 
     @pytest.mark.asyncio
     async def test_save_data(self, engine, sample_dataframe):
@@ -111,23 +117,29 @@ class TestUniversalDataEngine:
     @pytest.mark.asyncio
     async def test_filter_rows(self, engine, sample_dataframe):
         """Test row filtering functionality."""
-        # This test assumes the adapter supports filter_rows operation
         try:
-            filtered_data = await engine.filter_rows(sample_dataframe, "A > 2")
-            # Basic check - we can't assert exact results without knowing adapter behavior
-            assert filtered_data is not None
+            context = await engine.load_data(sample_dataframe)
+            filtered_context = await engine.filter_rows(context, "A > 2")
+
+            assert filtered_context is not None
+            assert isinstance(filtered_context, DataContext)
+            assert filtered_context.data is not None
+            assert filtered_context.schema is not None
         except (RuntimeError, NotImplementedError):
-            # Skip if adapter doesn't support filtering yet
             pytest.skip("Row filtering not yet implemented in adapter")
 
     @pytest.mark.asyncio
     async def test_select_columns(self, engine, sample_dataframe):
         """Test column selection functionality."""
         try:
-            selected_data = await engine.select_columns(sample_dataframe, ['A', 'B'])
-            assert selected_data is not None
+            context = await engine.load_data(sample_dataframe)
+            selected_context = await engine.select_columns(context, ['A', 'B'])
+
+            assert selected_context is not None
+            assert isinstance(selected_context, DataContext)
+            assert selected_context.data is not None
+            assert selected_context.schema is not None
         except (RuntimeError, NotImplementedError):
-            # Skip if adapter doesn't support column selection yet
             pytest.skip("Column selection not yet implemented in adapter")
 
     @pytest.mark.asyncio
@@ -200,15 +212,13 @@ class TestUniversalDataEngine:
         """Test convenience quick functions."""
         from research_analytics_suite.data_engine import quick_load, quick_save, quick_analyze
 
-        # Test quick_load
-        loaded_data = await quick_load(sample_dataframe)
-        assert loaded_data is not None
+        context = await quick_load(sample_dataframe)
+        assert context is not None
+        assert isinstance(context, DataContext)
 
-        # Test quick_analyze
         analysis = await quick_analyze(sample_dataframe)
         assert 'profile' in analysis
 
-        # Test quick_save
         with tempfile.NamedTemporaryFile(suffix='.csv', delete=False) as f:
             temp_path = f.name
 

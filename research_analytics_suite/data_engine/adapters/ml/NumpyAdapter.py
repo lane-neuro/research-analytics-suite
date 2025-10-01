@@ -213,21 +213,60 @@ class NumpyAdapter(BaseAdapter):
             axis = kwargs.get('axis', None)
             return np.std(data, axis=axis)
 
+        elif operation == 'slice_rows':
+            start_row = kwargs.get('start_row', 0)
+            end_row = kwargs.get('end_row')
+            if end_row is not None:
+                return data[start_row:end_row]
+            elif start_row > 0:
+                return data[start_row:]
+            return data
+
+        elif operation == 'filter_rows':
+            condition = kwargs.get('condition')
+            if condition:
+                column_names = kwargs.get('column_names')
+
+                if len(data.shape) == 2 and data.shape[1] > 1:
+                    try:
+                        import pandas as pd
+
+                        if not column_names:
+                            column_names = [f'col{i}' for i in range(data.shape[1])]
+                            self._logger.info(f"No column names provided, using generic: {column_names}")
+                        else:
+                            self._logger.info(f"Using column names from context: {column_names}")
+
+                        df = pd.DataFrame(data, columns=column_names)
+                        filtered_df = df.query(condition)
+                        self._logger.info(f"Successfully filtered numpy array with condition '{condition}'")
+                        return filtered_df.values
+
+                    except Exception as e:
+                        self._logger.error(f"Failed to filter numpy array with condition '{condition}': {e}")
+                        raise RuntimeError(f"Filter operation failed: {e}")
+                else:
+                    raise ValueError(f"filter_rows with condition '{condition}' requires 2D structured data. "
+                                   f"Current array shape: {data.shape}")
+            return data
+
+        elif operation == 'select_columns':
+            columns = kwargs.get('columns', [])
+            if columns and len(data.shape) > 1:
+                if all(isinstance(col, int) for col in columns):
+                    return data[:, columns]
+                else:
+                    self._logger.warning(f"select_columns requires integer indices for numpy arrays")
+                    return data
+            return data
+
         else:
             self._logger.warning(f"Unknown operation: {operation}")
             return data
 
     def get_schema(self, data: np.ndarray) -> Dict[str, Any]:
-        """
-        Get schema information for array data.
-
-        Args:
-            data: Array to analyze
-
-        Returns:
-            Schema information
-        """
-        return {
+        """Get schema information for array data."""
+        schema = {
             'shape': data.shape,
             'dtype': str(data.dtype),
             'ndim': data.ndim,
@@ -235,11 +274,18 @@ class NumpyAdapter(BaseAdapter):
             'itemsize': data.itemsize,
             'nbytes': data.nbytes,
             'is_contiguous': data.flags.c_contiguous,
-            'min_value': float(np.min(data)) if data.size > 0 else None,
-            'max_value': float(np.max(data)) if data.size > 0 else None,
-            'mean_value': float(np.mean(data)) if data.size > 0 else None,
-            'std_value': float(np.std(data)) if data.size > 0 else None,
         }
+
+        if data.size > 0 and np.issubdtype(data.dtype, np.number):
+            try:
+                schema['min_value'] = float(np.min(data))
+                schema['max_value'] = float(np.max(data))
+                schema['mean_value'] = float(np.mean(data))
+                schema['std_value'] = float(np.std(data))
+            except (TypeError, ValueError):
+                pass
+
+        return schema
 
     def get_sample(self, data: np.ndarray, size: int = 1000) -> np.ndarray:
         """

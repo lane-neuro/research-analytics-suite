@@ -91,6 +91,14 @@ class PandasAdapter(BaseAdapter):
             source_path = Path(source)
             file_ext = source_path.suffix.lower().lstrip('.')
 
+            # Auto-detect multi-level headers if not explicitly provided
+            if file_ext in ['csv', 'tsv'] and 'header' not in kwargs:
+                delimiter = '\t' if file_ext == 'tsv' else ','
+                detected_headers = self._detect_header_rows(source_path, delimiter=delimiter)
+                if detected_headers:
+                    kwargs['header'] = detected_headers
+                    self._logger.info(f"Detected multi-level headers: {detected_headers}")
+
             if file_ext == 'csv':
                 return pd.read_csv(source, **kwargs)
             elif file_ext == 'tsv':

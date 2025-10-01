@@ -355,37 +355,37 @@ class DataManagementDialog(GUIBase):
             if not source_slot:
                 raise ValueError(f"Source slot {source_slot_id} not found")
 
-            original_data = source_slot.data
-
             # Get workspace engine for subset operations
             from research_analytics_suite.data_engine.Workspace import Workspace
+            from research_analytics_suite.data_engine.core.DataContext import DataContext
             workspace = Workspace()
             engine = workspace.get_engine()
 
-            # Parse columns
+            stored_object = source_slot.data_object
+            if isinstance(stored_object, DataContext):
+                context = stored_object
+            else:
+                context = DataContext.create(stored_object, engine._adapter_registry)
+
             columns = None
             if columns_text:
                 columns = [col.strip() for col in columns_text.split(',') if col.strip()]
 
-            # Create subset parameters
             subset_params = {
                 'rows': filter_condition if filter_condition else None,
                 'columns': columns
             }
 
-            # Add row range if specified
             if use_range:
                 subset_params['start_row'] = start_row
                 subset_params['end_row'] = end_row
 
-            # Create subset using UniversalDataEngine
-            subset_data = await engine.subset_data(original_data, **subset_params)
+            result_context = await engine.subset_data(context, **subset_params)
 
-            # Create new memory slot with subset data
             await self._memory_manager.create_slot(
                 name=new_name,
-                data=subset_data,
-                d_type=type(subset_data)
+                data=result_context,
+                d_type=type(result_context)
             )
 
             # Close modal and refresh
@@ -454,15 +454,30 @@ class DataManagementDialog(GUIBase):
         async def _do():
             for file in selections:
                 file_path = os.path.normpath(file)
-                data, d_profile = await self._workspace.load_data(file_path)
-                if data is not None:
+                context = await self._workspace.load_data(file_path)
+                if context and context.data is not None:
                     name = os.path.basename(file_path)
-                    await self.add_variable(name=name, d_type=d_profile.data_type, value=data)
+                    # Store the entire DataContext (includes data, profile, and schema)
+                    await self.add_variable(
+                        name=name,
+                        d_type=type(context),
+                        value=context
+                    )
         asyncio.run(_do())
 
     async def add_variable(self, name, d_type, value) -> None:
+        """
+        Add a variable to memory.
+
+        Args:
+            name: Variable name
+            d_type: Data type (can be DataContext type)
+            value: Value to store (can be DataContext with all metadata)
+        """
         try:
-            _slot_id, _, _ = await self._memory_manager.create_slot(name=name, d_type=d_type, data=value)
+            _slot_id, _, _ = await self._memory_manager.create_slot(
+                name=name, d_type=d_type, data=value
+            )
             self._selected_slot_id = _slot_id
             self._force_list_refresh = True
         except Exception as e:

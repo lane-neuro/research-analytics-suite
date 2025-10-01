@@ -26,6 +26,7 @@ from research_analytics_suite.utils.Config import Config
 from research_analytics_suite.commands import command, link_class_commands
 
 from research_analytics_suite.data_engine.core.DataProfile import DataProfile
+from research_analytics_suite.data_engine.core.DataContext import DataContext
 from research_analytics_suite.data_engine.adapters.AdapterRegistry import AdapterRegistry
 from research_analytics_suite.data_engine.execution.ExecutionEngine import (
     ExecutionEngine, ExecutionResult, ExecutionContext
@@ -89,7 +90,7 @@ class UniversalDataEngine:
     @command
     async def load_data(self, source: Union[str, Path, Any],
                        data_type: Optional[str] = None,
-                       **kwargs) -> Tuple[Any, DataProfile]:
+                       **kwargs) -> DataContext:
         """
         Load data from any source with automatic optimization.
 
@@ -99,30 +100,26 @@ class UniversalDataEngine:
             **kwargs: Additional loading parameters
 
         Returns:
-            Tuple of (loaded_data, data_profile)
+            DataContext containing loaded data with profile and schema
         """
         start_time = time.time()
         operation_id = f"load_{start_time}"
 
         try:
-            # Create data profile
             if isinstance(source, (str, Path)):
                 data_profile = DataProfile.from_file(source)
             else:
                 data_profile = DataProfile.from_data(source, data_type)
 
-            # Override data type if provided
             if data_type:
                 data_profile.data_type = data_type
 
             self._logger.info(f"Loading {data_profile.data_type} data ({data_profile.size_mb:.2f} MB)")
 
-            # Select optimal adapter
             adapter = self._adapter_registry.select_best_adapter(data_profile, 'load')
             if not adapter:
                 raise ValueError(f"No suitable adapter found for {data_profile.data_type} data")
 
-            # Execute load operation
             result = await self._execution_engine.execute(
                 data_profile, 'load', source, adapter=adapter, **kwargs
             )
@@ -130,18 +127,15 @@ class UniversalDataEngine:
             if not result.success:
                 raise RuntimeError(f"Load failed: {result.error_message}")
 
-            # Cache the loaded data
+            context = DataContext.create(result.result, self._adapter_registry, data_type)
+
             cache_key = f"data_{hash(str(source))}"
-            self._data_cache[cache_key] = {
-                'data': result.result,
-                'profile': data_profile,
-                'loaded_at': time.time()
-            }
+            self._data_cache[cache_key] = {'context': context, 'loaded_at': time.time()}
 
             execution_time = time.time() - start_time
             self._logger.info(f"Loaded data in {execution_time:.2f}s using {result.adapter_used}")
 
-            return result.result, data_profile
+            return context
 
         except Exception as e:
             self._logger.error(f"Failed to load data from {source}: {e}")
@@ -239,34 +233,27 @@ class UniversalDataEngine:
             Analysis results
         """
         try:
-            # Load and profile the data
-            data, profile = await self.load_data(source)
+            context = await self.load_data(source)
 
-            # Get schema information
-            adapter = self._adapter_registry.select_best_adapter(profile, 'schema')
-            schema = adapter.get_schema(data) if adapter else {}
-
-            # Get sample
-            sample = adapter.get_sample(data) if adapter else None
-
-            # Get size information
-            size_info = adapter.get_size_info(data) if adapter else {}
+            adapter = self._adapter_registry.select_best_adapter(context.profile, 'schema')
+            sample = adapter.get_sample(context.data) if adapter else None
+            size_info = adapter.get_size_info(context.data) if adapter else {}
 
             analysis = {
                 'profile': {
-                    'data_type': profile.data_type,
-                    'format': profile.format,
-                    'size_mb': profile.size_mb,
-                    'fits_in_memory': profile.fits_in_memory,
-                    'requires_distributed': profile.requires_distributed_processing,
-                    'suggested_backend': profile.suggest_backend(),
-                    'optimal_chunk_size': profile.optimal_chunk_size
+                    'data_type': context.profile.data_type,
+                    'format': context.profile.format,
+                    'size_mb': context.profile.size_mb,
+                    'fits_in_memory': context.profile.fits_in_memory,
+                    'requires_distributed': context.profile.requires_distributed_processing,
+                    'suggested_backend': context.profile.suggest_backend(),
+                    'optimal_chunk_size': context.profile.optimal_chunk_size
                 },
-                'schema': schema,
+                'schema': context.schema,
                 'size_info': size_info,
                 'sample_available': sample is not None,
-                'recommended_operations': adapter.get_recommended_operations(profile) if adapter else [],
-                'optimization_hints': profile.processing_hints
+                'recommended_operations': adapter.get_recommended_operations(context.profile) if adapter else [],
+                'optimization_hints': context.profile.processing_hints
             }
 
             return analysis
@@ -488,57 +475,50 @@ class UniversalDataEngine:
             self._logger.error(f"Cleanup failed: {e}")
 
     @command
-    async def filter_rows(self, data: Any, condition: str,
-                         data_profile: Optional[DataProfile] = None) -> Any:
+    async def filter_rows(self, context: DataContext, condition: str) -> DataContext:
         """
         Filter rows from data based on a condition.
 
         Args:
-            data: Data to filter
-            condition: Filter condition (e.g., "price > 100", "column_name == 'value'")
-            data_profile: Optional data profile
+            context: DataContext containing data and metadata
+            condition: Filter condition (e.g., "price > 100", "name == 'Alice'")
 
         Returns:
-            Filtered data
+            New DataContext with filtered data
         """
         try:
-            if data_profile is None:
-                data_profile = DataProfile.from_data(data)
-
             self._logger.debug(f"Filtering rows with condition: {condition}")
 
-            # Execute filter operation using optimal adapter
+            # Execute filter operation with schema available in kwargs
             result = await self._execution_engine.execute(
-                data_profile, 'filter_rows', data, condition=condition
+                context.profile, 'filter_rows', context.data,
+                condition=condition,
+                column_names=context.columns  # Pass column names for numpy arrays
             )
 
             if not result.success:
                 raise RuntimeError(f"Row filtering failed: {result.error_message}")
 
-            return result.result
+            # Return new context with updated data
+            return context.update_after_transform(result.result, self._adapter_registry, preserve_type=True)
 
         except Exception as e:
             self._logger.error(f"Failed to filter rows: {e}")
             raise
 
     @command
-    async def select_columns(self, data: Any, columns: Union[List[str], str],
-                           data_profile: Optional[DataProfile] = None) -> Any:
+    async def select_columns(self, context: DataContext, columns: Union[List[str], str]) -> DataContext:
         """
         Select specific columns from data.
 
         Args:
-            data: Data to select from
+            context: DataContext containing data and metadata
             columns: Column names to select (string or list of strings)
-            data_profile: Optional data profile
 
         Returns:
-            Data with selected columns only
+            New DataContext with selected columns only
         """
         try:
-            if data_profile is None:
-                data_profile = DataProfile.from_data(data)
-
             # Ensure columns is a list
             if isinstance(columns, str):
                 columns = [columns]
@@ -547,68 +527,64 @@ class UniversalDataEngine:
 
             # Execute column selection using optimal adapter
             result = await self._execution_engine.execute(
-                data_profile, 'select_columns', data, columns=columns
+                context.profile, 'select_columns', context.data, columns=columns
             )
 
             if not result.success:
                 raise RuntimeError(f"Column selection failed: {result.error_message}")
 
-            return result.result
+            # Return new context with updated data
+            return context.update_after_transform(result.result, self._adapter_registry, preserve_type=True)
 
         except Exception as e:
             self._logger.error(f"Failed to select columns: {e}")
             raise
 
     @command
-    async def subset_data(self, data: Any,
+    async def subset_data(self, context: DataContext,
                          rows: Optional[str] = None,
                          columns: Optional[Union[List[str], str]] = None,
                          start_row: Optional[int] = None,
-                         end_row: Optional[int] = None,
-                         data_profile: Optional[DataProfile] = None) -> Any:
+                         end_row: Optional[int] = None) -> DataContext:
         """
         Create a subset of data with row and/or column filtering.
 
         Args:
-            data: Data to subset
-            rows: Row filter condition (e.g., "price > 100")
+            context: DataContext containing data and metadata
+            rows: Row filter condition (e.g., "price > 100", "name == 'Alice'")
             columns: Column names to select
             start_row: Starting row index for range selection
             end_row: Ending row index for range selection
-            data_profile: Optional data profile
 
         Returns:
-            Subset of the data
+            New DataContext with subset data
         """
         try:
-            if data_profile is None:
-                data_profile = DataProfile.from_data(data)
-
             self._logger.debug(f"Creating data subset - rows: {rows}, columns: {columns}, "
                              f"range: {start_row}-{end_row}")
 
-            result_data = data
+            current_context = context
 
-            # Apply row range selection first
             if start_row is not None or end_row is not None:
                 result = await self._execution_engine.execute(
-                    data_profile, 'slice_rows', result_data,
+                    current_context.profile, 'slice_rows', current_context.data,
                     start_row=start_row, end_row=end_row
                 )
                 if not result.success:
                     raise RuntimeError(f"Row slicing failed: {result.error_message}")
-                result_data = result.result
 
-            # Apply row filtering
+                current_context = current_context.update_after_transform(
+                    result.result, self._adapter_registry, preserve_type=True
+                )
+
             if rows:
-                result_data = await self.filter_rows(result_data, rows, data_profile)
+                current_context = await self.filter_rows(current_context, rows)
 
-            # Apply column selection
             if columns:
-                result_data = await self.select_columns(result_data, columns, data_profile)
+                current_context = await self.select_columns(current_context, columns)
 
             self._logger.info(f"Created data subset successfully")
-            return result_data
+            return current_context
 
         except Exception as e:
             self._logger.error(f"Failed to create data subset: {e}")
@@ -692,7 +668,7 @@ class UniversalDataEngine:
 
 # Convenience functions for quick usage
 @command
-async def quick_load(source: Union[str, Path, Any], **kwargs) -> Any:
+async def quick_load(source: Union[str, Path, Any], **kwargs) -> DataContext:
     """
     Quickly load data using a temporary Universal Data Engine.
 
@@ -701,11 +677,10 @@ async def quick_load(source: Union[str, Path, Any], **kwargs) -> Any:
         **kwargs: Additional parameters
 
     Returns:
-        Loaded data
+        DataContext containing loaded data
     """
     async with UniversalDataEngine() as engine:
-        data, _ = await engine.load_data(source, **kwargs)
-        return data
+        return await engine.load_data(source, **kwargs)
 
 
 @command

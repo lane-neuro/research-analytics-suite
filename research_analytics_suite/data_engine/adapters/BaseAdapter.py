@@ -197,6 +197,107 @@ class BaseAdapter(ABC):
         except Exception:
             return False
 
+    def _detect_header_rows(self, file_path: Union[str, Path], max_rows: int = 10,
+                           delimiter: str = ',') -> Optional[List[int]]:
+        """
+        Detect multi-level headers in tabular files (e.g., DeepLabCut datasets).
+
+        Args:
+            file_path: Path to the file
+            max_rows: Maximum rows to analyze (default: 10)
+            delimiter: Column delimiter (default: ',')
+
+        Returns:
+            List of header row indices (e.g., [0, 1, 2]) or None if single-level
+        """
+        try:
+            import csv
+            from collections import Counter
+
+            file_path = Path(file_path)
+            if not file_path.exists():
+                return None
+
+            # Read first max_rows without parsing
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                reader = csv.reader(f, delimiter=delimiter)
+                rows = []
+                for i, row in enumerate(reader):
+                    if i >= max_rows:
+                        break
+                    rows.append(row)
+
+            if len(rows) < 2:
+                return None
+
+            def is_numeric(cell):
+                try:
+                    float(cell.replace(',', ''))
+                    return True
+                except (ValueError, AttributeError):
+                    return False
+
+            def is_data_row(row):
+                if len(row) < 2:
+                    return False
+                non_empty = [cell.strip() for cell in row if cell.strip()]
+                if not non_empty:
+                    return False
+                numeric_count = sum(1 for cell in non_empty if is_numeric(cell))
+                return numeric_count >= max(2, len(non_empty) * 0.3)
+
+            header_candidates = 0
+            for row in rows:
+                if not is_data_row(row):
+                    header_candidates += 1
+                else:
+                    break
+
+            if header_candidates <= 1 or header_candidates > 5:
+                return None
+
+            header_rows = rows[:header_candidates]
+
+            non_numeric_counts = []
+            for row in header_rows:
+                non_empty = [cell.strip() for cell in row if cell.strip()]
+                non_numeric_count = sum(1 for cell in non_empty if not is_numeric(cell))
+                non_numeric_counts.append(non_numeric_count)
+
+            avg_non_numeric = sum(non_numeric_counts) / len(non_numeric_counts) if non_numeric_counts else 0
+            if avg_non_numeric < 2:
+                return None
+
+            repetition_scores = []
+
+            for row in header_rows:
+                non_empty = [cell.strip() for cell in row if cell.strip()]
+                if not non_empty:
+                    continue
+                counts = Counter(non_empty)
+                # Score based on ratio of repeated values
+                repeated = sum(count for count in counts.values() if count > 1)
+                score = repeated / len(non_empty) if non_empty else 0
+                repetition_scores.append(score)
+
+            if len(repetition_scores) >= 2 and any(score > 0.2 for score in repetition_scores[:2]):
+                return list(range(header_candidates))
+
+            empty_pattern = False
+            for row in header_rows[1:]:
+                empty_count = sum(1 for cell in row if not cell.strip())
+                if empty_count > len(row) * 0.3:
+                    empty_pattern = True
+                    break
+
+            if empty_pattern and header_candidates >= 2:
+                return list(range(header_candidates))
+
+            return None
+
+        except Exception:
+            return None
+
     def optimize_for_profile(self, data_profile: DataProfile) -> Dict[str, Any]:
         """
         Get optimization settings for the given data profile.

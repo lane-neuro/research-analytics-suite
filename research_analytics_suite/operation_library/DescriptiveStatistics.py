@@ -65,8 +65,6 @@ class DescriptiveStatistics(BaseOperation):
         """
         Execute the operation's logic: generate descriptive statistics for the dataset.
         """
-        # TODO: calculate the mean, median, and standard deviation of the dataset using operations
-        #  created in the operation library
         _inputs = self.get_inputs()
         _data = _inputs.get("data", [])
 

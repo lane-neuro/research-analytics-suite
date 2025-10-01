@@ -15,7 +15,6 @@ Status: Development
 """
 from __future__ import annotations
 
-import os
 import sys
 from dataclasses import dataclass
 from typing import Optional, Dict, Any, List, Union
@@ -226,7 +225,6 @@ class DataProfile:
     @staticmethod
     def _infer_data_type(data: Any) -> str:
         """Infer data type from data object."""
-        import pandas as pd
         import numpy as np
 
         # Check specific types first

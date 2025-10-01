@@ -44,8 +44,8 @@ class AdvancedSlotView(GUIBase):
             # Details
             with dpg.collapsing_header(label="Details", default_open=True):
                 dpg.add_text(tag=f"{self._root}_dtype",
-                             default_value=f"Type: {format_type_for_display(self._slot.data_type)}")
-                dpg.add_text(tag=f"{self._root}_shape", default_value=self._shape_text(self._slot.data))
+                             default_value=f"Type: {self._get_display_type()}")
+                dpg.add_text(tag=f"{self._root}_shape", default_value=self._shape_text(self._slot.raw_data))
                 dpg.add_text(tag=f"{self._root}_pointer", default_value=self._pointer_text(self._slot))
 
             # Data (preview + pointer combo)
@@ -62,7 +62,7 @@ class AdvancedSlotView(GUIBase):
                 )
 
                 # Preview text (lightweight). If you want a table, plug a renderer here.
-                dpg.add_text(tag=f"{self._root}_preview", default_value=self._preview_text(self._slot.data_object), wrap=0)
+                dpg.add_text(tag=f"{self._root}_preview", default_value=self._preview_text(self._slot.raw_data), wrap=0)
                 with dpg.group(horizontal=True):
                     dpg.add_button(label="Edit...", callback=self._open_edit_modal)
                     dpg.add_button(label="Validate", callback=self._validate)
@@ -97,10 +97,10 @@ class AdvancedSlotView(GUIBase):
                 continue
 
             dpg.set_value(f"{self._root}_title", f"Slot: {slot.name} [{slot.memory_id}]")
-            dpg.set_value(f"{self._root}_dtype", f"Type: {format_type_for_display(slot.data_type)}")
-            dpg.set_value(f"{self._root}_shape", self._shape_text(slot.data))
+            dpg.set_value(f"{self._root}_dtype", f"Type: {self._get_display_type(slot)}")
+            dpg.set_value(f"{self._root}_shape", self._shape_text(slot.raw_data))
             dpg.set_value(f"{self._root}_pointer", self._pointer_text(slot))
-            dpg.set_value(f"{self._root}_preview", self._preview_text(slot.data_object))
+            dpg.set_value(f"{self._root}_preview", self._preview_text(slot.raw_data))
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         """Resizes the GUI."""
@@ -132,7 +132,7 @@ class AdvancedSlotView(GUIBase):
         with dpg.window(tag=tag, label=f"Edit: {self._slot.name}", modal=True, width=540, height=380):
             dpg.add_text("Edit value (JSON/py-literal):")
             dpg.add_input_text(tag=f"{tag}_input", multiline=True, width=-1, height=250,
-                               default_value=self._preview_text(self._slot.data))
+                               default_value=self._preview_text(self._slot.raw_data))
             with dpg.group(horizontal=True):
                 dpg.add_button(label="Apply",
                                callback=lambda: self._apply_edit(tag))
@@ -162,10 +162,11 @@ class AdvancedSlotView(GUIBase):
             self._logger.error(e, self.__class__.__name__)
 
     async def _snapshot_async(self):
+        stored_data = self._slot.data_object
         await self._memory_manager.create_slot(
             name=f"{self._slot.name}_snapshot",
-            d_type=self._slot.data_type,
-            data=self._slot.data
+            d_type=type(stored_data),
+            data=stored_data
         )
         self._logger.info(f"Snapshot created: {self._slot.name}_snapshot")
 
@@ -190,6 +191,18 @@ class AdvancedSlotView(GUIBase):
 
     # ------------------------------- HELPERS ----------------------------------
 
+    def _get_display_type(self, slot=None) -> str:
+        """Get the display type, unwrapping DataContext if present."""
+        from research_analytics_suite.data_engine.core.DataContext import DataContext
+
+        target_slot = slot if slot is not None else self._slot
+        stored_object = target_slot.data_object
+
+        if isinstance(stored_object, DataContext):
+            return format_type_for_display(type(stored_object.data))
+
+        return format_type_for_display(target_slot.data_type)
+
     @staticmethod
     def _shape_text(data) -> str:
         try:
@@ -207,7 +220,6 @@ class AdvancedSlotView(GUIBase):
 
     @staticmethod
     def _preview_text(data) -> str:
-        # Keep it cheap—avoid giant dumps
         try:
             import pandas as pd
             if hasattr(data, "head") and isinstance(data, pd.DataFrame):

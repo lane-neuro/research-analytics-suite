@@ -29,6 +29,7 @@ from research_analytics_suite.data_engine.memory import MemoryManager
 # Universal Data Engine
 from research_analytics_suite.data_engine.UniversalDataEngine import UniversalDataEngine
 from research_analytics_suite.data_engine.core.DataProfile import DataProfile
+from research_analytics_suite.data_engine.core.DataContext import DataContext
 
 
 @link_class_commands
@@ -146,7 +147,7 @@ class Workspace:
     @command
     async def load_data(self, source: Union[str, Path, Any],
                        data_type: Optional[str] = None,
-                       **kwargs) -> tuple[Any, DataProfile]:
+                       **kwargs) -> DataContext:
         """
         Load data using the Universal Data Engine with automatic optimization.
 
@@ -156,22 +157,22 @@ class Workspace:
             **kwargs: Additional loading parameters
 
         Returns:
-            Tuple of (loaded_data, data_profile)
+            DataContext containing loaded data with profile and schema
         """
         if not self._universal_engine:
             raise RuntimeError("Workspace not initialized. Call initialize() first.")
 
-        data, profile = await self._universal_engine.load_data(source, data_type, **kwargs)
+        context = await self._universal_engine.load_data(source, data_type, **kwargs)
 
         # Update workspace profile
         if self._workspace_profile:
             # Ensure data_types_processed is a set
             if not isinstance(self._workspace_profile.get('data_types_processed'), set):
                 self._workspace_profile['data_types_processed'] = set()
-            self._workspace_profile['data_types_processed'].add(profile.data_type)
+            self._workspace_profile['data_types_processed'].add(context.profile.data_type)
 
-        self._logger.info(f"Loaded {profile.data_type} data ({profile.size_mb:.2f} MB) with auto-optimization")
-        return data, profile
+        self._logger.info(f"Loaded {context.profile.data_type} data ({context.profile.size_mb:.2f} MB) with auto-optimization")
+        return context
 
     @command
     async def save_data(self, data: Any, destination: Union[str, Path],

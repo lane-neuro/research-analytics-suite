@@ -208,6 +208,11 @@ class MemorySlot:
 
         raw_data = self._pointer.data if self._pointer else self._data
 
+        # Unwrap DataContext if present
+        from research_analytics_suite.data_engine.core.DataContext import DataContext
+        if isinstance(raw_data, DataContext):
+            raw_data = raw_data.data
+
         # Use UniversalDataEngine to extract data values
         try:
             from research_analytics_suite.data_engine.UniversalDataEngine import UniversalDataEngine
@@ -265,6 +270,35 @@ class MemorySlot:
     def data_object(self) -> any:
         """Returns the raw data object stored in the memory slot."""
         return self._data
+
+    @property
+    def raw_data(self) -> any:
+        """
+        Returns the raw data, unwrapping DataContext if present.
+
+        If the stored data is a DataContext, returns context.data.
+        Otherwise, returns the data as-is.
+
+        Returns:
+            Raw data suitable for display/processing
+        """
+        from research_analytics_suite.data_engine.core.DataContext import DataContext
+        if isinstance(self._data, DataContext):
+            return self._data.data
+        return self._data
+
+    @property
+    def context(self):
+        """
+        Returns DataContext if available.
+
+        Returns:
+            DataContext if stored, None otherwise
+        """
+        from research_analytics_suite.data_engine.core.DataContext import DataContext
+        if isinstance(self._data, DataContext):
+            return self._data
+        return None
 
     async def _update_data(self) -> None:
         """Updates the data stored in the memory slot."""
