@@ -70,6 +70,7 @@ class MemorySlot:
         self.name = name
         self.data_type = d_type
         self._pointer = pointer
+        self._data_selector = None
         self._metadata = {}
         self._created_at = time.time()
         self._modified_at = None
@@ -184,6 +185,34 @@ class MemorySlot:
         """
         return self._pointer
 
+    @property
+    def has_own_data(self) -> bool:
+        """Check if this slot contains its own data (not via pointer).
+
+        Returns:
+            bool: True if slot has its own data, False if empty or pointing to another slot
+        """
+        return self._data is not None and self._pointer is None
+
+    @property
+    def data_selector(self) -> dict:
+        """Get the data selector for filtering data.
+
+        Returns:
+            dict: The data selector configuration, or None if no selection
+        """
+        return self._data_selector
+
+    @data_selector.setter
+    def data_selector(self, value: dict) -> None:
+        """Set the data selector for filtering data.
+
+        Args:
+            value (dict): Selector configuration with keys like 'columns', 'rows', 'slice'
+        """
+        self._data_selector = value
+        self._update_modified_time()
+
     @pointer.setter
     def pointer(self, value: any) -> None:
         """Sets the pointer to the next memory slot.
@@ -191,48 +220,59 @@ class MemorySlot:
         Args:
             value (any): The pointer to the next memory slot.
         """
+        if self.has_own_data:
+            self._logger.warning(f"Cannot set pointer on slot {self.memory_id} - slot contains data")
+            return
+
         if isinstance(value, MemorySlot) and value.memory_id != self.memory_id:
             self._pointer = value
         else:
             self._pointer = None
 
+        self._update_modified_time()
+
+    def set_pointer(self, target_slot: 'MemorySlot', data_selector: dict = None) -> None:
+        """Set pointer with optional data selector.
+
+        Args:
+            target_slot (MemorySlot): The slot to point to
+            data_selector (dict): Optional selector for filtering data
+        """
+        self.pointer = target_slot
+        if data_selector is not None:
+            self.data_selector = data_selector
+
     @property
     def data(self) -> any:
         """Gets the data values extracted from the stored object using UniversalDataEngine.
+        Applies data_selector if set.
 
         Returns:
             any: The extracted data values (e.g., DataFrame.values, array data, etc.)
         """
         if self._pointer:
-            return self._pointer.data
+            raw_data = self._pointer._data
+        else:
+            raw_data = self._data
 
-        raw_data = self._pointer.data if self._pointer else self._data
-
-        # Unwrap DataContext if present
         from research_analytics_suite.data_engine.core.DataContext import DataContext
         if isinstance(raw_data, DataContext):
             raw_data = raw_data.data
 
-        # Use UniversalDataEngine to extract data values
+        raw_data = self._apply_data_selector(raw_data)
+
         try:
             from research_analytics_suite.data_engine.UniversalDataEngine import UniversalDataEngine
             from research_analytics_suite.data_engine.core.DataProfile import DataProfile
 
-            # Create data profile to understand the data type
             profile = DataProfile.from_data(raw_data)
-
-            # Create temporary engine
             engine = UniversalDataEngine()
 
-            # Get data info to understand structure
             import asyncio
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                # If already in async context, we need to handle this differently
-                # For now, return raw data and let the caller handle extraction
                 return self._extract_values_sync(raw_data)
             else:
-                # Run async operation to get data info and extract values
                 return loop.run_until_complete(self._extract_values_async(raw_data, engine))
 
         except Exception as e:
@@ -274,18 +314,26 @@ class MemorySlot:
     @property
     def raw_data(self) -> any:
         """
-        Returns the raw data, unwrapping DataContext if present.
+        Returns the raw data, unwrapping DataContext if present and applying data selector.
 
         If the stored data is a DataContext, returns context.data.
         Otherwise, returns the data as-is.
+        Applies data_selector if set.
 
         Returns:
             Raw data suitable for display/processing
         """
         from research_analytics_suite.data_engine.core.DataContext import DataContext
-        if isinstance(self._data, DataContext):
-            return self._data.data
-        return self._data
+
+        if self._pointer:
+            data = self._pointer.raw_data
+        else:
+            if isinstance(self._data, DataContext):
+                data = self._data.data
+            else:
+                data = self._data
+
+        return self._apply_data_selector(data)
 
     @property
     def context(self):
@@ -422,6 +470,64 @@ class MemorySlot:
             self._logger.info(f"Data exported to {_path}")
         except Exception as e:
             self._logger.error(Exception(f"Failed to export data to CSV: {e}"), self.__class__.__name__)
+
+    def _apply_data_selector(self, data: any) -> any:
+        """Apply data selector to filter/subset the data.
+
+        Args:
+            data: The data to filter
+
+        Returns:
+            Filtered data according to data_selector, or original data if no selector
+        """
+        if self._data_selector is None or data is None:
+            return data
+
+        try:
+            import pandas as pd
+            import numpy as np
+
+            if 'columns' in self._data_selector:
+                columns = self._data_selector['columns']
+
+                if isinstance(data, pd.DataFrame):
+                    if all(isinstance(c, int) for c in columns):
+                        selected = data.iloc[:, columns]
+                    else:
+                        selected = data.loc[:, columns]
+
+                    if len(columns) == 1:
+                        return selected.iloc[:, 0].values if isinstance(selected, pd.DataFrame) else selected.values
+                    return selected
+
+                elif isinstance(data, np.ndarray) and data.ndim == 2:
+                    selected = data[:, columns] if all(isinstance(c, int) for c in columns) else data
+                    if len(columns) == 1:
+                        return selected.flatten()
+                    return selected
+
+                elif isinstance(data, list) and len(data) > 0 and isinstance(data[0], (list, tuple)):
+                    if all(isinstance(c, int) for c in columns):
+                        selected = [[row[c] for c in columns] for row in data]
+                        if len(columns) == 1:
+                            return [row[0] for row in selected]
+                        return selected
+
+            if 'rows' in self._data_selector:
+                row_selector = self._data_selector['rows']
+
+                if isinstance(data, (pd.DataFrame, pd.Series)):
+                    return data.iloc[row_selector]
+                elif isinstance(data, np.ndarray):
+                    return data[row_selector]
+                elif isinstance(data, (list, tuple)):
+                    return data[row_selector]
+
+            return data
+
+        except Exception as e:
+            self._logger.warning(f"Failed to apply data selector: {e}")
+            return data
 
     def _update_modified_time(self):
         """

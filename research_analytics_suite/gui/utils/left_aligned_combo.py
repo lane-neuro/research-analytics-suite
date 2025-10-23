@@ -14,7 +14,8 @@ import dearpygui.dearpygui as dpg
 
 def left_aligned_combo(label: str, tag: str, parent, height: int = -1, width: int = -1,
                        items: list[str] | tuple[str, ...] = (), label_indent: int = -1,
-                       bullet: bool = False, user_data: Any = None, callback = None) -> None:
+                       bullet: bool = False, user_data: Any = None, callback = None,
+                       default_value: str = "") -> None:
     """
     Adds a new left-aligned combobox to the GUI.
 
@@ -29,6 +30,7 @@ def left_aligned_combo(label: str, tag: str, parent, height: int = -1, width: in
         bullet (bool): Whether to display a bullet point. Default is False.
         user_data (Any): User data to pass to the callback function. Default is None.
         callback (function): The callback function for the combobox. Default is None.
+        default_value (str): The default value for the combobox. Default is empty string.
     """
     if height == -1:
         height = dpg.get_item_height(parent)
@@ -39,4 +41,5 @@ def left_aligned_combo(label: str, tag: str, parent, height: int = -1, width: in
         with dpg.group(horizontal=False, width=int(width * 0.9), height=height):
             dpg.add_text(default_value=label, bullet=bullet, indent=label_indent)
         with dpg.group(horizontal=True, height=height):
-            dpg.add_combo(tag=tag, items=items, callback=callback, user_data=user_data)
+            dpg.add_combo(tag=tag, items=items, callback=callback, user_data=user_data,
+                         default_value=default_value)
