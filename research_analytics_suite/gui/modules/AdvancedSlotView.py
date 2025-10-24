@@ -167,6 +167,21 @@ class AdvancedSlotView(GUIBase):
 
     # ------------------------------- HELPERS ----------------------------------
 
+    def _format_column_name(self, col, max_length=None, show_levels=True):
+        """Format multi-level column names into readable strings."""
+        if isinstance(col, tuple):
+            if show_levels:
+                parts = [str(part) for part in col if str(part).strip()]
+                col_str = " > ".join(parts)
+            else:
+                col_str = str(col[-1])
+        else:
+            col_str = str(col)
+
+        if max_length and len(col_str) > max_length:
+            return col_str[:max_length-3] + "..."
+        return col_str
+
     def _render_data_selector_ui(self):
         """Render UI for selecting data subset when pointer is set."""
         import pandas as pd
@@ -189,7 +204,7 @@ class AdvancedSlotView(GUIBase):
             is_2d_list = isinstance(target_data, list) and len(target_data) > 0 and isinstance(target_data[0], (list, tuple))
 
             if is_dataframe:
-                columns_to_show = [(col, str(col)) for col in target_data.columns]
+                columns_to_show = [(col, col) for col in target_data.columns]
             elif is_2d_array:
                 num_cols = target_data.shape[1]
                 columns_to_show = [(i, f"Column {i}") for i in range(num_cols)]
@@ -214,19 +229,23 @@ class AdvancedSlotView(GUIBase):
 
                 dpg.add_spacer(height=3)
 
-                for col_key, col_label in columns_to_show:
+                for col_key, col_raw in columns_to_show:
                     is_selected = col_key in current_selection if current_selection else False
 
-                    if len(col_label) > 30:
-                        col_label = col_label[:27] + "..."
+                    col_label = self._format_column_name(col_raw, max_length=50)
+                    full_name = self._format_column_name(col_raw, max_length=None)
 
-                    dpg.add_checkbox(
+                    checkbox = dpg.add_checkbox(
                         label=col_label,
                         default_value=is_selected,
                         callback=lambda s, a, u: self._on_column_toggle(u),
                         user_data=col_key,
                         tag=f"{self._root}_col_select_{col_key}"
                     )
+
+                    if len(full_name) > 50:
+                        with dpg.tooltip(checkbox):
+                            dpg.add_text(full_name, wrap=400)
 
         except Exception as e:
             self._logger.error(f"Error rendering data selector UI: {e}", self.__class__.__name__)

@@ -119,6 +119,21 @@ class DataViewPanel(GUIBase):
             self._logger.error(f"Error rendering data: {e}", self.__class__.__name__)
             self._render_text(data)
 
+    def _format_column_name(self, col, max_length=None, show_levels=True):
+        """Format multi-level column names into readable strings."""
+        if isinstance(col, tuple):
+            if show_levels:
+                parts = [str(part) for part in col if str(part).strip()]
+                col_str = " > ".join(parts)
+            else:
+                col_str = str(col[-1])
+        else:
+            col_str = str(col)
+
+        if max_length and len(col_str) > max_length:
+            return col_str[:max_length-3] + "..."
+        return col_str
+
     def _render_dataframe(self, df, schema_info=None):
         """Render a pandas DataFrame with interactive controls."""
         with dpg.group(tag=f"{self._root}_data_container", parent=f"{self._root}_display"):
@@ -164,21 +179,24 @@ class DataViewPanel(GUIBase):
                 dpg.add_spacer(height=3)
 
                 with dpg.child_window(height=150, border=False):
-                    num_cols_per_row = 3
+                    num_cols_per_row = 2
                     for i in range(0, len(all_columns), num_cols_per_row):
                         with dpg.group(horizontal=True):
                             for col in all_columns[i:i + num_cols_per_row]:
                                 selected = self._visible_columns is None or col in self._visible_columns
-                                col_label = str(col)
-                                if len(col_label) > 20:
-                                    col_label = col_label[:17] + "..."
+                                col_label = self._format_column_name(col, max_length=35)
+                                full_name = self._format_column_name(col, max_length=None)
 
-                                dpg.add_checkbox(
+                                checkbox = dpg.add_checkbox(
                                     label=col_label,
                                     default_value=selected,
                                     callback=lambda s, a, u: self._toggle_column(u),
                                     user_data=col
                                 )
+
+                                if len(full_name) > 35:
+                                    with dpg.tooltip(checkbox):
+                                        dpg.add_text(full_name)
 
             dpg.add_spacer(height=5)
 
@@ -216,10 +234,14 @@ class DataViewPanel(GUIBase):
                 dpg.add_table_column(label="Index", width_fixed=True, init_width_or_weight=80)
 
                 for col in display_df.columns:
-                    col_header = str(col)
-                    if len(col_header) > 40:
-                        col_header = col_header[:37] + "..."
-                    dpg.add_table_column(label=col_header, width_fixed=True, init_width_or_weight=150)
+                    col_header = self._format_column_name(col, max_length=50)
+                    full_col_name = self._format_column_name(col, max_length=None)
+
+                    table_col = dpg.add_table_column(label=col_header, width_fixed=True, init_width_or_weight=200)
+
+                    if len(full_col_name) > 50:
+                        with dpg.tooltip(table_col):
+                            dpg.add_text(full_col_name, wrap=400)
 
                 for idx, row in display_df.iterrows():
                     with dpg.table_row():
