@@ -54,6 +54,13 @@ class OperationDetailPanel(GUIBase):
 
         self._update_operation: Optional[BaseOperation] = None
 
+        self.VIEW_MODE_SIMPLIFIED = 0
+        self.VIEW_MODE_ADVANCED = 1
+        self._view_mode: int = self.VIEW_MODE_SIMPLIFIED
+
+        self._last_input_ids: Optional[dict] = None
+        self._last_output_ids: Optional[dict] = None
+
     async def initialize_gui(self) -> None:
         """Initialize GUI components and update monitoring."""
         self._logger.debug("Initializing OperationDetailPanel")
@@ -67,12 +74,14 @@ class OperationDetailPanel(GUIBase):
         self._update_operation.is_ready = True
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
-        """Resize the detail panel."""
+        """Resize the detail panel and re-render content."""
         self.width = new_width
         self.height = new_height
         if dpg.does_item_exist(self._panel_id):
             dpg.set_item_width(self._panel_id, new_width)
             dpg.set_item_height(self._panel_id, new_height)
+            if self._current_operation:
+                self._render_operation_details(self._current_operation)
 
     def draw(self) -> None:
         """Draw the detail panel interface."""
@@ -85,30 +94,30 @@ class OperationDetailPanel(GUIBase):
 
     def _draw_panel_content(self) -> None:
         """Draw the panel content (separated to avoid container issues)."""
-        # Show empty state if no operation selected
         if not self._current_operation:
             self._draw_empty_state()
             return
 
-        # Operation header
         self._draw_operation_header()
 
         dpg.add_separator()
 
-        # Tabbed interface for different views
-        tab_bar_tag = f"{self._tab_bar_id}_{id(self._current_operation)}"  # Make unique per operation
-        with dpg.tab_bar(tag=tab_bar_tag):
-            with dpg.tab(label="Overview"):
-                self._draw_overview_tab()
+        if self._view_mode == self.VIEW_MODE_SIMPLIFIED:
+            self._draw_simplified_view()
+        else:
+            tab_bar_tag = f"{self._tab_bar_id}_{id(self._current_operation)}"
+            with dpg.tab_bar(tag=tab_bar_tag):
+                with dpg.tab(label="Overview"):
+                    self._draw_overview_tab()
 
-            with dpg.tab(label="Inputs/Outputs"):
-                self._draw_io_tab()
+                with dpg.tab(label="Inputs/Outputs"):
+                    self._draw_io_tab()
 
-            with dpg.tab(label="Code & Execution"):
-                self._draw_execution_tab()
+                with dpg.tab(label="Code & Execution"):
+                    self._draw_execution_tab()
 
-            with dpg.tab(label="Settings"):
-                self._draw_settings_tab()
+                with dpg.tab(label="Settings"):
+                    self._draw_settings_tab()
 
     def _draw_empty_state(self) -> None:
         """Draw empty state when no operation is selected."""
@@ -118,6 +127,100 @@ class OperationDetailPanel(GUIBase):
             dpg.add_text("Select an operation from the tree to view details",
                         color=(128, 128, 128))
 
+    def _draw_simplified_view(self) -> None:
+        """Draw simplified single-screen view with all essential information."""
+        if not self._current_operation:
+            return
+
+        attrs = self._current_operation.attributes if hasattr(self._current_operation, 'attributes') else None
+        if not attrs:
+            dpg.add_text("No attributes available")
+            return
+
+        dpg.add_text("Description:", color=(200, 200, 200))
+        dpg.add_text(attrs.description, wrap=self.width - 60)
+
+        dpg.add_spacer(height=10)
+
+        with dpg.group(horizontal=True):
+            panel_width = max(200, int((self.width - 80) / 2))
+
+            with dpg.child_window(width=panel_width, height=150, border=True):
+                dpg.add_text("Required Inputs", color=(100, 200, 255))
+                dpg.add_separator()
+
+                input_ids = attrs.input_ids
+                if input_ids:
+                    for name, slot_id in input_ids.items():
+                        with dpg.group(horizontal=True):
+                            dpg.add_text(f"{name}:")
+                            dpg.add_text(str(slot_id), color=(180, 180, 180))
+
+                        dpg.add_button(
+                            label=f"View {name}",
+                            width=-1,
+                            callback=(lambda captured_slot_id: lambda: self._view_memory_slot(captured_slot_id))(slot_id)
+                        )
+                        dpg.add_spacer(height=5)
+                else:
+                    dpg.add_text("No inputs defined", color=(128, 128, 128))
+
+            dpg.add_spacer(width=10)
+
+            with dpg.child_window(width=panel_width, height=150, border=True):
+                dpg.add_text("Outputs", color=(255, 200, 100))
+                dpg.add_separator()
+
+                output_ids = attrs.output_ids
+                if output_ids:
+                    for name, slot_id in output_ids.items():
+                        with dpg.group(horizontal=True):
+                            dpg.add_text(f"{name}:")
+                            dpg.add_text(str(slot_id), color=(180, 180, 180))
+
+                        dpg.add_button(
+                            label=f"View {name}",
+                            width=-1,
+                            callback=(lambda captured_slot_id: lambda: self._view_memory_slot(captured_slot_id))(slot_id)
+                        )
+                        dpg.add_spacer(height=5)
+                else:
+                    dpg.add_text("No outputs defined", color=(128, 128, 128))
+
+        dpg.add_spacer(height=10)
+
+        dpg.add_text("Settings:", color=(200, 200, 200))
+        dpg.add_separator()
+
+        with dpg.group(horizontal=True, horizontal_spacing=20):
+            op_id = id(self._current_operation)
+            dpg.add_checkbox(
+                label="Repeat continuously",
+                default_value=attrs.is_loop,
+                callback=lambda s, v: self._update_setting('is_loop', v),
+                tag=f"loop_setting_{self._runtime_id}_{op_id}_simple"
+            )
+
+            dpg.add_checkbox(
+                label="Run in parallel",
+                default_value=attrs.parallel,
+                callback=lambda s, v: self._update_setting('parallel', v),
+                tag=f"parallel_setting_{self._runtime_id}_{op_id}_simple"
+            )
+
+        dpg.add_spacer(height=10)
+
+        with dpg.group(horizontal=True, horizontal_spacing=10):
+            dpg.add_button(
+                label="Save Settings",
+                callback=lambda: self._save_operation_settings()
+            )
+
+            dpg.add_button(
+                label="View Results",
+                callback=lambda: asyncio.create_task(self._view_results())
+            )
+
     def _draw_operation_header(self) -> None:
         """Draw operation header with name, status, and quick actions."""
         if not self._current_operation:
@@ -126,26 +229,23 @@ class OperationDetailPanel(GUIBase):
         attrs = self._current_operation.attributes if hasattr(self._current_operation, 'attributes') else None
 
         with dpg.group(horizontal=True, horizontal_spacing=20):
-            # Operation name and version
             with dpg.group():
                 name = attrs.name if attrs else self._current_operation.name
                 version = f" v{attrs.version}" if attrs and hasattr(attrs, 'version') else ""
                 dpg.add_text(f"{name}{version}", color=(255, 255, 255))
 
-                # Author and runtime ID
-                author = attrs.author if attrs else "Unknown"
-                runtime_id = self._current_operation.runtime_id[-8:]
-                dpg.add_text(f"by {author} | ID: {runtime_id}", color=(180, 180, 180))
+                if self._view_mode == self.VIEW_MODE_ADVANCED:
+                    author = attrs.author if attrs else "Unknown"
+                    runtime_id = self._current_operation.runtime_id[-8:]
+                    dpg.add_text(f"by {author} | ID: {runtime_id}", color=(180, 180, 180))
 
             dpg.add_spacer(width=20)
 
-            # Status and quick actions
             with dpg.group():
                 status = self._current_operation.status
                 status_color = self._get_status_color(status)
                 dpg.add_text(f"Status: {status}", color=status_color)
 
-                # Action buttons
                 with dpg.group(horizontal=True, horizontal_spacing=10):
                     if status in ["ready", "waiting", "idle", "started"]:
                         dpg.add_button(
@@ -163,6 +263,18 @@ class OperationDetailPanel(GUIBase):
                         callback=lambda: asyncio.create_task(self._reset_operation())
                     )
 
+            dpg.add_spacer(width=10)
+
+            with dpg.group():
+                dpg.add_text("View:", color=(180, 180, 180))
+                dpg.add_radio_button(
+                    items=["Simplified", "Advanced"],
+                    default_value="Advanced" if self._view_mode == self.VIEW_MODE_ADVANCED else "Simplified",
+                    horizontal=True,
+                    callback=self._on_view_mode_changed,
+                    tag=f"view_mode_toggle_{self._runtime_id}_{id(self._current_operation)}"
+                )
+
     def _draw_overview_tab(self) -> None:
         """Draw overview tab with basic information."""
         if not self._current_operation:
@@ -173,14 +285,12 @@ class OperationDetailPanel(GUIBase):
             dpg.add_text("No attributes available")
             return
 
-        # Basic information
         with dpg.group():
             dpg.add_text("Description:", color=(200, 200, 200))
             dpg.add_text(attrs.description, wrap=self.width - 40)
 
             dpg.add_spacer(height=15)
 
-            # Metadata in two columns
             with dpg.group(horizontal=True):
                 with dpg.group():
                     dpg.add_text("Category ID:", color=(200, 200, 200))
@@ -204,7 +314,6 @@ class OperationDetailPanel(GUIBase):
 
             dpg.add_spacer(height=15)
 
-            # Inheritance information
             if attrs.inheritance:
                 dpg.add_text("Inherited Operations:", color=(200, 200, 200))
                 with dpg.group(indent=20):
@@ -223,7 +332,6 @@ class OperationDetailPanel(GUIBase):
 
         with dpg.child_window(border=False, width=-1, height=-1, horizontal_scrollbar=True):
             with dpg.group(horizontal=True):
-                # Inputs section
                 _width = dpg.get_item_width(self._panel_id)
                 with dpg.child_window(width=150, height=-1, border=True):
                     dpg.add_text("Required Inputs", color=(100, 200, 255))
@@ -236,7 +344,6 @@ class OperationDetailPanel(GUIBase):
                                 dpg.add_text(f"{name}:")
                                 dpg.add_text(str(slot_id), color=(180, 180, 180))
 
-                            # Add button to view slot details
                             dpg.add_button(
                                 label=f"View {name}",
                                 width=-1,
@@ -246,7 +353,6 @@ class OperationDetailPanel(GUIBase):
                     else:
                         dpg.add_text("No inputs defined", color=(128, 128, 128))
 
-                # Outputs section
                 with dpg.child_window(width=150, height=-1, border=True):
                     dpg.add_text("Outputs", color=(255, 200, 100))
                     dpg.add_separator()
@@ -258,7 +364,6 @@ class OperationDetailPanel(GUIBase):
                                 dpg.add_text(f"{name}:")
                                 dpg.add_text(str(slot_id), color=(180, 180, 180))
 
-                            # Add button to view slot details
                             dpg.add_button(
                                 label=f"View {name}",
                                 width=-1,
@@ -278,7 +383,6 @@ class OperationDetailPanel(GUIBase):
             dpg.add_text("No attributes available")
             return
 
-        # Action code display
         dpg.add_text("Action Code:", color=(200, 200, 200))
 
         action_code = ""
@@ -298,20 +402,18 @@ class OperationDetailPanel(GUIBase):
 
         dpg.add_spacer(height=15)
 
-        # Execution results
         dpg.add_text("Execution Results:", color=(200, 200, 200))
         dpg.add_button(
             label="View Results",
             callback=lambda: asyncio.create_task(self._view_results())
         )
 
-        # Operation logs (if available)
         if hasattr(self._current_operation, 'log_entries'):
             dpg.add_spacer(height=15)
             dpg.add_text("Recent Log Entries:", color=(200, 200, 200))
 
             with dpg.child_window(height=150, border=True):
-                for entry in self._current_operation.log_entries[-10:]:  # Show last 10 entries
+                for entry in self._current_operation.log_entries[-10:]:
                     dpg.add_text(entry, wrap=self.width - 60)
 
     def _draw_settings_tab(self) -> None:
@@ -324,7 +426,6 @@ class OperationDetailPanel(GUIBase):
             dpg.add_text("No attributes available")
             return
 
-        # Execution flags
         dpg.add_text("Execution Settings:", color=(200, 200, 200))
         dpg.add_separator()
 
@@ -360,7 +461,6 @@ class OperationDetailPanel(GUIBase):
 
         dpg.add_spacer(height=20)
 
-        # Save/Reset buttons
         with dpg.group(horizontal=True, horizontal_spacing=10):
             dpg.add_button(
                 label="Save Settings",
@@ -380,8 +480,22 @@ class OperationDetailPanel(GUIBase):
             await asyncio.sleep(0.5)
 
     async def _refresh_dynamic_content(self) -> None:
-        """Refresh dynamic content like status indicators."""
-        pass
+        """Refresh dynamic content like status indicators and I/O slots."""
+        if not self._current_operation or not hasattr(self._current_operation, 'attributes'):
+            return
+
+        attrs = self._current_operation.attributes
+        current_input_ids = dict(attrs.input_ids) if attrs.input_ids else {}
+        current_output_ids = dict(attrs.output_ids) if attrs.output_ids else {}
+
+        inputs_changed = current_input_ids != self._last_input_ids
+        outputs_changed = current_output_ids != self._last_output_ids
+
+        if inputs_changed or outputs_changed:
+            self._logger.debug(f"I/O slots changed - inputs: {inputs_changed}, outputs: {outputs_changed}")
+            self._last_input_ids = current_input_ids
+            self._last_output_ids = current_output_ids
+            self._render_operation_details(self._current_operation)
 
     def set_operation(self, operation: BaseOperation) -> None:
         """Set the operation to display in the detail panel."""
@@ -391,8 +505,13 @@ class OperationDetailPanel(GUIBase):
         self._current_operation = operation
         if operation and hasattr(operation, 'attributes'):
             self._original_attributes = copy(operation.attributes)
+            attrs = operation.attributes
+            self._last_input_ids = dict(attrs.input_ids) if attrs.input_ids else {}
+            self._last_output_ids = dict(attrs.output_ids) if attrs.output_ids else {}
+        else:
+            self._last_input_ids = None
+            self._last_output_ids = None
 
-        # Safely redraw panel content
         self._render_operation_details(operation)
 
     def _render_operation_details(self, operation: BaseOperation) -> None:
@@ -420,6 +539,16 @@ class OperationDetailPanel(GUIBase):
             "paused": (255, 150, 100),
         }
         return status_colors.get(status.lower(), (200, 200, 200))
+
+    def _on_view_mode_changed(self, sender, app_data) -> None:
+        """Handle view mode toggle changes."""
+        new_mode = self.VIEW_MODE_SIMPLIFIED if app_data == "Simplified" else self.VIEW_MODE_ADVANCED
+        if self._view_mode != new_mode:
+            self._view_mode = new_mode
+            mode_name = "simplified" if new_mode == self.VIEW_MODE_SIMPLIFIED else "advanced"
+            self._logger.debug(f"View mode changed to: {mode_name}")
+            if self._current_operation:
+                self._render_operation_details(self._current_operation)
 
     def _update_setting(self, setting_name: str, value: bool) -> None:
         """Update an operation setting."""
@@ -449,8 +578,8 @@ class OperationDetailPanel(GUIBase):
             dpg.delete_item(f"popup_view_slot_{slot_id}")
 
         pos = dpg.get_mouse_pos()
-        with dpg.window(label=f"Slot Details - {slot_id}", width=200, height=200, pos=pos,
-                        show=True, tag=f"popup_view_slot_{slot_id}", no_resize=True):
+        with dpg.window(label=f"Slot Details - {slot_id}", width=250, height=200, pos=pos,
+                        show=True, tag=f"popup_view_slot_{slot_id}", no_resize=False):
             asyncio.create_task(self.render_popup(slot_id))
 
     async def render_popup(self, slot_id: str) -> None:
@@ -462,7 +591,7 @@ class OperationDetailPanel(GUIBase):
             return
 
         from research_analytics_suite.gui.modules.AdvancedSlotView import AdvancedSlotView
-        adv_slot_view = AdvancedSlotView(slot=slot, temp_view=True, width=184, height=160,
+        adv_slot_view = AdvancedSlotView(slot=slot, temp_view=True, width=240, height=160,
                                          parent=f"popup_view_slot_{slot_id}")
         await adv_slot_view.initialize_gui()
         adv_slot_view.draw()
@@ -523,4 +652,6 @@ class OperationDetailPanel(GUIBase):
         self._current_operation = None
         self._original_attributes = None
         self._last_rendered_operation = None
+        self._last_input_ids = None
+        self._last_output_ids = None
         self._render_operation_details(None)

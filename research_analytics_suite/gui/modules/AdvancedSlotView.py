@@ -47,18 +47,18 @@ class AdvancedSlotView(GUIBase):
             dpg.add_separator()
 
             # Details
-            with dpg.collapsing_header(label="Details", default_open=True):
+            with dpg.collapsing_header(label="Details", default_open=False):
                 dpg.add_text(tag=f"{self._root}_dtype",
                              default_value=f"Type: {self._get_display_type()}")
                 dpg.add_text(tag=f"{self._root}_shape", default_value=self._shape_text(self._slot.raw_data))
-                dpg.add_text(tag=f"{self._root}_pointer", default_value=self._pointer_text(self._slot))
+                dpg.add_text(tag=f"{self._root}_pointer", default_value=self._linked_to_text(self._slot))
 
             # Data (preview + pointer combo)
             with dpg.collapsing_header(label="Data", default_open=True, tag=f"{self._root}_data_header"):
                 self._render_data_section()
 
             # Export
-            with dpg.collapsing_header(label="Backup & Export", default_open=True):
+            with dpg.collapsing_header(label="Backup & Export", default_open=False):
                 with dpg.group(horizontal=True):
                     dpg.add_button(label="Export CSV", callback=self._export_csv)
                     dpg.add_button(label="Export JSON", callback=self._export_json)
@@ -91,7 +91,7 @@ class AdvancedSlotView(GUIBase):
             dpg.set_value(f"{self._root}_title", f"Slot: {slot.name} [{slot.memory_id}]")
             dpg.set_value(f"{self._root}_dtype", f"Type: {self._get_display_type(slot)}")
             dpg.set_value(f"{self._root}_shape", self._shape_text(slot.raw_data))
-            dpg.set_value(f"{self._root}_pointer", self._pointer_text(slot))
+            dpg.set_value(f"{self._root}_pointer", self._linked_to_text(slot))
 
             if slot.has_own_data != previous_has_data:
                 previous_has_data = slot.has_own_data
@@ -289,27 +289,28 @@ class AdvancedSlotView(GUIBase):
             self._logger.error(f"Error toggling column: {e}", self.__class__.__name__)
 
     def _render_data_section(self):
-        """Render the data section with pointer control and data view."""
+        """Render the data section with link control and data view."""
         if self._slot.has_own_data:
             with dpg.group(horizontal=True, parent=f"{self._root}_data_header"):
-                dpg.add_text("Pointer:", color=(180, 180, 180))
+                dpg.add_text("Linked To:", color=(180, 180, 180))
                 dpg.add_text("(disabled - slot contains data)", color=(150, 150, 100))
         else:
             from research_analytics_suite.gui import left_aligned_combo
 
-            current_pointer_value = ""
+            current_linked_value = ""
             if self._slot.pointer:
-                current_pointer_value = f"{self._slot.pointer.name} [{self._slot.pointer.memory_id}]"
+                current_linked_value = f"{self._slot.pointer.name} [{self._slot.pointer.memory_id}]"
 
+            combo_width = max(100, self._width - 80)
             left_aligned_combo(
-                label="Pointer",
+                label="Linked To",
                 tag=f"{self._root}_pointer_combo",
                 items=self._memory_manager.format_slot_name_id(),
                 callback=self._on_pointer_changed,
                 user_data=self._slot.memory_id,
-                width=-1,
+                width=combo_width,
                 parent=f"{self._root}_data_header",
-                default_value=current_pointer_value
+                default_value=current_linked_value
             )
 
         if self._slot.pointer:
@@ -318,7 +319,7 @@ class AdvancedSlotView(GUIBase):
 
         from research_analytics_suite.gui.modules.DataViewPanel import DataViewPanel
         self._data_view_panel = DataViewPanel(
-            width=self._width,
+            width=max(150, self._width - 10),
             height=400,
             parent=f"{self._root}_data_header",
             slot=self._slot
@@ -491,9 +492,9 @@ class AdvancedSlotView(GUIBase):
             return txt if len(txt) < 4000 else txt[:4000] + " …"
 
     @staticmethod
-    def _pointer_text(slot: MemorySlot) -> str:
+    def _linked_to_text(slot: MemorySlot) -> str:
         try:
             p = getattr(slot, "pointer", None)
-            return f"Pointer: {p.name} [{p.memory_id}]" if p else "Pointer: (none)"
+            return f"Linked To: {p.name} [{p.memory_id}]" if p else "Linked To: (none)"
         except Exception:
-            return "Pointer: (none)"
+            return "Linked To: (none)"

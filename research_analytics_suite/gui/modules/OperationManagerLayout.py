@@ -74,7 +74,7 @@ class OperationManagerLayout(GUIBase):
         # Create detail panel
         detail_container_id = f"detail_container_{self._runtime_id}"
         self._detail_panel = OperationDetailPanel(
-            width=-1,
+            width=self.width,
             height=self.height,
             parent=detail_container_id
         )
@@ -85,7 +85,7 @@ class OperationManagerLayout(GUIBase):
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         """Resize the layout and child components."""
-        self.width = -1
+        self.width = new_width
         self.height = new_height
 
         if dpg.does_item_exist(self._layout_id):
@@ -96,7 +96,7 @@ class OperationManagerLayout(GUIBase):
         if self._tree_view and self._detail_panel:
             actual_width = new_width if new_width > 0 else dpg.get_item_width(self._layout_id)
             tree_width = max(self._min_tree_width, int(actual_width * self._tree_width_ratio))
-            detail_width = -1
+            detail_width = actual_width - tree_width
 
             await self._tree_view.resize_gui(tree_width, new_height)
             await self._detail_panel.resize_gui(detail_width, new_height)
