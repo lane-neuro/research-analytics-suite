@@ -1,7 +1,14 @@
 """
 OperationAttributes
 
-This module contains the OperationAttributes class, which is used to store the attributes of an operation.
+This module contains the OperationAttributes class, which stores and manages the attributes of an operation.
+
+The OperationAttributes class handles:
+- Operation metadata (name, version, author, etc.)
+- Input/output specifications and memory slot management
+- Execution settings (loop behavior, CPU/GPU binding, parallelization)
+- Type resolution for complex type annotations
+- Serialization of operation attributes for persistence
 
 Author: Lane
 Copyright: Lane
@@ -22,6 +29,43 @@ from research_analytics_suite.commands import command, link_class_commands
 
 @link_class_commands
 class OperationAttributes:
+    """
+    Stores and manages all attributes associated with an operation.
+
+    This class handles the configuration, metadata, and execution settings for operations in the
+    Research Analytics Suite. It manages memory slots for inputs and outputs, resolves type
+    specifications, and provides serialization capabilities.
+
+    Attributes:
+        name (str): The name of the operation. Defaults to '[no-name]'.
+        version (str): The version of the operation. Defaults to '0.0.1'.
+        description (str): A description of what the operation does. Defaults to '[no-description]'.
+        category_id (int): The category ID for organizing operations. Defaults to -1.
+        author (str): The author of the operation. Defaults to '[no-author]'.
+        github (str): The GitHub username of the operation author. Defaults to '[no-github]'.
+        email (str): The contact email of the operation author. Defaults to '[no-email]'.
+        unique_id (str): Auto-generated unique identifier combining github, name, and version.
+        action (Callable): The callable action to be executed by the operation.
+        active (bool): Whether the operation is active and memory slots should be created. Defaults to False.
+        required_inputs (Dict[str, type]): Dictionary mapping input names to their type specifications.
+            When active, these are converted to memory slot IDs.
+        outputs (Dict[str, Any]): Dictionary mapping output names to their values or memory slot IDs.
+        parent_operation (Optional[OperationAttributes]): Reference to the parent operation if this is a child.
+        inheritance (List[OperationAttributes]): List of child operations that inherit from this operation.
+        is_loop (bool): Whether the operation manages its own internal loop. Operations with this set to True
+            must implement loop logic (e.g., while self.is_loop: ...) and remain in 'running' status
+            until explicitly stopped. Defaults to False.
+        is_cpu_bound (bool): Whether the operation is CPU-intensive and should be run in a process pool.
+            Defaults to False.
+        is_gpu_bound (bool): Whether the operation requires GPU resources and should be offloaded to GPU.
+            Defaults to False.
+        parallel (bool): Whether child operations should run in parallel (True) or sequentially (False).
+            Defaults to False.
+
+    Class Attributes:
+        TYPES_DICT (Dict[str, type]): Mapping of type names to actual type objects for type resolution.
+        _lock (asyncio.Lock): Async lock for thread-safe initialization.
+    """
     _lock = asyncio.Lock()
     TYPES_DICT = {
         # Basic built-in types

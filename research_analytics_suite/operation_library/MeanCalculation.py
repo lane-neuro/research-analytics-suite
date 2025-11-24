@@ -62,7 +62,6 @@ class MeanCalculation(BaseOperation):
         """
         Execute the operation to calculate the mean of the provided numbers.
         """
-        import pyarrow as pa
         import pyarrow.compute as pc
         _inputs = self.get_inputs()
         _numbers = _inputs.get("numbers", [])

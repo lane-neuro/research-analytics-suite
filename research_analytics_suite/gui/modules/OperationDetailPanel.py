@@ -195,11 +195,15 @@ class OperationDetailPanel(GUIBase):
         with dpg.group(horizontal=True, horizontal_spacing=20):
             op_id = id(self._current_operation)
             dpg.add_checkbox(
-                label="Repeat continuously",
+                label="Manages own loop",
                 default_value=attrs.is_loop,
                 callback=lambda s, v: self._update_setting('is_loop', v),
                 tag=f"loop_setting_{self._runtime_id}_{op_id}_simple"
             )
+            with dpg.tooltip(f"loop_setting_{self._runtime_id}_{op_id}_simple"):
+                dpg.add_text("Enable if this operation implements its own internal loop")
+                dpg.add_text("(e.g., while self.is_loop: ...)")
+                dpg.add_text("The operation will remain in 'running' state until stopped")
 
             dpg.add_checkbox(
                 label="Run in parallel",
@@ -432,11 +436,15 @@ class OperationDetailPanel(GUIBase):
         op_id = id(self._current_operation)
 
         dpg.add_checkbox(
-            label="Loop Execution",
+            label="Manages Own Loop",
             default_value=attrs.is_loop,
             callback=lambda s, v: self._update_setting('is_loop', v),
             tag=f"loop_setting_{self._runtime_id}_{op_id}"
         )
+        with dpg.tooltip(f"loop_setting_{self._runtime_id}_{op_id}"):
+            dpg.add_text("Enable if this operation implements its own internal loop")
+            dpg.add_text("(e.g., while self.is_loop: ...)")
+            dpg.add_text("The operation will remain in 'running' state until stopped")
 
         dpg.add_checkbox(
             label="GPU Bound",

@@ -28,7 +28,9 @@ async def execute_operation(operation):
             for slot in operation.memory_outputs:
                 await operation.parent_operation.add_input(slot)
 
-        if not operation.is_loop:
+        if operation.is_loop:
+            operation.status = "running"
+        else:
             operation.status = "completed"
             operation.add_log_entry(f"[COMPLETE]")
     except Exception as e:
@@ -116,7 +118,8 @@ async def execute_action(operation):
                 await operation.add_output(key, value)
                 _result.pop(key)
 
-        operation.status = "completed"
+        if not operation.is_loop:
+            operation.status = "completed"
 
     except Exception as e:
         operation.handle_error(e)

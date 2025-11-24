@@ -14,7 +14,6 @@ License:        BSD 3-Clause License
 Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         In Progress
 """
-import statsmodels.api as sm
 from typing import Optional, Type
 from research_analytics_suite.operation_manager import BaseOperation
 
@@ -69,6 +68,7 @@ class RegressionAnalysis(BaseOperation):
         """
         Execute the operation's logic: perform regression analysis on the dataset.
         """
+        import statsmodels.api as sm
         _inputs = self.get_inputs()
         _x = _inputs.get("x", [])
         _y = _inputs.get("y", [])

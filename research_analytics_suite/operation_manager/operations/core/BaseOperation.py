@@ -70,7 +70,9 @@ class BaseOperation(ABC):
         memory_outputs (set): Memory output slots associated with the operation.
         parent_operation (Optional[BaseOperation]): The parent operation.
         inheritance (List[BaseOperation]): The child operations.
-        is_loop (bool): Whether the operation should run as a loop.
+        is_loop (bool): Whether the operation manages its own internal loop. Operations with this flag set to True
+            must implement their own loop logic (e.g., while self.is_loop: ...) and will remain in 'running'
+            status until explicitly stopped. Setting is_loop to False (via cleanup or stop) breaks the loop.
         is_cpu_bound (bool): Whether the operation is CPU-bound.
         is_gpu_bound (bool): Whether the operation is GPU-bound.
         parallel (bool): Whether child operations should run in parallel or sequentially.
