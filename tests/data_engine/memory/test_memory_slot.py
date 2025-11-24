@@ -6,7 +6,6 @@ from research_analytics_suite.data_engine.memory.MemorySlot import MemorySlot
 
 
 @pytest.fixture(scope='function')
-@pytest.mark.asyncio
 async def memory_slot():
     with tempfile.TemporaryDirectory() as temp_dir:
         db_path = f"{temp_dir}/test.db"
