@@ -692,8 +692,8 @@ class Workspace:
         Returns:
             Loaded data (without profile)
         """
-        data, _ = await self.load_data(source, **kwargs)
-        return data
+        context = await self.load_data(source, **kwargs)
+        return context.data
 
     @command
     async def quick_save(self, data: Any, destination: Union[str, Path], **kwargs) -> bool:
