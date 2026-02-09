@@ -115,14 +115,14 @@ class LibraryPane(GUIBase):
                               width=self._width, height=self._height, border=False) as child_window:
             with dpg.child_window(parent=child_window, border=False, width=-1, height=30):
                 with dpg.group(horizontal=True, horizontal_spacing=10):
-                    dpg.add_button(label="New", callback=self._new_operation, width=100)
+                    dpg.add_button(label="New", callback=lambda: asyncio.create_task(self._new_operation()), width=100)
                     dpg.add_button(label="Load from File", callback=self.load_operation, width=130)
                 dpg.add_separator()
 
                 from research_analytics_suite.gui import left_aligned_input_field
                 left_aligned_input_field(label="Search", tag="operation_search", width=-1,
                                          callback=self._search_operations, parent=child_window, value="")
-                dpg.add_button(label="New Category", callback=self._add_category, width=-1, parent=child_window)
+                # dpg.add_button(label="New Category", callback=self._add_category, width=-1, parent=child_window)
 
             with dpg.child_window(parent=child_window, border=True, width=-1, height=-1, tag="library_view",
                                   horizontal_scrollbar=True):
@@ -148,10 +148,18 @@ class LibraryPane(GUIBase):
         pass
         # self._library_manifest.add_category(category_id=10, category_name="New Category")
 
-    def _new_operation(self) -> None:
+    async def _new_operation(self) -> None:
         op_attributes = OperationAttributes()
-        self._library_manifest.add_operation_from_attributes(op_attributes)
-        self._node_manager.editors["planning_editor"].add_node(op_attributes)
+        op_attributes.name = "NewOperation"
+        op_attributes.active = True
+
+        from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
+        operation = BaseOperation(op_attributes)
+
+        await operation.initialize_operation()
+        operation = await self._operation_control.operation_manager.add_initialized_operation(operation)
+
+        self._logger.info(f"New operation created: {operation.name}")
 
     def _search_operations(self) -> None:
         pass

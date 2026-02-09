@@ -1,16 +1,28 @@
 """
 analytics package
 
-This package provides core analytical processing, data handling, model evaluation, and visualization.
+AI-powered operation intelligence for the Research Analytics Suite.
+
+Available modules:
+- operation_intelligence: AI-powered operation recommendation system
 """
 
-from .core import *
-from .visualization import *
-from .preloaded import *
-from .custom_user import *
-from .models import *
-from .evaluation import *
-from .prediction import *
-from .preprocessing import *
-from .training import *
-from .utils import *
+from .operation_intelligence import (
+    IntelligenceEngine,
+    OperationAnalyzer,
+    PatternLearner,
+    OperationSimulator,
+    ResultEvaluator,
+    IntelligenceManager,
+    SuggestionNotifier,
+)
+
+__all__ = [
+    'IntelligenceEngine',
+    'OperationAnalyzer',
+    'PatternLearner',
+    'OperationSimulator',
+    'ResultEvaluator',
+    'IntelligenceManager',
+    'SuggestionNotifier',
+]

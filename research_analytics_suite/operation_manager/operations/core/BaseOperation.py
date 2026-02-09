@@ -812,6 +812,20 @@ class BaseOperation(ABC):
         """Check if the operation is currently stopped."""
         return self._status == "stopped"
 
+    @property
+    def memory_inputs(self) -> set:
+        """Get the memory input slot IDs as a set."""
+        if hasattr(self, 'attributes') and self.attributes and hasattr(self.attributes, 'input_ids'):
+            return set(self.attributes.input_ids.values()) if self.attributes.input_ids else set()
+        return set()
+
+    @property
+    def memory_outputs(self) -> set:
+        """Get the memory output slot IDs as a set."""
+        if hasattr(self, 'attributes') and self.attributes and hasattr(self.attributes, 'output_ids'):
+            return set(self.attributes.output_ids.values()) if self.attributes.output_ids else set()
+        return set()
+
     @final
     def attach_gui_module(self, gui_module):
         """Attach a GUI module to the operation.
@@ -847,6 +861,17 @@ class BaseOperation(ABC):
 
         self.add_log_entry(f"Error: {str(e)}")
         self._status = "error"
+
+        try:
+            from research_analytics_suite.gui.modules import notification_bus
+            notification_bus.publish("operation_error", {
+                "operation_id": self.runtime_id,
+                "operation_name": self.name,
+                "error_message": str(e),
+                "error_type": type(e).__name__
+            })
+        except Exception:
+            pass
 
     def cleanup_operation(self):
         """

@@ -165,6 +165,39 @@ class AdvancedSlotView(GUIBase):
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
 
+    def _on_clear_data_clicked(self):
+        """Show confirmation modal for clearing slot data."""
+        modal_tag = f"{self._root}_clear_data_modal"
+        if dpg.does_item_exist(modal_tag):
+            dpg.delete_item(modal_tag)
+
+        with dpg.window(tag=modal_tag, label="Clear Slot Data?", modal=True,
+                        width=400, height=150, no_resize=True, show=True):
+            dpg.add_text(f"Clear data from '{self._slot.name}'?")
+            dpg.add_text("This will allow pointer linking but removes the data.",
+                         color=(255, 200, 100))
+            dpg.add_separator()
+            with dpg.group(horizontal=True):
+                dpg.add_button(label="Clear",
+                               callback=lambda s, a, u: asyncio.create_task(self._clear_slot_data(modal_tag)))
+                dpg.add_button(label="Cancel", callback=lambda s, a, u: dpg.delete_item(modal_tag))
+
+    async def _clear_slot_data(self, modal_tag: str):
+        """Clear the slot's data to allow pointer linking."""
+        try:
+            # Use direct data setter to avoid async lock issues
+            self._slot.data = None
+
+            if dpg.does_item_exist(modal_tag):
+                dpg.delete_item(modal_tag)
+
+            # Force data section refresh
+            if dpg.does_item_exist(f"{self._root}_data_header"):
+                dpg.delete_item(f"{self._root}_data_header", children_only=True)
+                self._render_data_section()
+        except Exception as e:
+            self._logger.error(f"Failed to clear slot data: {e}", self.__class__.__name__)
+
     # ------------------------------- HELPERS ----------------------------------
 
     def _format_column_name(self, col, max_length=None, show_levels=True):
@@ -223,9 +256,9 @@ class AdvancedSlotView(GUIBase):
 
                 with dpg.group(horizontal=True):
                     dpg.add_button(label="Select All", small=True,
-                                 callback=lambda: self._on_column_selection_changed(all_column_keys))
+                                 callback=lambda s, a, u: self._on_column_selection_changed(all_column_keys))
                     dpg.add_button(label="Clear", small=True,
-                                 callback=lambda: self._on_column_selection_changed([]))
+                                 callback=lambda s, a, u: self._on_column_selection_changed([]))
 
                 dpg.add_spacer(height=3)
 
@@ -294,6 +327,13 @@ class AdvancedSlotView(GUIBase):
             with dpg.group(horizontal=True, parent=f"{self._root}_data_header"):
                 dpg.add_text("Linked To:", color=(180, 180, 180))
                 dpg.add_text("(disabled - slot contains data)", color=(150, 150, 100))
+                dpg.add_spacer(width=10)
+                dpg.add_button(
+                    label="Clear Data",
+                    callback=self._on_clear_data_clicked,
+                    tag=f"{self._root}_clear_data_btn",
+                    small=True
+                )
         else:
             from research_analytics_suite.gui import left_aligned_combo
 
@@ -322,7 +362,8 @@ class AdvancedSlotView(GUIBase):
             width=max(150, self._width - 10),
             height=400,
             parent=f"{self._root}_data_header",
-            slot=self._slot
+            slot=self._slot,
+            editable=self._slot.has_own_data
         )
         self._data_view_panel.draw()
 

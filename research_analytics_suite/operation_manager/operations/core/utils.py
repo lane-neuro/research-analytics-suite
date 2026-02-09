@@ -93,6 +93,9 @@ async def get_attributes_from_module(module) -> OperationAttributes:
             _op_props.action = None
             CustomLogger().warning(f"{getattr(module, '__name__', module)} has no 'execute' method")
 
+    # Store the operation class for later instantiation
+    _op_props.operation_class = module
+
     return _op_props
 
 

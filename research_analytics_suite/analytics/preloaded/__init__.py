@@ -1,3 +1,0 @@
-"""
-Preloaded transformations and configurations.
-"""

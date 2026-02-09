@@ -20,6 +20,7 @@ import os
 import sys
 import nest_asyncio
 
+from research_analytics_suite.analytics import IntelligenceManager
 from research_analytics_suite.utils import CustomLogger
 from research_analytics_suite.data_engine.memory import MemoryManager
 from research_analytics_suite.library_manifest import LibraryManifest
@@ -42,6 +43,8 @@ class ResearchAnalyticsSuite:
     def __init__(self):
         from research_analytics_suite.commands import CommandRegistry
         from research_analytics_suite.hardware_manager.HardwareManager import HardwareManager
+        from research_analytics_suite.analytics.operation_intelligence.manager import IntelligenceManager
+
         self._config = Config()
         self._logger = CustomLogger()
         self._workspace = Workspace()
@@ -50,6 +53,7 @@ class ResearchAnalyticsSuite:
         self._library_manifest = LibraryManifest()
         self._command_registry = CommandRegistry()
         self._operation_control = OperationControl()
+        # self._intelligence_manager = IntelligenceManager()
 
         self._launch_tasks = []
         self._gui_launcher = None
@@ -86,6 +90,15 @@ class ResearchAnalyticsSuite:
         await self._library_manifest.initialize()
         await self._command_registry.initialize()
         # await self._hardware_manager.interface_manager.detect_interfaces()
+
+        # Initialize Operation Intelligence system
+        # if self._config.OPERATION_INTELLIGENCE_ENABLED:
+        #     try:
+        #         await self._intelligence_manager.initialize()
+        #         await self._intelligence_manager.start_intelligence_system()
+        #         self._logger.debug("Operation Intelligence system started")
+        #     except Exception as e:
+        #         self._logger.error(e, self.__class__.__name__)
 
     async def _setup_workspace(self):
         """

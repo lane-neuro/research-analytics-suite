@@ -356,22 +356,22 @@ class MemorySlot:
         while self._update_operation.is_running:
             await asyncio.sleep(.01)
             if self._last_modified != self._modified_at:
-                async with self._lock:
-                    if self._use_mmap:
-                        if self._mmapped_file:
-                            self._mmapped_file.seek(0)
-                            serialized_data = self._mmapped_file.read()
-                            self._data = pickle.loads(serialized_data)
-                            self._last_modified = self._modified_at
-                    elif self._pointer:
-                        self.data = self._pointer.data
+                # async with self._lock:
+                if self._use_mmap:
+                    if self._mmapped_file:
+                        self._mmapped_file.seek(0)
+                        serialized_data = self._mmapped_file.read()
+                        self._data = pickle.loads(serialized_data)
                         self._last_modified = self._modified_at
-                    else:
-                        try:
-                            await self.set_data(self._data)
-                            self._last_modified = self._modified_at
-                        except Exception as e:
-                            self._logger.error(Exception(f"Failed to update data: {e}"), self.__class__.__name__)
+                elif self._pointer:
+                    self.data = self._pointer.data
+                    self._last_modified = self._modified_at
+                else:
+                    try:
+                        await self.set_data(self._data)
+                        self._last_modified = self._modified_at
+                    except Exception as e:
+                        self._logger.error(Exception(f"Failed to update data: {e}"), self.__class__.__name__)
 
     def _check_data_size(self, _data) -> None:
         """

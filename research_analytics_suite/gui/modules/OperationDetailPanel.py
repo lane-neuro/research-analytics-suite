@@ -61,6 +61,8 @@ class OperationDetailPanel(GUIBase):
         self._last_input_ids: Optional[dict] = None
         self._last_output_ids: Optional[dict] = None
 
+        self.action_code_tag = f"action_code_{self._runtime_id}_{id(self._current_operation)}"
+
     async def initialize_gui(self) -> None:
         """Initialize GUI components and update monitoring."""
         self._logger.debug("Initializing OperationDetailPanel")
@@ -140,7 +142,7 @@ class OperationDetailPanel(GUIBase):
         dpg.add_text("Description:", color=(200, 200, 200))
         dpg.add_text(attrs.description, wrap=self.width - 60)
 
-        dpg.add_spacer(height=10)
+        dpg.add_spacer(height=5)
 
         with dpg.group(horizontal=True):
             panel_width = max(200, int((self.width - 80) / 2))
@@ -192,13 +194,14 @@ class OperationDetailPanel(GUIBase):
         dpg.add_text("Settings:", color=(200, 200, 200))
         dpg.add_separator()
 
-        with dpg.group(horizontal=True, horizontal_spacing=20):
+        with dpg.group(horizontal=True, horizontal_spacing=20, enabled=False):
             op_id = id(self._current_operation)
             dpg.add_checkbox(
                 label="Manages own loop",
                 default_value=attrs.is_loop,
                 callback=lambda s, v: self._update_setting('is_loop', v),
-                tag=f"loop_setting_{self._runtime_id}_{op_id}_simple"
+                tag=f"loop_setting_{self._runtime_id}_{op_id}_simple",
+                enabled=False
             )
             with dpg.tooltip(f"loop_setting_{self._runtime_id}_{op_id}_simple"):
                 dpg.add_text("Enable if this operation implements its own internal loop")
@@ -209,7 +212,8 @@ class OperationDetailPanel(GUIBase):
                 label="Run in parallel",
                 default_value=attrs.parallel,
                 callback=lambda s, v: self._update_setting('parallel', v),
-                tag=f"parallel_setting_{self._runtime_id}_{op_id}_simple"
+                tag=f"parallel_setting_{self._runtime_id}_{op_id}_simple",
+                enabled=False
             )
 
         dpg.add_spacer(height=10)
@@ -391,18 +395,30 @@ class OperationDetailPanel(GUIBase):
 
         action_code = ""
         if attrs.action:
-            action_code = get_function_body(attrs.action)
+            if isinstance(attrs.action, str):
+                action_code = attrs.action
+            else:
+                action_code = get_function_body(attrs.action)
 
-        action_code_tag = f"action_code_{self._runtime_id}_{id(self._current_operation)}"
+        self.action_code_tag = f"action_code_{self._runtime_id}_{id(self._current_operation)}"
         dpg.add_input_text(
             default_value=action_code,
             multiline=True,
             tab_input=True,
             height=150,
             width=-1,
-            readonly=True,
-            tag=action_code_tag
+            readonly=False,
+            tag=self.action_code_tag
         )
+
+        dpg.add_spacer(height=10)
+
+        with dpg.group(horizontal=True, horizontal_spacing=10):
+            dpg.add_button(
+                label="Save Action Code",
+                callback=lambda: self._save_action_code()
+            )
+            dpg.add_text("(Action will also update on Execute)", color=(150, 150, 150))
 
         dpg.add_spacer(height=15)
 
@@ -435,37 +451,43 @@ class OperationDetailPanel(GUIBase):
 
         op_id = id(self._current_operation)
 
-        dpg.add_checkbox(
-            label="Manages Own Loop",
-            default_value=attrs.is_loop,
-            callback=lambda s, v: self._update_setting('is_loop', v),
-            tag=f"loop_setting_{self._runtime_id}_{op_id}"
-        )
-        with dpg.tooltip(f"loop_setting_{self._runtime_id}_{op_id}"):
-            dpg.add_text("Enable if this operation implements its own internal loop")
-            dpg.add_text("(e.g., while self.is_loop: ...)")
-            dpg.add_text("The operation will remain in 'running' state until stopped")
 
-        dpg.add_checkbox(
-            label="GPU Bound",
-            default_value=attrs.is_gpu_bound,
-            callback=lambda s, v: self._update_setting('is_gpu_bound', v),
-            tag=f"gpu_setting_{self._runtime_id}_{op_id}"
-        )
+        with dpg.group(enabled=False):
+            dpg.add_checkbox(
+                label="Manages Own Loop",
+                default_value=attrs.is_loop,
+                callback=lambda s, v: self._update_setting('is_loop', v),
+                tag=f"loop_setting_{self._runtime_id}_{op_id}",
+                enabled=False
+            )
+            with dpg.tooltip(f"loop_setting_{self._runtime_id}_{op_id}"):
+                dpg.add_text("Enable if this operation implements its own internal loop")
+                dpg.add_text("(e.g., while self.is_loop: ...)")
+                dpg.add_text("The operation will remain in 'running' state until stopped")
 
-        dpg.add_checkbox(
-            label="CPU Bound",
-            default_value=attrs.is_cpu_bound,
-            callback=lambda s, v: self._update_setting('is_cpu_bound', v),
-            tag=f"cpu_setting_{self._runtime_id}_{op_id}"
-        )
+            dpg.add_checkbox(
+                label="GPU Bound",
+                default_value=attrs.is_gpu_bound,
+                callback=lambda s, v: self._update_setting('is_gpu_bound', v),
+                tag=f"gpu_setting_{self._runtime_id}_{op_id}",
+                enabled=False
+            )
 
-        dpg.add_checkbox(
-            label="Parallel Execution",
-            default_value=attrs.parallel,
-            callback=lambda s, v: self._update_setting('parallel', v),
-            tag=f"parallel_setting_{self._runtime_id}_{op_id}"
-        )
+            dpg.add_checkbox(
+                label="CPU Bound",
+                default_value=attrs.is_cpu_bound,
+                callback=lambda s, v: self._update_setting('is_cpu_bound', v),
+                tag=f"cpu_setting_{self._runtime_id}_{op_id}",
+                enabled=False
+            )
+
+            dpg.add_checkbox(
+                label="Parallel Execution",
+                default_value=attrs.parallel,
+                callback=lambda s, v: self._update_setting('parallel', v),
+                tag=f"parallel_setting_{self._runtime_id}_{op_id}",
+                enabled=False
+            )
 
         dpg.add_spacer(height=20)
 
@@ -564,10 +586,28 @@ class OperationDetailPanel(GUIBase):
             setattr(self._current_operation.attributes, setting_name, value)
             self._logger.debug(f"Updated {setting_name} to {value} for operation {self._current_operation.name}")
 
+    def _save_action_code(self) -> None:
+        """Save updated action code to the operation."""
+        if self._current_operation and dpg.does_item_exist(self.action_code_tag):
+            try:
+                updated_code = dpg.get_value(self.action_code_tag)
+                if updated_code and updated_code.strip():
+                    self._current_operation.action = updated_code
+                    self._logger.info(f"Saved action code for operation: {self._current_operation.name}")
+                else:
+                    self._logger.warning("Action code is empty, not updating")
+            except Exception as e:
+                self._logger.error(f"Error saving action code: {e}")
+
     def _save_operation_settings(self) -> None:
         """Save operation settings to workspace."""
         if self._current_operation:
             try:
+                if dpg.does_item_exist(self.action_code_tag):
+                    updated_code = dpg.get_value(self.action_code_tag)
+                    if updated_code and updated_code.strip():
+                        self._current_operation.action = updated_code
+
                 self._current_operation.save_in_workspace()
                 self._logger.info(f"Saved settings for operation: {self._current_operation.name}")
             except Exception as e:
@@ -608,6 +648,12 @@ class OperationDetailPanel(GUIBase):
         """Execute the current operation."""
         if self._current_operation:
             try:
+                if dpg.does_item_exist(self.action_code_tag):
+                    updated_code = dpg.get_value(self.action_code_tag)
+                    if updated_code and updated_code.strip():
+                        self._current_operation.action = updated_code
+                        self._logger.debug(f"Updated action code for operation: {self._current_operation.name}")
+
                 self._current_operation.is_ready = True
                 self._logger.info(f"Executing operation: {self._current_operation.name}")
             except Exception as e:

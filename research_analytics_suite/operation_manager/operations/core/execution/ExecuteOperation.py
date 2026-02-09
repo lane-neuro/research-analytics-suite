@@ -28,11 +28,11 @@ async def execute_operation(operation):
             for slot in operation.memory_outputs:
                 await operation.parent_operation.add_input(slot)
 
-        if operation.is_loop:
+        # Status and notification are handled in execute_action() to avoid duplicates
+        # Only set to "running" here for loop operations that need to continue
+        if operation.is_loop and operation.status != "error":
             operation.status = "running"
-        else:
-            operation.status = "completed"
-            operation.add_log_entry(f"[COMPLETE]")
+
     except Exception as e:
         operation.handle_error(e)
 
@@ -120,6 +120,18 @@ async def execute_action(operation):
 
         if not operation.is_loop:
             operation.status = "completed"
+
+            try:
+                from research_analytics_suite.gui.modules import notification_bus
+                result = await operation.get_results() if asyncio.iscoroutinefunction(operation.get_results) else operation.get_results()
+                notification_bus.publish("operation_complete", {
+                    "operation_id": operation.runtime_id,
+                    "operation_name": operation.name,
+                    "result": result,
+                    "output_ids": operation.attributes.output_ids if hasattr(operation, 'attributes') else {}
+                })
+            except Exception:
+                pass
 
     except Exception as e:
         operation.handle_error(e)

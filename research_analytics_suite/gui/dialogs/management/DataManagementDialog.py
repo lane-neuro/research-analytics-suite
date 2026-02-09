@@ -26,7 +26,7 @@ from research_analytics_suite.operation_manager.operations.system.UpdateMonitor 
 
 
 class DataManagementDialog(GUIBase):
-    """Data Management region: slot list (left) + single inspector (right)."""
+    """Data Inspector & Controls: operation chain viewer, operation details, data preview, and memory slots."""
 
     def __init__(self, width: int, height: int, parent):
         super().__init__(width, height, parent)
@@ -40,13 +40,31 @@ class DataManagementDialog(GUIBase):
         self._selected_slot_id = None
         self._last_rendered_slot_id = None
         self._last_slot_count = -1
+        self._selected_operation = None
+        self._last_rendered_operation = None
 
         self.add_var_dialog_id = None
+
+        # Operation manager layout for viewing operation chains
+        self._operation_manager_layout = None
 
     # ------------------------------- LIFECYCLE --------------------------------
 
     async def initialize_gui(self) -> None:
         try:
+            from research_analytics_suite.gui.modules.NotificationBus import notification_bus
+            notification_bus.subscribe("operation_selected", self._on_operation_selected)
+
+            # Create operation manager layout for operation chain viewing
+            from research_analytics_suite.gui.modules.OperationManagerLayout import OperationManagerLayout
+            op_layout_container_id = f"dm_op_layout_container_{self._runtime_id}"
+            self._operation_manager_layout = OperationManagerLayout(
+                width=self.width,
+                height=380,
+                parent=op_layout_container_id
+            )
+            await self._operation_manager_layout.initialize_gui()
+
             self._update_operation = await self._operation_control.operation_manager.create_operation(
                 operation_type=UpdateMonitor,
                 name="gui_DataManUpdate",
@@ -57,40 +75,76 @@ class DataManagementDialog(GUIBase):
             self._logger.error(e, self.__class__.__name__)
 
     def draw(self) -> None:
-        # Toolbar
-        with dpg.group(parent=self._parent, horizontal=True):
-            dpg.add_button(label="Add Variable", callback=lambda: asyncio.create_task(self.open_add_var_dialog()))
-            dpg.add_button(label="Data Import", callback=self.show_data_import)
-            # dpg.add_spacer(width=12)
-            dpg.add_input_text(tag="dm_search_input", hint="Search slots…", width=260, callback=self._on_search_change)
+        with dpg.child_window(tag="dm_main_container", parent=self._parent, width=-1, height=-1, border=False):
+            # SECTION 1: Operation Chain Viewer & Details
+            with dpg.collapsing_header(label="Operation Chain Viewer & Controls", default_open=False, parent="dm_main_container") as op_chain_header:
+                # Draw operation manager layout (tree view + detail panel) as direct child of collapsing header
+                with dpg.child_window(tag=f"dm_op_layout_container_{self._runtime_id}",
+                                     width=-1,
+                                     height=400,
+                                     border=True,
+                                     parent=op_chain_header):
+                    if self._operation_manager_layout:
+                        self._operation_manager_layout.draw()
 
-        # Main split: left list / right inspector
-        with dpg.child_window(tag="dm_main_split", parent=self._parent, width=-1, height=-1, border=False):
-            with dpg.group(horizontal=True):
-                # LEFT: slot list
-                dpg.add_child_window(tag="dm_slot_list_panel", width=280, height=-1, border=True)
-                # RIGHT: inspector
-                dpg.add_child_window(tag="dm_inspector_panel", width=-1, height=-1, border=True)
+            dpg.add_separator(parent="dm_main_container")
 
-        # Containers inside the two panels
-        with dpg.group(tag="dm_slot_list_group", parent="dm_slot_list_panel", horizontal=False):
-            dpg.add_text("Memory Slots")
-            dpg.add_separator()
-            dpg.add_text(tag="dm_slot_count_text", default_value="–")
-            dpg.add_spacer(height=4)
-            dpg.add_child_window(tag="dm_slot_list_scroll", width=-1, height=-1, border=False)
-
-        with dpg.group(tag="dm_inspector_group", parent="dm_inspector_panel"):
-            dpg.add_text("Inspector")
-            dpg.add_separator()
-            # dedicated mount for dynamic content
-            with dpg.group(tag="dm_inspector_mount"):
-                dpg.add_text(tag="dm_inspector_placeholder",
-                             default_value="...Select a slot from the list")
+            # SECTION 2: Memory Slot Management
+            with dpg.collapsing_header(label="Memory Slots", default_open=False, parent="dm_main_container"):
+                self._draw_memory_section()
 
     async def resize_gui(self, new_width: int, new_height: int) -> None:
         self.width, self.height = new_width, new_height
-        dpg.configure_item("dm_main_split", width=self.width, height=self.height)
+        if dpg.does_item_exist("dm_main_split"):
+            dpg.configure_item("dm_main_split", width=self.width, height=self.height)
+
+        # Resize operation manager layout
+        if self._operation_manager_layout:
+            await self._operation_manager_layout.resize_gui(new_width, 400)
+
+    # ------------------------------- SECTION RENDERERS ------------------------
+
+    def _draw_memory_section(self) -> None:
+        """Draw memory slot management section (existing functionality)."""
+        # Header with search and actions
+        with dpg.group(horizontal=True):
+            dpg.add_input_text(hint="Search slots...", tag="dm_search_input", width=200,
+                              callback=self._on_search_change)
+            dpg.add_button(label="Import Data", callback=self.show_data_import)
+            dpg.add_button(label="+ Add Slot", callback=lambda: asyncio.create_task(self.open_add_var_dialog()))
+            dpg.add_text("0 slot(s) loaded", tag="dm_slot_count_text")
+
+        dpg.add_separator()
+
+        # Split: Left = slot list, Right = inspector
+        with dpg.group(tag="dm_main_split", horizontal=True):
+            # LEFT: scrollable slot list
+            with dpg.child_window(tag="dm_slot_list_scroll", width=300, height=250, border=True):
+                dpg.add_group(tag="dm_slot_list_inner")
+
+            # RIGHT: inspector mount
+            with dpg.child_window(tag="dm_inspector_mount", width=-1, height=250, border=True):
+                dpg.add_text("Select a slot from the list", tag="dm_inspector_placeholder", color=(150, 150, 150))
+
+    def _on_operation_selected(self, operation_id: str) -> None:
+        """Callback when an operation is selected from NotificationPanel or other sources."""
+        try:
+            from research_analytics_suite.operation_manager.control import OperationControl
+            op_control = OperationControl()
+            operation = op_control.operation_manager.get_operation(operation_id)
+
+            if operation and self._operation_manager_layout:
+                # Use OperationManagerLayout's detail panel to display the selected operation
+                detail_panel = self._operation_manager_layout.get_detail_panel()
+                if detail_panel:
+                    detail_panel.set_operation(operation)
+                self._selected_operation = operation_id
+                self._logger.debug(f"Selected operation from notification: {operation.name}")
+            else:
+                self._logger.warning(f"Operation {operation_id} not found")
+
+        except Exception as e:
+            self._logger.error(e, self.__class__.__name__)
 
     # ------------------------------- UPDATE LOOP ------------------------------
 
@@ -225,6 +279,10 @@ class DataManagementDialog(GUIBase):
 
         # Update selection model
         self._selected_slot_id = current_id
+
+        # Publish memory slot selection event for visualization workspace
+        from research_analytics_suite.gui.modules.NotificationBus import notification_bus
+        notification_bus.publish("memory_slot_selected", current_id)
 
     def _on_click_delete(self, sender, app_data, user_data):
         """Open a confirmation modal for deleting a slot."""

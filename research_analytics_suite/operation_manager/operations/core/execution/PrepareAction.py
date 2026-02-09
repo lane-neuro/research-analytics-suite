@@ -61,12 +61,12 @@ async def prepare_action_for_exec(operation):
 
             async def _code_action():
                 if operation.memory_inputs:
-                    result = await _execute_code_action(code, operation.memory_inputs)
+                    result = await _execute_code_action(code, operation.memory_inputs, operation)
                     CustomLogger().debug(f"Memory Inputs: {operation.memory_inputs}")
                     operation.add_log_entry(f"Memory Inputs: {operation.memory_inputs}")
                 else:
                     CustomLogger().debug(f"No memory inputs for code action: {operation.name}")
-                    result = await _execute_code_action(code, set())
+                    result = await _execute_code_action(code, set(), operation)
                 operation.add_log_entry(f"[CODE] {code}")
                 return result
 
@@ -97,42 +97,49 @@ async def prepare_action_for_exec(operation):
         operation.handle_error(e)
 
 
-async def _execute_code_action(code: str, memory_inputs: set = None) -> Callable[[], any]:
+async def _execute_code_action(code: str, memory_inputs: set = None, operation=None):
     """
     Execute a code action.
 
     Args:
         code (str): The code to execute.
-        memory_inputs (list): The inputs for the code action.
+        memory_inputs (set): The memory slot IDs for the code action.
+        operation: The operation instance to provide as 'self' in the execution context.
 
     Returns:
-        callable: The action callable.
+        any: The result of executing the code.
     """
     from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
     memory_manager = MemoryManager()
 
-    async def action() -> any:
-        inputs = {}
+    inputs = {}
 
-        for slot_id in memory_inputs:
-            _name = memory_manager.slot_name(slot_id)
-            _data = memory_manager.slot_data(slot_id)
-            inputs[_name] = _data
+    for slot_id in memory_inputs:
+        _name = memory_manager.slot_name(slot_id)
+        _data = memory_manager.slot_data(slot_id)
+        inputs[_name] = _data
 
-        # Create a restricted execution environment
-        safe_globals = {"__builtins__": SAFE_BUILTINS}
-        # noinspection PyTypeChecker
+    # Create a restricted execution environment
+    safe_globals = {"__builtins__": SAFE_BUILTINS}
+    # noinspection PyTypeChecker
 
-        safe_globals.update(LazyModuleLoader().get_all_modules())
+    safe_globals.update(LazyModuleLoader().get_all_modules())
 
-        try:
-            parsed_code = ast.parse(code, mode='exec')
-            exec(compile(parsed_code, '<string>', 'exec'), safe_globals, inputs)
-            return inputs  # Return the modified inputs dictionary with updated values
-        except Exception as e:
-            raise RuntimeError(f"Error executing code: {e}")
+    if operation is not None:
+        safe_globals['self'] = operation
+    safe_globals.update(inputs)
 
-    return action
+    try:
+        indented_code = '\n'.join('    ' + line for line in code.split('\n'))
+        wrapped_code = f"async def __user_action():\n{indented_code}\n"
+
+        parsed_code = ast.parse(wrapped_code, mode='exec')
+        exec(compile(parsed_code, '<string>', 'exec'), safe_globals)
+
+        result = await safe_globals['__user_action']()
+        return result
+    except Exception as e:
+        raise RuntimeError(f"Error executing code: {e}")
 
 
 async def _execute_callable_action(t_action, memory_inputs: set = None):

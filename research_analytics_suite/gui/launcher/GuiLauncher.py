@@ -34,6 +34,12 @@ from research_analytics_suite.gui.dialogs.management.PlanningDialog import Plann
 from research_analytics_suite.gui.dialogs.info.DocumentationDialog import DocumentationDialog
 from research_analytics_suite.gui.dialogs.info.AboutDialog import AboutDialog
 from research_analytics_suite.utils.Resources import resource_path
+from research_analytics_suite.gui.modules import (
+    notification_bus,
+    NotificationPanel,
+    VisualizationWorkspace,
+    WorkflowPanel
+)
 
 
 class GuiLauncher:
@@ -65,6 +71,10 @@ class GuiLauncher:
         self._planning_dialog = None
         self._documentation_dialog = None
         self._about_dialog = None
+        self._intelligence_panel = None
+        self._notification_panel = None
+        self._visualization_workspace = None
+        self._workflow_panel = None
 
         self._splitter_height = 300
 
@@ -127,6 +137,9 @@ class GuiLauncher:
         """Sets up the main window of the GUI and runs the event loop."""
         await self._node_manager.initialize()
 
+        # Start notification bus
+        await notification_bus.start()
+
         # Ensure clean context creation
         try:
             dpg.destroy_context()
@@ -155,10 +168,9 @@ class GuiLauncher:
                     dpg.add_menu_item(label="Settings", callback=self.settings_popup)
 
                 with dpg.menu(label="View"):
-                    dpg.add_menu_item(label="Scratchpad", tag="planning_menu",
-                                      callback=lambda: self.switch_pane("planning"))
-                    dpg.add_menu_item(label="Console/Logs", tag="console_log_output_menu",
-                                      callback=lambda: self.switch_pane("console_log_output"))
+                    dpg.add_menu_item(label="Hardware Monitor", callback=self.show_hardware_dialog)
+                    dpg.add_menu_item(label="Resource Monitor", callback=self.show_resource_monitor)
+                    dpg.add_menu_item(label="Console/Logs", callback=self.show_console)
 
                 with dpg.menu(label="Help"):
                     dpg.add_menu_item(label="Documentation", callback=self.show_documentation)
@@ -168,29 +180,29 @@ class GuiLauncher:
                            height=dpg.get_viewport_height() - self._splitter_height - 25 - dpg.get_item_height("primary_menu_bar"),
                            horizontal_spacing=5, parent="main_window"):
 
-                with dpg.child_window(tag="left_pane", width=180):
-                    await self.setup_hardware_pane()
+                # with dpg.child_window(tag="left_pane", width=200):
+                #     await self.setup_workflow_pane()
 
-                with dpg.child_window(tag="middle_pane", width=int(dpg.get_viewport_width() - 480)):
-                    await self.setup_dynamic_panes()
+                with dpg.child_window(tag="middle_pane", width=int(dpg.get_viewport_width() - 500), border=False):
+                    await self.setup_visualization_workspace()
 
                 with dpg.child_window(tag="right_pane", width=250, border=False):
                     await self.setup_library_pane()
 
             with dpg.group(horizontal=True, tag="bottom_pane_group", horizontal_spacing=5, parent="main_window",
                            height=150):
-                with dpg.child_window(tag="bottom_left_pane", width=180, height=-1, border=False):
-                    await self.setup_workspace_pane()
+                # with dpg.child_window(tag="bottom_left_pane", width=200, height=-1, border=True):
+                #     await self.setup_intelligence_pane()
 
-                with dpg.child_window(tag="bottom_middle_pane", height=-1, width=int(dpg.get_viewport_width() - 480),
+                with dpg.child_window(tag="bottom_middle_pane", height=-1, width=int(dpg.get_viewport_width() - 510),
                                       border=True, no_scrollbar=True):
                     await self.setup_data_collection_pane()
                     self._collection_view_dialog.draw()
                     dpg.add_button(label="vvv", callback=self.splitter_callback,
                                    tag="splitter_resize", before="slots_window")
 
-                with dpg.child_window(tag="bottom_right_pane", width=250, height=-1, border=True):
-                    await self.setup_resource_monitor()
+                with dpg.child_window(tag="bottom_right_pane", width=280, height=-1, border=True):
+                    await self.setup_notification_pane()
 
         dpg.set_primary_window("main_window", True)
         dpg.set_viewport_resize_callback(self.adjust_main_window)
@@ -209,23 +221,27 @@ class GuiLauncher:
         if not self._should_relaunch:
             await self._exit()
 
-    async def setup_dynamic_panes(self) -> None:
-        """Sets up asynchronous panes."""
-        with dpg.child_window(tag="planning_pane", parent="middle_pane", show=True, border=False):
-            self._planning_dialog = PlanningDialog(width=int(dpg.get_item_width("middle_pane")), height=-1, parent="planning_pane")
-            await self._planning_dialog.initialize_gui()
-            self._planning_dialog.draw()
-            await self._node_manager.add_editor(editor_id="planning_editor", width=-1, height=-1, parent="plan_space")
+    async def setup_workflow_pane(self) -> None:
+        """Sets up the workflow checklist pane."""
+        self._workflow_panel = WorkflowPanel(width=-1, height=-1, parent="left_pane")
+        await self._workflow_panel.initialize_gui()
+        self._workflow_panel.draw()
 
-        with dpg.child_window(tag="console_log_output_pane", parent="middle_pane", show=False, border=False):
-            await self.setup_console_log_viewer_pane()
+    async def setup_visualization_workspace(self) -> None:
+        """Sets up the main visualization workspace."""
+        self._visualization_workspace = VisualizationWorkspace(
+            width=int(dpg.get_item_width("middle_pane")),
+            height=-1,
+            parent="middle_pane"
+        )
+        await self._visualization_workspace.initialize_gui()
+        self._visualization_workspace.draw()
 
-    async def setup_hardware_pane(self) -> None:
-        """Sets up the hardware management pane."""
-        self._hardware_dialog = HardwareDialog(width=-1, height=-1, parent="left_pane",
-                                               hardware_manager=self._hardware_manager)
-        await self._hardware_dialog.initialize_gui()
-        self._hardware_dialog.draw()
+    async def setup_notification_pane(self) -> None:
+        """Sets up the notification panel."""
+        self._notification_panel = NotificationPanel(width=-1, height=-1, parent="bottom_right_pane")
+        await self._notification_panel.initialize_gui()
+        self._notification_panel.draw()
 
     async def setup_library_pane(self) -> None:
         """Sets up the library pane."""
@@ -243,10 +259,12 @@ class GuiLauncher:
         await self._console_dialog.initialize_gui()
         self._console_dialog.draw()
 
-    async def setup_workspace_pane(self) -> None:
-        """Sets up the workspace pane."""
-        # Empty for now
-        pass
+    async def setup_intelligence_pane(self) -> None:
+        """Sets up the AI/ML Intelligence pane."""
+        from research_analytics_suite.gui.modules.IntelligencePanel import IntelligencePanel
+        self._intelligence_panel = IntelligencePanel(parent="bottom_left_pane", width=-1, height=-1)
+        await self._intelligence_panel.initialize()
+        self._intelligence_panel.draw()
 
     async def setup_data_collection_pane(self) -> None:
         """Sets up the data collection pane."""
@@ -276,11 +294,11 @@ class GuiLauncher:
         parent_width = dpg.get_item_configuration("main_window")["width"]
         parent_height = dpg.get_item_configuration("main_window")["height"]
 
-        top_left_width = dpg.get_item_configuration("left_pane")["width"]
+        top_left_width = 0      #dpg.get_item_configuration("left_pane")["width"]
         top_right_width = dpg.get_item_configuration("right_pane")["width"]
         top_middle_width = parent_width - (top_left_width + top_right_width + 25)
 
-        bottom_left_width = dpg.get_item_configuration("bottom_left_pane")["width"]
+        bottom_left_width = 0       #dpg.get_item_configuration("bottom_left_pane")["width"]
         bottom_right_width = dpg.get_item_configuration("bottom_right_pane")["width"]
         bottom_middle_width = parent_width - (bottom_left_width + bottom_right_width + 25)
 
@@ -290,6 +308,9 @@ class GuiLauncher:
         dpg.configure_item("middle_pane", width=top_middle_width)
         dpg.configure_item("upper_pane_group", height=top_middle_height)
         dpg.configure_item("bottom_middle_pane", width=bottom_middle_width)
+
+        if self._visualization_workspace:
+            asyncio.create_task(self._visualization_workspace.resize_gui(top_middle_width, top_middle_height))
 
         from research_analytics_suite.gui import center_in_container
         center_in_container("bottom_middle_pane", "splitter_resize")
@@ -379,6 +400,45 @@ class GuiLauncher:
             self._about_dialog = AboutDialog()
         self._about_dialog.show()
 
+    async def show_hardware_dialog(self, sender=None, app_data=None, user_data=None):
+        """Shows hardware monitor as a popup."""
+        if self._hardware_dialog is None:
+            self._hardware_dialog = HardwareDialog(width=600, height=400, parent=None,
+                                                   hardware_manager=self._hardware_manager)
+            await self._hardware_dialog.initialize_gui()
+
+        if dpg.does_item_exist("hardware_monitor_window"):
+            dpg.delete_item("hardware_monitor_window")
+
+        with dpg.window(label="Hardware Monitor", modal=False, width=600, height=400,
+                       tag="hardware_monitor_window", pos=(100, 100)):
+            self._hardware_dialog.draw()
+
+    async def show_resource_monitor(self, sender=None, app_data=None, user_data=None):
+        """Shows resource monitor as a popup."""
+        if dpg.does_item_exist("resource_monitor_window"):
+            dpg.delete_item("resource_monitor_window")
+
+        with dpg.window(label="Resource Monitor", modal=False, width=600, height=400,
+                       tag="resource_monitor_window", pos=(100, 100)):
+            if self._resource_monitor_dialog is None:
+                self._resource_monitor_dialog = ResourceMonitorDialog(width=-1, height=-1,
+                                                                      parent="resource_monitor_window")
+                await self._resource_monitor_dialog.initialize_gui()
+            self._resource_monitor_dialog.draw()
+
+    async def show_console(self, sender=None, app_data=None, user_data=None):
+        """Shows console as a popup."""
+        if dpg.does_item_exist("console_window"):
+            dpg.delete_item("console_window")
+
+        with dpg.window(label="Console/Logs", modal=False, width=800, height=500,
+                       tag="console_window", pos=(100, 100)):
+            if self._console_dialog is None:
+                self._console_dialog = ConsoleDialog(parent="console_window", width=-1, height=-1)
+                await self._console_dialog.initialize_gui()
+            self._console_dialog.draw()
+
     async def shutdown_gui(self):
         """Cleanly shuts down the GUI for relaunch or exit."""
         if self._is_shutting_down:
@@ -388,6 +448,17 @@ class GuiLauncher:
         self._logger.debug("Shutting down GUI...")
 
         try:
+            # Clean up new GUI panels
+            if self._notification_panel:
+                await self._notification_panel.cleanup()
+            if self._visualization_workspace:
+                await self._visualization_workspace.cleanup()
+            if self._workflow_panel:
+                await self._workflow_panel.cleanup()
+
+            # Stop notification bus
+            await notification_bus.stop()
+
             # Stop specific GUI update operations by finding them in the sequencer
             if hasattr(self._operation_control, 'sequencer'):
                 gui_operation_names = ['gui_ResourceUpdate', 'gui_ConsoleUpdate', 'gui_DataManUpdate']

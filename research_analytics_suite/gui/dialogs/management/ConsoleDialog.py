@@ -31,6 +31,7 @@ class ConsoleDialog(GUIBase):
         """
         super().__init__(width, height, parent)
         self.command_history = []
+        self.updated_logs = ""
 
     async def initialize_gui(self) -> None:
         self._update_operation = await self._operation_control.operation_manager.create_operation(
@@ -41,18 +42,21 @@ class ConsoleDialog(GUIBase):
         """Continuously updates the logger output with new messages."""
         while self._update_operation.is_loop:
             new_log = await self._logger.info_message_queue.get()
-            current_logs = dpg.get_value("logger_output") or ""
-            updated_logs = new_log + "\n" + current_logs
-            dpg.set_value("logger_output", updated_logs)
+            self.updated_logs = new_log + "\n" + self.updated_logs
+            dpg.set_value("logger_output", self.updated_logs)
             await asyncio.sleep(0.0001)
 
     def draw(self) -> None:
         """Draws the GUI elements for the console dialog."""
-        with dpg.group(horizontal=True, parent=self._parent):
+        if not dpg.does_item_exist("console_input_group"):
+            dpg.delete_item("console_input_group")
+            dpg.delete_item("logger_output")
+
+        with dpg.group(horizontal=True, parent=self._parent, tag="console_input_group"):
             dpg.add_input_text(label="", tag="input_text", width=500)
             dpg.add_button(label="Submit", callback=self.submit_command)
         dpg.add_separator()
-        dpg.add_text(default_value="", parent=self._parent, wrap=-1, tag="logger_output")
+        dpg.add_text(default_value=self.updated_logs, parent=self._parent, wrap=-1, tag="logger_output")
 
     async def submit_command(self, sender: str, app_data: dict) -> None:
         """

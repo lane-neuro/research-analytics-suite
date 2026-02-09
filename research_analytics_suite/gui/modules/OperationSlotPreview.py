@@ -55,6 +55,36 @@ class OperationSlotPreview(GUIBase):
     async def _update_async(self) -> None:  # pragma: no cover
         pass
 
+    def add_to_workspace(self, operation_attributes: OperationAttributes) -> None:
+        """
+        Add operation to workspace with given attributes.
+
+        Args:
+            operation_attributes (OperationAttributes): The attributes of the operation to add.
+        """
+        import asyncio
+        asyncio.create_task(self._create_and_add_operation(operation_attributes))
+
+    async def _create_and_add_operation(self, operation_attributes: OperationAttributes) -> None:
+        """Create and register a new operation from attributes."""
+        try:
+            # Set attributes as active for proper initialization
+            operation_attributes.active = True
+
+            from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
+            operation = BaseOperation(operation_attributes)
+
+            # Initialize the operation
+            await operation.initialize_operation()
+
+            # Add to operation manager (this handles sequencer registration)
+            operation = await self._operation_control.operation_manager.add_initialized_operation(operation)
+
+            self._logger.info(f"Operation added to workspace: {operation.name}")
+
+        except Exception as e:
+            self._logger.error(f"Failed to add operation: {e}", self.__class__.__name__)
+
     def draw(self):
         with dpg.child_window(tag=self._parent_id, parent=self._parent, width=self.width, height=self.height,
                               no_scrollbar=True, no_scroll_with_mouse=True, border=False):
@@ -67,8 +97,7 @@ class OperationSlotPreview(GUIBase):
             with dpg.group(tag=f"slot_preview_{self.runtime_id}", parent=self._parent_id,
                            horizontal=True, horizontal_spacing=10):
                 dpg.add_button(label="+", width=25, height=25, parent=f"slot_preview_{self.runtime_id}",
-                               callback=lambda: self._node_manager.editors["planning_editor"].add_node(
-                                   OperationAttributes(**self._attributes.export_attributes())), indent=5)
+                               callback=lambda: self.add_to_workspace(OperationAttributes(**self._attributes.export_attributes())), indent=5)
                 dpg.add_text(default_value=f"{self._name}", parent=f"slot_preview_{self.runtime_id}")
 
                 # with dpg.child_window(height=30, width=55, no_scrollbar=True, pos=(self.width - 115, 5)):

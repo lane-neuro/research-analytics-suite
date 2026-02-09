@@ -48,6 +48,15 @@ class Config:
             self.MEMORY_LIMIT = None
             self.LOG_ROTATION = None
             self.LOG_RETENTION = None
+            self.OPERATION_INTELLIGENCE_ENABLED = None
+            self.SANDBOX_MEMORY_LIMIT_MB = None
+            self.SIMULATION_TIMEOUT_SECONDS = None
+            self.RECOMMENDATION_CONFIDENCE_THRESHOLD = None
+            self.RECOMMENDATION_MAX_QUEUE_SIZE = None
+            self.BACKGROUND_ANALYSIS_INTERVAL_SECONDS = None
+            self.ENABLE_PATTERN_LEARNING = None
+            self.PATTERN_LEARNING_MIN_SAMPLES = None
+            self.SIMULATION_PARALLEL_LIMIT = None
 
             self._initialized = False
 
@@ -83,6 +92,17 @@ class Config:
         # Logging settings
         self.LOG_ROTATION = 1  # Rotate logs every week
         self.LOG_RETENTION = 4  # Retain logs for 4 weeks
+
+        # Operation Intelligence Settings
+        self.OPERATION_INTELLIGENCE_ENABLED = False
+        self.SANDBOX_MEMORY_LIMIT_MB = 1024
+        self.SIMULATION_TIMEOUT_SECONDS = 30
+        self.RECOMMENDATION_CONFIDENCE_THRESHOLD = 0.75
+        self.RECOMMENDATION_MAX_QUEUE_SIZE = 10
+        self.BACKGROUND_ANALYSIS_INTERVAL_SECONDS = 300
+        self.ENABLE_PATTERN_LEARNING = True
+        self.PATTERN_LEARNING_MIN_SAMPLES = 5
+        self.SIMULATION_PARALLEL_LIMIT = 3
 
     @command
     async def update_setting(self, key: str, value: any) -> None:

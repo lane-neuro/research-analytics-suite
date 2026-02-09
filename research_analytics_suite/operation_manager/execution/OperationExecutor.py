@@ -94,7 +94,7 @@ class OperationExecutor:
 
             for operation in chain_operations:
                 if not operation.task or operation.task.done():
-                    if operation.is_ready and (not operation.task or operation.task.done()):
+                    if operation.is_ready and (not operation.task or operation.task.done()) and operation.status in ["started", "idle"]:
                         try:
                             operation.task = self.task_creator.create_task(
                                 self.execute_operation(operation),
