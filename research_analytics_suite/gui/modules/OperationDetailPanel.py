@@ -24,6 +24,7 @@ from research_analytics_suite.data_engine import MemoryManager
 from research_analytics_suite.gui.GUIBase import GUIBase
 from research_analytics_suite.operation_manager.operations.core.BaseOperation import BaseOperation
 from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
+from research_analytics_suite.library_manifest.CategoryID import CategoryID
 from research_analytics_suite.operation_manager.operations.system.UpdateMonitor import UpdateMonitor
 
 
@@ -62,6 +63,10 @@ class OperationDetailPanel(GUIBase):
         self._last_output_ids: Optional[dict] = None
 
         self.action_code_tag = f"action_code_{self._runtime_id}_{id(self._current_operation)}"
+
+        self._overview_editing = False
+        self._header_name_tag: Optional[str] = None
+        self._header_author_tag: Optional[str] = None
 
     async def initialize_gui(self) -> None:
         """Initialize GUI components and update monitoring."""
@@ -236,16 +241,20 @@ class OperationDetailPanel(GUIBase):
 
         attrs = self._current_operation.attributes if hasattr(self._current_operation, 'attributes') else None
 
+        op_id = id(self._current_operation)
+        self._header_name_tag = f"header_name_{self._runtime_id}_{op_id}"
+        self._header_author_tag = f"header_author_{self._runtime_id}_{op_id}"
+
         with dpg.group(horizontal=True, horizontal_spacing=20):
             with dpg.group():
                 name = attrs.name if attrs else self._current_operation.name
                 version = f" v{attrs.version}" if attrs and hasattr(attrs, 'version') else ""
-                dpg.add_text(f"{name}{version}", color=(255, 255, 255))
+                dpg.add_text(f"{name}{version}", color=(255, 255, 255), tag=self._header_name_tag)
 
-                if self._view_mode == self.VIEW_MODE_ADVANCED:
-                    author = attrs.author if attrs else "Unknown"
-                    runtime_id = self._current_operation.runtime_id[-8:]
-                    dpg.add_text(f"by {author} | ID: {runtime_id}", color=(180, 180, 180))
+                author = attrs.author if attrs else "Unknown"
+                runtime_id = self._current_operation.runtime_id[-8:]
+                dpg.add_text(f"by {author} | ID: {runtime_id}", color=(180, 180, 180),
+                             tag=self._header_author_tag)
 
             dpg.add_spacer(width=20)
 
@@ -284,7 +293,7 @@ class OperationDetailPanel(GUIBase):
                 )
 
     def _draw_overview_tab(self) -> None:
-        """Draw overview tab with basic information."""
+        """Draw overview tab — plain text in view mode, input fields in edit mode."""
         if not self._current_operation:
             return
 
@@ -293,40 +302,173 @@ class OperationDetailPanel(GUIBase):
             dpg.add_text("No attributes available")
             return
 
+        op_id = id(self._current_operation)
+        tag_prefix = f"overview_{self._runtime_id}_{op_id}"
+
         with dpg.group():
-            dpg.add_text("Description:", color=(200, 200, 200))
-            dpg.add_text(attrs.description, wrap=self.width - 40)
+            with dpg.group(horizontal=True, horizontal_spacing=10):
+                if self._overview_editing:
+                    dpg.add_button(
+                        label="Confirm",
+                        callback=lambda: self._confirm_overview_edit(tag_prefix)
+                    )
+                    dpg.add_button(
+                        label="Cancel",
+                        callback=lambda: self._cancel_overview_edit()
+                    )
+                else:
+                    dpg.add_button(
+                        label="Edit",
+                        callback=lambda: self._enter_overview_edit()
+                    )
 
-            dpg.add_spacer(height=15)
+            dpg.add_spacer(height=5)
 
-            with dpg.group(horizontal=True):
-                with dpg.group():
-                    dpg.add_text("Category ID:", color=(200, 200, 200))
-                    dpg.add_text(str(attrs.category_id))
+            if self._overview_editing:
+                self._draw_overview_edit_fields(attrs, tag_prefix)
+            else:
+                self._draw_overview_display(attrs)
 
-                    dpg.add_spacer(height=10)
+    def _draw_overview_display(self, attrs) -> None:
+        """Draw overview fields as plain text."""
+        dpg.add_text("Name:", color=(200, 200, 200))
+        dpg.add_text(attrs.name)
 
-                    dpg.add_text("Email:", color=(200, 200, 200))
-                    dpg.add_text(attrs.email)
+        dpg.add_spacer(height=5)
 
-                dpg.add_spacer(width=50)
+        dpg.add_text("Version:", color=(200, 200, 200))
+        dpg.add_text(attrs.version)
 
-                with dpg.group():
-                    dpg.add_text("GitHub:", color=(200, 200, 200))
-                    dpg.add_text(attrs.github)
+        dpg.add_spacer(height=5)
 
-                    dpg.add_spacer(height=10)
+        dpg.add_text("Author:", color=(200, 200, 200))
+        dpg.add_text(attrs.author)
 
-                    dpg.add_text("Active:", color=(200, 200, 200))
-                    dpg.add_text("Yes" if attrs.active else "No")
+        dpg.add_spacer(height=5)
 
-            dpg.add_spacer(height=15)
+        dpg.add_text("Description:", color=(200, 200, 200))
+        dpg.add_text(attrs.description, wrap=self.width - 40)
 
-            if attrs.inheritance:
-                dpg.add_text("Inherited Operations:", color=(200, 200, 200))
-                with dpg.group(indent=20):
-                    for inherited in attrs.inheritance:
-                        dpg.add_text(f"• {inherited}")
+        dpg.add_spacer(height=10)
+
+        dpg.add_text("Category:", color=(200, 200, 200))
+        dpg.add_text(self._format_category(attrs.category_id))
+
+        dpg.add_spacer(height=10)
+
+        with dpg.group(horizontal=True):
+            with dpg.group():
+                dpg.add_text("Email:", color=(200, 200, 200))
+                dpg.add_text(attrs.email)
+
+            dpg.add_spacer(width=50)
+
+            with dpg.group():
+                dpg.add_text("GitHub:", color=(200, 200, 200))
+                dpg.add_text(attrs.github)
+
+                dpg.add_spacer(height=10)
+
+                dpg.add_text("Active:", color=(200, 200, 200))
+                dpg.add_text("Yes" if attrs.active else "No")
+
+        dpg.add_spacer(height=15)
+
+        if attrs.inheritance:
+            dpg.add_text("Inherited Operations:", color=(200, 200, 200))
+            with dpg.group(indent=20):
+                for inherited in attrs.inheritance:
+                    dpg.add_text(f"• {inherited}")
+
+    def _draw_overview_edit_fields(self, attrs, tag_prefix: str) -> None:
+        """Draw overview fields as editable input widgets."""
+        dpg.add_text("Name:", color=(200, 200, 200))
+        dpg.add_input_text(default_value=attrs.name, tag=f"{tag_prefix}_name", width=-1)
+
+        dpg.add_spacer(height=5)
+
+        dpg.add_text("Version:", color=(200, 200, 200))
+        dpg.add_input_text(default_value=attrs.version, tag=f"{tag_prefix}_version", width=150)
+
+        dpg.add_spacer(height=5)
+
+        dpg.add_text("Author:", color=(200, 200, 200))
+        dpg.add_input_text(default_value=attrs.author, tag=f"{tag_prefix}_author", width=-1)
+
+        dpg.add_spacer(height=5)
+
+        dpg.add_text("Description:", color=(200, 200, 200))
+        dpg.add_input_text(
+            default_value=attrs.description, tag=f"{tag_prefix}_description",
+            width=-1, multiline=True, height=60
+        )
+
+        dpg.add_spacer(height=10)
+
+        dpg.add_text("Category:", color=(200, 200, 200))
+        dpg.add_combo(
+            items=self._get_category_options(),
+            default_value=self._format_category(attrs.category_id),
+            tag=f"{tag_prefix}_category_id", width=-1
+        )
+
+        dpg.add_spacer(height=10)
+
+        with dpg.group(horizontal=True):
+            with dpg.group():
+                dpg.add_text("Email:", color=(200, 200, 200))
+                dpg.add_input_text(default_value=attrs.email, tag=f"{tag_prefix}_email", width=200)
+
+            dpg.add_spacer(width=50)
+
+            with dpg.group():
+                dpg.add_text("GitHub:", color=(200, 200, 200))
+                dpg.add_input_text(
+                    default_value=attrs.github, tag=f"{tag_prefix}_github", width=200
+                )
+
+                dpg.add_spacer(height=10)
+
+                dpg.add_text("Active:", color=(200, 200, 200))
+                dpg.add_text("Yes" if attrs.active else "No")
+
+        dpg.add_spacer(height=15)
+
+        if attrs.inheritance:
+            dpg.add_text("Inherited Operations:", color=(200, 200, 200))
+            with dpg.group(indent=20):
+                for inherited in attrs.inheritance:
+                    dpg.add_text(f"• {inherited}")
+
+    def _enter_overview_edit(self) -> None:
+        """Enter edit mode and re-render the panel to show input fields."""
+        self._overview_editing = True
+        self._render_operation_details(self._current_operation)
+
+    def _confirm_overview_edit(self, tag_prefix: str) -> None:
+        """Apply edited values from the overview tab to the operation's attributes and refresh."""
+        if not self._current_operation or not hasattr(self._current_operation, 'attributes'):
+            return
+
+        attrs = self._current_operation.attributes
+
+        for field in ("name", "version", "author", "description", "email", "github"):
+            field_tag = f"{tag_prefix}_{field}"
+            if dpg.does_item_exist(field_tag):
+                setattr(attrs, field, dpg.get_value(field_tag))
+
+        cat_tag = f"{tag_prefix}_category_id"
+        if dpg.does_item_exist(cat_tag):
+            attrs.category_id = self._parse_category_id(dpg.get_value(cat_tag))
+
+        self._overview_editing = False
+        self._render_operation_details(self._current_operation)
+        self._logger.info(f"Updated overview attributes for operation: {attrs.name}")
+
+    def _cancel_overview_edit(self) -> None:
+        """Cancel editing and re-render with plain text."""
+        self._overview_editing = False
+        self._render_operation_details(self._current_operation)
 
     def _draw_io_tab(self) -> None:
         """Draw inputs/outputs tab."""
@@ -558,6 +700,35 @@ class OperationDetailPanel(GUIBase):
                              border=False):
             self._draw_panel_content()
 
+    @staticmethod
+    def _format_category(category_id: int) -> str:
+        """Resolve a category_id to a human-readable 'Parent > Subcategory [ID: n]' string."""
+        for cat in CategoryID:
+            if cat.id == category_id:
+                return f"{cat.name} [ID: {category_id}]"
+            for _key, (sub_id, sub_name, _) in cat.subcategories.items():
+                if sub_id == category_id:
+                    return f"{cat.name} > {sub_name} [ID: {category_id}]"
+        return f"Uncategorized [ID: {category_id}]"
+
+    @staticmethod
+    def _get_category_options() -> list[str]:
+        """Build a flat list of all category labels for the dropdown."""
+        options = ["Uncategorized [ID: -1]"]
+        for cat in CategoryID:
+            options.append(f"{cat.name} [ID: {cat.id}]")
+            for _key, (sub_id, sub_name, _) in cat.subcategories.items():
+                options.append(f"{cat.name} > {sub_name} [ID: {sub_id}]")
+        return options
+
+    @staticmethod
+    def _parse_category_id(label: str) -> int:
+        """Extract the numeric ID from a category label like 'Name [ID: 101]'."""
+        try:
+            return int(label.rsplit("[ID: ", 1)[1].rstrip("]"))
+        except (IndexError, ValueError):
+            return -1
+
     def _get_status_color(self, status: str) -> tuple:
         """Get color for operation status."""
         status_colors = {
@@ -608,7 +779,7 @@ class OperationDetailPanel(GUIBase):
                     if updated_code and updated_code.strip():
                         self._current_operation.action = updated_code
 
-                self._current_operation.save_in_workspace()
+                asyncio.create_task(self._current_operation.save_in_workspace())
                 self._logger.info(f"Saved settings for operation: {self._current_operation.name}")
             except Exception as e:
                 self._logger.error(f"Error saving operation settings: {e}")

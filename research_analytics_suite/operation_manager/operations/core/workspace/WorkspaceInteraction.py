@@ -18,7 +18,7 @@ import os
 import aiofiles
 from research_analytics_suite.commands import command
 from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
-from research_analytics_suite.utils import Config
+from research_analytics_suite.utils import Config, CustomLogger
 
 
 @command
@@ -44,26 +44,33 @@ async def save_operation_in_workspace(operation_attributes: OperationAttributes,
         operation_attributes (OperationAttributes): The attributes of the operation to save.
         overwrite (bool, optional): Whether to overwrite the existing operation file. Defaults to False.
     """
-    file_ext = ".json"
-    attributes_to_save = operation_attributes.export_attributes()
+    _logger = CustomLogger()
+    try:
+        file_ext = ".json"
+        attributes_to_save = operation_attributes.export_attributes()
 
-    dir_path = os.path.join(Config().BASE_DIR, "workspaces", Config().WORKSPACE_NAME, Config().WORKSPACE_OPERATIONS_DIR)
-    os.makedirs(dir_path, exist_ok=True)
+        dir_path = os.path.join(Config().BASE_DIR, "workspaces", Config().WORKSPACE_NAME,
+                                Config().WORKSPACE_OPERATIONS_DIR)
+        os.makedirs(dir_path, exist_ok=True)
 
-    name = f"{attributes_to_save['github']}_{attributes_to_save['name']}_{attributes_to_save['version']}"
+        name = f"{attributes_to_save['github']}_{attributes_to_save['name']}_{attributes_to_save['version']}"
 
-    if os.path.exists(os.path.join(f"{dir_path}", f"{name}{file_ext}")):
-        if not overwrite:
-            appended_version = 1
-            while True:
-                _attempt = f"{name}-{appended_version}"
-                if not os.path.exists(os.path.join(f"{dir_path}", f"{_attempt}{file_ext}")):
-                    attributes_to_save['version'] = f"{attributes_to_save['version']}-{appended_version}"
-                    name = _attempt
-                    break
-                appended_version += 1
+        if os.path.exists(os.path.join(dir_path, f"{name}{file_ext}")):
+            if not overwrite:
+                appended_version = 1
+                while True:
+                    _attempt = f"{name}-{appended_version}"
+                    if not os.path.exists(os.path.join(dir_path, f"{_attempt}{file_ext}")):
+                        attributes_to_save['version'] = f"{attributes_to_save['version']}-{appended_version}"
+                        name = _attempt
+                        break
+                    appended_version += 1
 
-    file_path = os.path.normpath(os.path.join(f"{dir_path}", f"{name}{file_ext}"))
+        file_path = os.path.normpath(os.path.join(dir_path, f"{name}{file_ext}"))
 
-    async with aiofiles.open(file_path, 'w') as file:
-        await file.write(json.dumps(attributes_to_save, indent=4))
+        async with aiofiles.open(file_path, 'w') as file:
+            await file.write(json.dumps(attributes_to_save, indent=4))
+
+        _logger.info(f"Saved operation to {file_path}")
+    except Exception as e:
+        _logger.error(f"Failed to save operation: {e}")

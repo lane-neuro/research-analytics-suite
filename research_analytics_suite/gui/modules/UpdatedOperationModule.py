@@ -180,7 +180,9 @@ class UpdatedOperationModule(GUIBase):
     def draw_lower_region(self, parent, width=200):
         dpg.add_text(default_value="Action", parent=parent, indent=10)
         with dpg.group(parent=parent, tag=f"action_group_{self._runtime_id}"):
-            dpg.add_input_text(default_value=get_function_body(self._attributes.action), multiline=True,
+            action = self._attributes.action
+            action_text = action if isinstance(action, str) else get_function_body(action) if callable(action) else ""
+            dpg.add_input_text(default_value=action_text, multiline=True,
                                tab_input=True, height=100)
 
         if self._attributes.active:

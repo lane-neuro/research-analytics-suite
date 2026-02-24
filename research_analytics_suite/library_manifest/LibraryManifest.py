@@ -70,8 +70,10 @@ class LibraryManifest:
     @command
     def add_operation_from_attributes(self, operation_attributes: OperationAttributes):
         category_id = operation_attributes.category_id
-        if category_id in self._categories.keys():
+        if category_id in self._categories:
             self._categories[category_id].register_operation(operation_attributes)
+        elif -1 in self._categories:
+            self._categories[-1].register_operation(operation_attributes)
 
     async def build_base_library(self):
         def add_categories(parent_id, parent_name, subcategories):
@@ -91,6 +93,10 @@ class LibraryManifest:
             self._categories[main_cat.id] = main_category
             if isinstance(main_cat.subcategories, dict):
                 add_categories(main_cat.id, main_cat.name, main_cat.subcategories)
+
+        # Add Uncategorized category at the end so it appears last in the library
+        uncategorized = Category(-1, "Uncategorized")
+        self._categories[-1] = uncategorized
 
         for category in self._categories.values():
             self._logger.debug(f"Initializing category: {category.name}")
@@ -149,9 +155,8 @@ class LibraryManifest:
         _local_operation_dir = os.path.normpath(os.path.join(
             self._config.BASE_DIR, 'workspaces', self._config.WORKSPACE_NAME,
             self._config.WORKSPACE_OPERATIONS_DIR))
-        if not os.path.exists(_local_operation_dir) or not os.path.exists(_user_dir):
-            self._logger.warning("Operation directories do not exist")
-            return
+        os.makedirs(_local_operation_dir, exist_ok=True)
+        os.makedirs(_user_dir, exist_ok=True)
 
         operation_files = [os.path.join(_local_operation_dir, f) for f in os.listdir(_local_operation_dir)
                            if f.endswith('.json')]

@@ -101,6 +101,8 @@ Advanced users can also run RAS with custom command-line arguments:
 - `-g true/false` → enable or disable GUI
 - `-o PATH` → open or create a workspace at PATH
 
+Reference the [**Getting Started Tutorial**](https://github.com/lane-neuro/research-analytics-suite/docs/Getting_Started_Tutorial.md) for more details on using RAS.
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---

@@ -172,13 +172,13 @@ class LibraryPane(GUIBase):
         with dpg.file_dialog(show=True,
                              default_path=f"{self._config.BASE_DIR}/{self._config.WORKSPACE_NAME}/"
                                           f"{self._config.WORKSPACE_OPERATIONS_DIR}",
-                             callback=lambda s, d, u: asyncio.run(self._load_operation(d, u)),
+                             callback=lambda s, d, u: asyncio.get_event_loop().create_task(self._load_operation(d, u)),
                              tag="selected_file", width=500, height=500, modal=True):
             dpg.add_file_extension(".json", color=(255, 255, 255, 255))
 
     async def _load_operation(self, data: dict, user_data: dict) -> None:
         """
-        Loads the operation from the selected file asynchronously.
+        Loads the operation from the selected file and adds it to the workspace.
 
         Args:
             data (dict): The data associated with the event.
@@ -190,7 +190,6 @@ class LibraryPane(GUIBase):
             return
 
         self._logger.debug(f"Loading operation from file: {_file_path}")
-        self._logger.debug(f"User data received: {user_data}")
 
         loaded_operations = {}
         try:
@@ -198,11 +197,12 @@ class LibraryPane(GUIBase):
             self._logger.debug(f"Loaded operations: {loaded_operations}")
         except Exception as e:
             self._logger.error(e, self.__class__.__name__)
-            self._logger.debug(f"Error loading operations from file: {e}")
             return
 
         for operation in loaded_operations.values():
             try:
-                self._node_manager.editors["planning_editor"].add_node(operation)
+                await operation.initialize_operation()
+                await self._operation_control.operation_manager.add_initialized_operation(operation)
+                self._logger.info(f"Loaded operation from file: {operation.name}")
             except Exception as e:
                 self._logger.error(e, self.__class__.__name__)

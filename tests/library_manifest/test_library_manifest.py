@@ -76,19 +76,22 @@ class TestLibraryManifest:
             "name": "Mock Operation"
         })
 
-        with mock.patch('os.path.exists', return_value=True):
-            with mock.patch('os.listdir', return_value=['mock_operation.json']):
-                with mock.patch('builtins.open', mock.mock_open(read_data=mock_operation_json)):
-                    from research_analytics_suite.operation_manager.operations.core.OperationAttributes import OperationAttributes
+        self.library_manifest.add_category(9999, "Test Category")
+
+        with mock.patch("os.makedirs", return_value=None):
+            with mock.patch("os.listdir", return_value=["mock_operation.json"]):
+                with mock.patch("builtins.open", mock.mock_open(read_data=mock_operation_json)):
+                    from research_analytics_suite.operation_manager.operations.core.OperationAttributes import \
+                        OperationAttributes
                     mock_get_attributes_from_disk = mock.AsyncMock(
-                        return_value=mock.MagicMock(spec=OperationAttributes)
+                        return_value=mock.MagicMock(spec=OperationAttributes, category_id=9999)
                     )
 
                     with mock.patch(
-                            'research_analytics_suite.operation_manager.operations.core.get_attributes_from_disk',
-                            mock_get_attributes_from_disk):
+                            "research_analytics_suite.operation_manager.operations.core.get_attributes_from_disk",
+                            mock_get_attributes_from_disk
+                    ):
                         await self.library_manifest.load_user_library()
 
-                        # Verify that the operation was added to the library
-                        assert 9999 in self.library_manifest._categories
-                        assert len(self.library_manifest._categories[9999].operations) > 0
+        assert 9999 in self.library_manifest._categories
+        assert len(self.library_manifest._categories[9999].operations) > 0

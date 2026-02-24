@@ -180,11 +180,15 @@ class OperationAttributes:
                 if type_spec in self.TYPES_DICT:
                     return self.TYPES_DICT[type_spec]
 
+                # Handle literal-like strings that represent empty containers
+                # e.g. "[]" -> list, "{}" -> dict, "()" -> tuple
+                _literal_map = {'[]': list, '{}': dict, '()': tuple}
+                if type_spec in _literal_map:
+                    return _literal_map[type_spec]
+
                 # Handle complex type expressions like "Union[int, str]" or "List[float]"
                 if '[' in type_spec and ']' in type_spec:
                     try:
-                        # Safely evaluate the type expression
-                        # Create a safe namespace with typing constructs
                         safe_namespace = {
                             'Union': Union, 'List': List, 'Dict': Dict, 'Tuple': Tuple,
                             'Set': Set, 'Optional': Optional, 'Any': Any,
@@ -192,9 +196,12 @@ class OperationAttributes:
                             'list': list, 'dict': dict, 'tuple': tuple, 'set': set
                         }
 
-                        # Use eval with restricted namespace for safety
                         resolved_type = eval(type_spec, {"__builtins__": {}}, safe_namespace)
-                        return resolved_type
+                        # Validate that the result is a type or typing construct, not a literal value
+                        if isinstance(resolved_type, type) or hasattr(resolved_type, '__origin__'):
+                            return resolved_type
+                        # eval produced a value (e.g. []), fall back to its type
+                        return type(resolved_type)
                     except (SyntaxError, NameError, TypeError) as e:
                         self._logger.warning(f"Failed to parse complex type '{type_spec}': {e}")
                         return None
@@ -246,13 +253,47 @@ class OperationAttributes:
 
         return False
 
-    @command
-    def export_attributes(self) -> dict:
-        """Export the attributes of the operation. This is used for saving the operation to disk."""
-        from research_analytics_suite.operation_manager.operations.core.workspace.WorkspaceInteraction import \
-            pack_as_local_reference
+    def _export_io_types(self, raw_dict: dict) -> dict:
+        """Export an input/output dict as JSON-safe {name: type_name} pairs.
+
+        Handles three cases stored in _required_inputs / _outputs:
+          - type object  (e.g. ``list``)  → ``"list"``
+          - memory-slot ID string         → look up the slot's data_type → ``"list"``
+          - anything else                 → ``type(value).__name__``
+        """
         from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
         _memory_manager = MemoryManager()
+
+        result = {}
+        for key, value in raw_dict.items():
+            if isinstance(value, type):
+                result[key] = value.__name__
+            elif isinstance(value, str):
+                # Probably a memory-slot ID — resolve to the slot's declared type
+                _slot = _memory_manager.get_slot(value)
+                if _slot is not None and hasattr(_slot, 'data_type') and isinstance(_slot.data_type, type):
+                    result[key] = _slot.data_type.__name__
+                else:
+                    result[key] = value
+            elif value is None:
+                result[key] = None
+            else:
+                result[key] = type(value).__name__
+        return result
+
+    @command
+    def export_attributes(self) -> dict:
+        """Export the attributes of the operation as a JSON-serializable dict for saving to disk."""
+        from research_analytics_suite.operation_manager.operations.core.workspace.WorkspaceInteraction import \
+            pack_as_local_reference
+        from research_analytics_suite.commands.utils.text_utils import get_function_body
+
+        # Serialize action: callable -> source string, str -> as-is, None -> None
+        action = self.action
+        if callable(action):
+            action = get_function_body(action)
+        elif action is not None:
+            action = str(action)
 
         return {
             'name': self.name,
@@ -263,9 +304,9 @@ class OperationAttributes:
             'github': self.github,
             'email': self.email,
             'unique_id': self.unique_id,
-            'action': self.action,
-            'required_inputs': self.required_inputs,
-            'outputs': self.outputs,
+            'action': action,
+            'required_inputs': self._export_io_types(self._required_inputs),
+            'outputs': self._export_io_types(self._outputs),
             'parent_operation': pack_as_local_reference(self.parent_operation) if self.parent_operation else None,
             'inheritance': [pack_as_local_reference(child) for child in self.inheritance if self.inheritance is not []],
             'is_loop': self.is_loop,
