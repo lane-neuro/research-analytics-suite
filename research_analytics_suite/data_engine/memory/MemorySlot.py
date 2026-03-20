@@ -420,56 +420,94 @@ class MemorySlot:
         self._update_modified_time()
         self._logger.debug(f"Data dumped to memory-mapped file: {self._file_path}")
 
-    def export_as_csv(self):
-        """
-        Exports the data to a CSV file located
-        """
-        import csv
+    @staticmethod
+    def _build_export_path(export_dir: str, name: str, ext: str) -> str:
+        """Build a timestamped export file path, matching the PNG export pattern."""
+        from datetime import datetime
+        clean_name = "".join(c if c.isalnum() or c in ('-', '_') else '_' for c in name).strip('_')
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        return os.path.join(export_dir, f"{clean_name}_{timestamp}.{ext}")
 
-        if self.data is None:
+    def export_as_csv(self):
+        """Exports the slot data to a CSV file in the workspace export directory."""
+        import csv
+        import pandas as pd
+        import numpy as np
+
+        data = self.raw_data
+        if data is None:
             self._logger.warning("No data to export.")
             return
 
         _config = Config()
-        _path = os.path.join(_config.repr_path(_config.EXPORT_DIR), f"{self.name}-{self.memory_id}.csv")
-        try:
-            with open(_path, 'w', newline='') as csvfile:
-                writer = csv.writer(csvfile)
-                data = self.data
+        export_dir = _config.repr_path(_config.EXPORT_DIR)
+        os.makedirs(export_dir, exist_ok=True)
+        _path = self._build_export_path(export_dir, self.name, 'csv')
 
-                if isinstance(data, list):
-                    if data and isinstance(data[0], dict):
-                        # List of dicts
-                        fieldnames = set()
-                        for entry in data:
-                            fieldnames.update(entry.keys())
-                        fieldnames = list(fieldnames)
-                        dict_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                        dict_writer.writeheader()
-                        dict_writer.writerows(data)
-                    elif data and isinstance(data[0], (list, tuple)):
-                        # List of lists/tuples
-                        writer.writerows(data)
-                    else:
-                        # List of simple values
-                        for item in data:
-                            writer.writerow([item])
-                elif isinstance(data, dict):
-                    _data = {}
-                    for k, v in data.items():
-                        if isinstance(v, (list, dict)):
-                            _data[k] = ', '.join(map(str, v)) if isinstance(v, list) else str(v)
-                        else:
-                            _data[k] = v
-                    writer.writerow(_data.keys())
-                    writer.writerow(_data.values())
+        try:
+            if isinstance(data, pd.DataFrame):
+                data.to_csv(_path, index=False)
+            elif isinstance(data, np.ndarray):
+                if data.ndim == 1:
+                    pd.Series(data).to_csv(_path, index=False, header=False)
                 else:
-                    # Single value
-                    writer.writerow([data])
+                    pd.DataFrame(data).to_csv(_path, index=False)
+            else:
+                with open(_path, 'w', newline='') as csvfile:
+                    writer = csv.writer(csvfile)
+                    if isinstance(data, list):
+                        if data and isinstance(data[0], dict):
+                            fieldnames = list({k for entry in data for k in entry.keys()})
+                            dict_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                            dict_writer.writeheader()
+                            dict_writer.writerows(data)
+                        elif data and isinstance(data[0], (list, tuple)):
+                            writer.writerows(data)
+                        else:
+                            for item in data:
+                                writer.writerow([item])
+                    elif isinstance(data, dict):
+                        writer.writerow(data.keys())
+                        writer.writerow(data.values())
+                    else:
+                        writer.writerow([data])
 
             self._logger.info(f"Data exported to {_path}")
         except Exception as e:
             self._logger.error(Exception(f"Failed to export data to CSV: {e}"), self.__class__.__name__)
+
+    def export_as_json(self):
+        """Exports the slot data to a JSON file in the workspace export directory."""
+        import json
+        import pandas as pd
+        import numpy as np
+
+        data = self.raw_data
+        if data is None:
+            self._logger.warning("No data to export.")
+            return
+
+        _config = Config()
+        export_dir = _config.repr_path(_config.EXPORT_DIR)
+        os.makedirs(export_dir, exist_ok=True)
+        _path = self._build_export_path(export_dir, self.name, 'json')
+
+        try:
+            if isinstance(data, pd.DataFrame):
+                data.to_json(_path, orient='records', indent=2)
+            elif isinstance(data, np.ndarray):
+                with open(_path, 'w') as f:
+                    json.dump(data.tolist(), f, indent=2)
+            elif isinstance(data, (dict, list)):
+                with open(_path, 'w') as f:
+                    json.dump(data, f, indent=2, default=str)
+            else:
+                with open(_path, 'w') as f:
+                    json.dump(str(data), f, indent=2)
+
+            self._logger.info(f"Data exported to {_path}")
+        except Exception as e:
+            self._logger.error(Exception(f"Failed to export data to JSON: {e}"), self.__class__.__name__)
 
     def _apply_data_selector(self, data: any) -> any:
         """Apply data selector to filter/subset the data.

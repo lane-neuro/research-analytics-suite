@@ -88,6 +88,11 @@ class DataViewPanel(GUIBase):
                 actual_data = data
                 schema_info = None
 
+            # Empty slot with edit permission -> show value initializer
+            if actual_data is None and self._editable:
+                self._render_empty_editable()
+                return
+
             # Dispatch to appropriate renderer
             import pandas as pd
             if isinstance(actual_data, pd.DataFrame):
@@ -929,6 +934,76 @@ class DataViewPanel(GUIBase):
             self._force_refresh()
         except Exception as e:
             self._logger.error(f"Failed to save array edit: {e}", self.__class__.__name__)
+
+    def _render_empty_editable(self):
+        """Render a value-initializer UI for slots that have no data and no pointer."""
+        TYPE_ITEMS = ["str", "int", "float", "bool", "list", "dict"]
+
+        with dpg.group(tag=f"{self._root}_data_container", parent=f"{self._root}_display"):
+            dpg.add_text("Slot is empty. Set an initial value:", color=(180, 180, 180))
+            dpg.add_spacer(height=6)
+
+            with dpg.group(horizontal=True):
+                dpg.add_text("Type:", color=(150, 150, 150))
+                dpg.add_combo(
+                    items=TYPE_ITEMS,
+                    default_value="str",
+                    tag=f"{self._root}_init_type",
+                    width=80,
+                    callback=self._on_init_type_changed
+                )
+
+            dpg.add_spacer(height=4)
+            dpg.add_input_text(
+                hint="Enter value (Python literal for list/dict)",
+                tag=f"{self._root}_init_value",
+                width=-1,
+                on_enter=False
+            )
+            dpg.add_spacer(height=6)
+            dpg.add_button(
+                label="Set Value",
+                callback=lambda s, a, u: asyncio.create_task(self._save_initial_value())
+            )
+
+    def _on_init_type_changed(self, sender, app_data):
+        """Update the value input hint when type changes."""
+        hints = {
+            "str": "Enter text",
+            "int": "e.g. 42",
+            "float": "e.g. 3.14",
+            "bool": "True or False",
+            "list": "e.g. [1, 2, 3]",
+            "dict": "e.g. {'key': 'value'}",
+        }
+        tag = f"{self._root}_init_value"
+        if dpg.does_item_exist(tag):
+            dpg.configure_item(tag, hint=hints.get(app_data, "Enter value"))
+
+    async def _save_initial_value(self):
+        """Parse the input and store it as the slot's initial value."""
+        import ast
+        try:
+            type_str = dpg.get_value(f"{self._root}_init_type")
+            raw = dpg.get_value(f"{self._root}_init_value")
+
+            type_map = {"int": int, "float": float, "str": str,
+                        "bool": bool, "list": list, "dict": dict}
+            d_type = type_map.get(type_str, str)
+
+            if d_type in (list, dict):
+                value = ast.literal_eval(raw)
+            elif d_type is bool:
+                value = raw.strip().lower() in ("true", "1", "yes")
+            elif d_type in (int, float):
+                value = d_type(raw.strip())
+            else:
+                value = raw
+
+            self._slot.data = value
+            self._force_refresh()
+        except Exception as e:
+            self._logger.error(f"Failed to set initial value: {e}", self.__class__.__name__)
 
     def _render_text(self, data):
         """Fallback text display."""

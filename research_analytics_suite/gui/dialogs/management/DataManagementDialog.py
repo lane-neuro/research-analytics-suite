@@ -44,6 +44,7 @@ class DataManagementDialog(GUIBase):
         self._last_rendered_operation = None
 
         self.add_var_dialog_id = None
+        self._subset_states = {}  # {slot_id: {"count": int, "filter_column_items": list, "conditions_group_tag": str}}
 
         # Operation manager layout for viewing operation chains
         self._operation_manager_layout = None
@@ -328,6 +329,31 @@ class DataManagementDialog(GUIBase):
         except Exception as e:
             self._logger.error(Exception(f"Failed to delete slot '{slot_id}': {e}", self))
 
+    def _get_slot_columns(self, slot) -> list:
+        """Return column names/indices from a slot's data for the filter dropdown."""
+        try:
+            import pandas as pd
+            import numpy as np
+            from research_analytics_suite.data_engine.core.DataContext import DataContext
+
+            data_obj = slot.data_object if slot else None
+            if data_obj is None:
+                return []
+            data = data_obj.data if isinstance(data_obj, DataContext) else data_obj
+
+            if isinstance(data, pd.DataFrame):
+                return [str(col) for col in data.columns]
+            elif isinstance(data, np.ndarray) and data.ndim == 2:
+                return [f"col_{i}" for i in range(data.shape[1])]
+            elif isinstance(data, dict):
+                return [str(k) for k in data.keys()]
+            elif isinstance(data, list) and data and isinstance(data[0], dict):
+                # list-of-dicts: use keys from the first row
+                return [str(k) for k in data[0].keys()]
+        except Exception as exc:
+            self._logger.warning(f"_get_slot_columns failed: {exc}")
+        return []
+
     def _on_click_subset(self, sender, app_data, user_data):
         """Open subset creation dialog for a slot."""
         slot_id = str(user_data)
@@ -338,8 +364,19 @@ class DataManagementDialog(GUIBase):
         if dpg.does_item_exist(modal_tag):
             dpg.delete_item(modal_tag)
 
+        columns_available = self._get_slot_columns(slot)
+
+        combinator_tag       = f"subset_combinator_{slot_id}"
+        conditions_group_tag = f"subset_cond_group_{slot_id}"
+
+        self._subset_states[slot_id] = {
+            "count": 0,
+            "filter_column_items": ["-- none --"] + columns_available,
+            "conditions_group_tag": conditions_group_tag,
+        }
+
         with dpg.window(tag=modal_tag, label=f"Create Subset - {name}", modal=True,
-                        width=600, height=400, no_resize=True, show=True):
+                        width=600, height=460, no_resize=True, show=True):
 
             dpg.add_text(f"Create a subset of '{name}'")
             dpg.add_separator()
@@ -355,17 +392,25 @@ class DataManagementDialog(GUIBase):
             dpg.add_text("Select Columns (leave empty for all):")
             columns_input_tag = f"subset_columns_{slot_id}"
             dpg.add_input_text(tag=columns_input_tag,
-                              hint="e.g., column1,column2,column3",
-                              multiline=True, height=60, width=400)
+                               hint="e.g., column1,column2,column3",
+                               multiline=True, height=60, width=400)
 
             dpg.add_separator()
 
-            # Row filtering
-            dpg.add_text("Row Filter Condition (optional):")
-            filter_input_tag = f"subset_filter_{slot_id}"
-            dpg.add_input_text(tag=filter_input_tag,
-                              hint="e.g., price > 100 or column_name == 'value'",
-                              multiline=True, height=60, width=400)
+            # Multi-condition row filter
+            dpg.add_text("Keep rows where (optional):")
+            with dpg.group(horizontal=True):
+                dpg.add_text("Match:")
+                dpg.add_combo(tag=combinator_tag, items=["AND", "OR"],
+                              default_value="AND", width=65)
+
+            # Scrollable container for condition rows
+            with dpg.child_window(tag=conditions_group_tag, height=120, border=False):
+                pass
+
+            self._add_condition_row(slot_id)
+            dpg.add_button(label="+ Add Condition",
+                           callback=lambda: self._add_condition_row(slot_id))
 
             dpg.add_separator()
 
@@ -373,9 +418,9 @@ class DataManagementDialog(GUIBase):
             with dpg.group(horizontal=True):
                 dpg.add_text("Row Range (optional):")
                 start_row_tag = f"subset_start_{slot_id}"
-                end_row_tag = f"subset_end_{slot_id}"
+                end_row_tag   = f"subset_end_{slot_id}"
                 dpg.add_input_int(tag=start_row_tag, label="Start", default_value=0, width=80)
-                dpg.add_input_int(tag=end_row_tag, label="End", default_value=100, width=80)
+                dpg.add_input_int(tag=end_row_tag,   label="End",   default_value=100, width=80)
                 dpg.add_checkbox(tag=f"subset_use_range_{slot_id}", label="Use Range")
 
             dpg.add_separator()
@@ -385,78 +430,203 @@ class DataManagementDialog(GUIBase):
                 dpg.add_button(label="Create Subset",
                                callback=lambda: asyncio.create_task(
                                    self._create_subset(slot_id, modal_tag, name_input_tag,
-                                                     columns_input_tag, filter_input_tag,
-                                                     start_row_tag, end_row_tag,
-                                                     f"subset_use_range_{slot_id}")
+                                                       columns_input_tag, combinator_tag,
+                                                       start_row_tag, end_row_tag,
+                                                       f"subset_use_range_{slot_id}")
                                ))
                 dpg.add_button(label="Cancel", callback=lambda: dpg.hide_item(modal_tag))
 
+    def _add_condition_row(self, slot_id: str) -> None:
+        """Append a new condition row inside the scrollable conditions container."""
+        state = self._subset_states.get(slot_id)
+        if state is None:
+            return
+        idx = state["count"]
+        state["count"] += 1
+
+        row_tag = f"subset_cond_row_{slot_id}_{idx}"
+        col_tag = f"subset_cond_col_{slot_id}_{idx}"
+        op_tag  = f"subset_cond_op_{slot_id}_{idx}"
+        val_tag = f"subset_cond_val_{slot_id}_{idx}"
+
+        with dpg.group(tag=row_tag, horizontal=True,
+                       parent=state["conditions_group_tag"]):
+            dpg.add_combo(tag=col_tag,
+                          items=state["filter_column_items"],
+                          default_value="-- none --", width=165)
+            dpg.add_combo(tag=op_tag,
+                          items=["<", ">", "==", "!=", "<=", ">="],
+                          default_value="<", width=60)
+            dpg.add_input_float(tag=val_tag, default_value=0.0,
+                                width=110, format="%.4f")
+            dpg.add_button(label="x", width=22,
+                           callback=lambda t=row_tag: dpg.delete_item(t))
+
     async def _create_subset(self, source_slot_id: str, modal_tag: str,
-                           name_input_tag: str, columns_input_tag: str,
-                           filter_input_tag: str, start_row_tag: str,
-                           end_row_tag: str, use_range_tag: str):
+                             name_input_tag: str, columns_input_tag: str,
+                             combinator_tag: str,
+                             start_row_tag: str, end_row_tag: str, use_range_tag: str):
         """Create a new memory slot with subset data."""
         try:
-            # Get input values
-            new_name = dpg.get_value(name_input_tag).strip()
+            import pandas as pd
+            import numpy as np
+            from dataclasses import replace as dc_replace
+            from research_analytics_suite.data_engine.core.DataContext import DataContext
+
+            new_name     = dpg.get_value(name_input_tag).strip()
             columns_text = dpg.get_value(columns_input_tag).strip()
-            filter_condition = dpg.get_value(filter_input_tag).strip()
-            start_row = dpg.get_value(start_row_tag)
-            end_row = dpg.get_value(end_row_tag)
-            use_range = dpg.get_value(use_range_tag)
+            combinator   = dpg.get_value(combinator_tag)  # "AND" or "OR"
+            start_row    = dpg.get_value(start_row_tag)
+            end_row      = dpg.get_value(end_row_tag)
+            use_range    = dpg.get_value(use_range_tag)
 
             if not new_name:
                 new_name = f"subset_{source_slot_id[:8]}"
 
-            # Get original data
             source_slot = self._memory_manager.get_slot(source_slot_id)
             if not source_slot:
                 raise ValueError(f"Source slot {source_slot_id} not found")
 
-            # Get workspace engine for subset operations
-            from research_analytics_suite.data_engine.Workspace import Workspace
-            from research_analytics_suite.data_engine.core.DataContext import DataContext
-            workspace = Workspace()
-            engine = workspace.get_engine()
-
             stored_object = source_slot.data_object
-            if isinstance(stored_object, DataContext):
-                context = stored_object
-            else:
-                context = DataContext.create(stored_object, engine._adapter_registry)
+            context = stored_object if isinstance(stored_object, DataContext) else None
+            data = context.data if context else stored_object
 
-            columns = None
-            if columns_text:
-                columns = [col.strip() for col in columns_text.split(',') if col.strip()]
+            # --- Collect active conditions ---
+            state = self._subset_states.get(source_slot_id, {})
+            conditions = []
+            for i in range(state.get("count", 0)):
+                col_tag = f"subset_cond_col_{source_slot_id}_{i}"
+                op_tag  = f"subset_cond_op_{source_slot_id}_{i}"
+                val_tag = f"subset_cond_val_{source_slot_id}_{i}"
+                if not dpg.does_item_exist(col_tag):
+                    continue  # row was deleted via X button
+                col = dpg.get_value(col_tag)
+                if not col or col == "-- none --":
+                    continue
+                conditions.append((col, dpg.get_value(op_tag), float(dpg.get_value(val_tag))))
 
-            subset_params = {
-                'rows': filter_condition if filter_condition else None,
-                'columns': columns
+            self._logger.info(
+                f"[Subset] data type={type(data).__name__}, "
+                f"{combinator} of {len(conditions)} condition(s)"
+            )
+
+            # --- Row filter (multi-condition) ---
+            _ops = {
+                "<":  lambda a, b: a < b,
+                ">":  lambda a, b: a > b,
+                "==": lambda a, b: a == b,
+                "!=": lambda a, b: a != b,
+                "<=": lambda a, b: a <= b,
+                ">=": lambda a, b: a >= b,
             }
 
-            if use_range:
-                subset_params['start_row'] = start_row
-                subset_params['end_row'] = end_row
+            rows_before = (
+                len(data) if isinstance(data, (list, dict)) else
+                data.shape[0] if hasattr(data, "shape") else "?"
+            )
 
-            result_context = await engine.subset_data(context, **subset_params)
+            if isinstance(data, pd.DataFrame) and conditions:
+                combined = pd.Series([combinator == "AND"] * len(data), index=data.index)
+                for col, op, val in conditions:
+                    col_match = col if col in data.columns else next(
+                        (c for c in data.columns if str(c) == col), None)
+                    if col_match is None:
+                        self._logger.warning(f"[Subset] column {col!r} not in DataFrame")
+                        continue
+                    numeric = pd.to_numeric(data[col_match], errors="coerce")
+                    mask = numeric.apply(lambda v: _ops[op](v, val) if v == v else False)
+                    combined = (combined & mask) if combinator == "AND" else (combined | mask)
+                data = data[combined].reset_index(drop=True)
+
+            elif isinstance(data, np.ndarray) and data.ndim == 2 and conditions:
+                combined = np.full(len(data), combinator == "AND", dtype=bool)
+                for col, op, val in conditions:
+                    try:
+                        idx = int(col.replace("col_", ""))
+                        col_vals = data[:, idx].astype(float)
+                        mask = np.array([_ops[op](v, val) for v in col_vals])
+                        combined = (combined & mask) if combinator == "AND" else (combined | mask)
+                    except (ValueError, IndexError) as exc:
+                        self._logger.warning(f"[Subset] ndarray filter error: {exc}")
+                data = data[combined]
+
+            elif isinstance(data, dict) and conditions:
+                n = max((len(v) for v in data.values()), default=0)
+                combined = [combinator == "AND"] * n
+                for col, op, val in conditions:
+                    if col not in data:
+                        continue
+                    for i, v in enumerate(data[col]):
+                        try:
+                            result = _ops[op](float(v), val) if v is not None else False
+                        except (TypeError, ValueError):
+                            result = False
+                        combined[i] = (combined[i] and result) if combinator == "AND" else (combined[i] or result)
+                data = {k: [v for v, keep in zip(vals, combined) if keep]
+                        for k, vals in data.items()}
+
+            elif isinstance(data, list) and data and isinstance(data[0], dict) and conditions:
+                filtered = []
+                for row in data:
+                    keep = (combinator == "AND")
+                    for col, op, val in conditions:
+                        v = row.get(col)
+                        try:
+                            result = v is not None and _ops[op](float(v), val)
+                        except (TypeError, ValueError):
+                            result = False
+                        keep = (keep and result) if combinator == "AND" else (keep or result)
+                    if keep:
+                        filtered.append(row)
+                data = filtered
+
+            rows_after = (
+                len(data) if isinstance(data, (list, dict)) else
+                data.shape[0] if hasattr(data, "shape") else "?"
+            )
+            if conditions:
+                self._logger.info(
+                    f"[Subset] {combinator} of {len(conditions)} condition(s): "
+                    f"{rows_before} --> {rows_after} rows"
+                )
+
+            # --- Column selection ---
+            if columns_text:
+                columns = [c.strip() for c in columns_text.split(',') if c.strip()]
+                if columns and isinstance(data, pd.DataFrame):
+                    valid = [c for c in columns if c in data.columns]
+                    if valid:
+                        data = data[valid]
+
+            # --- Row range ---
+            if use_range:
+                if isinstance(data, pd.DataFrame):
+                    data = data.iloc[start_row:end_row].reset_index(drop=True)
+                elif isinstance(data, np.ndarray):
+                    data = data[start_row:end_row]
+                elif isinstance(data, list):
+                    data = data[start_row:end_row]
+                elif isinstance(data, dict):
+                    data = {k: v[start_row:end_row] for k, v in data.items()}
+
+            # Wrap back into a DataContext, preserving original profile/schema
+            result = dc_replace(context, data=data) if context else data
 
             await self._memory_manager.create_slot(
                 name=new_name,
-                data=result_context,
-                d_type=type(result_context)
+                data=result,
+                d_type=type(result)
             )
 
-            # Close modal and refresh
             if dpg.does_item_exist(modal_tag):
                 dpg.hide_item(modal_tag)
 
+            self._subset_states.pop(source_slot_id, None)
             self._force_list_refresh = True
-
             self._logger.info(f"Created subset '{new_name}' from '{source_slot.name}'")
 
         except Exception as e:
             self._logger.error(f"Failed to create subset: {e}")
-            # Could add error popup here
 
     def _render_inspector(self, slot_id: str | None) -> None:
         """Clears inspector mount and installs the selected slot view."""

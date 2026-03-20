@@ -126,7 +126,7 @@ class LibraryManifest:
         self._logger.debug("Starting _populate_verified_operations")
         try:
             # Use dynamic operation discovery
-            from research_analytics_suite.library_manifest.operation_loader import discover_operations
+            from research_analytics_suite.library_manifest.OperationLoader import discover_operations
             from research_analytics_suite.operation_manager.operations.core.utils import get_attributes_from_module
 
             # Discover operations dynamically

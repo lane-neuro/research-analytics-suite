@@ -7,14 +7,18 @@ import ast
 from research_analytics_suite.commands import command
 from research_analytics_suite.utils.LazyModuleLoader import LazyModuleLoader
 
-SAFE_BUILTINS = {
-    'print': print,
-    'range': range,
-    'len': len,
-    'int': int,
-    'float': float,
-    '__import__': __import__,
-}
+# Builtins that can execute arbitrary strings/code objects or access the filesystem.
+# Everything else in the standard builtins module is permitted.
+_BLOCKED_BUILTINS = frozenset({
+    'eval',        # executes arbitrary string as Python
+    'exec',        # executes arbitrary code object or string
+    'compile',     # turns a string into a code object (precursor to eval/exec)
+    'open',        # filesystem access
+    'breakpoint',  # invokes the debugger
+})
+
+import builtins as _builtins
+SAFE_BUILTINS = {k: v for k, v in vars(_builtins).items() if k not in _BLOCKED_BUILTINS}
 
 
 @command

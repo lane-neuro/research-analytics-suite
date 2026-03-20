@@ -223,8 +223,9 @@ class VisualizationDetector:
     def _detect_dict_viz(data: dict, data_info: Dict[str, Any]) -> Dict[str, Any]:
         """Detect visualization for dictionary."""
         keys = data_info['keys']
-
         values = list(data.values())
+
+        # All-numeric dict -> bar / pie
         if all(isinstance(v, (int, float)) for v in values):
             return {
                 'primary_viz': 'bar',
@@ -234,13 +235,46 @@ class VisualizationDetector:
                 'suggested_title': 'Dictionary Values'
             }
 
-        else:
+        # Correlation matrix pattern: {'correlation_matrix': [[...]], 'labels': [...]}
+        if 'correlation_matrix' in data and 'labels' in data:
+            matrix = data['correlation_matrix']
+            labels = data['labels']
+            if (isinstance(matrix, list) and len(matrix) > 0
+                    and isinstance(matrix[0], list)
+                    and isinstance(labels, list)):
+                return {
+                    'primary_viz': 'correlation_heatmap',
+                    'alternatives': ['table'],
+                    'data_info': data_info,
+                    'suggested_title': 'Correlation Matrix'
+                }
+
+        # Dict where all values are equal-length lists -> table (column-per-key)
+        if all(isinstance(v, (list, tuple)) for v in values) and values:
+            lengths = [len(v) for v in values]
+            if len(set(lengths)) == 1:
+                return {
+                    'primary_viz': 'table',
+                    'alternatives': ['bar'],
+                    'data_info': data_info,
+                    'suggested_title': 'Data Table'
+                }
+
+        # Dict with any nested content -> table
+        if any(isinstance(v, (list, tuple, dict)) for v in values):
             return {
-                'primary_viz': 'text',
+                'primary_viz': 'table',
                 'alternatives': [],
                 'data_info': data_info,
-                'suggested_title': 'Dictionary Data'
+                'suggested_title': 'Data Table'
             }
+
+        return {
+            'primary_viz': 'text',
+            'alternatives': [],
+            'data_info': data_info,
+            'suggested_title': 'Dictionary Data'
+        }
 
     @staticmethod
     def _detect_list_viz(data: list, data_info: Dict[str, Any]) -> Dict[str, Any]:
@@ -263,14 +297,32 @@ class VisualizationDetector:
                 'suggested_title': 'List Values'
             }
 
-        elif isinstance(first_elem, (list, tuple)) and len(first_elem) == 2:
-            if all(isinstance(x, (int, float)) for x in first_elem):
+        elif isinstance(first_elem, (list, tuple)):
+            col_len = len(first_elem)
+            if col_len == 2 and all(isinstance(x, (int, float)) for x in first_elem):
                 return {
                     'primary_viz': 'scatter',
                     'alternatives': ['line'],
                     'data_info': data_info,
                     'suggested_title': 'Point Cloud'
                 }
+            # Uniform-width nested list -> table
+            sample = data[:20]
+            if all(isinstance(row, (list, tuple)) and len(row) == col_len for row in sample):
+                return {
+                    'primary_viz': 'table',
+                    'alternatives': ['heatmap'],
+                    'data_info': data_info,
+                    'suggested_title': 'Tabular Data'
+                }
+
+        elif isinstance(first_elem, dict):
+            return {
+                'primary_viz': 'table',
+                'alternatives': [],
+                'data_info': data_info,
+                'suggested_title': 'Data Table'
+            }
 
         return {
             'primary_viz': 'text',

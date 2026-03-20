@@ -95,7 +95,8 @@ def _get_operation_search_paths() -> List[Path]:
 
 def _discover_operation_modules(search_path: Path) -> List[Path]:
     """
-    Discover Python module files in the given path that could contain operations.
+    Discover Python module files in the given path (and subdirectories) that could
+    contain operations.
 
     Args:
         search_path (Path): Path to search for Python modules
@@ -105,12 +106,11 @@ def _discover_operation_modules(search_path: Path) -> List[Path]:
     """
     operation_modules = []
 
-    for file_path in search_path.iterdir():
-        if (file_path.is_file() and
-            file_path.suffix == '.py' and
-            not file_path.name.startswith('__') and
-            file_path.name not in ['loader.py']):
-            operation_modules.append(file_path)
+    for file_path in search_path.rglob("*.py"):
+        if (file_path.name.startswith('__') or
+                file_path.name in ['loader.py']):
+            continue
+        operation_modules.append(file_path)
 
     return operation_modules
 
@@ -133,11 +133,15 @@ def _load_operation_from_file(module_path: Path, search_path: Path) -> Optional[
         module_name = module_path.stem
 
         # For bundled/source files, load directly from file
-        if not str(search_path).endswith('operation_library'):
+        search_path_str = str(search_path)
+        if not (search_path_str.endswith('operation_library') or
+                'operation_library' in search_path_str):
             return _load_module_from_source_file(module_path)
 
-        # For development, use importlib with proper package structure
-        full_module_name = f"research_analytics_suite.operation_library.{module_name}"
+        # For development, derive dotted module name from path relative to search_path
+        rel = module_path.relative_to(search_path)
+        parts = list(rel.with_suffix("").parts)  # e.g. ['statistics', 'ANOVATest']
+        full_module_name = "research_analytics_suite.operation_library." + ".".join(parts)
 
         try:
             # Try to import from the package first

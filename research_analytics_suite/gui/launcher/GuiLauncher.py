@@ -162,6 +162,9 @@ class GuiLauncher:
                 with dpg.menu(label="File"):
                     dpg.add_menu_item(label="New Workspace", callback=self.new_workspace_dialog)
                     dpg.add_menu_item(label="Open Workspace", callback=self.open_workspace_dialog)
+                    with dpg.menu(label="Load Sample Dataset"):
+                        dpg.add_menu_item(label="DLC Olfaction Demo",
+                                          callback=lambda: asyncio.create_task(self.load_sample_dlc()))
                     dpg.add_menu_item(label="Exit", callback=lambda: asyncio.create_task(self._exit()))
 
                 with dpg.menu(label="Edit"):
@@ -387,6 +390,51 @@ class GuiLauncher:
 
         # Trigger GUI relaunch for workspace change
         self.request_relaunch()
+
+    def _sample_data_path(self, relative: str) -> "Path":
+        """Resolve a path under sample_datasets/ for both dev and PyInstaller builds."""
+        import sys
+        from pathlib import Path
+        if getattr(sys, "frozen", False):
+            base = Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
+        else:
+            # GuiLauncher.py lives at research_analytics_suite/gui/launcher/
+            # so .parents[3] is the project root
+            base = Path(__file__).resolve().parents[3]
+        return base / "sample_datasets" / relative
+
+    async def load_sample_dlc(self, sender=None, app_data=None, user_data=None):
+        """Load the DLC olfaction sample dataset into a memory slot named 'dlc_sample'."""
+        from pathlib import Path
+        sample_file = self._sample_data_path(
+            "2024-Tariq-et-al_olfaction/"
+            "8-30-2021-2-08 PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv"
+        )
+        if not sample_file.exists():
+            self._logger.error(
+                Exception(f"Sample dataset not found at: {sample_file}"),
+                self.__class__.__name__
+            )
+            return
+
+        try:
+            context = await self._workspace.load_data(str(sample_file))
+            if context is not None and context.data is not None:
+                from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+                memory_manager = MemoryManager()
+                await memory_manager.create_slot(
+                    name="dlc_sample",
+                    d_type=type(context),
+                    data=context
+                )
+                self._logger.info("Sample dataset loaded into memory slot 'dlc_sample'.")
+            else:
+                self._logger.error(
+                    Exception("Failed to parse sample dataset — no data returned."),
+                    self.__class__.__name__
+                )
+        except Exception as e:
+            self._logger.error(e, self.__class__.__name__)
 
     def show_documentation(self, sender=None, app_data=None, user_data=None):
         """Shows the documentation dialog."""

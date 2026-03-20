@@ -34,6 +34,7 @@ class VisualizationTab:
         self.title = title
         self.data = data
         self.is_pinned = False
+        self.is_drawn = False
         self.viz_type = "auto"
         self.viz_config: Optional[Dict[str, Any]] = None
         self.rendered_image: Optional[str] = None
@@ -154,8 +155,8 @@ class VisualizationWorkspace(GUIBase):
                 current_active_tab_id = dpg.get_value(self._tab_bar_id)
             except:
                 pass
-            # Delete all individual tab items first to avoid alias conflicts
             for tab in self._tabs:
+                tab.is_drawn = False
                 if dpg.does_item_exist(tab.tab_id):
                     dpg.delete_item(tab.tab_id)
             dpg.delete_item(self._tab_bar_id)
@@ -206,6 +207,7 @@ class VisualizationWorkspace(GUIBase):
 
         with dpg.tab(label=tab_label, tag=tab.tab_id, closable=True, order_mode=dpg.mvTabOrder_Leading):
             self._draw_tab_content(tab)
+        tab.is_drawn = True
 
     def _draw_tab_content(self, tab: VisualizationTab) -> None:
         """Draw the content of a visualization tab."""
@@ -218,6 +220,18 @@ class VisualizationWorkspace(GUIBase):
         import numpy as np
 
         if isinstance(tab.data, pd.DataFrame):
+            # Flatten MultiIndex columns to strings on first draw (e.g., DLC data with 3 header rows).
+            # DPG combo widgets return string values, so tuple column names from a MultiIndex
+            # would never match data.columns when read back -- causing X column selection to be ignored.
+            if isinstance(tab.data.columns, pd.MultiIndex):
+                flat_df = tab.data.copy()
+                flat_df.columns = [
+                    '_'.join(str(level).strip() for level in col if str(level).strip())
+                    for col in tab.data.columns
+                ]
+                tab.data = flat_df
+                self._logger.debug(f"Flattened MultiIndex columns for visualization.")
+
             self._logger.debug(f"DataFrame with columns: {tab.data.columns.tolist()}")
             if tab.numeric_columns is None:
                 tab.numeric_columns = tab.data.select_dtypes(include=[np.number]).columns.tolist()
@@ -380,22 +394,46 @@ class VisualizationWorkspace(GUIBase):
                 "status": "error"
             })
 
+    def _resolve_viz_data(self, data: Dict[str, Any]) -> Any:
+        """
+        Resolve the best data object to visualize from an operation notification.
+
+        Prefers raw_data from output memory slots (same as _on_memory_slot_selected) so
+        that the VisualizationDetector sees the actual DataFrame/array rather than the
+        plain result dict returned by execute().  Falls back to the raw result dict when
+        no output slots are available.
+        """
+        output_ids = data.get('output_ids') or {}
+        if output_ids:
+            try:
+                from research_analytics_suite.data_engine.memory.MemoryManager import MemoryManager
+                memory_manager = MemoryManager()
+                slot_data = {}
+                for name, slot_id in output_ids.items():
+                    slot = memory_manager.get_slot(slot_id)
+                    if slot and slot.raw_data is not None:
+                        slot_data[name] = slot.raw_data
+                if slot_data:
+                    return list(slot_data.values())[0] if len(slot_data) == 1 else slot_data
+            except Exception as e:
+                self._logger.error(e, self.__class__.__name__)
+        return data.get('result')
+
     def _on_operation_complete(self, data: Dict[str, Any]) -> None:
         """Handle operation completion by creating new visualization tab."""
         operation_name = data.get('operation_name', 'Unknown')
         tab_id = f"viz_tab_{data.get('operation_id', id(data))}"
 
-        # Check if tab already exists to avoid duplicates
-        existing_tab = next((tab for tab in self._tabs if tab.tab_id == tab_id), None)
+        existing_tab = self._get_existing_open_tab(tab_id)
         if existing_tab:
-            self._active_tab = existing_tab
+            self._focus_tab(existing_tab)
             self._logger.debug(f"Switched to existing visualization for {operation_name}")
             return
 
         new_tab = VisualizationTab(
             tab_id=tab_id,
             title=f"{operation_name} Results",
-            data=data.get('result')
+            data=self._resolve_viz_data(data)
         )
 
         self._tabs.append(new_tab)
@@ -408,15 +446,15 @@ class VisualizationWorkspace(GUIBase):
         operation_name = data.get('operation_name', 'Unknown')
         tab_id = f"viz_tab_{data.get('operation_id', id(data))}"
 
-        existing_tab = next((tab for tab in self._tabs if tab.tab_id == tab_id), None)
+        existing_tab = self._get_existing_open_tab(tab_id)
         if existing_tab:
-            self._active_tab = existing_tab
+            self._focus_tab(existing_tab)
             self._logger.debug(f"Switched to existing visualization for {operation_name}")
         else:
             new_tab = VisualizationTab(
                 tab_id=tab_id,
                 title=f"{operation_name} Results",
-                data=data.get('result')
+                data=self._resolve_viz_data(data)
             )
             self._tabs.append(new_tab)
             self._active_tab = new_tab
@@ -461,10 +499,10 @@ class VisualizationWorkspace(GUIBase):
 
             # Create or switch to tab for this operation
             tab_id = f"viz_tab_op_{operation_id}"
-            existing_tab = next((tab for tab in self._tabs if tab.tab_id == tab_id), None)
+            existing_tab = self._get_existing_open_tab(tab_id)
 
             if existing_tab:
-                self._active_tab = existing_tab
+                self._focus_tab(existing_tab)
                 self._logger.debug(f"Switched to existing tab for operation {operation.name}")
             else:
                 # If only one data item, use it directly; otherwise use dict
@@ -496,10 +534,10 @@ class VisualizationWorkspace(GUIBase):
 
             # Create or switch to tab for this memory slot
             tab_id = f"viz_tab_slot_{slot_id}"
-            existing_tab = next((tab for tab in self._tabs if tab.tab_id == tab_id), None)
+            existing_tab = self._get_existing_open_tab(tab_id)
 
             if existing_tab:
-                self._active_tab = existing_tab
+                self._focus_tab(existing_tab)
                 self._logger.debug(f"Switched to existing tab for slot {slot.name}")
             else:
                 new_tab = VisualizationTab(
@@ -847,7 +885,7 @@ class VisualizationWorkspace(GUIBase):
             dpg.add_spacer(height=5)
             dpg.add_text("Y Columns:", color=(150, 150, 150))
 
-            current_y_cols = opts.get('y_columns') or tab.selected_columns or numeric_cols
+            current_y_cols = opts.get('y_columns') or []
             # Remove X column from Y columns if present
             if current_x and current_x != '(Index)' and current_x in current_y_cols:
                 current_y_cols = [c for c in current_y_cols if c != current_x]
@@ -1041,7 +1079,50 @@ class VisualizationWorkspace(GUIBase):
 
     def _draw_heatmap_options(self, container_id: str, tab: VisualizationTab) -> None:
         """Draw options specific to heatmaps."""
+        import pandas as pd
+
         opts = tab.custom_options
+
+        # Column selectors for 2D density heatmap (e.g., spatial X/Y for location density)
+        if isinstance(tab.data, pd.DataFrame) and tab.all_columns:
+            all_cols = tab.all_columns
+            numeric_cols = tab.numeric_columns or []
+
+            dpg.add_text("Data Selection", color=(200, 200, 255))
+            dpg.add_spacer(height=5)
+
+            x_options = ['(auto)'] + all_cols
+            current_x = opts.get('x_column') or '(auto)'
+            dpg.add_combo(
+                items=x_options,
+                label="X Column",
+                tag=f"{container_id}_heatmap_x_column",
+                default_value=current_x if current_x in x_options else '(auto)',
+                width=200,
+            )
+
+            y_options = ['(auto)'] + all_cols
+            current_y = (opts.get('y_columns') or [None])[0] or '(auto)'
+            dpg.add_combo(
+                items=y_options,
+                label="Y Column",
+                tag=f"{container_id}_heatmap_y_column",
+                default_value=current_y if current_y in y_options else '(auto)',
+                width=200,
+            )
+
+            dpg.add_input_int(
+                label="Bins",
+                tag=f"{container_id}_heatmap_bins",
+                default_value=opts.get('bins', 50),
+                min_value=5,
+                max_value=500,
+                step=5,
+                width=100,
+            )
+
+            dpg.add_spacer(height=10)
+
         dpg.add_text("Color Settings", color=(200, 200, 255))
         dpg.add_spacer(height=5)
 
@@ -1187,6 +1268,21 @@ class VisualizationWorkspace(GUIBase):
             if dpg.does_item_exist(cmap_tag):
                 opts['color_map'] = dpg.get_value(cmap_tag)
 
+            if new_chart_type == 'heatmap':
+                x_tag = f"{container_id}_heatmap_x_column"
+                if dpg.does_item_exist(x_tag):
+                    val = dpg.get_value(x_tag)
+                    opts['x_column'] = None if val == '(auto)' else val
+
+                y_tag = f"{container_id}_heatmap_y_column"
+                if dpg.does_item_exist(y_tag):
+                    val = dpg.get_value(y_tag)
+                    opts['y_columns'] = None if val == '(auto)' else [val]
+
+                bins_tag = f"{container_id}_heatmap_bins"
+                if dpg.does_item_exist(bins_tag):
+                    opts['bins'] = dpg.get_value(bins_tag)
+
         # Apply chart type change if different
         if new_chart_type != tab.viz_type:
             self._switch_viz_type(tab, new_chart_type)
@@ -1207,11 +1303,44 @@ class VisualizationWorkspace(GUIBase):
             dpg.delete_item(popup_id)
         self._options_popup_tab = None
 
+    def _is_tab_visible(self, tab_id: str) -> bool:
+        """Return True if the tab DPG item exists and is shown (not closed by user)."""
+        return dpg.does_item_exist(tab_id) and dpg.is_item_shown(tab_id)
+
+    def _focus_tab(self, tab: "VisualizationTab") -> None:
+        """Set a tab as active and immediately bring it into focus in the tab bar."""
+        self._active_tab = tab
+        if dpg.does_item_exist(self._tab_bar_id) and self._is_tab_visible(tab.tab_id):
+            dpg.set_value(self._tab_bar_id, tab.tab_id)
+
+    def _get_existing_open_tab(self, tab_id: str) -> Optional["VisualizationTab"]:
+        """Return tab if it is in the list and currently visible.
+        If it was previously drawn but is now hidden/closed, remove it so the caller can recreate it."""
+        tab = next((t for t in self._tabs if t.tab_id == tab_id), None)
+        if tab is None:
+            return None
+        if self._is_tab_visible(tab.tab_id):
+            return tab
+        if tab.is_drawn:
+            self._close_figure(tab)
+            self._tabs.remove(tab)
+            self._needs_redraw = True
+        return None
+
     async def _update_async(self) -> None:
         """Async update loop - only redraw when tabs change."""
         while self._update_operation and self._update_operation.is_ready:
             if dpg.does_item_exist(self._workspace_id):
-                # Only redraw if tab count changed or explicit redraw requested
+                # Sweep for tabs closed via the UI close button (show=False in DPG).
+                # Only check drawn tabs; newly added tabs have is_drawn=False and no DPG item yet.
+                if dpg.does_item_exist(self._tab_bar_id):
+                    closed = [t for t in self._tabs if t.is_drawn and not self._is_tab_visible(t.tab_id)]
+                    if closed:
+                        for t in closed:
+                            self._close_figure(t)
+                            self._tabs.remove(t)
+                        self._needs_redraw = True
+
                 current_tab_count = len(self._tabs)
                 if current_tab_count != self._last_tab_count or self._needs_redraw:
                     self._draw_tab_area()

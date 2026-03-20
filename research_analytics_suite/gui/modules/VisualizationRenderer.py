@@ -136,6 +136,8 @@ class VisualizationRenderer:
                 VisualizationRenderer._render_pie(fig, data, viz_config)
             elif viz_type == 'area':
                 VisualizationRenderer._render_area(fig, data, viz_config)
+            elif viz_type == 'table':
+                VisualizationRenderer._render_table(fig, data, viz_config)
             else:
                 VisualizationRenderer._render_text(fig, data, viz_config)
 
@@ -360,12 +362,37 @@ class VisualizationRenderer:
 
     @staticmethod
     def _render_heatmap(fig: Figure, data: Any, config: Dict[str, Any]):
-        """Render heatmap."""
+        """Render heatmap.
+
+        When x_column and y_columns are provided via custom options, renders a 2D density
+        histogram (hist2d) suitable for location density / trajectory analysis.
+        Otherwise renders the DataFrame as a matrix heatmap using imshow.
+        """
         ax = fig.add_subplot(111)
         custom = config.get('_custom', {})
-
-        # Get custom options
         color_map = custom.get('color_map', 'viridis')
+
+        x_col = custom.get('x_column')
+        y_cols = custom.get('y_columns')
+        y_col = y_cols[0] if y_cols else None
+
+        # 2D density heatmap when both spatial columns are specified
+        if config['data_info'].get('is_pandas') and x_col and y_col and x_col in data.columns and y_col in data.columns:
+            import numpy as np
+            bins = custom.get('bins', 50)
+            x_vals = data[x_col].dropna().values.astype(float)
+            y_vals = data[y_col].dropna().values.astype(float)
+            # Align lengths after independent dropna
+            min_len = min(len(x_vals), len(y_vals))
+            x_vals, y_vals = x_vals[:min_len], y_vals[:min_len]
+
+            h, xedges, yedges, img = ax.hist2d(x_vals, y_vals, bins=bins, cmap=color_map)
+            fig.colorbar(img, ax=ax, label='Count')
+            ax.set_xlabel(custom.get('x_label') or x_col)
+            ax.set_ylabel(custom.get('y_label') or y_col)
+            ax.set_aspect('equal', adjustable='box')
+            ax.set_title(custom.get('title') or f'Location Density: {y_col} vs {x_col}', fontweight='bold')
+            return
 
         if config['data_info'].get('is_pandas'):
             im = ax.imshow(data.values, cmap=color_map, aspect='auto', interpolation='nearest')
@@ -402,7 +429,6 @@ class VisualizationRenderer:
             im = ax.imshow(data, cmap=color_map, aspect='auto', interpolation='nearest')
             fig.colorbar(im, ax=ax, label='Value')
 
-            # Limit tick labels for numpy arrays too
             num_cols = data.shape[1] if data.ndim > 1 else 1
             num_rows = data.shape[0]
 
@@ -417,22 +443,115 @@ class VisualizationRenderer:
         ax.set_title(custom.get('title') or config.get('suggested_title', 'Heatmap'), fontweight='bold')
 
     @staticmethod
+    def _render_table(fig: Figure, data: Any, config: Dict[str, Any]):
+        """Render data as a formatted table."""
+        ax = fig.add_subplot(111)
+        custom = config.get('_custom', {})
+        ax.axis('off')
+
+        MAX_ROWS = 20
+        MAX_COLS = 15
+
+        df = None
+        if isinstance(data, pd.DataFrame):
+            df = data
+        elif isinstance(data, dict):
+            # Correlation matrix dict: rebuild labeled DataFrame
+            if 'correlation_matrix' in data and 'labels' in data:
+                import numpy as np
+                labels = data['labels']
+                matrix = np.array(data['correlation_matrix'])
+                df = pd.DataFrame(matrix, index=labels, columns=labels)
+            elif all(isinstance(v, (list, tuple)) for v in data.values()):
+                try:
+                    df = pd.DataFrame(data)
+                except Exception:
+                    pass
+            if df is None:
+                df = pd.DataFrame(list(data.items()), columns=['Key', 'Value'])
+        elif isinstance(data, (list, tuple)) and len(data) > 0:
+            if isinstance(data[0], dict):
+                try:
+                    df = pd.DataFrame(data)
+                except Exception:
+                    pass
+            elif isinstance(data[0], (list, tuple)):
+                try:
+                    df = pd.DataFrame(data)
+                except Exception:
+                    pass
+
+        if df is None:
+            ax.text(0.5, 0.5, str(data)[:500], transform=ax.transAxes,
+                   ha='center', va='center', wrap=True, fontfamily='monospace')
+            ax.set_title(custom.get('title') or config.get('suggested_title', 'Data Preview'), fontweight='bold')
+            return
+
+        display_df = df.iloc[:MAX_ROWS, :MAX_COLS]
+
+        cell_text = []
+        for _, row in display_df.iterrows():
+            formatted = []
+            for val in row:
+                if isinstance(val, float):
+                    formatted.append(f'{val:.4f}')
+                else:
+                    formatted.append(str(val))
+            cell_text.append(formatted)
+
+        col_labels = [str(c) for c in display_df.columns]
+        row_labels = [str(i) for i in display_df.index]
+
+        table = ax.table(
+            cellText=cell_text,
+            colLabels=col_labels,
+            rowLabels=row_labels,
+            loc='center',
+            cellLoc='center'
+        )
+        table.auto_set_font_size(False)
+        table.set_fontsize(8)
+        table.scale(1, 1.5)
+
+        if len(df) > MAX_ROWS or len(df.columns) > MAX_COLS:
+            ax.text(0.5, 0.02,
+                   f'Showing {min(MAX_ROWS, len(df))} of {len(df)} rows, '
+                   f'{min(MAX_COLS, len(df.columns))} of {len(df.columns)} cols',
+                   transform=ax.transAxes, ha='center', va='bottom',
+                   fontsize=7, color='gray', style='italic')
+
+        ax.set_title(custom.get('title') or config.get('suggested_title', 'Data Table'), fontweight='bold')
+
+    @staticmethod
     def _render_correlation_heatmap(fig: Figure, data: Any, config: Dict[str, Any]):
         """Render correlation heatmap."""
         ax = fig.add_subplot(111)
         custom = config.get('_custom', {})
 
+        # Convert raw correlation matrix dict to labeled DataFrame
+        precomputed = False
+        if isinstance(data, dict) and 'correlation_matrix' in data and 'labels' in data:
+            labels = data['labels']
+            matrix = np.array(data['correlation_matrix'])
+            data = pd.DataFrame(matrix, index=labels, columns=labels)
+            config['data_info']['is_pandas'] = True
+            config['data_info']['is_dict'] = False
+            precomputed = True
+
         # Get custom options - default to RdBu_r for correlation (diverging colormap)
         color_map = custom.get('color_map', 'RdBu_r')
 
         if config['data_info'].get('is_pandas'):
-            columns = config.get('columns', data.columns)
-            # Filter to only include columns that exist in the data
-            valid_columns = [c for c in columns if c in data.columns]
-            if valid_columns:
-                corr = data[valid_columns].corr()
+            if precomputed:
+                # Data is already a labeled correlation matrix — use directly
+                corr = data
             else:
-                corr = data.corr()
+                columns = config.get('columns', data.columns)
+                valid_columns = [c for c in columns if c in data.columns]
+                if valid_columns:
+                    corr = data[valid_columns].corr()
+                else:
+                    corr = data.corr()
 
             im = ax.imshow(corr, cmap=color_map, aspect='auto', vmin=-1, vmax=1, interpolation='nearest')
             fig.colorbar(im, ax=ax, label='Correlation')

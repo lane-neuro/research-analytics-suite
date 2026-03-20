@@ -49,6 +49,8 @@ class LibraryPane(GUIBase):
         self._child_window_id = None
         self._categories = {}
         self._cell_ids = set()
+        self._search_active = False
+        self._pending_search_task = None
 
     async def initialize_gui(self) -> None:
         self._logger.debug("Initializing the operation library dialog.")
@@ -71,7 +73,7 @@ class LibraryPane(GUIBase):
                     current_workspace = new_workspace
                     await self._handle_workspace_change()
 
-                if self._library_manifest:
+                if not self._search_active and self._library_manifest:
                     for _id, _category in self._library_manifest.get_categories():
                         if _id not in self._categories:
                             self._categories[_id] = _category
@@ -161,8 +163,67 @@ class LibraryPane(GUIBase):
 
         self._logger.info(f"New operation created: {operation.name}")
 
-    def _search_operations(self) -> None:
-        pass
+    def _search_operations(self, sender=None, app_data=None, user_data=None) -> None:
+        query = (app_data if app_data is not None else dpg.get_value("operation_search") or "").strip().lower()
+        if self._pending_search_task and not self._pending_search_task.done():
+            self._pending_search_task.cancel()
+        self._pending_search_task = asyncio.create_task(self._apply_search_filter(query))
+
+    async def _apply_search_filter(self, query: str) -> None:
+        try:
+            async with self._lock:
+                if not dpg.does_item_exist("library_view"):
+                    return
+
+                dpg.delete_item("library_view", children_only=True)
+                self._cell_ids.clear()
+
+                if not query:
+                    # Restore normal view -- clear categories so _update_async repopulates
+                    self._search_active = False
+                    self._categories.clear()
+                    return
+
+                self._search_active = True
+                rendered_ids = set()
+                for _id, category in self._library_manifest.get_categories():
+                    if _id not in rendered_ids:
+                        await self._create_filtered_category_node(category, "library_view", query, rendered_ids)
+        except asyncio.CancelledError:
+            raise
+
+    async def _create_filtered_category_node(self, category, parent: str, query: str, rendered_ids: set) -> None:
+        """Creates a category tree node containing only operations matching query."""
+        if not self._category_has_matches(category, query):
+            return
+
+        rendered_ids.add(category.category_id)
+
+        unique_tag = f"search_{category.category_id}"
+        # Guard against stale aliases from an interrupted prior rebuild
+        if dpg.does_item_exist(unique_tag):
+            dpg.delete_item(unique_tag)
+        with dpg.tree_node(label=category.name, parent=parent, tag=unique_tag, default_open=True):
+            for subcategory in category.subcategories.values():
+                if subcategory.category_id not in rendered_ids:
+                    await self._create_filtered_category_node(subcategory, unique_tag, query, rendered_ids)
+            for operation in category.operations:
+                op_name = operation.name if isinstance(operation, OperationAttributes) else operation.get("name", "")
+                if query in op_name.lower():
+                    await self._create_operation_tile(operation, unique_tag)
+        if not category.subcategories:
+            dpg.add_separator(parent=parent)
+
+    def _category_has_matches(self, category, query: str) -> bool:
+        """Returns True if category or any subcategory has an operation matching query."""
+        for operation in category.operations:
+            op_name = operation.name if isinstance(operation, OperationAttributes) else operation.get("name", "")
+            if query in op_name.lower():
+                return True
+        for subcategory in category.subcategories.values():
+            if self._category_has_matches(subcategory, query):
+                return True
+        return False
 
     def load_operation(self, sender: str, data: dict) -> None:
         """Loads operations from a file."""

@@ -363,7 +363,7 @@ class AdvancedSlotView(GUIBase):
             height=400,
             parent=f"{self._root}_data_header",
             slot=self._slot,
-            editable=self._slot.has_own_data
+            editable=self._slot.pointer is None
         )
         self._data_view_panel.draw()
 

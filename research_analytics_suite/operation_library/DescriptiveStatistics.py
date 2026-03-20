@@ -15,7 +15,6 @@ Maintainer:     Lane (GitHub: @lane-neuro)
 Status:         In Progress
 """
 from typing import List, Optional, Type
-from statistics import mean, median, stdev
 from research_analytics_suite.operation_manager import BaseOperation
 
 
@@ -65,15 +64,24 @@ class DescriptiveStatistics(BaseOperation):
         """
         Execute the operation's logic: generate descriptive statistics for the dataset.
         """
+        from statistics import mean, median, stdev
+
         _inputs = self.get_inputs()
         _data = _inputs.get("data", [])
 
+        count_value = len(_data)
         mean_value = mean(_data)
         median_value = median(_data)
         stdev_value = stdev(_data)
-        self.add_log_entry(f"[RESULT] Mean: {mean_value}, Median: {median_value}, Standard Deviation: {stdev_value}")
+        min_value = min(_data)
+        max_value = max(_data)
+
+        self.add_log_entry(f"[RESULT] Count: {count_value}, Mean: {mean_value}, Median: {median_value}, Standard Deviation: {stdev_value}, Min: {min_value}, Max: {max_value}")
         return {
-            "mean_value": mean_value,
-            "median_value": median_value,
-            "stdev_value": stdev_value
+            "count": count_value,
+            "mean": mean_value,
+            "median": median_value,
+            "stdev": stdev_value,
+            "min": min_value,
+            "max": max_value
         }

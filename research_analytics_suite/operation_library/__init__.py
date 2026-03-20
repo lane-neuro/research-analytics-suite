@@ -50,6 +50,6 @@ class _OperationsList:
 OPERATIONS = _OperationsList()
 
 # Export the dynamic loader for direct use
-from research_analytics_suite.library_manifest.operation_loader import discover_operations
+from research_analytics_suite.library_manifest.OperationLoader import discover_operations
 
 __all__ = ['OPERATIONS', 'discover_operations']
