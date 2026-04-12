@@ -408,7 +408,7 @@ class GuiLauncher:
         from pathlib import Path
         sample_file = self._sample_data_path(
             "2024-Tariq-et-al_olfaction/"
-            "8-30-2021-2-08 PM-Mohammad-ETHSensor-CB3-3_reencodedDLC_resnet50_odor-arenaOct3shuffle1_200000_filtered.csv"
+            "CB3-3_reencodedDLC_resnet50_odor-arena.csv"
         )
         if not sample_file.exists():
             self._logger.error(

@@ -340,18 +340,39 @@ To save `dlc_sample_subset` as a CSV or JSON for use in other tools:
 
 Beyond visualization, the **Operation Library** contains general-purpose analytics you can apply to DLC data or any other dataset. These include, but are not limited to:
 
-| Category                 | Operations available                                                             |
-|--------------------------|----------------------------------------------------------------------------------|
-| Descriptive Statistics   | Mean, Median, Mode, Std Dev, Variance, Range, IQR, Quantile, Skewness, Kurtosis… |
-| Inferential Statistics   | T-test, Paired T-test, Mann-Whitney U, Chi-Square…                               |
-| ANOVA                    | One-way ANOVA                                                                    |
-| Regression / Correlation | Linear Regression, Correlation Matrix, Covariance Matrix                         |
-| Time Series              | Moving Average, Autocorrelation, Seasonal Decomposition                          |
+| Category | Subcategory | Operations |
+|---|---|---|
+| **Descriptive Statistics** | Central Tendency | Mean, Median, Mode, Harmonic Mean, Geometric Mean, Trimmed Mean |
+| | Variability | Std Dev, Variance, Range, IQR, Mean Absolute Deviation, Coefficient of Variation |
+| | Distribution | Skewness, Kurtosis, Percentile, Quantile, Histogram, Frequency Count, Normality Test, Sum |
+| **Inferential Statistics** | Parametric | Z-Test |
+| | Non-parametric | Mann-Whitney U, Wilcoxon Signed-Rank, Kruskal-Wallis, Kolmogorov-Smirnov |
+| | Confidence Intervals | Mean CI, Bootstrap CI, Proportion CI |
+| **Hypothesis Testing** | T-Tests | Independent T-Test, Paired T-Test |
+| | Chi-Square | Chi-Square Test, Goodness of Fit, Fisher Exact Test |
+| | ANOVA | One-Way ANOVA, Two-Way ANOVA, Repeated Measures ANOVA, Tukey HSD, Bartlett Test, Levene Test |
+| **Regression & Correlation** | Linear Regression | Simple Linear Regression, Polynomial Regression, Logistic Regression |
+| | Multiple Regression | Multiple Linear Regression, Stepwise Regression, Ridge/Lasso Regression, Robust Regression |
+| | Correlation | Correlation Matrix, Covariance Matrix |
+| **Time Series** | Trend Analysis | Linear Trend Forecast, Moving Average, Autocorrelation |
+| | Seasonal Analysis | Seasonal Decomposition |
+| | Forecasting | ARIMA Forecast, Exponential Smoothing |
+| **Data Preprocessing** | Cleaning | Missing Value Detection, Outlier Detection, Duplicate Row Detection, Column Type Inference |
+| | Transformation | Interpolation, One-Hot Encoding, Log Transformation |
+| | Normalization | Min-Max Scaling, Z-Score Standardization, Robust Scaling |
+
+## Developing Your Own Operations with Generative AI
+
+The built-in library is a starting point, not a ceiling. Every operation is a single Python file dropped into the `operation_library/` folder — RAS picks it up automatically on the next launch, no configuration required.
+
+If the analysis you need isn't in the table above, you can describe it to a generative AI tool (such as Claude, ChatGPT, or similar) and have a working operation produced in minutes. RAS operations follow a strict, well-defined interface, and the purpose-built prompt template in the companion guide ensures the AI output is immediately usable without manual cleanup.
+
+See **[AI-Assisted Operation Development](AI_Assisted_Operation_Development.md)** for the full prompt template, worked examples at increasing complexity, and a checklist for validating and installing the result.
 
 ---
 
 ## References
 
-[^1]: Tariq MF, Sterrett SC, Moore S, Lane, Perkel DJ, Gire DH (2024) Dynamics of odor-source localization: Insights from real-time odor plume recordings and head-motion tracking in freely moving mice. *PLoS ONE* 19(9): e0310254. https://doi.org/10.1371/journal.pone.0310254
+[^1]: Tariq MF, Sterrett SC, Moore S, Lane, Perkel DJ, Gire DH (2024) Dynamics of odor-source localization: Insights from real-time odor plume recordings and head-motion tracking in freely moving mice. *PLoS ONE* 19(9): e0310254. <https://doi.org/10.1371/journal.pone.0310254>
 
-[^2]: Nath T, Mathis A, Chen AC, et al. (2019) Using DeepLabCut for 3D markerless pose estimation across species and behaviors. *Nature Protocols* 14, 2152–2176. https://doi.org/10.1038/s41596-019-0176-0
+[^2]: Nath T, Mathis A, Chen AC, et al. (2019) Using DeepLabCut for 3D markerless pose estimation across species and behaviors. *Nature Protocols* 14, 2152–2176. <https://doi.org/10.1038/s41596-019-0176-0>
