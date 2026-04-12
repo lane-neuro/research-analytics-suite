@@ -53,12 +53,6 @@ class CategoryID(Enum):
         "Normalization": (603, "Data Normalization", {})
     })
 
-    VISUALIZATION = (7, "Data Visualization", {
-        "Basic_Plots": (701, "Basic Plots", {}),
-        "Statistical_Plots": (702, "Statistical Plots", {}),
-        "Advanced_Visualization": (703, "Advanced Visualization", {})
-    })
-
     def __init__(self, u_id, name, subcategories):
         self._id = u_id
         self._name = name
